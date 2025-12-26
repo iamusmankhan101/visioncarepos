@@ -4,34 +4,20 @@
 mkdir -p /tmp/storage/framework/{sessions,views,cache}
 mkdir -p /tmp/storage/logs
 mkdir -p /tmp/bootstrap/cache
-
-# Create symlinks if they don't exist
-if [ ! -L storage/framework/sessions ]; then
-    rm -rf storage/framework/sessions
-    ln -s /tmp/storage/framework/sessions storage/framework/sessions
-fi
-
-if [ ! -L storage/framework/views ]; then
-    rm -rf storage/framework/views
-    ln -s /tmp/storage/framework/views storage/framework/views
-fi
-
-if [ ! -L storage/framework/cache ]; then
-    rm -rf storage/framework/cache
-    ln -s /tmp/storage/framework/cache storage/framework/cache
-fi
-
-if [ ! -L storage/logs ]; then
-    rm -rf storage/logs
-    ln -s /tmp/storage/logs storage/logs
-fi
-
-if [ ! -L bootstrap/cache ]; then
-    rm -rf bootstrap/cache
-    ln -s /tmp/bootstrap/cache bootstrap/cache
-fi
+mkdir -p /tmp/uploads/{business_logos,documents,img,invoice_logos}
 
 # Set permissions
-chmod -R 777 /tmp/storage /tmp/bootstrap/cache
+chmod -R 777 /tmp/storage /tmp/bootstrap/cache /tmp/uploads
+
+# Remove or rename install directory to prevent installation check
+if [ -d "public/install" ]; then
+    mv public/install public/install_disabled
+fi
+
+# Create symlink for uploads
+if [ ! -L public/uploads ]; then
+    rm -rf public/uploads
+    ln -s /tmp/uploads public/uploads
+fi
 
 echo "Heroku setup complete"
