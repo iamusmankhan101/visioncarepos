@@ -1,13 +1,14 @@
 #!/bin/bash
 
-# Clear any existing compiled views to prevent cache issues
-rm -rf /tmp/storage/framework/views/*
-
 # Create writable directories in /tmp for Heroku
 mkdir -p /tmp/storage/framework/{sessions,views,cache}
 mkdir -p /tmp/storage/logs
 mkdir -p /tmp/bootstrap/cache
 mkdir -p /tmp/uploads/{business_logos,documents,img,invoice_logos}
+
+# Clear any existing compiled views to prevent cache issues (after mkdir)
+rm -rf /tmp/storage/framework/views/*
+rm -rf /tmp/bootstrap/cache/*
 
 # Set permissions
 chmod -R 777 /tmp/storage /tmp/bootstrap/cache /tmp/uploads
