@@ -6,6 +6,9 @@ if [ ! -f .env ]; then
     chmod 666 .env
 fi
 
+# Create custom_views directory if it doesn't exist
+mkdir -p custom_views
+
 # Parse DATABASE_URL if available (Heroku PostgreSQL format)
 if [ ! -z "$DATABASE_URL" ]; then
     echo "DATABASE_URL=$DATABASE_URL" >> .env
@@ -19,6 +22,28 @@ if [ ! -z "$DATABASE_URL" ]; then
         DB_PORT="${BASH_REMATCH[4]}"
         DB_DATABASE="${BASH_REMATCH[5]}"
         
+        echo "DB_HOST=$DB_HOST" >> .env
+        echo "DB_PORT=$DB_PORT" >> .env
+        echo "DB_DATABASE=$DB_DATABASE" >> .env
+        echo "DB_USERNAME=$DB_USERNAME" >> .env
+        echo "DB_PASSWORD=$DB_PASSWORD" >> .env
+    fi
+fi
+
+# Parse JAWSDB_URL if available (JawsDB MySQL format)
+if [ ! -z "$JAWSDB_URL" ]; then
+    echo "JAWSDB_URL=$JAWSDB_URL" >> .env
+    
+    # Extract database connection details from JAWSDB_URL
+    # Format: mysql://username:password@host:port/database
+    if [[ $JAWSDB_URL =~ mysql://([^:]+):([^@]+)@([^:]+):([0-9]+)/(.+) ]]; then
+        DB_USERNAME="${BASH_REMATCH[1]}"
+        DB_PASSWORD="${BASH_REMATCH[2]}"
+        DB_HOST="${BASH_REMATCH[3]}"
+        DB_PORT="${BASH_REMATCH[4]}"
+        DB_DATABASE="${BASH_REMATCH[5]}"
+        
+        echo "DB_CONNECTION=mysql" >> .env
         echo "DB_HOST=$DB_HOST" >> .env
         echo "DB_PORT=$DB_PORT" >> .env
         echo "DB_DATABASE=$DB_DATABASE" >> .env
