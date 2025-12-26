@@ -1,5 +1,14 @@
 #!/bin/bash
 
+# Create .env file from Heroku config vars if it doesn't exist
+if [ ! -f .env ]; then
+    cp .env.example .env
+    # Set APP_KEY from Heroku config
+    if [ ! -z "$APP_KEY" ]; then
+        sed -i "s|APP_KEY=.*|APP_KEY=$APP_KEY|g" .env
+    fi
+fi
+
 # Create writable directories in /tmp for Heroku
 mkdir -p /tmp/storage/framework/{sessions,views,cache}
 mkdir -p /tmp/storage/logs
