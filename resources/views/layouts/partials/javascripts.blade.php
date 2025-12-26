@@ -126,7 +126,17 @@
 @endif
 @yield('javascript')
 
-@if (class_exists('\Nwidart\Modules\Facades\Module') && Module::has('Essentials'))
+@php
+    $hasEssentials = false;
+    try {
+        if (class_exists('\Nwidart\Modules\Facades\Module')) {
+            $hasEssentials = \Nwidart\Modules\Facades\Module::has('Essentials');
+        }
+    } catch (\Exception $e) {
+        // Module facade not available
+    }
+@endphp
+@if ($hasEssentials)
     @includeIf('essentials::layouts.partials.footer_part')
 @endif
 
