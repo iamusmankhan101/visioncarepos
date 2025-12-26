@@ -9,7 +9,7 @@ use App\System;
 use App\Transaction;
 use App\User;
 use Composer\Semver\Comparator;
-use Module;
+use Nwidart\Modules\Facades\Module;
 
 class ModuleUtil extends Util
 {
