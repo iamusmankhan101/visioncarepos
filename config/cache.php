@@ -51,7 +51,9 @@ return [
 
         'file' => [
             'driver' => 'file',
-            'path' => storage_path('framework/cache/data'),
+            'path' => env('APP_ENV') === 'production' && isset($_ENV['DYNO']) 
+                ? '/tmp/storage/framework/cache/data'
+                : storage_path('framework/cache/data'),
         ],
 
         'memcached' => [

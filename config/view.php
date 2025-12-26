@@ -31,7 +31,9 @@ return [
 
     'compiled' => env(
         'VIEW_COMPILED_PATH',
-        realpath(storage_path('framework/views'))
+        env('APP_ENV') === 'production' && isset($_ENV['DYNO']) 
+            ? '/tmp/storage/framework/views'
+            : realpath(storage_path('framework/views'))
     ),
 
 ];

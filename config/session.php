@@ -59,7 +59,9 @@ return [
     |
     */
 
-    'files' => storage_path('framework/sessions'),
+    'files' => env('APP_ENV') === 'production' && isset($_ENV['DYNO']) 
+        ? '/tmp/storage/framework/sessions'
+        : storage_path('framework/sessions'),
 
     /*
     |--------------------------------------------------------------------------
