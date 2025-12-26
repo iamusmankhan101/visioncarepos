@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# Create .env file if it doesn't exist
+# Copy .env.heroku to .env if .env doesn't exist
 if [ ! -f .env ]; then
-    echo "Creating .env file..."
-    cp .env.example .env
+    echo "Creating .env file from .env.heroku..."
+    cp .env.heroku .env
     chmod 666 .env
 fi
 
