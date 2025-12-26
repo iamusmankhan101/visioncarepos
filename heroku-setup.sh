@@ -1,5 +1,13 @@
 #!/bin/bash
 
+# Create minimal .env file to satisfy installation check
+if [ ! -f .env ]; then
+    echo "APP_NAME=VisionCarePOS" > .env
+    echo "APP_ENV=production" >> .env
+    echo "APP_DEBUG=false" >> .env
+    chmod 666 .env
+fi
+
 # Create writable directories in /tmp for Heroku
 mkdir -p /tmp/storage/framework/{sessions,views,cache}
 mkdir -p /tmp/storage/logs
