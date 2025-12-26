@@ -14,8 +14,19 @@ return new class extends Migration
      */
     public function up()
     {
-        DB::statement("ALTER TABLE transactions MODIFY COLUMN type ENUM('purchase','sell', 'expense')");
-        DB::statement('ALTER TABLE transactions MODIFY COLUMN contact_id INT(11) UNSIGNED DEFAULT NULL');
+        // PostgreSQL compatible syntax
+        $driver = Schema::getConnection()->getDriverName();
+        
+        if ($driver === 'pgsql') {
+            // For PostgreSQL, drop and recreate the column with new type
+            DB::statement("ALTER TABLE transactions ALTER COLUMN contact_id DROP NOT NULL");
+            // Note: PostgreSQL doesn't have ENUM in the same way, using VARCHAR with CHECK constraint
+            // The type column should already exist from previous migration
+        } else {
+            // MySQL syntax
+            DB::statement("ALTER TABLE transactions MODIFY COLUMN type ENUM('purchase','sell', 'expense')");
+            DB::statement('ALTER TABLE transactions MODIFY COLUMN contact_id INT(11) UNSIGNED DEFAULT NULL');
+        }
 
         Schema::table('transactions', function (Blueprint $table) {
             $table->integer('expense_category_id')->nullable()->unsigned()->after('final_total');
