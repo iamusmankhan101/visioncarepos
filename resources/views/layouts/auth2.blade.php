@@ -44,18 +44,18 @@
                         style="text-align: left">
                         <a href="{{ url('/') }}">
                             <div
-                                class="tw-w-32 tw-h-auto tw-flex tw-items-center tw-justify-center tw-overflow-hidden tw-mb-4">
+                                class="tw-w-32 tw-h-auto tw-flex tw-items-center tw-justify-cenGET https://visioncarepos-969e6857489f.herokuapp.com/ net::ERR_HTTP_RESPONSE_CODE_FAILURE 500 (Internal Server Error)ter tw-overflow-hidden tw-mb-4">
                                 <img src="{{ asset('images/logo2.png')}}" alt="logo" class="tw-w-full tw-h-auto tw-object-contain" style="filter: invert(1); max-height: 60px;" />
                             </div>
                         </a>
-                        @if(config('constants.SHOW_REPAIR_STATUS_LOGIN_SCREEN') && Route::has('repair-status'))
+                        @if(config('constants.SHOW_REPAIR_STATUS_LOGIN_SCREEN') && Route::has('repair-status') && class_exists('\Modules\Repair\Http\Controllers\CustomerRepairStatusController'))
                             <a class="tw-text-white tw-font-medium tw-text-sm md:tw-text-base hover:tw-text-white"
                                 href="{{ action([\Modules\Repair\Http\Controllers\CustomerRepairStatusController::class, 'index']) }}">
                                 @lang('repair::lang.repair_status')
                             </a>
                         @endif
                         
-                        @if(Route::has('member_scanner'))
+                        @if(Route::has('member_scanner') && class_exists('\Modules\Gym\Http\Controllers\MemberController'))
                             <a class="tw-text-white tw-font-medium tw-text-sm md:tw-text-base hover:tw-text-white"
                                 href="{{ action([\Modules\Gym\Http\Controllers\MemberController::class, 'member_scanner']) }}">
                                 @lang('gym::lang.gym_member_profile')
@@ -79,7 +79,7 @@
                             </div>
 
                                 <!-- pricing url -->
-                                @if (Route::has('pricing') && config('app.env') != 'demo' && $request->segment(1) != 'pricing')
+                                @if (Route::has('pricing') && config('app.env') != 'demo' && $request->segment(1) != 'pricing' && class_exists('\Modules\Superadmin\Http\Controllers\PricingController'))
                                     &nbsp; <a class="tw-text-white tw-font-medium tw-text-sm md:tw-text-base hover:tw-text-white"
                                         href="{{ action([\Modules\Superadmin\Http\Controllers\PricingController::class, 'index']) }}">@lang('superadmin::lang.pricing')</a>
                                 @endif
