@@ -21,7 +21,12 @@ class ModuleUtil extends Util
      */
     public function isModuleInstalled($module_name)
     {
-        $is_available = Module::has($module_name);
+        try {
+            $is_available = Module::has($module_name);
+        } catch (\Exception $e) {
+            // If modules are not available, return false
+            return false;
+        }
 
         if ($is_available) {
             //Check if installed by checking the system table {module_name}_version
@@ -55,7 +60,12 @@ class ModuleUtil extends Util
      */
     public function getModuleData($function_name, $arguments = null, $get_data_from_modules = [])
     {
-        $modules = Module::toCollection()->toArray();
+        try {
+            $modules = Module::toCollection()->toArray();
+        } catch (\Exception $e) {
+            // If modules are not available, return empty array
+            return [];
+        }
 
         $installed_modules = [];
         foreach ($modules as $module => $details) {
@@ -459,7 +469,12 @@ class ModuleUtil extends Util
             'is_update_available' => null,
         ];
 
-        $is_available = Module::has($module_name);
+        try {
+            $is_available = Module::has($module_name);
+        } catch (\Exception $e) {
+            // If modules are not available, return default output
+            return $output;
+        }
 
         if ($is_available) {
             //Check if installed by checking the system table {module_name}_version
