@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Clear any existing compiled views to prevent cache issues
+rm -rf /tmp/storage/framework/views/*
+
 # Create writable directories in /tmp for Heroku
 mkdir -p /tmp/storage/framework/{sessions,views,cache}
 mkdir -p /tmp/storage/logs
