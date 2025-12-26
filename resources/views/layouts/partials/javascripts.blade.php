@@ -126,7 +126,7 @@
 @endif
 @yield('javascript')
 
-@if (Module::has('Essentials'))
+@if (class_exists('\Nwidart\Modules\Facades\Module') && Module::has('Essentials'))
     @includeIf('essentials::layouts.partials.footer_part')
 @endif
 
