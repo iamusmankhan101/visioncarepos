@@ -44,7 +44,7 @@
                         style="text-align: left">
                         <a href="{{ url('/') }}">
                             <div
-                                class="tw-w-32 tw-h-auto tw-flex tw-items-center tw-justify-cenGET https://visioncarepos-969e6857489f.herokuapp.com/ net::ERR_HTTP_RESPONSE_CODE_FAILURE 500 (Internal Server Error)ter tw-overflow-hidden tw-mb-4">
+                                class="tw-w-32 tw-h-auto tw-flex tw-items-center tw-justify-center tw-overflow-hidden tw-mb-4">
                                 <img src="{{ asset('images/logo2.png')}}" alt="logo" class="tw-w-full tw-h-auto tw-object-contain" style="filter: invert(1); max-height: 60px;" />
                             </div>
                         </a>
