@@ -3,6 +3,10 @@
         Options -MultiViews -Indexes
     </IfModule>
 
+    # Force PHP handler
+    AddHandler application/x-httpd-php .php
+    AddType application/x-httpd-php .php
+
     RewriteEngine On
 
     # Handle Authorization Header
