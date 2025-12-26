@@ -1,12 +1,5 @@
 #!/bin/bash
 
-# Copy .env.heroku to .env if .env doesn't exist
-if [ ! -f .env ]; then
-    echo "Creating .env file from .env.heroku..."
-    cp .env.heroku .env
-    chmod 666 .env
-fi
-
 # Create writable directories in /tmp for Heroku
 mkdir -p /tmp/storage/framework/{sessions,views,cache}
 mkdir -p /tmp/storage/logs
