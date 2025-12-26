@@ -1,11 +1,30 @@
 #!/bin/bash
 
-# Create minimal .env file to satisfy installation check
+# Copy Heroku environment configuration
 if [ ! -f .env ]; then
-    echo "APP_NAME=VisionCarePOS" > .env
-    echo "APP_ENV=production" >> .env
-    echo "APP_DEBUG=false" >> .env
+    cp .env.heroku .env
     chmod 666 .env
+fi
+
+# Parse DATABASE_URL if available (Heroku PostgreSQL format)
+if [ ! -z "$DATABASE_URL" ]; then
+    echo "DATABASE_URL=$DATABASE_URL" >> .env
+    
+    # Extract database connection details from DATABASE_URL
+    # Format: postgres://username:password@host:port/database
+    if [[ $DATABASE_URL =~ postgres://([^:]+):([^@]+)@([^:]+):([0-9]+)/(.+) ]]; then
+        DB_USERNAME="${BASH_REMATCH[1]}"
+        DB_PASSWORD="${BASH_REMATCH[2]}"
+        DB_HOST="${BASH_REMATCH[3]}"
+        DB_PORT="${BASH_REMATCH[4]}"
+        DB_DATABASE="${BASH_REMATCH[5]}"
+        
+        echo "DB_HOST=$DB_HOST" >> .env
+        echo "DB_PORT=$DB_PORT" >> .env
+        echo "DB_DATABASE=$DB_DATABASE" >> .env
+        echo "DB_USERNAME=$DB_USERNAME" >> .env
+        echo "DB_PASSWORD=$DB_PASSWORD" >> .env
+    fi
 fi
 
 # Create writable directories in /tmp for Heroku
