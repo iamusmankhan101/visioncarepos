@@ -2,6 +2,9 @@
 
 echo "Running release tasks..."
 
+# Create custom_views directory if it doesn't exist
+mkdir -p custom_views
+
 # Run database migrations
 php artisan migrate --force
 
@@ -9,12 +12,10 @@ php artisan migrate --force
 php artisan config:clear
 php artisan config:cache
 
-# Clear and cache routes
+# Clear routes (skip caching due to route conflicts)
 php artisan route:clear
-php artisan route:cache
 
 # Clear and cache views
 php artisan view:clear
-php artisan view:cache
 
 echo "Release tasks completed."
