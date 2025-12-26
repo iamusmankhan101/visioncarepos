@@ -14,9 +14,10 @@ rm -rf /tmp/bootstrap/cache/*
 chmod -R 777 /tmp/storage /tmp/bootstrap/cache /tmp/uploads
 
 # Remove or rename install directory to prevent installation check
-if [ -d "public/install" ]; then
-    mv public/install public/install_disabled
-fi
+# Commented out to allow installation on first deploy
+# if [ -d "public/install" ]; then
+#     mv public/install public/install_disabled
+# fi
 
 # Create symlink for uploads
 if [ ! -L public/uploads ]; then
