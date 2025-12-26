@@ -1,12 +1,10 @@
 #!/bin/bash
 
-# Create .env file from Heroku config vars if it doesn't exist
+# Create .env file if it doesn't exist
 if [ ! -f .env ]; then
+    echo "Creating .env file..."
     cp .env.example .env
-    # Set APP_KEY from Heroku config
-    if [ ! -z "$APP_KEY" ]; then
-        sed -i "s|APP_KEY=.*|APP_KEY=$APP_KEY|g" .env
-    fi
+    chmod 666 .env
 fi
 
 # Create writable directories in /tmp for Heroku
@@ -33,12 +31,6 @@ if [ ! -L bootstrap/cache ]; then
     mkdir -p bootstrap
     ln -s /tmp/bootstrap/cache bootstrap/cache
 fi
-
-# Remove or rename install directory to prevent installation check
-# Commented out to allow installation on first deploy
-# if [ -d "public/install" ]; then
-#     mv public/install public/install_disabled
-# fi
 
 # Create symlink for uploads
 if [ ! -L public/uploads ]; then
