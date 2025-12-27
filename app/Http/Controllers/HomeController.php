@@ -71,29 +71,24 @@ class HomeController extends Controller
         }
 
         $business_id = request()->session()->get('user.business_id');
-
         $is_admin = $this->businessUtil->is_admin(auth()->user());
 
+        // HEROKU FIX: Return minimal view without any data loading
+        // This prevents memory crashes on Heroku's limited resources
         if (! auth()->user()->can('dashboard.data')) {
             return view('home.index');
         }
 
-        // HEROKU FIX: Load minimal data on initial page load
-        // Charts and heavy data will be loaded via AJAX
+        // Load only essential data
         $all_locations = BusinessLocation::forDropdown($business_id)->toArray();
         $common_settings = ! empty(session('business.common_settings')) ? session('business.common_settings') : [];
         
-        // Get Dashboard widgets from module
-        $module_widgets = $this->moduleUtil->getModuleData('dashboard_widget');
-        $widgets = [];
-        foreach ($module_widgets as $widget_array) {
-            if (! empty($widget_array['position'])) {
-                $widgets[$widget_array['position']][] = $widget_array['widget'];
-            }
-        }
-
-        // Return view without heavy chart data - charts will load via AJAX
-        return view('home.index', compact('widgets', 'all_locations', 'common_settings', 'is_admin'))
+        // Return minimal view - all data will be loaded via AJAX
+        return view('home.index')
+            ->with('all_locations', $all_locations)
+            ->with('common_settings', $common_settings)
+            ->with('is_admin', $is_admin)
+            ->with('widgets', [])
             ->with('sells_chart_1', null)
             ->with('sells_chart_2', null);
     }
