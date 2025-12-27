@@ -199,6 +199,7 @@ return [
         Milon\Barcode\BarcodeServiceProvider::class,
         ConsoleTVs\Charts\ChartsServiceProvider::class,
         Nwidart\Menus\MenusServiceProvider::class,
+        Nwidart\Modules\LaravelModulesServiceProvider::class,
         Knox\Pesapal\PesapalServiceProvider::class,
     ],
 
