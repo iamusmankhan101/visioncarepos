@@ -66,7 +66,8 @@ class HomeController extends Controller
     {
         $user = auth()->user();
         if ($user->user_type == 'user_customer') {
-            return redirect()->action([\Modules\Crm\Http\Controllers\DashboardController::class, 'index']);
+            // CRM module not available, redirect to regular dashboard
+            // return redirect()->action([\Modules\Crm\Http\Controllers\DashboardController::class, 'index']);
         }
 
         $business_id = request()->session()->get('user.business_id');
