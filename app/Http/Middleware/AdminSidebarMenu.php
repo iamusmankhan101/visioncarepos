@@ -5,7 +5,6 @@ namespace App\Http\Middleware;
 use App\Utils\ModuleUtil;
 use Closure;
 use Menu;
-use Modules\CustomDashboard\Entities\CustomDashboard;
 
 class AdminSidebarMenu
 {
