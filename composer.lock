@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e8c3f6c8b5a4d3c2b1a0f9e8d7c6b5a4",
+    "content-hash": "941d919a0c5c378e67c00251b2d969ad",
     "packages": [
         {
             "name": "aloha/twilio",
@@ -2161,16 +2161,16 @@
         },
         {
             "name": "laravel/framework",
-            "version": "v9.52.16",
+            "version": "v9.52.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/framework.git",
-                "reference": "082345d76fc6e5f90d2bc77d6c3c1a5e23f78d36"
+                "reference": "9239128cfb4d22afefb64060dfecf53e82987267"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/framework/zipball/082345d76fc6e5f90d2bc77d6c3c1a5e23f78d36",
-                "reference": "082345d76fc6e5f90d2bc77d6c3c1a5e23f78d36",
+                "url": "https://api.github.com/repos/laravel/framework/zipball/9239128cfb4d22afefb64060dfecf53e82987267",
+                "reference": "9239128cfb4d22afefb64060dfecf53e82987267",
                 "shasum": ""
             },
             "require": {
