@@ -53,10 +53,15 @@ if [ ! -z "$JAWSDB_URL" ]; then
 fi
 
 # Create writable directories in /tmp for Heroku
-mkdir -p /tmp/storage/framework/{sessions,views,cache}
+mkdir -p /tmp/storage/framework/sessions
+mkdir -p /tmp/storage/framework/views
+mkdir -p /tmp/storage/framework/cache/data
 mkdir -p /tmp/storage/logs
 mkdir -p /tmp/bootstrap/cache
-mkdir -p /tmp/uploads/{business_logos,documents,img,invoice_logos}
+mkdir -p /tmp/uploads/business_logos
+mkdir -p /tmp/uploads/documents
+mkdir -p /tmp/uploads/img
+mkdir -p /tmp/uploads/invoice_logos
 
 # Clear any existing compiled views to prevent cache issues (after mkdir)
 rm -rf /tmp/storage/framework/views/*
