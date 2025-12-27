@@ -2161,16 +2161,16 @@
         },
         {
             "name": "laravel/framework",
-            "version": "v9.52.4",
+            "version": "v9.52.16",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/framework.git",
-                "reference": "9239128cfb4d22afefb64060dfecf53e82987267"
+                "reference": "082345d76fc6e5f90d2bc77d6c3c1a5e23f78d36"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/framework/zipball/9239128cfb4d22afefb64060dfecf53e82987267",
-                "reference": "9239128cfb4d22afefb64060dfecf53e82987267",
+                "url": "https://api.github.com/repos/laravel/framework/zipball/082345d76fc6e5f90d2bc77d6c3c1a5e23f78d36",
+                "reference": "082345d76fc6e5f90d2bc77d6c3c1a5e23f78d36",
                 "shasum": ""
             },
             "require": {
