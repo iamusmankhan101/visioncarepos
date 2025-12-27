@@ -88,4 +88,7 @@ if [ ! -L public/uploads ]; then
     ln -s /tmp/uploads public/uploads
 fi
 
+# Increase PHP memory limit for Heroku
+echo "memory_limit = 256M" > .user.ini
+
 echo "Heroku setup complete"
