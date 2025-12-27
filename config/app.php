@@ -221,9 +221,10 @@ return [
         'Datatables' => Yajra\DataTables\Facades\DataTables::class,
         'Form' => Collective\Html\FormFacade::class,
         'Html' => Collective\Html\HtmlFacade::class,
-        'Paystack' => Unicodeveloper\Paystack\Facades\Paystack::class,
-        'Redis' => Illuminate\Support\Facades\Redis::class,
         'Menu' => Nwidart\Menus\Facades\Menu::class,
+        'Module' => Nwidart\Modules\Facades\Module::class,
+        'Paystack' => Unicodeveloper\Paystack\Facades\Paystack::class,
         'Pesapal' => Knox\Pesapal\Facades\Pesapal::class,
+        'Redis' => Illuminate\Support\Facades\Redis::class,
     ])->toArray(),
 ];
