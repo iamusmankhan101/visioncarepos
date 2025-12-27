@@ -17,7 +17,7 @@
     "AiAssistance": true,
     "Hms": true,
     "InboxReport": true,
-    "CustomDashboard": true,
+    "CustomDashboard": false,
     "Gym": true,
     "ZatcaIntegrationKsa": true
 }
