@@ -304,6 +304,17 @@
 
 <div class="row" style="color: #000000 !important; margin-top: 10px;">
 	<div class="col-xs-12">
+		<!-- DEBUG INFO -->
+		<div style="background: yellow; padding: 5px; margin-bottom: 10px;">
+			DEBUG: Contact ID = {{ $receipt_details->contact_id ?? 'NULL' }}
+			@if($contact)
+				| Contact Name = {{ $contact->name ?? 'NO NAME' }}
+				| CF1 = {{ $contact->custom_field1 ?? 'EMPTY' }}
+			@else
+				| Contact = NULL
+			@endif
+		</div>
+		
 		<table width="100%" style="border-collapse: collapse;">
 			<tr>
 				<!-- RIGHT EYE TABLE -->
