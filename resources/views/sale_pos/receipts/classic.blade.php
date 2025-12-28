@@ -278,7 +278,25 @@
 	if($contact_id) {
 		try {
 			$contact = \App\Contact::find($contact_id);
+			// Debug: Log contact data
+			\Log::info('Contact ID: ' . $contact_id);
+			if($contact) {
+				\Log::info('Contact found: ' . $contact->name);
+				\Log::info('Custom fields: ', [
+					'cf1' => $contact->custom_field1,
+					'cf2' => $contact->custom_field2,
+					'cf3' => $contact->custom_field3,
+					'cf4' => $contact->custom_field4,
+					'cf5' => $contact->custom_field5,
+					'cf6' => $contact->custom_field6,
+					'cf7' => $contact->custom_field7,
+					'cf8' => $contact->custom_field8,
+					'cf9' => $contact->custom_field9,
+					'cf10' => $contact->custom_field10,
+				]);
+			}
 		} catch (\Exception $e) {
+			\Log::error('Error loading contact: ' . $e->getMessage());
 			$contact = null;
 		}
 	}
@@ -303,15 +321,15 @@
 						<tbody>
 							<tr>
 								<td style="font-weight: 600;">Distance</td>
-								<td style="text-align: center;">{{ optional($contact)->custom_field1 ?? '' }}</td>
-								<td style="text-align: center;">{{ optional($contact)->custom_field2 ?? '' }}</td>
-								<td style="text-align: center;">{{ optional($contact)->custom_field3 ?? '' }}</td>
+								<td style="text-align: center;">{{ optional($contact)->custom_field1 }}</td>
+								<td style="text-align: center;">{{ optional($contact)->custom_field2 }}</td>
+								<td style="text-align: center;">{{ optional($contact)->custom_field3 }}</td>
 							</tr>
 							<tr>
 								<td style="font-weight: 600;">Near</td>
-								<td style="text-align: center;">{{ optional($contact)->custom_field4 ?? '' }}</td>
-								<td style="text-align: center;">{{ optional($contact)->custom_field5 ?? '' }}</td>
-								<td style="text-align: center;">{{ optional($contact)->custom_field6 ?? '' }}</td>
+								<td style="text-align: center;">{{ optional($contact)->custom_field4 }}</td>
+								<td style="text-align: center;">{{ optional($contact)->custom_field5 }}</td>
+								<td style="text-align: center;">{{ optional($contact)->custom_field6 }}</td>
 							</tr>
 						</tbody>
 					</table>
@@ -332,13 +350,13 @@
 						<tbody>
 							<tr>
 								<td style="font-weight: 600;">Distance</td>
-								<td style="text-align: center;">{{ optional($contact)->custom_field7 ?? '' }}</td>
-								<td style="text-align: center;">{{ optional($contact)->custom_field8 ?? '' }}</td>
-								<td style="text-align: center;">{{ optional($contact)->custom_field9 ?? '' }}</td>
+								<td style="text-align: center;">{{ optional($contact)->custom_field7 }}</td>
+								<td style="text-align: center;">{{ optional($contact)->custom_field8 }}</td>
+								<td style="text-align: center;">{{ optional($contact)->custom_field9 }}</td>
 							</tr>
 							<tr>
 								<td style="font-weight: 600;">Near</td>
-								<td style="text-align: center;">{{ optional($contact)->custom_field10 ?? '' }}</td>
+								<td style="text-align: center;">{{ optional($contact)->custom_field10 }}</td>
 								<td style="text-align: center;">{{ $contact && !empty($contact->shipping_custom_field_details['shipping_custom_field_1']) ? $contact->shipping_custom_field_details['shipping_custom_field_1'] : '' }}</td>
 								<td style="text-align: center;">{{ $contact && !empty($contact->shipping_custom_field_details['shipping_custom_field_2']) ? $contact->shipping_custom_field_details['shipping_custom_field_2'] : '' }}</td>
 							</tr>
