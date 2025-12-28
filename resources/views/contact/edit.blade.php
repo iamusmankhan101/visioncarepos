@@ -230,6 +230,16 @@
         <div id="more_div" class="hide">
 
             <div class="col-md-12"><hr/></div>
+            
+            {{-- Add Another Customer Button --}}
+            <div class="col-md-12" style="margin-bottom: 15px;">
+                <button type="button" class="btn btn-success add-related-customer-inline">
+                    <i class="fa fa-plus-circle"></i> Add Another Related Customer
+                </button>
+                <small class="text-muted" style="margin-left: 10px;">
+                    <i class="fa fa-info-circle"></i> Add family members or related customers
+                </small>
+            </div>
         
       <div class="clearfix"></div>
       <div class="col-md-12">
@@ -574,7 +584,7 @@ $(document).on('click', '.edit-related-customer', function(e) {
 });
 
 // Handle "Add Another Customer" button
-$(document).on('click', '.add-related-customer', function(e) {
+$(document).on('click', '.add-related-customer, .add-related-customer-inline', function(e) {
     e.preventDefault();
     e.stopPropagation();
     
