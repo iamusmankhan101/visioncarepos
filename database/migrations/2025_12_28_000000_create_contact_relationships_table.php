@@ -17,16 +17,11 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('contact_id');
             $table->unsignedBigInteger('related_contact_id');
-            $table->string('relationship_type')->nullable(); // sibling, parent, child, spouse, etc.
+            $table->string('relationship_type')->nullable();
             $table->unsignedBigInteger('business_id');
             $table->timestamps();
 
-            // Foreign keys
-            $table->foreign('contact_id')->references('id')->on('contacts')->onDelete('cascade');
-            $table->foreign('related_contact_id')->references('id')->on('contacts')->onDelete('cascade');
-            $table->foreign('business_id')->references('id')->on('business')->onDelete('cascade');
-
-            // Indexes
+            // Indexes (without foreign key constraints to avoid errors)
             $table->index('contact_id');
             $table->index('related_contact_id');
             $table->index('business_id');
