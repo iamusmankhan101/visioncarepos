@@ -623,40 +623,108 @@
                     <i class="fa fa-info-circle"></i> These customers are linked to this contact
                 </p>
                 
-                <div class="table-responsive">
-                    <table class="table table-bordered table-striped">
-                        <thead style="background-color: #f8f9fa;">
-                            <tr>
-                                <th>Contact ID</th>
-                                <th>Name</th>
-                                <th>Mobile</th>
-                                <th>Relationship</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($related_customers as $related)
-                                <tr>
-                                    <td>{{ $related['contact_id'] }}</td>
-                                    <td>{{ $related['name'] }}</td>
-                                    <td>{{ $related['mobile'] ?? 'N/A' }}</td>
-                                    <td>
-                                        <span class="label label-info">
-                                            {{ ucfirst($related['relationship_type'] ?? 'Related') }}
+                @foreach($related_customers as $related)
+                    <div style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #48b2ee;">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <h5 style="color: #333; margin-top: 0;">
+                                    <i class="fa fa-user"></i> {{ $related['name'] }}
+                                    @if(!empty($related['relationship_type']))
+                                        <span class="label label-info" style="margin-left: 10px;">
+                                            {{ ucfirst($related['relationship_type']) }}
                                         </span>
-                                    </td>
-                                    <td>
-                                        <a href="{{ action([\App\Http\Controllers\ContactController::class, 'show'], [$related['id']]) }}" 
-                                           class="btn btn-xs btn-info" 
-                                           target="_blank">
-                                            <i class="fa fa-eye"></i> View
-                                        </a>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
+                                    @endif
+                                </h5>
+                            </div>
+                        </div>
+                        
+                        <div class="row" style="margin-top: 10px;">
+                            <div class="col-md-3">
+                                <strong>Contact ID:</strong><br>
+                                {{ $related['contact_id'] }}
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Mobile:</strong><br>
+                                {{ $related['mobile'] ?? 'N/A' }}
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Email:</strong><br>
+                                {{ $related['email'] ?? 'N/A' }}
+                            </div>
+                            <div class="col-md-3">
+                                <a href="{{ action([\App\Http\Controllers\ContactController::class, 'show'], [$related['id']]) }}" 
+                                   class="btn btn-sm btn-info" 
+                                   target="_blank"
+                                   style="margin-top: 15px;">
+                                    <i class="fa fa-eye"></i> View Full Details
+                                </a>
+                            </div>
+                        </div>
+                        
+                        {{-- Prescription Details --}}
+                        @if(!empty($related['prescription']))
+                            <div class="row" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #dee2e6;">
+                                <div class="col-md-12">
+                                    <strong style="color: #48b2ee;"><i class="fa fa-eye"></i> Prescription Details:</strong>
+                                </div>
+                                
+                                {{-- Right Eye --}}
+                                @if(!empty($related['prescription']['right_eye']))
+                                    <div class="col-md-6" style="margin-top: 10px;">
+                                        <div style="background-color: white; padding: 10px; border-radius: 5px;">
+                                            <strong>Right Eye:</strong>
+                                            <table class="table table-condensed table-bordered" style="margin-top: 5px; margin-bottom: 0;">
+                                                <tr>
+                                                    <th style="width: 30%;">Distance</th>
+                                                    <td>
+                                                        Sph: {{ $related['prescription']['right_eye']['distance']['sph'] ?? '-' }} | 
+                                                        Cyl: {{ $related['prescription']['right_eye']['distance']['cyl'] ?? '-' }} | 
+                                                        Axis: {{ $related['prescription']['right_eye']['distance']['axis'] ?? '-' }}
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Near</th>
+                                                    <td>
+                                                        Sph: {{ $related['prescription']['right_eye']['near']['sph'] ?? '-' }} | 
+                                                        Cyl: {{ $related['prescription']['right_eye']['near']['cyl'] ?? '-' }} | 
+                                                        Axis: {{ $related['prescription']['right_eye']['near']['axis'] ?? '-' }}
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </div>
+                                    </div>
+                                @endif
+                                
+                                {{-- Left Eye --}}
+                                @if(!empty($related['prescription']['left_eye']))
+                                    <div class="col-md-6" style="margin-top: 10px;">
+                                        <div style="background-color: white; padding: 10px; border-radius: 5px;">
+                                            <strong>Left Eye:</strong>
+                                            <table class="table table-condensed table-bordered" style="margin-top: 5px; margin-bottom: 0;">
+                                                <tr>
+                                                    <th style="width: 30%;">Distance</th>
+                                                    <td>
+                                                        Sph: {{ $related['prescription']['left_eye']['distance']['sph'] ?? '-' }} | 
+                                                        Cyl: {{ $related['prescription']['left_eye']['distance']['cyl'] ?? '-' }} | 
+                                                        Axis: {{ $related['prescription']['left_eye']['distance']['axis'] ?? '-' }}
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Near</th>
+                                                    <td>
+                                                        Sph: {{ $related['prescription']['left_eye']['near']['sph'] ?? '-' }} | 
+                                                        Cyl: {{ $related['prescription']['left_eye']['near']['cyl'] ?? '-' }} | 
+                                                        Axis: {{ $related['prescription']['left_eye']['near']['axis'] ?? '-' }}
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
+                        @endif
+                    </div>
+                @endforeach
             </div>
         @endif
     </div>

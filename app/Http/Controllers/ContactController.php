@@ -823,12 +823,40 @@ class ContactController extends Controller
             
             foreach ($relationships as $relationship) {
                 if ($relationship->relatedContact) {
+                    $rc = $relationship->relatedContact;
                     $related_customers[] = [
-                        'id' => $relationship->relatedContact->id,
-                        'name' => $relationship->relatedContact->name,
-                        'contact_id' => $relationship->relatedContact->contact_id,
-                        'mobile' => $relationship->relatedContact->mobile,
-                        'relationship_type' => $relationship->relationship_type
+                        'id' => $rc->id,
+                        'name' => $rc->name,
+                        'contact_id' => $rc->contact_id,
+                        'mobile' => $rc->mobile,
+                        'email' => $rc->email,
+                        'relationship_type' => $relationship->relationship_type,
+                        'prescription' => [
+                            'right_eye' => [
+                                'distance' => [
+                                    'sph' => $rc->custom_field1,
+                                    'cyl' => $rc->custom_field2,
+                                    'axis' => $rc->custom_field3,
+                                ],
+                                'near' => [
+                                    'sph' => $rc->custom_field4,
+                                    'cyl' => $rc->custom_field5,
+                                    'axis' => $rc->custom_field6,
+                                ]
+                            ],
+                            'left_eye' => [
+                                'distance' => [
+                                    'sph' => $rc->custom_field7,
+                                    'cyl' => $rc->custom_field8,
+                                    'axis' => $rc->custom_field9,
+                                ],
+                                'near' => [
+                                    'sph' => $rc->custom_field10,
+                                    'cyl' => !empty($rc->shipping_custom_field_details['shipping_custom_field_1']) ? $rc->shipping_custom_field_details['shipping_custom_field_1'] : null,
+                                    'axis' => !empty($rc->shipping_custom_field_details['shipping_custom_field_2']) ? $rc->shipping_custom_field_details['shipping_custom_field_2'] : null,
+                                ]
+                            ]
+                        ]
                     ];
                 }
             }
