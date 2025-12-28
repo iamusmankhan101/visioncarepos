@@ -2,70 +2,55 @@
     $custom_labels = json_decode(session('business.custom_labels'), true);
 @endphp
 
-@if(!empty($contact->custom_field1))
-    <strong>{{ $custom_labels['contact']['custom_field_1'] ?? __('lang_v1.contact_custom_field1') }}</strong>
-    <p class="text-muted">
-        {{ $contact->custom_field1 }}
-    </p>
-@endif
-
-@if(!empty($contact->custom_field2))
-    <strong>{{ $custom_labels['contact']['custom_field_2'] ?? __('lang_v1.contact_custom_field2') }}</strong>
-    <p class="text-muted">
-        {{ $contact->custom_field2 }}
-    </p>
-@endif
-
-@if(!empty($contact->custom_field3))
-    <strong>{{ $custom_labels['contact']['custom_field_3'] ?? __('lang_v1.contact_custom_field3') }}</strong>
-    <p class="text-muted">
-        {{ $contact->custom_field3 }}
-    </p>
-@endif
-
-@if(!empty($contact->custom_field4))
-    <strong>{{ $custom_labels['contact']['custom_field_4'] ?? __('lang_v1.contact_custom_field4') }}</strong>
-    <p class="text-muted">
-        {{ $contact->custom_field4 }}
-    </p>
-@endif
-
-@if(!empty($contact->custom_field5))
-    <strong>{{ $custom_labels['contact']['custom_field_5'] ?? __('lang_v1.custom_field', ['number' => 5]) }}</strong>
-    <p class="text-muted">
-        {{ $contact->custom_field5 }}
-    </p>
-@endif
-
-@if(!empty($contact->custom_field6))
-    <strong>{{ $custom_labels['contact']['custom_field_6'] ?? __('lang_v1.custom_field', ['number' => 6]) }}</strong>
-    <p class="text-muted">
-        {{ $contact->custom_field6 }}
-    </p>
-@endif
-
-@if(!empty($contact->custom_field7))
-    <strong>{{ $custom_labels['contact']['custom_field_7'] ?? __('lang_v1.custom_field', ['number' => 7]) }}</strong>
-    <p class="text-muted">
-        {{ $contact->custom_field7 }}
-    </p>
-@endif
-@if(!empty($contact->custom_field8))
-    <strong>{{ $custom_labels['contact']['custom_field_8'] ?? __('lang_v1.custom_field', ['number' => 8]) }}</strong>
-    <p class="text-muted">
-        {{ $contact->custom_field8 }}
-    </p>
-@endif
-@if(!empty($contact->custom_field9))
-    <strong>{{ $custom_labels['contact']['custom_field_9'] ?? __('lang_v1.custom_field', ['number' => 9]) }}</strong>
-    <p class="text-muted">
-        {{ $contact->custom_field9 }}
-    </p>
-@endif
-
-@if(!empty($contact->custom_field10))
-    <strong>{{ $custom_labels['contact']['custom_field_10'] ?? __('lang_v1.custom_field', ['number' => 10]) }}</strong>
-    <p class="text-muted">
-        {{ $contact->custom_field10 }}
-    </p>
-@endif
+{{-- Prescription Display --}}
+<div style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+    <h5 style="color: #48b2ee; margin-top: 0;">
+        <i class="fa fa-eye"></i> Prescription Details
+    </h5>
+    
+    {{-- RIGHT EYE --}}
+    <div style="margin-bottom: 15px;">
+        <strong style="color: #333;"><i class="fa fa-arrow-right"></i> RIGHT EYE</strong>
+        <table class="table table-condensed table-bordered" style="margin-top: 5px;">
+            <tr>
+                <th style="width: 20%; background-color: #fff;">Distance</th>
+                <td>
+                    <strong>Sph:</strong> {{ $contact->custom_field1 ?? '-' }} | 
+                    <strong>Cyl:</strong> {{ $contact->custom_field2 ?? '-' }} | 
+                    <strong>Axis:</strong> {{ $contact->custom_field3 ?? '-' }}
+                </td>
+            </tr>
+            <tr>
+                <th style="background-color: #fff;">Near</th>
+                <td>
+                    <strong>Sph:</strong> {{ $contact->custom_field4 ?? '-' }} | 
+                    <strong>Cyl:</strong> {{ $contact->custom_field5 ?? '-' }} | 
+                    <strong>Axis:</strong> {{ $contact->custom_field6 ?? '-' }}
+                </td>
+            </tr>
+        </table>
+    </div>
+    
+    {{-- LEFT EYE --}}
+    <div>
+        <strong style="color: #333;"><i class="fa fa-arrow-left"></i> LEFT EYE</strong>
+        <table class="table table-condensed table-bordered" style="margin-top: 5px;">
+            <tr>
+                <th style="width: 20%; background-color: #fff;">Distance</th>
+                <td>
+                    <strong>Sph:</strong> {{ $contact->custom_field7 ?? '-' }} | 
+                    <strong>Cyl:</strong> {{ $contact->custom_field8 ?? '-' }} | 
+                    <strong>Axis:</strong> {{ $contact->custom_field9 ?? '-' }}
+                </td>
+            </tr>
+            <tr>
+                <th style="background-color: #fff;">Near</th>
+                <td>
+                    <strong>Sph:</strong> {{ $contact->custom_field10 ?? '-' }} | 
+                    <strong>Cyl:</strong> {{ !empty($contact->shipping_custom_field_details['shipping_custom_field_1']) ? $contact->shipping_custom_field_details['shipping_custom_field_1'] : '-' }} | 
+                    <strong>Axis:</strong> {{ !empty($contact->shipping_custom_field_details['shipping_custom_field_2']) ? $contact->shipping_custom_field_details['shipping_custom_field_2'] : '-' }}
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
