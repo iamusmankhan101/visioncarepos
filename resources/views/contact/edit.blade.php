@@ -534,8 +534,7 @@
   </div><!-- /.modal-content -->
 </div><!-- /.modal-dialog -->
 
-<
-script type="text/javascript">
+<script type="text/javascript">
 $(document).on('click', '.edit-related-customer', function() {
     var contactId = $(this).data('contact-id');
     if (contactId) {
