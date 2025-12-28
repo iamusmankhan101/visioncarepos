@@ -535,7 +535,10 @@
 </div><!-- /.modal-dialog -->
 
 <script type="text/javascript">
-$(document).on('click', '.edit-related-customer', function() {
+$(document).on('click', '.edit-related-customer', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    
     var contactId = $(this).data('contact-id');
     if (contactId) {
         $.ajax({
@@ -551,16 +554,10 @@ $(document).on('click', '.edit-related-customer', function() {
                 
                 // Auto-expand "More Info" section after modal is shown
                 $newModal.on('shown.bs.modal', function() {
-                    // Show the more_div directly
+                    // Show the more_div directly without clicking button
                     var $moreDiv = $newModal.find('#more_div');
                     if ($moreDiv.length > 0) {
                         $moreDiv.removeClass('hide').show();
-                    }
-                    
-                    // Also try clicking the button if it exists
-                    var $moreBtn = $newModal.find('.more_btn');
-                    if ($moreBtn.length > 0) {
-                        $moreBtn.click();
                     }
                 });
                 
