@@ -243,36 +243,3 @@
 		</table>
 	</div>
 </div>
-
-<s
-cript type="text/javascript">
-$(document).ready(function() {
-    // Show/hide edit button when customer is selected
-    $('#customer_id').on('change', function() {
-        var customerId = $(this).val();
-        if (customerId && customerId != '') {
-            $('.edit_customer_btn').show();
-            $('.edit_customer_btn').attr('data-customer-id', customerId);
-        } else {
-            $('.edit_customer_btn').hide();
-        }
-    });
-    
-    // Handle edit customer button click
-    $(document).on('click', '.edit_customer_btn', function() {
-        var customerId = $(this).attr('data-customer-id');
-        if (customerId) {
-            $.ajax({
-                method: 'get',
-                url: '/contacts/' + customerId + '/edit',
-                dataType: 'html',
-                success: function(result) {
-                    $('.contact_modal')
-                        .html(result)
-                        .modal('show');
-                },
-            });
-        }
-    });
-});
-</script>
