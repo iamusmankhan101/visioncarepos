@@ -1,15 +1,14 @@
-## About Ultimate POS
+## About Vision Care POS
 
-Ultimate POS is a POS application by [Ultimate Fosters](http://ultimatefosters.com), a brand of [The Web Fosters](http://thewebfosters.com).
+Vision Care POS is a Point of Sale application designed for optical and vision care businesses.
 
 ## Installation & Documentation
-You will find installation guide and documentation in the downloaded zip file.
-Also, For complete updated documentation of the ultimate pos please visit online [documentation guide](http://ultimatefosters.com/ultimate-pos/).
+You will find installation guide and documentation in the project files.
 
 ## Security Vulnerabilities
 
-If you discover a security vulnerability within ultimate POS, please send an e-mail to support at thewebfosters@gmail.com. All security vulnerabilities will be promptly addressed.
+If you discover a security vulnerability within Vision Care POS, please contact the development team. All security vulnerabilities will be promptly addressed.
 
 ## License
 
-The Ultimate POS software is licensed under the [Codecanyon license](https://codecanyon.net/licenses/standard).
+Vision Care POS is proprietary software.
