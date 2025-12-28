@@ -1835,10 +1835,30 @@ class ContactController extends Controller
                 return response()->json(['success' => false, 'msg' => 'Contact not found']);
             }
             
-            // Get the customer_group_id_link
-            $group_id = $contact->customer_group_id_link;
+            // Get all related contact IDs (both directions)
+            $related_ids = \DB::table('contact_relationships')
+                ->where('business_id', $business_id)
+                ->where(function($query) use ($contact_id) {
+                    $query->where('contact_id', $contact_id)
+                          ->orWhere('related_contact_id', $contact_id);
+                })
+                ->get();
             
-            if (empty($group_id)) {
+            // Collect all unique contact IDs
+            $contact_ids = collect([$contact_id]); // Include the current contact
+            
+            foreach ($related_ids as $rel) {
+                if ($rel->contact_id != $contact_id) {
+                    $contact_ids->push($rel->contact_id);
+                }
+                if ($rel->related_contact_id != $contact_id) {
+                    $contact_ids->push($rel->related_contact_id);
+                }
+            }
+            
+            $contact_ids = $contact_ids->unique()->values();
+            
+            if ($contact_ids->count() <= 1) {
                 return response()->json([
                     'success' => true,
                     'has_related' => false,
@@ -1846,9 +1866,9 @@ class ContactController extends Controller
                 ]);
             }
             
-            // Get all contacts with the same group ID
+            // Get all contacts
             $related_contacts = Contact::where('business_id', $business_id)
-                ->where('customer_group_id_link', $group_id)
+                ->whereIn('id', $contact_ids)
                 ->select('id', 'name', 'mobile', 'contact_id', 'custom_field1', 'custom_field2', 'custom_field3', 'custom_field4', 'custom_field5', 'custom_field6', 'custom_field7', 'custom_field8', 'custom_field9', 'custom_field10')
                 ->get();
             
