@@ -233,11 +233,11 @@
             
             {{-- Add Another Customer Button --}}
             <div class="col-md-12" style="margin-bottom: 15px;">
-                <button type="button" class="btn btn-success add-related-customer-inline">
+                <button type="button" class="btn btn-success" onclick="window.open('/contacts/create?quick_add=1&group_id=' + $('#customer_group_id_link').val(), '_blank', 'width=800,height=600')">
                     <i class="fa fa-plus-circle"></i> Add Another Related Customer
                 </button>
                 <small class="text-muted" style="margin-left: 10px;">
-                    <i class="fa fa-info-circle"></i> Add family members or related customers
+                    <i class="fa fa-info-circle"></i> Opens in new window - save and refresh this page to see the new customer
                 </small>
             </div>
         
@@ -583,43 +583,15 @@ $(document).on('click', '.edit-related-customer', function(e) {
     }
 });
 
-// Handle "Add Another Customer" button
-$(document).on('click', '.add-related-customer, .add-related-customer-inline', function(e) {
+// Handle "Add Another Customer" button in Related Customers section
+$(document).on('click', '.add-related-customer', function(e) {
     e.preventDefault();
     e.stopPropagation();
     
-    // Get the current contact's group ID from the hidden field
+    // Get the current contact's group ID
     var groupId = $('#customer_group_id_link').val();
     
-    // Open the add customer modal
-    $.ajax({
-        method: 'get',
-        url: '/contacts/create',
-        dataType: 'html',
-        data: { 
-            quick_add: true,
-            customer_group_id_link: groupId
-        },
-        success: function(result) {
-            var $newModal = $('<div class="modal fade contact_modal" tabindex="-1" role="dialog"></div>');
-            $newModal.html(result);
-            $('body').append($newModal);
-            $newModal.modal('show');
-            
-            // Set the group ID in the new form
-            $newModal.on('shown.bs.modal', function() {
-                if (groupId) {
-                    $newModal.find('#customer_group_id_link').val(groupId);
-                }
-            });
-            
-            // Remove modal from DOM when closed
-            $newModal.on('hidden.bs.modal', function() {
-                $(this).remove();
-                // Optionally reload the page to show the new related customer
-                location.reload();
-            });
-        },
-    });
+    // Open in popup window
+    window.open('/contacts/create?quick_add=1&group_id=' + groupId, '_blank', 'width=800,height=600');
 });
 </script>
