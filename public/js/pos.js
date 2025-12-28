@@ -725,69 +725,6 @@ $(document).ready(function() {
             $('#modal_payment').modal('show');
         }
     });
-    
-    // Function to show related customers modal
-    function showRelatedCustomersModal(customers) {
-        console.log('Building modal for customers:', customers);
-        var html = '';
-        customers.forEach(function(customer) {
-            var isCurrentClass = customer.is_current ? 'border-primary' : '';
-            var isCurrentBadge = customer.is_current ? '<span class="label label-primary pull-right">Currently Selected</span>' : '';
-            
-            html += '<div class="related-customer-item" style="border: 2px solid #ddd; border-radius: 8px; padding: 15px; margin-bottom: 15px; cursor: pointer; transition: all 0.3s;" data-customer-id="' + customer.id + '" class="' + isCurrentClass + '">';
-            html += '  <div class="row">';
-            html += '    <div class="col-md-8">';
-            html += '      <h5 style="margin-top: 0; color: #48b2ee;"><i class="fa fa-user"></i> ' + customer.name + ' ' + isCurrentBadge + '</h5>';
-            html += '      <p style="margin-bottom: 5px;"><strong>Contact ID:</strong> ' + (customer.contact_id || 'N/A') + '</p>';
-            html += '      <p style="margin-bottom: 5px;"><strong>Mobile:</strong> ' + (customer.mobile || 'N/A') + '</p>';
-            if (customer.prescription_summary) {
-                html += '      <p style="margin-bottom: 0; color: #6c757d;"><strong>Prescription:</strong> ' + customer.prescription_summary + '</p>';
-            }
-            html += '    </div>';
-            html += '    <div class="col-md-4 text-right">';
-            html += '      <button type="button" class="btn btn-primary btn-select-customer" data-customer-id="' + customer.id + '" style="margin-top: 20px;">';
-            html += '        <i class="fa fa-check"></i> Select';
-            html += '      </button>';
-            html += '    </div>';
-            html += '  </div>';
-            html += '</div>';
-        });
-        
-        $('#related_customers_list').html(html);
-        $('#related_customers_modal').modal('show');
-    }
-    
-    // Handle customer selection from related customers modal
-    $(document).on('click', '.btn-select-customer, .related-customer-item', function(e) {
-        e.preventDefault();
-        var customerId = $(this).data('customer-id');
-        
-        // Update the customer dropdown
-        $('#customer_id').val(customerId).trigger('change');
-        
-        // Close related customers modal
-        $('#related_customers_modal').modal('hide');
-        
-        // Show payment modal after a short delay
-        setTimeout(function() {
-            $('#modal_payment').modal('show');
-        }, 300);
-    });
-    
-    // Add hover effect for related customer items
-    $(document).on('mouseenter', '.related-customer-item', function() {
-        $(this).css({
-            'border-color': '#48b2ee',
-            'background-color': '#f8f9fa',
-            'transform': 'scale(1.02)'
-        });
-    }).on('mouseleave', '.related-customer-item', function() {
-        $(this).css({
-            'border-color': '#ddd',
-            'background-color': 'white',
-            'transform': 'scale(1)'
-        });
-    });
 
     $('#modal_payment').one('shown.bs.modal', function() {
         $('#modal_payment')
@@ -3642,4 +3579,36 @@ function saveFormDataToLocalStorage() {
     localStorage.setItem("pos_form_data_array", JSON.stringify(formArray));
 
     // console.log("Form data successfully saved to LocalStorage.");
+}
+
+
+// Function to show related customers modal
+function showRelatedCustomersModal(customers) {
+    console.log('Building modal for customers:', customers);
+    var html = '';
+    customers.forEach(function(customer) {
+        var isCurrentClass = customer.is_current ? 'border-primary' : '';
+        var isCurrentBadge = customer.is_current ? '<span class="label label-primary pull-right">Currently Selected</span>' : '';
+        
+        html += '<div class="related-customer-item" style="border: 2px solid #ddd; border-radius: 8px; padding: 15px; margin-bottom: 15px; cursor: pointer; transition: all 0.3s;" data-customer-id="' + customer.id + '" class="' + isCurrentClass + '">';
+        html += '  <div class="row">';
+        html += '    <div class="col-md-8">';
+        html += '      <h5 style="margin-top: 0; color: #48b2ee;"><i class="fa fa-user"></i> ' + customer.name + ' ' + isCurrentBadge + '</h5>';
+        html += '      <p style="margin-bottom: 5px;"><strong>Contact ID:</strong> ' + (customer.contact_id || 'N/A') + '</p>';
+        html += '      <p style="margin-bottom: 5px;"><strong>Mobile:</strong> ' + (customer.mobile || 'N/A') + '</p>';
+        if (customer.prescription_summary) {
+            html += '      <p style="margin-bottom: 0; color: #6c757d;"><strong>Prescription:</strong> ' + customer.prescription_summary + '</p>';
+        }
+        html += '    </div>';
+        html += '    <div class="col-md-4 text-right">';
+        html += '      <button type="button" class="btn btn-primary btn-select-customer" data-customer-id="' + customer.id + '" style="margin-top: 20px;">';
+        html += '        <i class="fa fa-check"></i> Select';
+        html += '      </button>';
+        html += '    </div>';
+        html += '  </div>';
+        html += '</div>';
+    });
+    
+    $('#related_customers_list').html(html);
+    $('#related_customers_modal').modal('show');
 }
