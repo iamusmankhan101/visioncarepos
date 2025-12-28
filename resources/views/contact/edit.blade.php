@@ -295,17 +295,17 @@
         </div>
       </div>
       
-      {{-- Hidden field to link related customers --}}
-      {!! Form::hidden('customer_group_id_link', $contact->customer_group_id ?? uniqid('group_'), ['id' => 'customer_group_id_link']); !!}
-      
       {{-- Add Another Customer Button - After Prescription --}}
       <div class="col-md-12" style="margin-top: 20px; margin-bottom: 15px;">
           <button type="button" class="btn btn-success" id="toggle-add-customer-form">
               <i class="fa fa-plus-circle"></i> Add Another Related Customer
           </button>
+          <small class="text-muted" style="margin-left: 10px;">
+              <i class="fa fa-info-circle"></i> Add family members or related customers
+          </small>
       </div>
       
-      {{-- Inline Add Customer Form --}}
+      {{-- Inline Add Customer Form (Hidden by default) --}}
       <div class="col-md-12" id="inline-add-customer-form" style="display: none; background-color: #f0f8ff; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 2px solid #48b2ee;">
           <h5 style="color: #48b2ee; margin-top: 0;">
               <i class="fa fa-user-plus"></i> Add New Related Customer
@@ -314,232 +314,7 @@
               </button>
           </h5>
           <hr>
-          
-          {!! Form::open(['url' => action([\App\Http\Controllers\ContactController::class, 'store']), 'method' => 'post', 'id' => 'quick_add_contact_form']) !!}
-          
-          <div class="row">
-              <div class="col-md-3">
-                  <div class="form-group">
-                      {!! Form::label('type', __('contact.contact_type') . ':*') !!}
-                      <div class="input-group">
-                          <span class="input-group-addon"><i class="fa fa-user"></i></span>
-                          {!! Form::select('type', ['customer' => __('report.customer')], 'customer', ['class' => 'form-control', 'placeholder' => __('messages.please_select'), 'required']); !!}
-                      </div>
-                  </div>
-              </div>
-              <div class="col-md-3 mt-15">
-                  <label class="radio-inline">
-                      <input type="radio" name="contact_type_radio" id="inline_radio_individual" value="individual" checked>
-                      @lang('lang_v1.individual')
-                  </label>
-                  <label class="radio-inline">
-                      <input type="radio" name="contact_type_radio" id="inline_radio_business" value="business">
-                      @lang('business.business')
-                  </label>
-              </div>
-              <div class="col-md-3">
-                  <div class="form-group">
-                      {!! Form::label('contact_id', __('lang_v1.contact_id') . ':') !!}
-                      <div class="input-group">
-                          <span class="input-group-addon"><i class="fa fa-id-badge"></i></span>
-                          {!! Form::text('contact_id', null, ['class' => 'form-control','placeholder' => __('lang_v1.contact_id')]); !!}
-                      </div>
-                      <p class="help-block">@lang('lang_v1.leave_empty_to_autogenerate')</p>
-                  </div>
-              </div>
-              <div class="col-md-3">
-                  <div class="form-group">
-                      {!! Form::label('customer_group_id', __('lang_v1.customer_group') . ':') !!}
-                      <div class="input-group">
-                          <span class="input-group-addon"><i class="fa fa-users"></i></span>
-                          {!! Form::select('customer_group_id', $customer_groups, '', ['class' => 'form-control']); !!}
-                      </div>
-                  </div>
-              </div>
-          </div>
-          
-          <div class="row">
-              <div class="col-md-4 inline_business" style="display: none;">
-                  <div class="form-group">
-                      {!! Form::label('supplier_business_name', __('business.business_name') . ':') !!}
-                      <div class="input-group">
-                          <span class="input-group-addon"><i class="fa fa-briefcase"></i></span>
-                          {!! Form::text('supplier_business_name', null, ['class' => 'form-control', 'placeholder' => __('business.business_name')]); !!}
-                      </div>
-                  </div>
-              </div>
-          </div>
-          
-          <div class="row">
-              <div class="col-md-3 inline_individual">
-                  <div class="form-group">
-                      {!! Form::label('prefix', __('business.prefix') . ':') !!}
-                      {!! Form::text('prefix', null, ['class' => 'form-control', 'placeholder' => __('business.prefix_placeholder')]); !!}
-                  </div>
-              </div>
-              <div class="col-md-3 inline_individual">
-                  <div class="form-group">
-                      {!! Form::label('first_name', __('business.first_name') . ':*') !!}
-                      {!! Form::text('first_name', null, ['class' => 'form-control', 'required', 'placeholder' => __('business.first_name')]); !!}
-                  </div>
-              </div>
-              <div class="col-md-3 inline_individual">
-                  <div class="form-group">
-                      {!! Form::label('middle_name', __('lang_v1.middle_name') . ':') !!}
-                      {!! Form::text('middle_name', null, ['class' => 'form-control', 'placeholder' => __('lang_v1.middle_name')]); !!}
-                  </div>
-              </div>
-              <div class="col-md-3 inline_individual">
-                  <div class="form-group">
-                      {!! Form::label('last_name', __('business.last_name') . ':') !!}
-                      {!! Form::text('last_name', null, ['class' => 'form-control', 'placeholder' => __('business.last_name')]); !!}
-                  </div>
-              </div>
-          </div>
-          
-          <div class="row">
-              <div class="col-md-3">
-                  <div class="form-group">
-                      {!! Form::label('mobile', __('contact.mobile') . ':*') !!}
-                      <div class="input-group">
-                          <span class="input-group-addon"><i class="fa fa-mobile"></i></span>
-                          {!! Form::text('mobile', null, ['class' => 'form-control', 'required', 'placeholder' => __('contact.mobile')]); !!}
-                      </div>
-                  </div>
-              </div>
-              <div class="col-md-3">
-                  <div class="form-group">
-                      {!! Form::label('alternate_number', __('contact.alternate_contact_number') . ':') !!}
-                      <div class="input-group">
-                          <span class="input-group-addon"><i class="fa fa-phone"></i></span>
-                          {!! Form::text('alternate_number', null, ['class' => 'form-control', 'placeholder' => __('contact.alternate_contact_number')]); !!}
-                      </div>
-                  </div>
-              </div>
-              <div class="col-md-3">
-                  <div class="form-group">
-                      {!! Form::label('landline', __('contact.landline') . ':') !!}
-                      <div class="input-group">
-                          <span class="input-group-addon"><i class="fa fa-phone"></i></span>
-                          {!! Form::text('landline', null, ['class' => 'form-control', 'placeholder' => __('contact.landline')]); !!}
-                      </div>
-                  </div>
-              </div>
-              <div class="col-md-3">
-                  <div class="form-group">
-                      {!! Form::label('email', __('business.email') . ':') !!}
-                      <div class="input-group">
-                          <span class="input-group-addon"><i class="fa fa-envelope"></i></span>
-                          {!! Form::email('email', null, ['class' => 'form-control','placeholder' => __('business.email')]); !!}
-                      </div>
-                  </div>
-              </div>
-          </div>
-          
-          <div class="row">
-              <div class="col-sm-4 inline_individual">
-                  <div class="form-group">
-                      {!! Form::label('dob', __('lang_v1.dob') . ':') !!}
-                      <div class="input-group">
-                          <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
-                          {!! Form::text('dob', null, ['class' => 'form-control inline-dob-picker','placeholder' => __('lang_v1.dob'), 'readonly']); !!}
-                      </div>
-                  </div>
-              </div>
-              <div class="col-md-6">
-                  <div class="form-group">
-                      {!! Form::label('relationship_type', 'Relationship:') !!}
-                      <div class="input-group">
-                          <span class="input-group-addon"><i class="fa fa-users"></i></span>
-                          {!! Form::select('relationship_type', [
-                              '' => 'Select Relationship',
-                              'spouse' => 'Spouse',
-                              'child' => 'Child',
-                              'parent' => 'Parent',
-                              'sibling' => 'Sibling',
-                              'relative' => 'Other Relative',
-                              'friend' => 'Friend'
-                          ], '', ['class' => 'form-control']); !!}
-                      </div>
-                      <p class="help-block" style="color: #48b2ee;">
-                          <i class="fa fa-info-circle"></i> Relationship to the current customer
-                      </p>
-                  </div>
-              </div>
-          </div>
-          
-          <div class="row">
-              <div class="col-md-12">
-                  <hr/>
-                  <h5 style="color: #48b2ee;"><i class="fa fa-eye"></i> Lens Prescription</h5>
-              </div>
-          </div>
-          
-          <div class="row">
-              <div class="col-md-12">
-                  <div class="table-responsive">
-                      <table class="table table-bordered" style="background-color: #fff;">
-                          <thead style="background-color: #48b2ee; color: white;">
-                              <tr>
-                                  <th style="width: 15%;">Eye</th>
-                                  <th style="width: 15%;">Type</th>
-                                  <th style="width: 23%;">Sph.</th>
-                                  <th style="width: 23%;">Cyl.</th>
-                                  <th style="width: 24%;">Axis</th>
-                              </tr>
-                          </thead>
-                          <tbody>
-                              <tr>
-                                  <td rowspan="2" style="vertical-align: middle; font-weight: bold; background-color: #f8f9fa;">
-                                      <i class="fa fa-arrow-right" style="color: #48b2ee;"></i> RIGHT EYE
-                                  </td>
-                                  <td style="font-weight: 600;">Distance</td>
-                                  <td>{!! Form::text('custom_field1', null, ['class' => 'form-control', 'placeholder' => 'e.g., -2.00']); !!}</td>
-                                  <td>{!! Form::text('custom_field2', null, ['class' => 'form-control', 'placeholder' => 'e.g., -1.00']); !!}</td>
-                                  <td>{!! Form::text('custom_field3', null, ['class' => 'form-control', 'placeholder' => 'e.g., 180']); !!}</td>
-                              </tr>
-                              <tr>
-                                  <td style="font-weight: 600;">Near</td>
-                                  <td>{!! Form::text('custom_field4', null, ['class' => 'form-control', 'placeholder' => 'e.g., -2.00']); !!}</td>
-                                  <td>{!! Form::text('custom_field5', null, ['class' => 'form-control', 'placeholder' => 'e.g., -1.00']); !!}</td>
-                                  <td>{!! Form::text('custom_field6', null, ['class' => 'form-control', 'placeholder' => 'e.g., 180']); !!}</td>
-                              </tr>
-                              <tr>
-                                  <td rowspan="2" style="vertical-align: middle; font-weight: bold; background-color: #f8f9fa;">
-                                      <i class="fa fa-arrow-left" style="color: #48b2ee;"></i> LEFT EYE
-                                  </td>
-                                  <td style="font-weight: 600;">Distance</td>
-                                  <td>{!! Form::text('custom_field7', null, ['class' => 'form-control', 'placeholder' => 'e.g., -2.00']); !!}</td>
-                                  <td>{!! Form::text('custom_field8', null, ['class' => 'form-control', 'placeholder' => 'e.g., -1.00']); !!}</td>
-                                  <td>{!! Form::text('custom_field9', null, ['class' => 'form-control', 'placeholder' => 'e.g., 180']); !!}</td>
-                              </tr>
-                              <tr>
-                                  <td style="font-weight: 600;">Near</td>
-                                  <td>{!! Form::text('custom_field10', null, ['class' => 'form-control', 'placeholder' => 'e.g., -2.00']); !!}</td>
-                                  <td>{!! Form::text('shipping_custom_field_details[shipping_custom_field_1]', null, ['class' => 'form-control', 'placeholder' => 'e.g., -1.00']); !!}</td>
-                                  <td>{!! Form::text('shipping_custom_field_details[shipping_custom_field_2]', null, ['class' => 'form-control', 'placeholder' => 'e.g., 180']); !!}</td>
-                              </tr>
-                          </tbody>
-                      </table>
-                  </div>
-              </div>
-          </div>
-          
-          {!! Form::hidden('customer_group_id_link', null, ['id' => 'new_customer_group_id']) !!}
-          
-          <div class="row" style="margin-top: 20px;">
-              <div class="col-md-12">
-                  <button type="submit" class="btn btn-primary">
-                      <i class="fa fa-save"></i> Save Related Customer
-                  </button>
-                  <button type="button" class="btn btn-default" id="cancel-add-customer-2">
-                      <i class="fa fa-times"></i> Cancel
-                  </button>
-              </div>
-          </div>
-          
-          {!! Form::close() !!}
-          
+          <iframe id="add-customer-iframe" src="" style="width: 100%; height: 600px; border: none;"></iframe>
       </div>
       
       <div class="clearfix"></div>
@@ -820,92 +595,48 @@ $(document).on('click', '.edit-related-customer', function(e) {
     }
 });
 
-// Handle "Add Another Customer" button in Related Customers section AND the one after prescription
-$(document).on('click', '.add-related-customer, #toggle-add-customer-form', function(e) {
+// Handle "Add Another Customer" button in Related Customers section
+$(document).on('click', '.add-related-customer', function(e) {
     e.preventDefault();
     e.stopPropagation();
     
+    // Get the current contact's group ID
+    var groupId = $('#customer_group_id_link').val();
+    
+    // Open in popup window
+    window.open('/contacts/create?quick_add=1&group_id=' + groupId, '_blank', 'width=800,height=600');
+});
+
+// Handle inline add customer form toggle
+$(document).on('click', '#toggle-add-customer-form', function(e) {
+    e.preventDefault();
     var $form = $('#inline-add-customer-form');
+    var $iframe = $('#add-customer-iframe');
     
     if ($form.is(':visible')) {
         $form.slideUp();
     } else {
-        // Get group ID and set it in the form
+        // Get group ID and load the form
         var groupId = $('#customer_group_id_link').val();
-        $('#new_customer_group_id').val(groupId);
-        
-        // Scroll to the form
-        $('html, body').animate({
-            scrollTop: $form.offset().top - 100
-        }, 500);
-        
+        $iframe.attr('src', '/contacts/create?quick_add=1&group_id=' + groupId + '&inline=1');
         $form.slideDown();
-        
-        // Initialize datepicker for inline form
-        if (typeof $.fn.datepicker !== 'undefined') {
-            $('.inline-dob-picker').datepicker({
-                autoclose: true,
-                endDate: 'today',
-                format: 'mm/dd/yyyy'
-            });
-        }
     }
 });
 
-// Handle individual/business toggle in inline form
-$(document).on('change', 'input[name="contact_type_radio"]', function() {
-    if ($(this).val() === 'individual') {
-        $('.inline_individual').show();
-        $('.inline_business').hide();
-    } else {
-        $('.inline_individual').hide();
-        $('.inline_business').show();
-    }
-});
-
-// Handle cancel buttons
-$(document).on('click', '#cancel-add-customer, #cancel-add-customer-2', function(e) {
+// Handle cancel button
+$(document).on('click', '#cancel-add-customer', function(e) {
     e.preventDefault();
     $('#inline-add-customer-form').slideUp();
-    $('#quick_add_contact_form')[0].reset();
-    $('.inline_individual').show();
-    $('.inline_business').hide();
+    $('#add-customer-iframe').attr('src', '');
 });
 
-// Handle form submission
-$(document).on('submit', '#quick_add_contact_form', function(e) {
-    e.preventDefault();
-    
-    var $submitBtn = $(this).find('button[type="submit"]');
-    $submitBtn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Saving...');
-    
-    $.ajax({
-        method: 'POST',
-        url: $(this).attr('action'),
-        dataType: 'json',
-        data: $(this).serialize(),
-        success: function(result) {
-            if (result.success) {
-                toastr.success(result.msg);
-                $('#inline-add-customer-form').slideUp();
-                $('#quick_add_contact_form')[0].reset();
-                // Reload the page to show new related customer
-                setTimeout(function() {
-                    location.reload();
-                }, 1000);
-            } else {
-                toastr.error(result.msg);
-                $submitBtn.prop('disabled', false).html('<i class="fa fa-save"></i> Save Related Customer');
-            }
-        },
-        error: function(xhr) {
-            var errorMsg = 'Error saving customer';
-            if (xhr.responseJSON && xhr.responseJSON.message) {
-                errorMsg = xhr.responseJSON.message;
-            }
-            toastr.error(errorMsg);
-            $submitBtn.prop('disabled', false).html('<i class="fa fa-save"></i> Save Related Customer');
-        }
-    });
+// Listen for message from iframe when customer is saved
+window.addEventListener('message', function(event) {
+    if (event.data === 'customer-saved') {
+        $('#inline-add-customer-form').slideUp();
+        $('#add-customer-iframe').attr('src', '');
+        // Reload the page to show new related customer
+        location.reload();
+    }
 });
 </script>
