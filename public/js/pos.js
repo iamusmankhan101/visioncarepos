@@ -691,21 +691,26 @@ $(document).ready(function() {
 
         // Check if customer has related customers
         var customerId = $('#customer_id').val();
+        console.log('Customer ID:', customerId);
         if (customerId && customerId != '') {
             $.ajax({
                 url: '/contacts/' + customerId + '/related-customers',
                 method: 'GET',
                 dataType: 'json',
                 success: function(response) {
+                    console.log('Related customers response:', response);
                     if (response.success && response.has_related && response.customers.length > 1) {
                         // Show related customers modal
+                        console.log('Showing related customers modal');
                         showRelatedCustomersModal(response.customers);
                     } else {
+                        console.log('No related customers, showing payment modal');
                         // No related customers, show payment modal directly
                         $('#modal_payment').modal('show');
                     }
                 },
-                error: function() {
+                error: function(xhr, status, error) {
+                    console.error('Error fetching related customers:', error, xhr.responseText);
                     // On error, show payment modal directly
                     $('#modal_payment').modal('show');
                 }
@@ -717,6 +722,7 @@ $(document).ready(function() {
     
     // Function to show related customers modal
     function showRelatedCustomersModal(customers) {
+        console.log('Building modal for customers:', customers);
         var html = '';
         customers.forEach(function(customer) {
             var isCurrentClass = customer.is_current ? 'border-primary' : '';
