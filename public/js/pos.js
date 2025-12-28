@@ -678,9 +678,6 @@ $(document).ready(function() {
 
     //Finalize invoice, open payment modal
     $('button#pos-finalize').click(function() {
-        console.log('POS Finalize button clicked!');
-        alert('Button clicked! Check console for logs.');
-        
         //Check if product is present or not.
         if ($('table#pos_table tbody').find('.product_row').length <= 0) {
             toastr.warning(LANG.no_products_added);
@@ -697,7 +694,6 @@ $(document).ready(function() {
 
         // Check if customer has related customers
         var customerId = $('#customer_id').val();
-        console.log('Customer ID:', customerId);
         if (customerId && customerId != '') {
             $.ajax({
                 url: '/contacts/' + customerId + '/related-customers',
@@ -3665,8 +3661,26 @@ $(document).on('click', '.btn-select-customer, .related-customer-item', function
     console.log('Callback exists:', !!window.relatedCustomerCallback);
     console.log('Callback type:', typeof window.relatedCustomerCallback);
     
-    // Update the customer dropdown
-    $('#customer_id').val(customerId).trigger('change');
+    // Update the customer dropdown (Select2)
+    var $customerSelect = $('#customer_id');
+    
+    // Check if the option exists, if not create it
+    if ($customerSelect.find("option[value='" + customerId + "']").length === 0) {
+        // Get customer name from the modal
+        var customerName = $(this).find('h5').text().trim();
+        // Remove the "Currently Selected" badge text if present
+        customerName = customerName.replace('Currently Selected', '').trim();
+        
+        // Create new option
+        var newOption = new Option(customerName, customerId, true, true);
+        $customerSelect.append(newOption);
+    } else {
+        // Option exists, just select it
+        $customerSelect.val(customerId);
+    }
+    
+    // Trigger change event for Select2
+    $customerSelect.trigger('change');
     
     // Close related customers modal
     $('#related_customers_modal').modal('hide');
