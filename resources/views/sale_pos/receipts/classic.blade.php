@@ -2,11 +2,13 @@
 
 <div class="row" style="color: #000000 !important;">
 		<!-- Logo -->
+		@if(!empty($receipt_details->logo))
+			<div class="col-xs-12 text-center">
+				<img style="max-height: 120px; width: auto; margin-bottom: 10px;" src="{{$receipt_details->logo}}" class="img img-responsive center-block">
+			</div>
+		@endif
+		
 		@if(empty($receipt_details->letter_head))
-			@if(!empty($receipt_details->logo))
-				<img style="max-height: 120px; width: auto;" src="{{$receipt_details->logo}}" class="img img-responsive center-block">
-			@endif
-
 			<!-- Header text -->
 			@if(!empty($receipt_details->header_text))
 				<div class="col-xs-12">
