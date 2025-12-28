@@ -8,49 +8,53 @@
         <i class="fa fa-eye"></i> Prescription Details
     </h5>
     
-    {{-- RIGHT EYE --}}
-    <div style="margin-bottom: 15px;">
-        <strong style="color: #333;"><i class="fa fa-arrow-right"></i> RIGHT EYE</strong>
-        <table class="table table-condensed table-bordered" style="margin-top: 5px;">
-            <tr>
-                <th style="width: 20%; background-color: #fff;">Distance</th>
-                <td>
-                    <strong>Sph:</strong> {{ $contact->custom_field1 ?? '-' }} | 
-                    <strong>Cyl:</strong> {{ $contact->custom_field2 ?? '-' }} | 
-                    <strong>Axis:</strong> {{ $contact->custom_field3 ?? '-' }}
-                </td>
-            </tr>
-            <tr>
-                <th style="background-color: #fff;">Near</th>
-                <td>
-                    <strong>Sph:</strong> {{ $contact->custom_field4 ?? '-' }} | 
-                    <strong>Cyl:</strong> {{ $contact->custom_field5 ?? '-' }} | 
-                    <strong>Axis:</strong> {{ $contact->custom_field6 ?? '-' }}
-                </td>
-            </tr>
-        </table>
-    </div>
-    
-    {{-- LEFT EYE --}}
-    <div>
-        <strong style="color: #333;"><i class="fa fa-arrow-left"></i> LEFT EYE</strong>
-        <table class="table table-condensed table-bordered" style="margin-top: 5px;">
-            <tr>
-                <th style="width: 20%; background-color: #fff;">Distance</th>
-                <td>
-                    <strong>Sph:</strong> {{ $contact->custom_field7 ?? '-' }} | 
-                    <strong>Cyl:</strong> {{ $contact->custom_field8 ?? '-' }} | 
-                    <strong>Axis:</strong> {{ $contact->custom_field9 ?? '-' }}
-                </td>
-            </tr>
-            <tr>
-                <th style="background-color: #fff;">Near</th>
-                <td>
-                    <strong>Sph:</strong> {{ $contact->custom_field10 ?? '-' }} | 
-                    <strong>Cyl:</strong> {{ !empty($contact->shipping_custom_field_details['shipping_custom_field_1']) ? $contact->shipping_custom_field_details['shipping_custom_field_1'] : '-' }} | 
-                    <strong>Axis:</strong> {{ !empty($contact->shipping_custom_field_details['shipping_custom_field_2']) ? $contact->shipping_custom_field_details['shipping_custom_field_2'] : '-' }}
-                </td>
-            </tr>
+    <div class="table-responsive">
+        <table class="table table-bordered" style="background-color: #fff; margin-bottom: 0;">
+            <thead style="background-color: #48b2ee; color: white;">
+                <tr>
+                    <th style="width: 15%;">Eye</th>
+                    <th style="width: 15%;">Type</th>
+                    <th style="width: 23%;">Sph.</th>
+                    <th style="width: 23%;">Cyl.</th>
+                    <th style="width: 24%;">Axis</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- RIGHT EYE - Distance -->
+                <tr>
+                    <td rowspan="2" style="vertical-align: middle; font-weight: bold; background-color: #f8f9fa;">
+                        <i class="fa fa-arrow-right" style="color: #48b2ee;"></i> RIGHT EYE
+                    </td>
+                    <td style="font-weight: 600;">Distance</td>
+                    <td>{{ $contact->custom_field1 ?? '-' }}</td>
+                    <td>{{ $contact->custom_field2 ?? '-' }}</td>
+                    <td>{{ $contact->custom_field3 ?? '-' }}</td>
+                </tr>
+                <!-- RIGHT EYE - Near -->
+                <tr>
+                    <td style="font-weight: 600;">Near</td>
+                    <td>{{ $contact->custom_field4 ?? '-' }}</td>
+                    <td>{{ $contact->custom_field5 ?? '-' }}</td>
+                    <td>{{ $contact->custom_field6 ?? '-' }}</td>
+                </tr>
+                <!-- LEFT EYE - Distance -->
+                <tr>
+                    <td rowspan="2" style="vertical-align: middle; font-weight: bold; background-color: #f8f9fa;">
+                        <i class="fa fa-arrow-left" style="color: #48b2ee;"></i> LEFT EYE
+                    </td>
+                    <td style="font-weight: 600;">Distance</td>
+                    <td>{{ $contact->custom_field7 ?? '-' }}</td>
+                    <td>{{ $contact->custom_field8 ?? '-' }}</td>
+                    <td>{{ $contact->custom_field9 ?? '-' }}</td>
+                </tr>
+                <!-- LEFT EYE - Near -->
+                <tr>
+                    <td style="font-weight: 600;">Near</td>
+                    <td>{{ $contact->custom_field10 ?? '-' }}</td>
+                    <td>{{ !empty($contact->shipping_custom_field_details['shipping_custom_field_1']) ? $contact->shipping_custom_field_details['shipping_custom_field_1'] : '-' }}</td>
+                    <td>{{ !empty($contact->shipping_custom_field_details['shipping_custom_field_2']) ? $contact->shipping_custom_field_details['shipping_custom_field_2'] : '-' }}</td>
+                </tr>
+            </tbody>
         </table>
     </div>
 </div>

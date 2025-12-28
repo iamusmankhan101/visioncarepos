@@ -395,116 +395,64 @@
       <div class="clearfix"></div>
       <div class="col-md-12">
         <hr/>
+        <h4 class="tw-font-semibold tw-text-gray-800 tw-mb-4" style="color: #48b2ee;">
+          <i class="fa fa-eye"></i> Lens Prescription
+        </h4>
       </div>
       @php
         $custom_labels = json_decode(session('business.custom_labels'), true);
       @endphp
       
-      {{-- PRESCRIPTION FORM - RIGHT EYE --}}
+      <!-- PRESCRIPTION TABLE -->
       <div class="col-md-12">
-        <div style="background-color: #f8f9fa; padding: 10px; border-radius: 5px; margin-bottom: 15px;">
-          <h5 class="tw-font-semibold tw-text-gray-700 tw-mb-3">
-            <i class="fa fa-arrow-right" style="color: #48b2ee;"></i> RIGHT EYE
-          </h5>
-          <div class="row">
-            <div class="col-md-12 tw-mb-2">
-              <strong style="color: #6c757d;">Distance</strong>
-            </div>
-            <div class="col-md-4">
-              <div class="form-group">
-                  {!! Form::label('right_sph_distance', 'Sph.:') !!}
-                  {!! Form::text('custom_field1', $contact->custom_field1, ['class' => 'form-control', 'placeholder' => 'e.g., -2.00']); !!}
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="form-group">
-                  {!! Form::label('right_cyl_distance', 'Cyl.:') !!}
-                  {!! Form::text('custom_field2', $contact->custom_field2, ['class' => 'form-control', 'placeholder' => 'e.g., -1.00']); !!}
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="form-group">
-                  {!! Form::label('right_axis_distance', 'Axis:') !!}
-                  {!! Form::text('custom_field3', $contact->custom_field3, ['class' => 'form-control', 'placeholder' => 'e.g., 180']); !!}
-              </div>
-            </div>
-            
-            <div class="col-md-12 tw-mb-2 tw-mt-2">
-              <strong style="color: #6c757d;">Near</strong>
-            </div>
-            <div class="col-md-4">
-              <div class="form-group">
-                  {!! Form::label('right_sph_near', 'Sph.:') !!}
-                  {!! Form::text('custom_field4', $contact->custom_field4, ['class' => 'form-control', 'placeholder' => 'e.g., -2.00']); !!}
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="form-group">
-                  {!! Form::label('right_cyl_near', 'Cyl.:') !!}
-                  {!! Form::text('custom_field5', $contact->custom_field5, ['class' => 'form-control', 'placeholder' => 'e.g., -1.00']); !!}
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="form-group">
-                  {!! Form::label('right_axis_near', 'Axis:') !!}
-                  {!! Form::text('custom_field6', $contact->custom_field6, ['class' => 'form-control', 'placeholder' => 'e.g., 180']); !!}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      {{-- PRESCRIPTION FORM - LEFT EYE --}}
-      <div class="col-md-12">
-        <div style="background-color: #f8f9fa; padding: 10px; border-radius: 5px; margin-bottom: 15px;">
-          <h5 class="tw-font-semibold tw-text-gray-700 tw-mb-3">
-            <i class="fa fa-arrow-left" style="color: #48b2ee;"></i> LEFT EYE
-          </h5>
-          <div class="row">
-            <div class="col-md-12 tw-mb-2">
-              <strong style="color: #6c757d;">Distance</strong>
-            </div>
-            <div class="col-md-4">
-              <div class="form-group">
-                  {!! Form::label('left_sph_distance', 'Sph.:') !!}
-                  {!! Form::text('custom_field7', $contact->custom_field7, ['class' => 'form-control', 'placeholder' => 'e.g., -2.00']); !!}
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="form-group">
-                  {!! Form::label('left_cyl_distance', 'Cyl.:') !!}
-                  {!! Form::text('custom_field8', $contact->custom_field8, ['class' => 'form-control', 'placeholder' => 'e.g., -1.00']); !!}
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="form-group">
-                  {!! Form::label('left_axis_distance', 'Axis:') !!}
-                  {!! Form::text('custom_field9', $contact->custom_field9, ['class' => 'form-control', 'placeholder' => 'e.g., 180']); !!}
-              </div>
-            </div>
-            
-            <div class="col-md-12 tw-mb-2 tw-mt-2">
-              <strong style="color: #6c757d;">Near</strong>
-            </div>
-            <div class="col-md-4">
-              <div class="form-group">
-                  {!! Form::label('left_sph_near', 'Sph.:') !!}
-                  {!! Form::text('custom_field10', $contact->custom_field10, ['class' => 'form-control', 'placeholder' => 'e.g., -2.00']); !!}
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="form-group">
-                  {!! Form::label('left_cyl_near', 'Cyl.:') !!}
-                  {!! Form::text('shipping_custom_field_details[shipping_custom_field_1]', !empty($contact->shipping_custom_field_details['shipping_custom_field_1']) ? $contact->shipping_custom_field_details['shipping_custom_field_1'] : null, ['class' => 'form-control', 'placeholder' => 'e.g., -1.00']); !!}
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="form-group">
-                  {!! Form::label('left_axis_near', 'Axis:') !!}
-                  {!! Form::text('shipping_custom_field_details[shipping_custom_field_2]', !empty($contact->shipping_custom_field_details['shipping_custom_field_2']) ? $contact->shipping_custom_field_details['shipping_custom_field_2'] : null, ['class' => 'form-control', 'placeholder' => 'e.g., 180']); !!}
-              </div>
-            </div>
-          </div>
+        <div class="table-responsive">
+          <table class="table table-bordered" style="background-color: #fff;">
+            <thead style="background-color: #48b2ee; color: white;">
+              <tr>
+                <th style="width: 15%;">Eye</th>
+                <th style="width: 15%;">Type</th>
+                <th style="width: 23%;">Sph.</th>
+                <th style="width: 23%;">Cyl.</th>
+                <th style="width: 24%;">Axis</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- RIGHT EYE - Distance -->
+              <tr>
+                <td rowspan="2" style="vertical-align: middle; font-weight: bold; background-color: #f8f9fa;">
+                  <i class="fa fa-arrow-right" style="color: #48b2ee;"></i> RIGHT EYE
+                </td>
+                <td style="font-weight: 600;">Distance</td>
+                <td>{!! Form::text('custom_field1', $contact->custom_field1, ['class' => 'form-control', 'placeholder' => 'e.g., -2.00']); !!}</td>
+                <td>{!! Form::text('custom_field2', $contact->custom_field2, ['class' => 'form-control', 'placeholder' => 'e.g., -1.00']); !!}</td>
+                <td>{!! Form::text('custom_field3', $contact->custom_field3, ['class' => 'form-control', 'placeholder' => 'e.g., 180']); !!}</td>
+              </tr>
+              <!-- RIGHT EYE - Near -->
+              <tr>
+                <td style="font-weight: 600;">Near</td>
+                <td>{!! Form::text('custom_field4', $contact->custom_field4, ['class' => 'form-control', 'placeholder' => 'e.g., -2.00']); !!}</td>
+                <td>{!! Form::text('custom_field5', $contact->custom_field5, ['class' => 'form-control', 'placeholder' => 'e.g., -1.00']); !!}</td>
+                <td>{!! Form::text('custom_field6', $contact->custom_field6, ['class' => 'form-control', 'placeholder' => 'e.g., 180']); !!}</td>
+              </tr>
+              <!-- LEFT EYE - Distance -->
+              <tr>
+                <td rowspan="2" style="vertical-align: middle; font-weight: bold; background-color: #f8f9fa;">
+                  <i class="fa fa-arrow-left" style="color: #48b2ee;"></i> LEFT EYE
+                </td>
+                <td style="font-weight: 600;">Distance</td>
+                <td>{!! Form::text('custom_field7', $contact->custom_field7, ['class' => 'form-control', 'placeholder' => 'e.g., -2.00']); !!}</td>
+                <td>{!! Form::text('custom_field8', $contact->custom_field8, ['class' => 'form-control', 'placeholder' => 'e.g., -1.00']); !!}</td>
+                <td>{!! Form::text('custom_field9', $contact->custom_field9, ['class' => 'form-control', 'placeholder' => 'e.g., 180']); !!}</td>
+              </tr>
+              <!-- LEFT EYE - Near -->
+              <tr>
+                <td style="font-weight: 600;">Near</td>
+                <td>{!! Form::text('custom_field10', $contact->custom_field10, ['class' => 'form-control', 'placeholder' => 'e.g., -2.00']); !!}</td>
+                <td>{!! Form::text('shipping_custom_field_details[shipping_custom_field_1]', !empty($contact->shipping_custom_field_details['shipping_custom_field_1']) ? $contact->shipping_custom_field_details['shipping_custom_field_1'] : null, ['class' => 'form-control', 'placeholder' => 'e.g., -1.00']); !!}</td>
+                <td>{!! Form::text('shipping_custom_field_details[shipping_custom_field_2]', !empty($contact->shipping_custom_field_details['shipping_custom_field_2']) ? $contact->shipping_custom_field_details['shipping_custom_field_2'] : null, ['class' => 'form-control', 'placeholder' => 'e.g., 180']); !!}</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
       
