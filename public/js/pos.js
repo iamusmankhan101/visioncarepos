@@ -3655,11 +3655,19 @@ function showRelatedCustomersModal(customers, callback) {
 // Handle customer selection from related customers modal
 $(document).on('click', '.btn-select-customer, .related-customer-item', function(e) {
     e.preventDefault();
+    e.stopPropagation(); // Prevent event bubbling
+    
     var customerId = $(this).data('customer-id');
     
     console.log('Customer selected:', customerId);
     console.log('Callback exists:', !!window.relatedCustomerCallback);
     console.log('Callback type:', typeof window.relatedCustomerCallback);
+    
+    // Prevent multiple clicks
+    if ($(this).hasClass('processing')) {
+        return false;
+    }
+    $(this).addClass('processing');
     
     // Update the customer dropdown (Select2)
     var $customerSelect = $('#customer_id');
