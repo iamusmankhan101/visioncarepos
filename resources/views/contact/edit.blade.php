@@ -549,6 +549,15 @@ $(document).on('click', '.edit-related-customer', function() {
                 $('body').append($newModal);
                 $newModal.modal('show');
                 
+                // Auto-expand "More Info" section after modal is shown
+                $newModal.on('shown.bs.modal', function() {
+                    // Click the "More Info" button to show prescription data
+                    var $moreBtn = $newModal.find('.more_btn');
+                    if ($moreBtn.length > 0) {
+                        $moreBtn.trigger('click');
+                    }
+                });
+                
                 // Remove modal from DOM when closed
                 $newModal.on('hidden.bs.modal', function() {
                     $(this).remove();
