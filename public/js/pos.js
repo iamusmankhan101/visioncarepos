@@ -3661,19 +3661,28 @@ $(document).on('click', '.btn-select-customer, .related-customer-item', function
     e.preventDefault();
     var customerId = $(this).data('customer-id');
     
+    console.log('Customer selected:', customerId);
+    console.log('Callback exists:', !!window.relatedCustomerCallback);
+    console.log('Callback type:', typeof window.relatedCustomerCallback);
+    
     // Update the customer dropdown
     $('#customer_id').val(customerId).trigger('change');
     
     // Close related customers modal
     $('#related_customers_modal').modal('hide');
     
+    // Store callback reference before timeout
+    var callback = window.relatedCustomerCallback;
+    
     // Execute callback if exists (for express checkout)
-    if (window.relatedCustomerCallback && typeof window.relatedCustomerCallback === 'function') {
+    if (callback && typeof callback === 'function') {
+        console.log('Executing callback for express checkout');
         setTimeout(function() {
-            window.relatedCustomerCallback();
+            callback();
             window.relatedCustomerCallback = null;
         }, 300);
     } else {
+        console.log('No callback, showing payment modal');
         // Show payment modal after a short delay (for multiple pay)
         setTimeout(function() {
             $('#modal_payment').modal('show');
