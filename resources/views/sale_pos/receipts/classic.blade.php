@@ -2,13 +2,11 @@
 
 <div class="row" style="color: #000000 !important;">
 		<!-- Logo -->
-		@if(!empty($receipt_details->logo))
-			<div class="col-xs-12 text-center">
-				<img style="max-height: 120px; width: auto; margin-bottom: 10px;" src="{{$receipt_details->logo}}" class="img img-responsive center-block">
-			</div>
-		@endif
-		
 		@if(empty($receipt_details->letter_head))
+			@if(!empty($receipt_details->logo))
+				<img style="max-height: 120px; width: auto;" src="{{$receipt_details->logo}}" class="img img-responsive center-block">
+			@endif
+
 			<!-- Header text -->
 			@if(!empty($receipt_details->header_text))
 				<div class="col-xs-12">
@@ -71,6 +69,7 @@
 					<b>{{ $receipt_details->tax_label2 }}</b> {{ $receipt_details->tax_info2 }}
 				@endif
 				</p>
+			@endif
 
 
 			<!-- Title of receipt -->
@@ -79,7 +78,6 @@
 					{!! $receipt_details->invoice_heading !!}
 				</h3>
 			@endif
-		@endif
 		</div>
 		@if(!empty($receipt_details->letter_head))
 			<div class="col-xs-12 text-center">
@@ -276,10 +274,13 @@
 {{-- Prescription Form - Side by Side Layout --}}
 @php
 	$contact_id = $receipt_details->contact_id ?? null;
+	$contact = null;
 	if($contact_id) {
-		$contact = \App\Contact::find($contact_id);
-	} else {
-		$contact = null;
+		try {
+			$contact = \App\Contact::find($contact_id);
+		} catch (\Exception $e) {
+			$contact = null;
+		}
 	}
 @endphp
 
@@ -302,15 +303,15 @@
 						<tbody>
 							<tr>
 								<td style="font-weight: 600;">Distance</td>
-								<td style="text-align: center;">{{ $contact->custom_field1 ?? '' }}</td>
-								<td style="text-align: center;">{{ $contact->custom_field2 ?? '' }}</td>
-								<td style="text-align: center;">{{ $contact->custom_field3 ?? '' }}</td>
+								<td style="text-align: center;">{{ optional($contact)->custom_field1 ?? '' }}</td>
+								<td style="text-align: center;">{{ optional($contact)->custom_field2 ?? '' }}</td>
+								<td style="text-align: center;">{{ optional($contact)->custom_field3 ?? '' }}</td>
 							</tr>
 							<tr>
 								<td style="font-weight: 600;">Near</td>
-								<td style="text-align: center;">{{ $contact->custom_field4 ?? '' }}</td>
-								<td style="text-align: center;">{{ $contact->custom_field5 ?? '' }}</td>
-								<td style="text-align: center;">{{ $contact->custom_field6 ?? '' }}</td>
+								<td style="text-align: center;">{{ optional($contact)->custom_field4 ?? '' }}</td>
+								<td style="text-align: center;">{{ optional($contact)->custom_field5 ?? '' }}</td>
+								<td style="text-align: center;">{{ optional($contact)->custom_field6 ?? '' }}</td>
 							</tr>
 						</tbody>
 					</table>
@@ -331,15 +332,15 @@
 						<tbody>
 							<tr>
 								<td style="font-weight: 600;">Distance</td>
-								<td style="text-align: center;">{{ $contact->custom_field7 ?? '' }}</td>
-								<td style="text-align: center;">{{ $contact->custom_field8 ?? '' }}</td>
-								<td style="text-align: center;">{{ $contact->custom_field9 ?? '' }}</td>
+								<td style="text-align: center;">{{ optional($contact)->custom_field7 ?? '' }}</td>
+								<td style="text-align: center;">{{ optional($contact)->custom_field8 ?? '' }}</td>
+								<td style="text-align: center;">{{ optional($contact)->custom_field9 ?? '' }}</td>
 							</tr>
 							<tr>
 								<td style="font-weight: 600;">Near</td>
-								<td style="text-align: center;">{{ $contact->custom_field10 ?? '' }}</td>
-								<td style="text-align: center;">{{ !empty($contact->shipping_custom_field_details['shipping_custom_field_1']) ? $contact->shipping_custom_field_details['shipping_custom_field_1'] : '' }}</td>
-								<td style="text-align: center;">{{ !empty($contact->shipping_custom_field_details['shipping_custom_field_2']) ? $contact->shipping_custom_field_details['shipping_custom_field_2'] : '' }}</td>
+								<td style="text-align: center;">{{ optional($contact)->custom_field10 ?? '' }}</td>
+								<td style="text-align: center;">{{ $contact && !empty($contact->shipping_custom_field_details['shipping_custom_field_1']) ? $contact->shipping_custom_field_details['shipping_custom_field_1'] : '' }}</td>
+								<td style="text-align: center;">{{ $contact && !empty($contact->shipping_custom_field_details['shipping_custom_field_2']) ? $contact->shipping_custom_field_details['shipping_custom_field_2'] : '' }}</td>
 							</tr>
 						</tbody>
 					</table>
