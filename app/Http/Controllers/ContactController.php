@@ -765,8 +765,33 @@ class ContactController extends Controller
             //Added check because $users is of no use if enable_contact_assign if false
             $users = config('constants.enable_contact_assign') ? User::forDropdown($business_id, false, false, false, true) : [];
 
+            // Load related customers based on custom fields containing negative IDs
+            $related_customers = [];
+            $custom_fields = [
+                'custom_field1', 'custom_field2', 'custom_field3', 'custom_field4', 'custom_field5',
+                'custom_field6', 'custom_field7', 'custom_field8', 'custom_field9', 'custom_field10'
+            ];
+            
+            foreach ($custom_fields as $field) {
+                $value = $contact->$field;
+                // Check if the value is a negative number (indicates related customer ID)
+                if (!empty($value) && is_numeric($value) && $value < 0) {
+                    $related_id = abs($value);
+                    $related_contact = Contact::where('business_id', $business_id)->find($related_id);
+                    if ($related_contact) {
+                        $related_customers[] = [
+                            'id' => $related_contact->id,
+                            'name' => $related_contact->name,
+                            'contact_id' => $related_contact->contact_id,
+                            'mobile' => $related_contact->mobile,
+                            'field' => $field
+                        ];
+                    }
+                }
+            }
+
             return view('contact.edit')
-                ->with(compact('contact', 'types', 'customer_groups', 'opening_balance', 'users'));
+                ->with(compact('contact', 'types', 'customer_groups', 'opening_balance', 'users', 'related_customers'));
         }
     }
 

@@ -1,0 +1,11 @@
+# Force PHP 8.1 or higher
+# Uncomment the line that matches your Hostinger PHP version
+
+# For PHP 8.1
+# AddHandler application/x-httpd-php81 .php
+
+# For PHP 8.2 (recommended)
+# AddHandler application/x-httpd-php82 .php
+
+# For PHP 8.3
+# AddHandler application/x-httpd-php83 .php

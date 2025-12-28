@@ -582,6 +582,48 @@
                 </div>
             @endfor
         @endif
+        
+        {{-- Related Customers Section --}}
+        @if(!empty($related_customers) && count($related_customers) > 0)
+            <div class="col-md-12"><hr style="border-top: 2px solid #48b2ee; margin: 20px 0;"/></div>
+            <div class="col-md-12">
+                <h4 style="color: #48b2ee; margin-bottom: 15px;">
+                    <i class="fa fa-users"></i> Related Customers
+                </h4>
+                <p style="color: #6c757d; font-size: 13px; margin-bottom: 15px;">
+                    <i class="fa fa-info-circle"></i> These customers are linked to this contact
+                </p>
+                
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped">
+                        <thead style="background-color: #f8f9fa;">
+                            <tr>
+                                <th>Contact ID</th>
+                                <th>Name</th>
+                                <th>Mobile</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($related_customers as $related)
+                                <tr>
+                                    <td>{{ $related['contact_id'] }}</td>
+                                    <td>{{ $related['name'] }}</td>
+                                    <td>{{ $related['mobile'] ?? 'N/A' }}</td>
+                                    <td>
+                                        <a href="{{ action([\App\Http\Controllers\ContactController::class, 'show'], [$related['id']]) }}" 
+                                           class="btn btn-xs btn-info" 
+                                           target="_blank">
+                                            <i class="fa fa-eye"></i> View
+                                        </a>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        @endif
     </div>
 </div>
     </div>

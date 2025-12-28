@@ -8,20 +8,44 @@
 
 ## Step 1: Prepare Your Files
 
-### Option A: Upload via FTP/File Manager
-1. Compress your entire project into a ZIP file (exclude `node_modules` and `vendor` folders to save time)
-2. Upload to your Hostinger account
-3. Extract in the root directory (usually `public_html` or `domains/yourdomain.com`)
+⚠️ **IMPORTANT**: If Hostinger's Git deployment fails with composer errors, use manual deployment instead.
 
-### Option B: Deploy via Git (Recommended)
+### Option A: Manual Upload (Recommended for First Time)
+1. Download your project from GitHub as ZIP
+2. Upload to Hostinger via FTP or File Manager
+3. Extract in your domain directory (e.g., `public_html`)
+
+### Option B: Deploy via Git + SSH
 1. SSH into your Hostinger account
 2. Navigate to your domain directory
 3. Clone your repository:
    ```bash
-   git clone <your-repo-url> .
+   git clone https://github.com/iamusmankhan101/visioncarepos.git .
    ```
 
-## Step 2: Install Dependencies
+### Option C: Hostinger Git Integration
+⚠️ May fail if PHP version is not 8.1+ or extensions are missing.
+See `HOSTINGER_TROUBLESHOOTING.md` if this fails.
+
+## Step 2: Set PHP Version (CRITICAL)
+
+Before installing dependencies, ensure PHP 8.1+ is active:
+
+### Via cPanel:
+1. Go to **"Select PHP Version"** or **"PHP Configuration"**
+2. Select **PHP 8.2** (recommended) or **PHP 8.1**
+3. Enable required extensions:
+   - mbstring, openssl, pdo, pdo_mysql, tokenizer, xml
+   - ctype, json, bcmath, fileinfo, gd, zip, curl
+4. Save changes
+
+### Via SSH (check version):
+```bash
+php -v
+```
+Should show PHP 8.1 or higher. If not, contact Hostinger support.
+
+## Step 3: Install Dependencies
 
 SSH into your hosting and run:
 ```bash
