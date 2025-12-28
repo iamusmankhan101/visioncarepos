@@ -398,90 +398,119 @@
       </div>
       @php
         $custom_labels = json_decode(session('business.custom_labels'), true);
-        $contact_custom_field1 = !empty($custom_labels['contact']['custom_field_1']) ? $custom_labels['contact']['custom_field_1'] : __('lang_v1.contact_custom_field1');
-        $contact_custom_field2 = !empty($custom_labels['contact']['custom_field_2']) ? $custom_labels['contact']['custom_field_2'] : __('lang_v1.contact_custom_field2');
-        $contact_custom_field3 = !empty($custom_labels['contact']['custom_field_3']) ? $custom_labels['contact']['custom_field_3'] : __('lang_v1.contact_custom_field3');
-        $contact_custom_field4 = !empty($custom_labels['contact']['custom_field_4']) ? $custom_labels['contact']['custom_field_4'] : __('lang_v1.contact_custom_field4');
-        $contact_custom_field5 = !empty($custom_labels['contact']['custom_field_5']) ? $custom_labels['contact']['custom_field_5'] : __('lang_v1.custom_field', ['number' => 5]);
-        $contact_custom_field6 = !empty($custom_labels['contact']['custom_field_6']) ? $custom_labels['contact']['custom_field_6'] : __('lang_v1.custom_field', ['number' => 6]);
-        $contact_custom_field7 = !empty($custom_labels['contact']['custom_field_7']) ? $custom_labels['contact']['custom_field_7'] : __('lang_v1.custom_field', ['number' => 7]);
-        $contact_custom_field8 = !empty($custom_labels['contact']['custom_field_8']) ? $custom_labels['contact']['custom_field_8'] : __('lang_v1.custom_field', ['number' => 8]);
-        $contact_custom_field9 = !empty($custom_labels['contact']['custom_field_9']) ? $custom_labels['contact']['custom_field_9'] : __('lang_v1.custom_field', ['number' => 9]);
-        $contact_custom_field10 = !empty($custom_labels['contact']['custom_field_10']) ? $custom_labels['contact']['custom_field_10'] : __('lang_v1.custom_field', ['number' => 10]);
       @endphp
-      <div class="col-md-3">
-        <div class="form-group">
-            {!! Form::label('custom_field1', $contact_custom_field1 . ':') !!}
-            {!! Form::text('custom_field1', $contact->custom_field1, ['class' => 'form-control', 
-                'placeholder' => $contact_custom_field1]); !!}
+      
+      {{-- PRESCRIPTION FORM - RIGHT EYE --}}
+      <div class="col-md-12">
+        <div style="background-color: #f8f9fa; padding: 10px; border-radius: 5px; margin-bottom: 15px;">
+          <h5 class="tw-font-semibold tw-text-gray-700 tw-mb-3">
+            <i class="fa fa-arrow-right" style="color: #48b2ee;"></i> RIGHT EYE
+          </h5>
+          <div class="row">
+            <div class="col-md-12 tw-mb-2">
+              <strong style="color: #6c757d;">Distance</strong>
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                  {!! Form::label('right_sph_distance', 'Sph.:') !!}
+                  {!! Form::text('custom_field1', $contact->custom_field1, ['class' => 'form-control', 'placeholder' => 'e.g., -2.00']); !!}
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                  {!! Form::label('right_cyl_distance', 'Cyl.:') !!}
+                  {!! Form::text('custom_field2', $contact->custom_field2, ['class' => 'form-control', 'placeholder' => 'e.g., -1.00']); !!}
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                  {!! Form::label('right_axis_distance', 'Axis:') !!}
+                  {!! Form::text('custom_field3', $contact->custom_field3, ['class' => 'form-control', 'placeholder' => 'e.g., 180']); !!}
+              </div>
+            </div>
+            
+            <div class="col-md-12 tw-mb-2 tw-mt-2">
+              <strong style="color: #6c757d;">Near</strong>
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                  {!! Form::label('right_sph_near', 'Sph.:') !!}
+                  {!! Form::text('custom_field4', $contact->custom_field4, ['class' => 'form-control', 'placeholder' => 'e.g., -2.00']); !!}
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                  {!! Form::label('right_cyl_near', 'Cyl.:') !!}
+                  {!! Form::text('custom_field5', $contact->custom_field5, ['class' => 'form-control', 'placeholder' => 'e.g., -1.00']); !!}
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                  {!! Form::label('right_axis_near', 'Axis:') !!}
+                  {!! Form::text('custom_field6', $contact->custom_field6, ['class' => 'form-control', 'placeholder' => 'e.g., 180']); !!}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-      <div class="col-md-3">
-        <div class="form-group">
-            {!! Form::label('custom_field2', $contact_custom_field2 . ':') !!}
-            {!! Form::text('custom_field2', $contact->custom_field2, ['class' => 'form-control', 
-                'placeholder' => $contact_custom_field2]); !!}
+      
+      {{-- PRESCRIPTION FORM - LEFT EYE --}}
+      <div class="col-md-12">
+        <div style="background-color: #f8f9fa; padding: 10px; border-radius: 5px; margin-bottom: 15px;">
+          <h5 class="tw-font-semibold tw-text-gray-700 tw-mb-3">
+            <i class="fa fa-arrow-left" style="color: #48b2ee;"></i> LEFT EYE
+          </h5>
+          <div class="row">
+            <div class="col-md-12 tw-mb-2">
+              <strong style="color: #6c757d;">Distance</strong>
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                  {!! Form::label('left_sph_distance', 'Sph.:') !!}
+                  {!! Form::text('custom_field7', $contact->custom_field7, ['class' => 'form-control', 'placeholder' => 'e.g., -2.00']); !!}
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                  {!! Form::label('left_cyl_distance', 'Cyl.:') !!}
+                  {!! Form::text('custom_field8', $contact->custom_field8, ['class' => 'form-control', 'placeholder' => 'e.g., -1.00']); !!}
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                  {!! Form::label('left_axis_distance', 'Axis:') !!}
+                  {!! Form::text('custom_field9', $contact->custom_field9, ['class' => 'form-control', 'placeholder' => 'e.g., 180']); !!}
+              </div>
+            </div>
+            
+            <div class="col-md-12 tw-mb-2 tw-mt-2">
+              <strong style="color: #6c757d;">Near</strong>
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                  {!! Form::label('left_sph_near', 'Sph.:') !!}
+                  {!! Form::text('custom_field10', $contact->custom_field10, ['class' => 'form-control', 'placeholder' => 'e.g., -2.00']); !!}
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                  {!! Form::label('left_cyl_near', 'Cyl.:') !!}
+                  {!! Form::text('shipping_custom_field_details[shipping_custom_field_1]', !empty($contact->shipping_custom_field_details['shipping_custom_field_1']) ? $contact->shipping_custom_field_details['shipping_custom_field_1'] : null, ['class' => 'form-control', 'placeholder' => 'e.g., -1.00']); !!}
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                  {!! Form::label('left_axis_near', 'Axis:') !!}
+                  {!! Form::text('shipping_custom_field_details[shipping_custom_field_2]', !empty($contact->shipping_custom_field_details['shipping_custom_field_2']) ? $contact->shipping_custom_field_details['shipping_custom_field_2'] : null, ['class' => 'form-control', 'placeholder' => 'e.g., 180']); !!}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-      <div class="col-md-3">
-        <div class="form-group">
-            {!! Form::label('custom_field3', $contact_custom_field3 . ':') !!}
-            {!! Form::text('custom_field3', $contact->custom_field3, ['class' => 'form-control', 
-                'placeholder' => $contact_custom_field3]); !!}
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="form-group">
-            {!! Form::label('custom_field4', $contact_custom_field4 . ':') !!}
-            {!! Form::text('custom_field4', $contact->custom_field4, ['class' => 'form-control', 
-                'placeholder' => $contact_custom_field4]); !!}
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="form-group">
-            {!! Form::label('custom_field5', $contact_custom_field5 . ':') !!}
-            {!! Form::text('custom_field5', $contact->custom_field5, ['class' => 'form-control', 
-                'placeholder' => $contact_custom_field5]); !!}
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="form-group">
-            {!! Form::label('custom_field6', $contact_custom_field6 . ':') !!}
-            {!! Form::text('custom_field6', $contact->custom_field6, ['class' => 'form-control', 
-                'placeholder' => $contact_custom_field6]); !!}
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="form-group">
-            {!! Form::label('custom_field7', $contact_custom_field7 . ':') !!}
-            {!! Form::text('custom_field7', $contact->custom_field7, ['class' => 'form-control', 
-                'placeholder' => $contact_custom_field7]); !!}
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="form-group">
-            {!! Form::label('custom_field8', $contact_custom_field8 . ':') !!}
-            {!! Form::text('custom_field8', $contact->custom_field8, ['class' => 'form-control', 
-                'placeholder' => $contact_custom_field8]); !!}
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="form-group">
-            {!! Form::label('custom_field9', $contact_custom_field9 . ':') !!}
-            {!! Form::text('custom_field9', $contact->custom_field9, ['class' => 'form-control', 
-                'placeholder' => $contact_custom_field9]); !!}
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="form-group">
-            {!! Form::label('custom_field10', $contact_custom_field10 . ':') !!}
-            {!! Form::text('custom_field10', $contact->custom_field10, ['class' => 'form-control', 
-                'placeholder' => $contact_custom_field10]); !!}
-        </div>
-      </div>
+      
       <div class="clearfix"></div>
       <div class="col-md-12 shipping_addr_div"><hr></div>
-      <div class="col-md-8 col-md-offset-2 shipping_addr_div mb-10" >
+      <div class="col-md-8 col-md-offset-2 shipping_addr_div mb-10" style="display: none;">
           <strong>{{__('lang_v1.shipping_address')}}</strong><br>
           {!! Form::text('shipping_address', $contact->shipping_address, ['class' => 'form-control', 
                 'placeholder' => __('lang_v1.search_address'), 'id' => 'shipping_address']); !!}
