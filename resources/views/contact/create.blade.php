@@ -670,117 +670,132 @@
 </div><!-- /.modal-dialog -->
 
 <script type="text/javascript">
-  $(document).ready(function() {
-    // Counter for multiple customer forms
-    var customerFormCount = 0;
+  // Use setTimeout to ensure jQuery is loaded
+  (function() {
+    function initAddCustomer() {
+      if (typeof jQuery === 'undefined' || typeof $ === 'undefined') {
+        setTimeout(initAddCustomer, 100);
+        return;
+      }
+      
+      $(document).ready(function() {
+        // Counter for multiple customer forms
+        var customerFormCount = 0;
+        
+        // Get or generate a unique group ID for linking customers
+        var customerGroupLinkId = $('#customer_group_id_link').val();
+        
+        // Handle Add Another Customer button
+        $('.add-another-customer-btn').off('click').on('click', function(e) {
+          e.preventDefault();
+          customerFormCount++;
+          
+          // Clone ALL form content including basic fields and more_div
+          var $basicFields = $('.modal-body > .row').first().clone();
+          var $groupLinkField = $('.customer-group-link').clone();
+          var $moreInfoRow = $('.modal-body > .row').eq(2).clone();
+          var $moreDiv = $('#more_div').clone();
+          
+          // Update the more_div ID to be unique
+          $moreDiv.attr('id', 'more_div_' + customerFormCount);
+          $moreDiv.removeClass('hide');
+          
+          // Update the More Info button target
+          $moreInfoRow.find('.more_btn').attr('data-target', '#more_div_' + customerFormCount);
+          
+          // Update IDs and clear values in basic fields
+          $basicFields.find('input, select, textarea').each(function() {
+            var $field = $(this);
+            var name = $field.attr('name');
+            var id = $field.attr('id');
+            
+            if (name) {
+              $field.attr('name', 'customers[' + customerFormCount + '][' + name + ']');
+            }
+            
+            if (id) {
+              $field.attr('id', id + '_' + customerFormCount);
+            }
+            
+            // Clear the value
+            if ($field.is('select')) {
+              $field.val('').trigger('change');
+            } else if ($field.attr('type') !== 'radio' && $field.attr('type') !== 'checkbox') {
+              $field.val('');
+            } else if ($field.attr('type') === 'radio' || $field.attr('type') === 'checkbox') {
+              $field.prop('checked', false);
+            }
+          });
+          
+          // Update the group link field
+          $groupLinkField.attr('name', 'customers[' + customerFormCount + '][customer_group_id_link]');
+          $groupLinkField.attr('id', 'customer_group_id_link_' + customerFormCount);
+          $groupLinkField.val(customerGroupLinkId);
+          
+          // Update IDs and clear values in more_div fields
+          $moreDiv.find('input, select, textarea').each(function() {
+            var $field = $(this);
+            var name = $field.attr('name');
+            var id = $field.attr('id');
+            
+            if (name) {
+              $field.attr('name', 'customers[' + customerFormCount + '][' + name + ']');
+            }
+            
+            if (id) {
+              $field.attr('id', id + '_' + customerFormCount);
+            }
+            
+            // Clear the value except for relationship_type
+            if ($field.attr('id') && $field.attr('id').includes('relationship_type')) {
+              $field.val('');
+            } else if ($field.is('select')) {
+              $field.val('').trigger('change');
+            } else if ($field.attr('type') !== 'radio' && $field.attr('type') !== 'checkbox') {
+              $field.val('');
+            }
+          });
+          
+          // Create a container for the new customer
+          var $customerContainer = $('<div class="customer-form-container" data-customer="' + customerFormCount + '" style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;"></div>');
+          
+          // Add a separator and heading
+          var $separator = $('<div class="col-md-12"><hr style="border-top: 2px solid #48b2ee; margin: 30px 0 20px 0;"/><h4 style="color: #48b2ee; margin-bottom: 10px;"><i class="fa fa-user-plus"></i> Related Customer #' + (customerFormCount + 1) + '</h4><p style="color: #6c757d; font-size: 13px;"><i class="fa fa-link"></i> This customer will be linked to the primary customer</p></div>');
+          
+          // Append everything
+          $customerContainer.append($separator);
+          $customerContainer.append($basicFields);
+          $customerContainer.append($groupLinkField);
+          $customerContainer.append($moreInfoRow);
+          $customerContainer.append($moreDiv);
+          
+          // Insert before button
+          $('.add-another-customer-btn').closest('.row').before($customerContainer);
+          
+          // Reinitialize plugins
+          if (typeof $.fn.select2 !== 'undefined') {
+            $customerContainer.find('.select2').select2();
+            $customerContainer.find('.select2_register').select2();
+          }
+          
+          if (typeof $.fn.datepicker !== 'undefined') {
+            $customerContainer.find('.dob-date-picker').datepicker({
+              autoclose: true,
+              endDate: 'today',
+            });
+          }
+          
+          // Show success message
+          if (typeof toastr !== 'undefined') {
+            toastr.success('Related customer form added. This customer will be linked to the primary customer.');
+          }
+          
+          // Scroll to the new form
+          $customerContainer[0].scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+      });
+    }
     
-    // Get or generate a unique group ID for linking customers
-    var customerGroupLinkId = $('#customer_group_id_link').val();
-    
-    // Handle Add Another Customer button
-    $('.add-another-customer-btn').on('click', function(e) {
-      e.preventDefault();
-      customerFormCount++;
-      
-      // Clone ALL form content including basic fields and more_div
-      var $basicFields = $('.modal-body > .row').first().clone();
-      var $groupLinkField = $('.customer-group-link').clone();
-      var $moreInfoRow = $('.modal-body > .row').eq(2).clone(); // Row with More Info button (adjusted index)
-      var $moreDiv = $('#more_div').clone();
-      
-      // Update the more_div ID to be unique
-      $moreDiv.attr('id', 'more_div_' + customerFormCount);
-      $moreDiv.removeClass('hide'); // Show it by default for additional customers
-      
-      // Update the More Info button target
-      $moreInfoRow.find('.more_btn').attr('data-target', '#more_div_' + customerFormCount);
-      
-      // Update IDs and clear values in basic fields
-      $basicFields.find('input, select, textarea').each(function() {
-        var $field = $(this);
-        var name = $field.attr('name');
-        var id = $field.attr('id');
-        
-        if (name) {
-          // Add array notation for multiple customers
-          $field.attr('name', 'customers[' + customerFormCount + '][' + name + ']');
-        }
-        
-        if (id) {
-          $field.attr('id', id + '_' + customerFormCount);
-        }
-        
-        // Clear the value
-        if ($field.is('select')) {
-          $field.val('').trigger('change');
-        } else if ($field.attr('type') !== 'radio' && $field.attr('type') !== 'checkbox') {
-          $field.val('');
-        } else if ($field.attr('type') === 'radio' || $field.attr('type') === 'checkbox') {
-          $field.prop('checked', false);
-        }
-      });
-      
-      // Update the group link field to maintain the same group ID
-      $groupLinkField.attr('name', 'customers[' + customerFormCount + '][customer_group_id_link]');
-      $groupLinkField.attr('id', 'customer_group_id_link_' + customerFormCount);
-      $groupLinkField.val(customerGroupLinkId); // Same group ID for all related customers
-      
-      // Update IDs and clear values in more_div fields
-      $moreDiv.find('input, select, textarea').each(function() {
-        var $field = $(this);
-        var name = $field.attr('name');
-        var id = $field.attr('id');
-        
-        if (name) {
-          $field.attr('name', 'customers[' + customerFormCount + '][' + name + ']');
-        }
-        
-        if (id) {
-          $field.attr('id', id + '_' + customerFormCount);
-        }
-        
-        // Clear the value except for relationship_type
-        if ($field.attr('id') && $field.attr('id').includes('relationship_type')) {
-          // Set default relationship for additional customers
-          $field.val(''); // Let user select the relationship
-        } else if ($field.is('select')) {
-          $field.val('').trigger('change');
-        } else if ($field.attr('type') !== 'radio' && $field.attr('type') !== 'checkbox') {
-          $field.val('');
-        }
-      });
-      
-      // Create a container for the new customer
-      var $customerContainer = $('<div class="customer-form-container" data-customer="' + customerFormCount + '" style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;"></div>');
-      
-      // Add a separator and heading with relationship indicator
-      var $separator = $('<div class="col-md-12"><hr style="border-top: 2px solid #48b2ee; margin: 30px 0 20px 0;"/><h4 style="color: #48b2ee; margin-bottom: 10px;"><i class="fa fa-user-plus"></i> Related Customer #' + (customerFormCount + 1) + '</h4><p style="color: #6c757d; font-size: 13px;"><i class="fa fa-link"></i> This customer will be linked to the primary customer</p></div>');
-      
-      // Append everything to the container
-      $customerContainer.append($separator);
-      $customerContainer.append($basicFields);
-      $customerContainer.append($groupLinkField);
-      $customerContainer.append($moreInfoRow);
-      $customerContainer.append($moreDiv);
-      
-      // Insert before the "Add Another Customer" button row
-      $('.add-another-customer-btn').closest('.row').before($customerContainer);
-      
-      // Reinitialize select2 for new fields
-      $customerContainer.find('.select2').select2();
-      $customerContainer.find('.select2_register').select2();
-      
-      // Reinitialize date pickers
-      $customerContainer.find('.dob-date-picker').datepicker({
-        autoclose: true,
-        endDate: 'today',
-      });
-      
-      // Show success message
-      toastr.success('Related customer form added. This customer will be linked to the primary customer.');
-      
-      // Scroll to the new form
-      $customerContainer[0].scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
-  });
+    initAddCustomer();
+  })();
 </script>
