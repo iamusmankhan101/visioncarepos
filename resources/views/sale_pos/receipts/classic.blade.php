@@ -291,11 +291,10 @@
 					<table class="table table-bordered table-condensed" style="margin-top: 5px; margin-bottom: 0;">
 						<thead>
 							<tr style="background-color: #f0f0f0;">
-								<th style="width: 20%;"></th>
-								<th style="width: 20%; text-align: center;">Sph.</th>
-								<th style="width: 20%; text-align: center;">Cyl.</th>
-								<th style="width: 20%; text-align: center;">Axis.</th>
-								<th style="width: 20%; text-align: center;">VA</th>
+								<th style="width: 25%;"></th>
+								<th style="width: 25%; text-align: center;">Sph.</th>
+								<th style="width: 25%; text-align: center;">Cyl.</th>
+								<th style="width: 25%; text-align: center;">Axis.</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -304,14 +303,12 @@
 								<td style="text-align: center;">{{ $contact->custom_field1 ?? '' }}</td>
 								<td style="text-align: center;">{{ $contact->custom_field2 ?? '' }}</td>
 								<td style="text-align: center;">{{ $contact->custom_field3 ?? '' }}</td>
-								<td style="text-align: center;"></td>
 							</tr>
 							<tr>
 								<td style="font-weight: 600;">Near</td>
 								<td style="text-align: center;">{{ $contact->custom_field4 ?? '' }}</td>
 								<td style="text-align: center;">{{ $contact->custom_field5 ?? '' }}</td>
 								<td style="text-align: center;">{{ $contact->custom_field6 ?? '' }}</td>
-								<td style="text-align: center;"></td>
 							</tr>
 						</tbody>
 					</table>
@@ -323,11 +320,10 @@
 					<table class="table table-bordered table-condensed" style="margin-top: 5px; margin-bottom: 0;">
 						<thead>
 							<tr style="background-color: #f0f0f0;">
-								<th style="width: 20%;"></th>
-								<th style="width: 20%; text-align: center;">Sph.</th>
-								<th style="width: 20%; text-align: center;">Cyl.</th>
-								<th style="width: 20%; text-align: center;">Axis.</th>
-								<th style="width: 20%; text-align: center;">VA</th>
+								<th style="width: 25%;"></th>
+								<th style="width: 25%; text-align: center;">Sph.</th>
+								<th style="width: 25%; text-align: center;">Cyl.</th>
+								<th style="width: 25%; text-align: center;">Axis.</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -336,14 +332,12 @@
 								<td style="text-align: center;">{{ $contact->custom_field7 ?? '' }}</td>
 								<td style="text-align: center;">{{ $contact->custom_field8 ?? '' }}</td>
 								<td style="text-align: center;">{{ $contact->custom_field9 ?? '' }}</td>
-								<td style="text-align: center;"></td>
 							</tr>
 							<tr>
 								<td style="font-weight: 600;">Near</td>
 								<td style="text-align: center;">{{ $contact->custom_field10 ?? '' }}</td>
 								<td style="text-align: center;">{{ !empty($contact->shipping_custom_field_details['shipping_custom_field_1']) ? $contact->shipping_custom_field_details['shipping_custom_field_1'] : '' }}</td>
 								<td style="text-align: center;">{{ !empty($contact->shipping_custom_field_details['shipping_custom_field_2']) ? $contact->shipping_custom_field_details['shipping_custom_field_2'] : '' }}</td>
-								<td style="text-align: center;"></td>
 							</tr>
 						</tbody>
 					</table>
