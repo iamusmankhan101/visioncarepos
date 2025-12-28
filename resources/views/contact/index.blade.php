@@ -181,36 +181,16 @@
                                 @php
                                     $custom_labels = json_decode(session('business.custom_labels'), true);
                                 @endphp
-                                <th>
-                                    {{ $custom_labels['contact']['custom_field_1'] ?? __('lang_v1.contact_custom_field1') }}
-                                </th>
-                                <th>
-                                    {{ $custom_labels['contact']['custom_field_2'] ?? __('lang_v1.contact_custom_field2') }}
-                                </th>
-                                <th>
-                                    {{ $custom_labels['contact']['custom_field_3'] ?? __('lang_v1.contact_custom_field3') }}
-                                </th>
-                                <th>
-                                    {{ $custom_labels['contact']['custom_field_4'] ?? __('lang_v1.contact_custom_field4') }}
-                                </th>
-                                <th>
-                                    {{ $custom_labels['contact']['custom_field_5'] ?? __('lang_v1.custom_field', ['number' => 5]) }}
-                                </th>
-                                <th>
-                                    {{ $custom_labels['contact']['custom_field_6'] ?? __('lang_v1.custom_field', ['number' => 6]) }}
-                                </th>
-                                <th>
-                                    {{ $custom_labels['contact']['custom_field_7'] ?? __('lang_v1.custom_field', ['number' => 7]) }}
-                                </th>
-                                <th>
-                                    {{ $custom_labels['contact']['custom_field_8'] ?? __('lang_v1.custom_field', ['number' => 8]) }}
-                                </th>
-                                <th>
-                                    {{ $custom_labels['contact']['custom_field_9'] ?? __('lang_v1.custom_field', ['number' => 9]) }}
-                                </th>
-                                <th>
-                                    {{ $custom_labels['contact']['custom_field_10'] ?? __('lang_v1.custom_field', ['number' => 10]) }}
-                                </th>
+                                <th>R-Dist-Sph</th>
+                                <th>R-Dist-Cyl</th>
+                                <th>R-Dist-Axis</th>
+                                <th>R-Near-Sph</th>
+                                <th>R-Near-Cyl</th>
+                                <th>R-Near-Axis</th>
+                                <th>L-Dist-Sph</th>
+                                <th>L-Dist-Cyl</th>
+                                <th>L-Dist-Axis</th>
+                                <th>L-Near-Sph</th>
                             </tr>
                         </thead>
                         <tfoot>
