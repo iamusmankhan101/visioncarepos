@@ -233,11 +233,11 @@
             
             {{-- Add Another Customer Button --}}
             <div class="col-md-12" style="margin-bottom: 15px;">
-                <button type="button" class="btn btn-success" onclick="window.open('/contacts/create?quick_add=1&group_id=' + $('#customer_group_id_link').val(), '_blank', 'width=800,height=600')">
+                <a href="#" class="btn btn-success" onclick="event.preventDefault(); window.location.href='/contacts/create?quick_add=1&group_id=' + $('#customer_group_id_link').val();">
                     <i class="fa fa-plus-circle"></i> Add Another Related Customer
-                </button>
+                </a>
                 <small class="text-muted" style="margin-left: 10px;">
-                    <i class="fa fa-info-circle"></i> Opens in new window - save and refresh this page to see the new customer
+                    <i class="fa fa-info-circle"></i> After saving, use browser back button to return
                 </small>
             </div>
         
