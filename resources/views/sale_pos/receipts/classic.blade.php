@@ -271,7 +271,7 @@
 	@includeIf('sale_pos.receipts.partial.common_repair_invoice')
 </div>
 
-{{-- Prescription Table --}}
+{{-- Prescription Form - Side by Side Layout --}}
 @php
 	$contact_id = $receipt_details->contact_id ?? null;
 	if($contact_id) {
@@ -280,60 +280,78 @@
 		$contact = null;
 	}
 @endphp
-@if($contact && ($contact->custom_field1 || $contact->custom_field2 || $contact->custom_field3 || $contact->custom_field4 || $contact->custom_field5 || $contact->custom_field6 || $contact->custom_field7 || $contact->custom_field8 || $contact->custom_field9 || $contact->custom_field10))
-	<div class="row" style="color: #000000 !important; margin-top: 10px;">
-		<div class="col-xs-12">
-			<h4 style="margin: 10px 0; color: #48b2ee;"><i class="fa fa-eye"></i> Prescription Details</h4>
-			<table class="table table-bordered table-condensed" style="margin-bottom: 10px;">
-				<thead style="background-color: #48b2ee; color: white;">
-					<tr>
-						<th style="width: 15%;">Eye</th>
-						<th style="width: 15%;">Type</th>
-						<th style="width: 23%;">Sph.</th>
-						<th style="width: 23%;">Cyl.</th>
-						<th style="width: 24%;">Axis</th>
-					</tr>
-				</thead>
-				<tbody>
-					<!-- RIGHT EYE - Distance -->
-					<tr>
-						<td rowspan="2" style="vertical-align: middle; font-weight: bold; background-color: #f8f9fa;">
-							<i class="fa fa-arrow-right" style="color: #48b2ee;"></i> RIGHT EYE
-						</td>
-						<td style="font-weight: 600;">Distance</td>
-						<td>{{ $contact->custom_field1 ?? '-' }}</td>
-						<td>{{ $contact->custom_field2 ?? '-' }}</td>
-						<td>{{ $contact->custom_field3 ?? '-' }}</td>
-					</tr>
-					<!-- RIGHT EYE - Near -->
-					<tr>
-						<td style="font-weight: 600;">Near</td>
-						<td>{{ $contact->custom_field4 ?? '-' }}</td>
-						<td>{{ $contact->custom_field5 ?? '-' }}</td>
-						<td>{{ $contact->custom_field6 ?? '-' }}</td>
-					</tr>
-					<!-- LEFT EYE - Distance -->
-					<tr>
-						<td rowspan="2" style="vertical-align: middle; font-weight: bold; background-color: #f8f9fa;">
-							<i class="fa fa-arrow-left" style="color: #48b2ee;"></i> LEFT EYE
-						</td>
-						<td style="font-weight: 600;">Distance</td>
-						<td>{{ $contact->custom_field7 ?? '-' }}</td>
-						<td>{{ $contact->custom_field8 ?? '-' }}</td>
-						<td>{{ $contact->custom_field9 ?? '-' }}</td>
-					</tr>
-					<!-- LEFT EYE - Near -->
-					<tr>
-						<td style="font-weight: 600;">Near</td>
-						<td>{{ $contact->custom_field10 ?? '-' }}</td>
-						<td>{{ !empty($contact->shipping_custom_field_details['shipping_custom_field_1']) ? $contact->shipping_custom_field_details['shipping_custom_field_1'] : '-' }}</td>
-						<td>{{ !empty($contact->shipping_custom_field_details['shipping_custom_field_2']) ? $contact->shipping_custom_field_details['shipping_custom_field_2'] : '-' }}</td>
-					</tr>
-				</tbody>
-			</table>
-		</div>
+
+<div class="row" style="color: #000000 !important; margin-top: 10px;">
+	<div class="col-xs-12">
+		<table width="100%" style="border-collapse: collapse;">
+			<tr>
+				<!-- RIGHT EYE TABLE -->
+				<td style="width: 48%; vertical-align: top; padding-right: 10px;">
+					<strong>RIGHT</strong>
+					<table class="table table-bordered table-condensed" style="margin-top: 5px; margin-bottom: 0;">
+						<thead>
+							<tr style="background-color: #f0f0f0;">
+								<th style="width: 20%;"></th>
+								<th style="width: 20%; text-align: center;">Sph.</th>
+								<th style="width: 20%; text-align: center;">Cyl.</th>
+								<th style="width: 20%; text-align: center;">Axis.</th>
+								<th style="width: 20%; text-align: center;">VA</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td style="font-weight: 600;">Distance</td>
+								<td style="text-align: center;">{{ $contact->custom_field1 ?? '' }}</td>
+								<td style="text-align: center;">{{ $contact->custom_field2 ?? '' }}</td>
+								<td style="text-align: center;">{{ $contact->custom_field3 ?? '' }}</td>
+								<td style="text-align: center;"></td>
+							</tr>
+							<tr>
+								<td style="font-weight: 600;">Near</td>
+								<td style="text-align: center;">{{ $contact->custom_field4 ?? '' }}</td>
+								<td style="text-align: center;">{{ $contact->custom_field5 ?? '' }}</td>
+								<td style="text-align: center;">{{ $contact->custom_field6 ?? '' }}</td>
+								<td style="text-align: center;"></td>
+							</tr>
+						</tbody>
+					</table>
+				</td>
+				
+				<!-- LEFT EYE TABLE -->
+				<td style="width: 48%; vertical-align: top; padding-left: 10px;">
+					<strong>Left</strong>
+					<table class="table table-bordered table-condensed" style="margin-top: 5px; margin-bottom: 0;">
+						<thead>
+							<tr style="background-color: #f0f0f0;">
+								<th style="width: 20%;"></th>
+								<th style="width: 20%; text-align: center;">Sph.</th>
+								<th style="width: 20%; text-align: center;">Cyl.</th>
+								<th style="width: 20%; text-align: center;">Axis.</th>
+								<th style="width: 20%; text-align: center;">VA</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td style="font-weight: 600;">Distance</td>
+								<td style="text-align: center;">{{ $contact->custom_field7 ?? '' }}</td>
+								<td style="text-align: center;">{{ $contact->custom_field8 ?? '' }}</td>
+								<td style="text-align: center;">{{ $contact->custom_field9 ?? '' }}</td>
+								<td style="text-align: center;"></td>
+							</tr>
+							<tr>
+								<td style="font-weight: 600;">Near</td>
+								<td style="text-align: center;">{{ $contact->custom_field10 ?? '' }}</td>
+								<td style="text-align: center;">{{ !empty($contact->shipping_custom_field_details['shipping_custom_field_1']) ? $contact->shipping_custom_field_details['shipping_custom_field_1'] : '' }}</td>
+								<td style="text-align: center;">{{ !empty($contact->shipping_custom_field_details['shipping_custom_field_2']) ? $contact->shipping_custom_field_details['shipping_custom_field_2'] : '' }}</td>
+								<td style="text-align: center;"></td>
+							</tr>
+						</tbody>
+					</table>
+				</td>
+			</tr>
+		</table>
 	</div>
-@endif
+</div>
 
 <div class="row" style="color: #000000 !important;">
 	<div class="col-xs-12">
