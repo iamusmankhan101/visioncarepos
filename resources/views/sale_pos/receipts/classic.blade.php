@@ -277,7 +277,8 @@
 	$contact = null;
 	if($contact_id) {
 		try {
-			$contact = \App\Contact::find($contact_id);
+			// Find contact by contact_id field, not by primary key
+			$contact = \App\Contact::where('contact_id', $contact_id)->first();
 			// Debug: Log contact data
 			\Log::info('Contact ID: ' . $contact_id);
 			if($contact) {
