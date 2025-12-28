@@ -20,6 +20,7 @@
 				{!! Form::select('contact_id', 
 					[], null, ['class' => 'form-control mousetrap', 'id' => 'customer_id', 'placeholder' => 'Enter Customer name / phone', 'required']); !!}
 				<span class="input-group-btn">
+					<button type="button" class="btn btn-default bg-white btn-flat edit_customer_btn" title="Edit Customer" style="display:none;" data-container=".contact_modal"><i class="fa fa-edit text-primary fa-lg"></i></button>
 					<button type="button" class="btn btn-default bg-white btn-flat add_new_customer" data-name=""  @if(!auth()->user()->can('customer.create')) disabled @endif><i class="fa fa-plus-circle text-primary fa-lg"></i></button>
 				</span>
 			</div>
@@ -242,3 +243,36 @@
 		</table>
 	</div>
 </div>
+
+<s
+cript type="text/javascript">
+$(document).ready(function() {
+    // Show/hide edit button when customer is selected
+    $('#customer_id').on('change', function() {
+        var customerId = $(this).val();
+        if (customerId && customerId != '') {
+            $('.edit_customer_btn').show();
+            $('.edit_customer_btn').attr('data-customer-id', customerId);
+        } else {
+            $('.edit_customer_btn').hide();
+        }
+    });
+    
+    // Handle edit customer button click
+    $(document).on('click', '.edit_customer_btn', function() {
+        var customerId = $(this).attr('data-customer-id');
+        if (customerId) {
+            $.ajax({
+                method: 'get',
+                url: '/contacts/' + customerId + '/edit',
+                dataType: 'html',
+                success: function(result) {
+                    $('.contact_modal')
+                        .html(result)
+                        .modal('show');
+                },
+            });
+        }
+    });
+});
+</script>
