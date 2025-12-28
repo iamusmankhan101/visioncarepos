@@ -3668,7 +3668,7 @@ $(document).on('click', '.btn-select-customer, .related-customer-item', function
     $('#related_customers_modal').modal('hide');
     
     // Execute callback if exists (for express checkout)
-    if (window.relatedCustomerCallback) {
+    if (window.relatedCustomerCallback && typeof window.relatedCustomerCallback === 'function') {
         setTimeout(function() {
             window.relatedCustomerCallback();
             window.relatedCustomerCallback = null;
