@@ -163,6 +163,7 @@ Route::middleware(['setData', 'auth', 'SetSessionData', 'language', 'timezone', 
     Route::post('/contacts/check-contacts-id', [ContactController::class, 'checkContactId']);
 
     Route::post('/contacts/check-tax-number', [ContactController::class, 'checkTaxNumber']);
+    Route::get('/contacts/{id}/related-customers', [ContactController::class, 'getRelatedCustomers']);
 
     Route::get('/contacts/customers', [ContactController::class, 'getCustomers']);
     Route::resource('contacts', ContactController::class);

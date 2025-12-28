@@ -1815,4 +1815,72 @@ class ContactController extends Controller
             'msg' => ! empty($contacts) ? __('lang_v1.tax_number_already_registered', ['contacts' => implode(', ', $contacts), 'tax_number' => $tax_number]) : '',
         ];
     }
+
+    /**
+     * Get related customers for a contact
+     *
+     * @param int $contact_id
+     * @return \Illuminate\Http\Response
+     */
+    public function getRelatedCustomers($contact_id)
+    {
+        if (request()->ajax()) {
+            $business_id = request()->session()->get('user.business_id');
+            
+            $contact = Contact::where('business_id', $business_id)
+                ->where('id', $contact_id)
+                ->first();
+            
+            if (!$contact) {
+                return response()->json(['success' => false, 'msg' => 'Contact not found']);
+            }
+            
+            // Get the customer_group_id_link
+            $group_id = $contact->customer_group_id_link;
+            
+            if (empty($group_id)) {
+                return response()->json([
+                    'success' => true,
+                    'has_related' => false,
+                    'customers' => []
+                ]);
+            }
+            
+            // Get all contacts with the same group ID
+            $related_contacts = Contact::where('business_id', $business_id)
+                ->where('customer_group_id_link', $group_id)
+                ->select('id', 'name', 'mobile', 'contact_id', 'custom_field1', 'custom_field2', 'custom_field3', 'custom_field4', 'custom_field5', 'custom_field6', 'custom_field7', 'custom_field8', 'custom_field9', 'custom_field10')
+                ->get();
+            
+            $customers = [];
+            foreach ($related_contacts as $related) {
+                $prescription_summary = '';
+                
+                // Build prescription summary
+                if (!empty($related->custom_field1) || !empty($related->custom_field2) || !empty($related->custom_field3)) {
+                    $prescription_summary .= 'R: ' . ($related->custom_field1 ?? '-') . '/' . ($related->custom_field2 ?? '-') . '/' . ($related->custom_field3 ?? '-');
+                }
+                if (!empty($related->custom_field7) || !empty($related->custom_field8) || !empty($related->custom_field9)) {
+                    if ($prescription_summary) $prescription_summary .= ' | ';
+                    $prescription_summary .= 'L: ' . ($related->custom_field7 ?? '-') . '/' . ($related->custom_field8 ?? '-') . '/' . ($related->custom_field9 ?? '-');
+                }
+                
+                $customers[] = [
+                    'id' => $related->id,
+                    'name' => $related->name,
+                    'mobile' => $related->mobile,
+                    'contact_id' => $related->contact_id,
+                    'prescription_summary' => $prescription_summary,
+                    'is_current' => $related->id == $contact_id
+                ];
+            }
+            
+            return response()->json([
+                'success' => true,
+                'has_related' => count($customers) > 1,
+                'customers' => $customers
+            ]);
+        }
+    }
 }
+
