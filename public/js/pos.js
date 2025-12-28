@@ -1,3 +1,6 @@
+// POS.JS VERSION: 2025-12-28-RELATED-CUSTOMERS-v2
+console.log('POS.JS LOADED - Version: 2025-12-28-RELATED-CUSTOMERS-v2');
+
 var global_brand_id = null;
 var global_p_category_id = null;
 var global_is_clear_local_storage = false;
