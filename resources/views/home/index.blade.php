@@ -394,18 +394,12 @@
                                     </h3>
                                 </div>
                                 <div class="tw-mt-5">
-                                    @if(!empty($sells_chart_1))
                                     <div
                                         class="tw-grid tw-w-full tw-h-100 tw-border tw-border-gray-200 tw-border-dashed tw-rounded-xl tw-bg-gray-50 ">
                                         <p class="tw-text-sm tw-italic tw-font-normal tw-text-gray-400">
                                             {!! $sells_chart_1->container() !!}
                                         </p>
                                     </div>
-                                    @else
-                                    <div class="tw-p-4 tw-text-center tw-text-gray-500">
-                                        <p>{{ __('messages.loading') }}...</p>
-                                    </div>
-                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -439,18 +433,12 @@
                                     </h3>
                                 </div>
                                 <div class="tw-mt-5">
-                                    @if(!empty($sells_chart_2))
                                     <div
                                         class="tw-grid tw-w-full tw-h-100 tw-border tw-border-gray-200 tw-border-dashed tw-rounded-xl tw-bg-gray-50 ">
                                         <p class="tw-text-sm tw-italic tw-font-normal tw-text-gray-400">
                                             {!! $sells_chart_2->container() !!}
                                         </p>
                                     </div>
-                                    @else
-                                    <div class="tw-p-4 tw-text-center tw-text-gray-500">
-                                        <p>{{ __('messages.loading') }}...</p>
-                                    </div>
-                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -1047,12 +1035,8 @@
     @includeIf('sales_order.common_js')
     @includeIf('purchase_order.common_js')
     @if (!empty($all_locations))
-        @if(!empty($sells_chart_1))
-            {!! $sells_chart_1->script() !!}
-        @endif
-        @if(!empty($sells_chart_2))
-            {!! $sells_chart_2->script() !!}
-        @endif
+        {!! $sells_chart_1->script() !!}
+        {!! $sells_chart_2->script() !!}
     @endif
     <script type="text/javascript">
         $(document).ready(function() {
