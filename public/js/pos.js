@@ -739,6 +739,7 @@ $(document).ready(function() {
 
     //Finalize without showing payment options
     $('button.pos-express-finalize').click(function() {
+        console.log('Express finalize (Cash) button clicked!');
 
         //Check if product is present or not.
         if ($('table#pos_table tbody').find('.product_row').length <= 0) {
@@ -755,7 +756,44 @@ $(document).ready(function() {
         }
 
         var pay_method = $(this).data('pay_method');
+        var $button = $(this);
 
+        // Check if customer has related customers before processing payment
+        var customerId = $('#customer_id').val();
+        console.log('Customer ID for express checkout:', customerId);
+        
+        if (customerId && customerId != '' && pay_method != 'credit_sale') {
+            $.ajax({
+                url: '/contacts/' + customerId + '/related-customers',
+                method: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    console.log('Related customers response (express):', response);
+                    if (response.success && response.has_related && response.customers.length > 1) {
+                        // Show related customers modal
+                        console.log('Showing related customers modal for express checkout');
+                        showRelatedCustomersModal(response.customers, function() {
+                            // After customer is selected, continue with express checkout
+                            processExpressCheckout($button, pay_method);
+                        });
+                    } else {
+                        // No related customers, process express checkout directly
+                        processExpressCheckout($button, pay_method);
+                    }
+                },
+                error: function() {
+                    // On error, process express checkout directly
+                    processExpressCheckout($button, pay_method);
+                }
+            });
+            return false; // Prevent default action
+        } else {
+            processExpressCheckout($button, pay_method);
+        }
+    });
+    
+    // Function to process express checkout
+    function processExpressCheckout($button, pay_method) {
         //If pay method is credit sale submit form
         if (pay_method == 'credit_sale') {
             $('#is_credit_sale').val(1);
@@ -796,7 +834,7 @@ $(document).ready(function() {
         } else {
             pos_form_obj.submit();
         }
-    });
+    }
 
     $('div#card_details_modal').on('shown.bs.modal', function(e) {
         $('input#card_number').focus();
@@ -3583,8 +3621,12 @@ function saveFormDataToLocalStorage() {
 
 
 // Function to show related customers modal
-function showRelatedCustomersModal(customers) {
+function showRelatedCustomersModal(customers, callback) {
     console.log('Building modal for customers:', customers);
+    
+    // Store callback for later use
+    window.relatedCustomerCallback = callback;
+    
     var html = '';
     customers.forEach(function(customer) {
         var isCurrentClass = customer.is_current ? 'border-primary' : '';
@@ -3612,3 +3654,44 @@ function showRelatedCustomersModal(customers) {
     $('#related_customers_list').html(html);
     $('#related_customers_modal').modal('show');
 }
+
+
+// Handle customer selection from related customers modal
+$(document).on('click', '.btn-select-customer, .related-customer-item', function(e) {
+    e.preventDefault();
+    var customerId = $(this).data('customer-id');
+    
+    // Update the customer dropdown
+    $('#customer_id').val(customerId).trigger('change');
+    
+    // Close related customers modal
+    $('#related_customers_modal').modal('hide');
+    
+    // Execute callback if exists (for express checkout)
+    if (window.relatedCustomerCallback) {
+        setTimeout(function() {
+            window.relatedCustomerCallback();
+            window.relatedCustomerCallback = null;
+        }, 300);
+    } else {
+        // Show payment modal after a short delay (for multiple pay)
+        setTimeout(function() {
+            $('#modal_payment').modal('show');
+        }, 300);
+    }
+});
+
+// Add hover effect for related customer items
+$(document).on('mouseenter', '.related-customer-item', function() {
+    $(this).css({
+        'border-color': '#48b2ee',
+        'background-color': '#f8f9fa',
+        'transform': 'scale(1.02)'
+    });
+}).on('mouseleave', '.related-customer-item', function() {
+    $(this).css({
+        'border-color': '#ddd',
+        'background-color': 'white',
+        'transform': 'scale(1)'
+    });
+});
