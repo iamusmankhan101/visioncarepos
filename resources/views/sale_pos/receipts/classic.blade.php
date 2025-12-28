@@ -71,7 +71,6 @@
 					<b>{{ $receipt_details->tax_label2 }}</b> {{ $receipt_details->tax_info2 }}
 				@endif
 				</p>
-			@endif
 
 
 			<!-- Title of receipt -->
@@ -80,6 +79,7 @@
 					{!! $receipt_details->invoice_heading !!}
 				</h3>
 			@endif
+		@endif
 		</div>
 		@if(!empty($receipt_details->letter_head))
 			<div class="col-xs-12 text-center">
