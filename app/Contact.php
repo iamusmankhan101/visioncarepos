@@ -400,4 +400,20 @@ class Contact extends Authenticatable
     {
         return $this->belongsToMany(\App\User::class, 'user_contact_access');
     }
+
+    /**
+     * Get all related contacts for this contact
+     */
+    public function relatedContacts()
+    {
+        return $this->hasMany(ContactRelationship::class, 'contact_id');
+    }
+
+    /**
+     * Get all contacts that have this contact as related
+     */
+    public function relatedBy()
+    {
+        return $this->hasMany(ContactRelationship::class, 'related_contact_id');
+    }
 }

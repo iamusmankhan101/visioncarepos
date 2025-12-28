@@ -630,6 +630,7 @@
                                 <th>Contact ID</th>
                                 <th>Name</th>
                                 <th>Mobile</th>
+                                <th>Relationship</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
@@ -639,6 +640,11 @@
                                     <td>{{ $related['contact_id'] }}</td>
                                     <td>{{ $related['name'] }}</td>
                                     <td>{{ $related['mobile'] ?? 'N/A' }}</td>
+                                    <td>
+                                        <span class="label label-info">
+                                            {{ ucfirst($related['relationship_type'] ?? 'Related') }}
+                                        </span>
+                                    </td>
                                     <td>
                                         <a href="{{ action([\App\Http\Controllers\ContactController::class, 'show'], [$related['id']]) }}" 
                                            class="btn btn-xs btn-info" 

@@ -640,6 +640,55 @@ class ContactController extends Controller
 
             $this->contactUtil->activityLog($output['data'], 'added');
 
+            // Handle multiple customers (related customers)
+            if ($request->has('customers') && is_array($request->input('customers'))) {
+                $primary_contact_id = $output['data']->id;
+                $customers = $request->input('customers');
+                
+                foreach ($customers as $customer_data) {
+                    // Create each related customer
+                    $related_input = $customer_data;
+                    $related_input['business_id'] = $business_id;
+                    $related_input['created_by'] = $request->session()->get('user.id');
+                    
+                    // Build name for related customer
+                    $name_array = [];
+                    if (!empty($related_input['prefix'])) $name_array[] = $related_input['prefix'];
+                    if (!empty($related_input['first_name'])) $name_array[] = $related_input['first_name'];
+                    if (!empty($related_input['middle_name'])) $name_array[] = $related_input['middle_name'];
+                    if (!empty($related_input['last_name'])) $name_array[] = $related_input['last_name'];
+                    $related_input['name'] = trim(implode(' ', $name_array));
+                    
+                    if (!empty($related_input['dob'])) {
+                        $related_input['dob'] = $this->commonUtil->uf_date($related_input['dob']);
+                    }
+                    
+                    $related_input['credit_limit'] = isset($related_input['credit_limit']) && $related_input['credit_limit'] != '' ? $this->commonUtil->num_uf($related_input['credit_limit']) : null;
+                    $related_input['opening_balance'] = isset($related_input['opening_balance']) ? $this->commonUtil->num_uf($related_input['opening_balance']) : 0;
+                    
+                    // Create the related contact
+                    $related_output = $this->contactUtil->createNewContact($related_input);
+                    
+                    if ($related_output['success']) {
+                        // Save the relationship
+                        \App\ContactRelationship::create([
+                            'contact_id' => $primary_contact_id,
+                            'related_contact_id' => $related_output['data']->id,
+                            'relationship_type' => $related_input['relationship_type'] ?? null,
+                            'business_id' => $business_id
+                        ]);
+                        
+                        // Also create reverse relationship for easy querying
+                        \App\ContactRelationship::create([
+                            'contact_id' => $related_output['data']->id,
+                            'related_contact_id' => $primary_contact_id,
+                            'relationship_type' => $related_input['relationship_type'] ?? null,
+                            'business_id' => $business_id
+                        ]);
+                    }
+                }
+            }
+
             DB::commit();
             
             // Check if user wants to add another contact
@@ -765,28 +814,22 @@ class ContactController extends Controller
             //Added check because $users is of no use if enable_contact_assign if false
             $users = config('constants.enable_contact_assign') ? User::forDropdown($business_id, false, false, false, true) : [];
 
-            // Load related customers based on custom fields containing negative IDs
+            // Load related customers from contact_relationships table
             $related_customers = [];
-            $custom_fields = [
-                'custom_field1', 'custom_field2', 'custom_field3', 'custom_field4', 'custom_field5',
-                'custom_field6', 'custom_field7', 'custom_field8', 'custom_field9', 'custom_field10'
-            ];
+            $relationships = \App\ContactRelationship::where('contact_id', $id)
+                ->where('business_id', $business_id)
+                ->with('relatedContact')
+                ->get();
             
-            foreach ($custom_fields as $field) {
-                $value = $contact->$field;
-                // Check if the value is a negative number (indicates related customer ID)
-                if (!empty($value) && is_numeric($value) && $value < 0) {
-                    $related_id = abs($value);
-                    $related_contact = Contact::where('business_id', $business_id)->find($related_id);
-                    if ($related_contact) {
-                        $related_customers[] = [
-                            'id' => $related_contact->id,
-                            'name' => $related_contact->name,
-                            'contact_id' => $related_contact->contact_id,
-                            'mobile' => $related_contact->mobile,
-                            'field' => $field
-                        ];
-                    }
+            foreach ($relationships as $relationship) {
+                if ($relationship->relatedContact) {
+                    $related_customers[] = [
+                        'id' => $relationship->relatedContact->id,
+                        'name' => $relationship->relatedContact->name,
+                        'contact_id' => $relationship->relatedContact->contact_id,
+                        'mobile' => $relationship->relatedContact->mobile,
+                        'relationship_type' => $relationship->relationship_type
+                    ];
                 }
             }
 
