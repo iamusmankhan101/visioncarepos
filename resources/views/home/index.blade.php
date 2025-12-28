@@ -397,7 +397,11 @@
                                     <div
                                         class="tw-grid tw-w-full tw-h-100 tw-border tw-border-gray-200 tw-border-dashed tw-rounded-xl tw-bg-gray-50 ">
                                         <p class="tw-text-sm tw-italic tw-font-normal tw-text-gray-400">
-                                            {!! $sells_chart_1->container() !!}
+                                            @if(!empty($sells_chart_1))
+                                                {!! $sells_chart_1->container() !!}
+                                            @else
+                                                <span>Loading chart...</span>
+                                            @endif
                                         </p>
                                     </div>
                                 </div>
@@ -436,7 +440,11 @@
                                     <div
                                         class="tw-grid tw-w-full tw-h-100 tw-border tw-border-gray-200 tw-border-dashed tw-rounded-xl tw-bg-gray-50 ">
                                         <p class="tw-text-sm tw-italic tw-font-normal tw-text-gray-400">
-                                            {!! $sells_chart_2->container() !!}
+                                            @if(!empty($sells_chart_2))
+                                                {!! $sells_chart_2->container() !!}
+                                            @else
+                                                <span>Loading chart...</span>
+                                            @endif
                                         </p>
                                     </div>
                                 </div>
@@ -1035,8 +1043,12 @@
     @includeIf('sales_order.common_js')
     @includeIf('purchase_order.common_js')
     @if (!empty($all_locations))
-        {!! $sells_chart_1->script() !!}
-        {!! $sells_chart_2->script() !!}
+        @if(!empty($sells_chart_1))
+            {!! $sells_chart_1->script() !!}
+        @endif
+        @if(!empty($sells_chart_2))
+            {!! $sells_chart_2->script() !!}
+        @endif
     @endif
     <script type="text/javascript">
         $(document).ready(function() {
