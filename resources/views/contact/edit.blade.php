@@ -233,12 +233,24 @@
             
             {{-- Add Another Customer Button --}}
             <div class="col-md-12" style="margin-bottom: 15px;">
-                <a href="#" class="btn btn-success" onclick="event.preventDefault(); window.location.href='/contacts/create?quick_add=1&group_id=' + $('#customer_group_id_link').val();">
+                <button type="button" class="btn btn-success" id="toggle-add-customer-form">
                     <i class="fa fa-plus-circle"></i> Add Another Related Customer
-                </a>
+                </button>
                 <small class="text-muted" style="margin-left: 10px;">
-                    <i class="fa fa-info-circle"></i> After saving, use browser back button to return
+                    <i class="fa fa-info-circle"></i> Add family members or related customers
                 </small>
+            </div>
+            
+            {{-- Inline Add Customer Form (Hidden by default) --}}
+            <div class="col-md-12" id="inline-add-customer-form" style="display: none; background-color: #f0f8ff; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 2px solid #48b2ee;">
+                <h5 style="color: #48b2ee; margin-top: 0;">
+                    <i class="fa fa-user-plus"></i> Add New Related Customer
+                    <button type="button" class="btn btn-sm btn-default pull-right" id="cancel-add-customer">
+                        <i class="fa fa-times"></i> Cancel
+                    </button>
+                </h5>
+                <hr>
+                <iframe id="add-customer-iframe" src="" style="width: 100%; height: 600px; border: none;"></iframe>
             </div>
         
       <div class="clearfix"></div>
@@ -593,5 +605,38 @@ $(document).on('click', '.add-related-customer', function(e) {
     
     // Open in popup window
     window.open('/contacts/create?quick_add=1&group_id=' + groupId, '_blank', 'width=800,height=600');
+});
+
+// Handle inline add customer form toggle
+$(document).on('click', '#toggle-add-customer-form', function(e) {
+    e.preventDefault();
+    var $form = $('#inline-add-customer-form');
+    var $iframe = $('#add-customer-iframe');
+    
+    if ($form.is(':visible')) {
+        $form.slideUp();
+    } else {
+        // Get group ID and load the form
+        var groupId = $('#customer_group_id_link').val();
+        $iframe.attr('src', '/contacts/create?quick_add=1&group_id=' + groupId + '&inline=1');
+        $form.slideDown();
+    }
+});
+
+// Handle cancel button
+$(document).on('click', '#cancel-add-customer', function(e) {
+    e.preventDefault();
+    $('#inline-add-customer-form').slideUp();
+    $('#add-customer-iframe').attr('src', '');
+});
+
+// Listen for message from iframe when customer is saved
+window.addEventListener('message', function(event) {
+    if (event.data === 'customer-saved') {
+        $('#inline-add-customer-form').slideUp();
+        $('#add-customer-iframe').attr('src', '');
+        // Reload the page to show new related customer
+        location.reload();
+    }
 });
 </script>
