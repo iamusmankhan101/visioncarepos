@@ -820,21 +820,11 @@ $(document).on('click', '.edit-related-customer', function(e) {
     }
 });
 
-// Handle "Add Another Customer" button in Related Customers section
-$(document).on('click', '.add-related-customer', function(e) {
+// Handle "Add Another Customer" button in Related Customers section AND the one after prescription
+$(document).on('click', '.add-related-customer, #toggle-add-customer-form', function(e) {
     e.preventDefault();
     e.stopPropagation();
     
-    // Get the current contact's group ID
-    var groupId = $('#customer_group_id_link').val();
-    
-    // Open in popup window
-    window.open('/contacts/create?quick_add=1&group_id=' + groupId, '_blank', 'width=800,height=600');
-});
-
-// Handle inline add customer form toggle
-$(document).on('click', '#toggle-add-customer-form', function(e) {
-    e.preventDefault();
     var $form = $('#inline-add-customer-form');
     
     if ($form.is(':visible')) {
@@ -843,6 +833,12 @@ $(document).on('click', '#toggle-add-customer-form', function(e) {
         // Get group ID and set it in the form
         var groupId = $('#customer_group_id_link').val();
         $('#new_customer_group_id').val(groupId);
+        
+        // Scroll to the form
+        $('html, body').animate({
+            scrollTop: $form.offset().top - 100
+        }, 500);
+        
         $form.slideDown();
         
         // Initialize datepicker for inline form
