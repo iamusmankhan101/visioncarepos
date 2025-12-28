@@ -551,10 +551,16 @@ $(document).on('click', '.edit-related-customer', function() {
                 
                 // Auto-expand "More Info" section after modal is shown
                 $newModal.on('shown.bs.modal', function() {
-                    // Click the "More Info" button to show prescription data
+                    // Show the more_div directly
+                    var $moreDiv = $newModal.find('#more_div');
+                    if ($moreDiv.length > 0) {
+                        $moreDiv.removeClass('hide').show();
+                    }
+                    
+                    // Also try clicking the button if it exists
                     var $moreBtn = $newModal.find('.more_btn');
                     if ($moreBtn.length > 0) {
-                        $moreBtn.trigger('click');
+                        $moreBtn.click();
                     }
                 });
                 
