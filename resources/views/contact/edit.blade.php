@@ -405,6 +405,9 @@
             <div class="col-md-12">
                 <h4 style="color: #48b2ee; margin-bottom: 15px;">
                     <i class="fa fa-users"></i> Related Customers
+                    <button type="button" class="btn btn-sm btn-success pull-right add-related-customer" style="margin-top: -5px;">
+                        <i class="fa fa-plus-circle"></i> Add Another Customer
+                    </button>
                 </h4>
                 <p style="color: #6c757d; font-size: 13px; margin-bottom: 15px;">
                     <i class="fa fa-info-circle"></i> These customers are linked to this contact
@@ -568,5 +571,45 @@ $(document).on('click', '.edit-related-customer', function(e) {
             },
         });
     }
+});
+
+// Handle "Add Another Customer" button
+$(document).on('click', '.add-related-customer', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Get the current contact's group ID from the hidden field
+    var groupId = $('#customer_group_id_link').val();
+    
+    // Open the add customer modal
+    $.ajax({
+        method: 'get',
+        url: '/contacts/create',
+        dataType: 'html',
+        data: { 
+            quick_add: true,
+            customer_group_id_link: groupId
+        },
+        success: function(result) {
+            var $newModal = $('<div class="modal fade contact_modal" tabindex="-1" role="dialog"></div>');
+            $newModal.html(result);
+            $('body').append($newModal);
+            $newModal.modal('show');
+            
+            // Set the group ID in the new form
+            $newModal.on('shown.bs.modal', function() {
+                if (groupId) {
+                    $newModal.find('#customer_group_id_link').val(groupId);
+                }
+            });
+            
+            // Remove modal from DOM when closed
+            $newModal.on('hidden.bs.modal', function() {
+                $(this).remove();
+                // Optionally reload the page to show the new related customer
+                location.reload();
+            });
+        },
+    });
 });
 </script>
