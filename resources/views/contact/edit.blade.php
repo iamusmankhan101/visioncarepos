@@ -230,28 +230,6 @@
         <div id="more_div" class="hide">
 
             <div class="col-md-12"><hr/></div>
-            
-            {{-- Add Another Customer Button --}}
-            <div class="col-md-12" style="margin-bottom: 15px;">
-                <button type="button" class="btn btn-success" id="toggle-add-customer-form">
-                    <i class="fa fa-plus-circle"></i> Add Another Related Customer
-                </button>
-                <small class="text-muted" style="margin-left: 10px;">
-                    <i class="fa fa-info-circle"></i> Add family members or related customers
-                </small>
-            </div>
-            
-            {{-- Inline Add Customer Form (Hidden by default) --}}
-            <div class="col-md-12" id="inline-add-customer-form" style="display: none; background-color: #f0f8ff; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 2px solid #48b2ee;">
-                <h5 style="color: #48b2ee; margin-top: 0;">
-                    <i class="fa fa-user-plus"></i> Add New Related Customer
-                    <button type="button" class="btn btn-sm btn-default pull-right" id="cancel-add-customer">
-                        <i class="fa fa-times"></i> Cancel
-                    </button>
-                </h5>
-                <hr>
-                <iframe id="add-customer-iframe" src="" style="width: 100%; height: 600px; border: none;"></iframe>
-            </div>
         
       <div class="clearfix"></div>
       <div class="col-md-12">
@@ -315,6 +293,28 @@
             </tbody>
           </table>
         </div>
+      </div>
+      
+      {{-- Add Another Customer Button - After Prescription --}}
+      <div class="col-md-12" style="margin-top: 20px; margin-bottom: 15px;">
+          <button type="button" class="btn btn-success" id="toggle-add-customer-form">
+              <i class="fa fa-plus-circle"></i> Add Another Related Customer
+          </button>
+          <small class="text-muted" style="margin-left: 10px;">
+              <i class="fa fa-info-circle"></i> Add family members or related customers
+          </small>
+      </div>
+      
+      {{-- Inline Add Customer Form (Hidden by default) --}}
+      <div class="col-md-12" id="inline-add-customer-form" style="display: none; background-color: #f0f8ff; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 2px solid #48b2ee;">
+          <h5 style="color: #48b2ee; margin-top: 0;">
+              <i class="fa fa-user-plus"></i> Add New Related Customer
+              <button type="button" class="btn btn-sm btn-default pull-right" id="cancel-add-customer">
+                  <i class="fa fa-times"></i> Cancel
+              </button>
+          </h5>
+          <hr>
+          <iframe id="add-customer-iframe" src="" style="width: 100%; height: 600px; border: none;"></iframe>
       </div>
       
       <div class="clearfix"></div>
