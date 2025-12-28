@@ -445,6 +445,12 @@
                                    style="margin-top: 15px;">
                                     <i class="fa fa-eye"></i> View Full Details
                                 </a>
+                                <button type="button" 
+                                   class="btn btn-sm btn-primary edit-related-customer" 
+                                   data-contact-id="{{ $related['id'] }}"
+                                   style="margin-top: 15px; margin-left: 5px;">
+                                    <i class="fa fa-edit"></i> Edit
+                                </button>
                             </div>
                         </div>
                         
@@ -527,3 +533,29 @@
 
   </div><!-- /.modal-content -->
 </div><!-- /.modal-dialog -->
+
+<
+script type="text/javascript">
+$(document).on('click', '.edit-related-customer', function() {
+    var contactId = $(this).data('contact-id');
+    if (contactId) {
+        $.ajax({
+            method: 'get',
+            url: '/contacts/' + contactId + '/edit',
+            dataType: 'html',
+            success: function(result) {
+                // Open in a new modal or replace current modal
+                var $newModal = $('<div class="modal fade" tabindex="-1" role="dialog"></div>');
+                $newModal.html(result);
+                $('body').append($newModal);
+                $newModal.modal('show');
+                
+                // Remove modal from DOM when closed
+                $newModal.on('hidden.bs.modal', function() {
+                    $(this).remove();
+                });
+            },
+        });
+    }
+});
+</script>
