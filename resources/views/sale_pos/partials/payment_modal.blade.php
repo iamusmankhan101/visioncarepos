@@ -7,7 +7,7 @@
                 <h4 class="modal-title">@lang('lang_v1.payment')</h4>
             </div>
             <div class="modal-body">
-                <div class="row">
+                <div class="row" style="display: none;">
                     <div class="col-md-12 mb-12">
                         <strong>@lang('lang_v1.advance_balance'):</strong> <span id="advance_balance_text"></span>
                         {!! Form::hidden('advance_balance', null, [
