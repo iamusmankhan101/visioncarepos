@@ -279,25 +279,7 @@
 		try {
 			// Find contact by contact_id field, not by primary key
 			$contact = \App\Contact::where('contact_id', $contact_id)->first();
-			// Debug: Log contact data
-			\Log::info('Contact ID: ' . $contact_id);
-			if($contact) {
-				\Log::info('Contact found: ' . $contact->name);
-				\Log::info('Custom fields: ', [
-					'cf1' => $contact->custom_field1,
-					'cf2' => $contact->custom_field2,
-					'cf3' => $contact->custom_field3,
-					'cf4' => $contact->custom_field4,
-					'cf5' => $contact->custom_field5,
-					'cf6' => $contact->custom_field6,
-					'cf7' => $contact->custom_field7,
-					'cf8' => $contact->custom_field8,
-					'cf9' => $contact->custom_field9,
-					'cf10' => $contact->custom_field10,
-				]);
-			}
 		} catch (\Exception $e) {
-			\Log::error('Error loading contact: ' . $e->getMessage());
 			$contact = null;
 		}
 	}
@@ -305,17 +287,6 @@
 
 <div class="row" style="color: #000000 !important; margin-top: 10px;">
 	<div class="col-xs-12">
-		<!-- DEBUG INFO -->
-		<div style="background: yellow; padding: 5px; margin-bottom: 10px;">
-			DEBUG: Contact ID = {{ $receipt_details->contact_id ?? 'NULL' }}
-			@if($contact)
-				| Contact Name = {{ $contact->name ?? 'NO NAME' }}
-				| CF1 = {{ $contact->custom_field1 ?? 'EMPTY' }}
-			@else
-				| Contact = NULL
-			@endif
-		</div>
-		
 		<table width="100%" style="border-collapse: collapse;">
 			<tr>
 				<!-- RIGHT EYE TABLE -->
