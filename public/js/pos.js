@@ -3630,19 +3630,19 @@ function showRelatedCustomersModal(customers, callback) {
         var borderColor = customer.is_current ? '#48b2ee' : '#ddd';
         var bgColor = customer.is_current ? '#f0f8ff' : 'white';
         
-        html += '<div class="related-customer-item" style="border: 2px solid ' + borderColor + '; border-radius: 8px; padding: 15px; margin-bottom: 15px; transition: all 0.3s; background-color: ' + bgColor + ';" data-customer-id="' + customer.id + '">';
+        html += '<div class="related-customer-item" style="border: 2px solid ' + borderColor + '; border-radius: 8px; padding: 15px; margin-bottom: 15px; transition: all 0.3s; background-color: ' + bgColor + '; cursor: pointer;" data-customer-id="' + customer.id + '">';
         html += '  <div class="row">';
         html += '    <div class="col-md-1" style="padding-top: 10px; text-align: center;">';
         html += '      <input type="checkbox" class="customer-checkbox" data-customer-id="' + customer.id + '" ' + isChecked + ' style="width: 20px; height: 20px; cursor: pointer;">';
         html += '    </div>';
         html += '    <div class="col-md-11">';
-        html += '      <h5 style="margin-top: 0; color: #48b2ee; cursor: pointer;" class="customer-name-click" data-customer-id="' + customer.id + '">';
+        html += '      <h5 style="margin-top: 0; color: #48b2ee;" class="customer-name-click" data-customer-id="' + customer.id + '">';
         html += '        <i class="fa fa-user"></i> ' + customer.name + isCurrentBadge;
         html += '      </h5>';
-        html += '      <p style="margin-bottom: 5px;"><strong>Contact ID:</strong> ' + (customer.contact_id || 'N/A') + '</p>';
-        html += '      <p style="margin-bottom: 5px;"><strong>Mobile:</strong> ' + (customer.mobile || 'N/A') + '</p>';
+        html += '      <p style="margin-bottom: 5px; pointer-events: none;"><strong>Contact ID:</strong> ' + (customer.contact_id || 'N/A') + '</p>';
+        html += '      <p style="margin-bottom: 5px; pointer-events: none;"><strong>Mobile:</strong> ' + (customer.mobile || 'N/A') + '</p>';
         if (customer.prescription_summary) {
-            html += '      <p style="margin-bottom: 0; color: #6c757d;"><strong>Prescription:</strong> ' + customer.prescription_summary + '</p>';
+            html += '      <p style="margin-bottom: 0; color: #6c757d; pointer-events: none;"><strong>Prescription:</strong> ' + customer.prescription_summary + '</p>';
         }
         html += '    </div>';
         html += '  </div>';
@@ -3708,12 +3708,19 @@ $(document).on('change', '.customer-checkbox', function() {
 
 // Handle clicking on customer name to toggle checkbox
 $(document).on('click', '.customer-name-click, .related-customer-item', function(e) {
-    // Don't trigger if clicking on checkbox itself
-    if ($(e.target).hasClass('customer-checkbox')) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Don't trigger if clicking on checkbox itself or links
+    if ($(e.target).hasClass('customer-checkbox') || $(e.target).is('a') || $(e.target).closest('a').length > 0) {
         return;
     }
     
     var customerId = $(this).data('customer-id');
+    if (!customerId) {
+        customerId = $(this).closest('.related-customer-item').data('customer-id');
+    }
+    
     var $checkbox = $('.customer-checkbox[data-customer-id="' + customerId + '"]');
     $checkbox.prop('checked', !$checkbox.is(':checked')).trigger('change');
 });
