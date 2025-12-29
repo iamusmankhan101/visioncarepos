@@ -1,21 +1,30 @@
 <!-- Related Customers Selection Modal -->
 <div class="modal fade" tabindex="-1" role="dialog" id="related_customers_modal">
-    <div class="modal-dialog" role="document">
+    <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header" style="background-color: #48b2ee; color: white;">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true" style="color: white;">&times;</span></button>
-                <h4 class="modal-title"><i class="fa fa-users"></i> Select Customer for This Sale</h4>
+                <h4 class="modal-title"><i class="fa fa-users"></i> Select Customer(s) for This Sale</h4>
             </div>
             <div class="modal-body">
-                <p style="color: #6c757d; margin-bottom: 20px;">
-                    <i class="fa fa-info-circle"></i> This customer has related family members/contacts. Please select who this sale is for:
+                <p style="color: #6c757d; margin-bottom: 15px;">
+                    <i class="fa fa-info-circle"></i> This customer has related family members/contacts. You can select one or multiple customers for this sale:
                 </p>
+                <div style="margin-bottom: 15px;">
+                    <label style="font-weight: normal; cursor: pointer;">
+                        <input type="checkbox" id="select_all_customers" style="margin-right: 5px;">
+                        <strong>Select All</strong>
+                    </label>
+                </div>
                 <div id="related_customers_list">
                     <!-- Will be populated via AJAX -->
                 </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirm_customer_selection">
+                    <i class="fa fa-check"></i> Confirm Selection
+                </button>
             </div>
         </div>
     </div>

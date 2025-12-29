@@ -3626,22 +3626,23 @@ function showRelatedCustomersModal(customers, callback) {
     var html = '';
     customers.forEach(function(customer) {
         var isCurrentClass = customer.is_current ? 'border-primary' : '';
-        var isCurrentBadge = customer.is_current ? '<span class="label label-primary pull-right">Currently Selected</span>' : '';
+        var isCurrentBadge = customer.is_current ? '<span class="label label-primary" style="margin-left: 10px;">Currently Selected</span>' : '';
+        var isChecked = customer.is_current ? 'checked' : '';
         
-        html += '<div class="related-customer-item" style="border: 2px solid #ddd; border-radius: 8px; padding: 15px; margin-bottom: 15px; cursor: pointer; transition: all 0.3s;" data-customer-id="' + customer.id + '" class="' + isCurrentClass + '">';
+        html += '<div class="related-customer-item" style="border: 2px solid #ddd; border-radius: 8px; padding: 15px; margin-bottom: 15px; transition: all 0.3s; ' + (customer.is_current ? 'border-color: #48b2ee; background-color: #f0f8ff;' : '') + '" data-customer-id="' + customer.id + '">';
         html += '  <div class="row">';
-        html += '    <div class="col-md-8">';
-        html += '      <h5 style="margin-top: 0; color: #48b2ee;"><i class="fa fa-user"></i> ' + customer.name + ' ' + isCurrentBadge + '</h5>';
+        html += '    <div class="col-md-1" style="padding-top: 10px;">';
+        html += '      <input type="checkbox" class="customer-checkbox" data-customer-id="' + customer.id + '" ' + isChecked + ' style="width: 20px; height: 20px; cursor: pointer;">';
+        html += '    </div>';
+        html += '    <div class="col-md-11">';
+        html += '      <h5 style="margin-top: 0; color: #48b2ee; cursor: pointer;" class="customer-name-click" data-customer-id="' + customer.id + '">';
+        html += '        <i class="fa fa-user"></i> ' + customer.name + isCurrentBadge;
+        html += '      </h5>';
         html += '      <p style="margin-bottom: 5px;"><strong>Contact ID:</strong> ' + (customer.contact_id || 'N/A') + '</p>';
         html += '      <p style="margin-bottom: 5px;"><strong>Mobile:</strong> ' + (customer.mobile || 'N/A') + '</p>';
         if (customer.prescription_summary) {
             html += '      <p style="margin-bottom: 0; color: #6c757d;"><strong>Prescription:</strong> ' + customer.prescription_summary + '</p>';
         }
-        html += '    </div>';
-        html += '    <div class="col-md-4 text-right">';
-        html += '      <button type="button" class="btn btn-primary btn-select-customer" data-customer-id="' + customer.id + '" style="margin-top: 20px;">';
-        html += '        <i class="fa fa-check"></i> Select';
-        html += '      </button>';
         html += '    </div>';
         html += '  </div>';
         html += '</div>';
@@ -3652,43 +3653,115 @@ function showRelatedCustomersModal(customers, callback) {
 }
 
 
-// Handle customer selection from related customers modal
-$(document).on('click', '.btn-select-customer, .related-customer-item', function(e) {
-    e.preventDefault();
-    e.stopPropagation(); // Prevent event bubbling
+// Handle "Select All" checkbox
+$(document).on('change', '#select_all_customers', function() {
+    var isChecked = $(this).is(':checked');
+    $('.customer-checkbox').prop('checked', isChecked);
+    
+    // Update visual feedback
+    $('.related-customer-item').each(function() {
+        if (isChecked) {
+            $(this).css({
+                'border-color': '#48b2ee',
+                'background-color': '#f0f8ff'
+            });
+        } else {
+            $(this).css({
+                'border-color': '#ddd',
+                'background-color': 'white'
+            });
+        }
+    });
+});
+
+// Handle individual checkbox changes
+$(document).on('change', '.customer-checkbox', function() {
+    var $item = $(this).closest('.related-customer-item');
+    var isChecked = $(this).is(':checked');
+    
+    if (isChecked) {
+        $item.css({
+            'border-color': '#48b2ee',
+            'background-color': '#f0f8ff'
+        });
+    } else {
+        $item.css({
+            'border-color': '#ddd',
+            'background-color': 'white'
+        });
+        // Uncheck "Select All" if any checkbox is unchecked
+        $('#select_all_customers').prop('checked', false);
+    }
+    
+    // Check if all checkboxes are checked to update "Select All"
+    var totalCheckboxes = $('.customer-checkbox').length;
+    var checkedCheckboxes = $('.customer-checkbox:checked').length;
+    $('#select_all_customers').prop('checked', totalCheckboxes === checkedCheckboxes);
+});
+
+// Handle clicking on customer name to toggle checkbox
+$(document).on('click', '.customer-name-click, .related-customer-item', function(e) {
+    // Don't trigger if clicking on checkbox itself
+    if ($(e.target).hasClass('customer-checkbox')) {
+        return;
+    }
     
     var customerId = $(this).data('customer-id');
+    var $checkbox = $('.customer-checkbox[data-customer-id="' + customerId + '"]');
+    $checkbox.prop('checked', !$checkbox.is(':checked')).trigger('change');
+});
+
+// Handle confirm button click
+$(document).on('click', '#confirm_customer_selection', function(e) {
+    e.preventDefault();
     
-    console.log('Customer selected:', customerId);
-    console.log('Callback exists:', !!window.relatedCustomerCallback);
-    console.log('Callback type:', typeof window.relatedCustomerCallback);
+    var selectedCustomers = [];
+    $('.customer-checkbox:checked').each(function() {
+        selectedCustomers.push($(this).data('customer-id'));
+    });
     
-    // Prevent multiple clicks
-    if ($(this).hasClass('processing')) {
-        return false;
+    if (selectedCustomers.length === 0) {
+        toastr.warning('Please select at least one customer');
+        return;
     }
-    $(this).addClass('processing');
     
-    // Update the customer dropdown (Select2)
+    console.log('Selected customers:', selectedCustomers);
+    
+    // Update the customer dropdown with the first selected customer
     var $customerSelect = $('#customer_id');
+    var firstCustomerId = selectedCustomers[0];
     
     // Check if the option exists, if not create it
-    if ($customerSelect.find("option[value='" + customerId + "']").length === 0) {
+    if ($customerSelect.find("option[value='" + firstCustomerId + "']").length === 0) {
         // Get customer name from the modal
-        var customerName = $(this).find('h5').text().trim();
-        // Remove the "Currently Selected" badge text if present
-        customerName = customerName.replace('Currently Selected', '').trim();
+        var customerName = $('.customer-checkbox[data-customer-id="' + firstCustomerId + '"]')
+            .closest('.related-customer-item')
+            .find('.customer-name-click')
+            .text()
+            .trim()
+            .replace('Currently Selected', '')
+            .trim();
         
         // Create new option
-        var newOption = new Option(customerName, customerId, true, true);
+        var newOption = new Option(customerName, firstCustomerId, true, true);
         $customerSelect.append(newOption);
     } else {
         // Option exists, just select it
-        $customerSelect.val(customerId);
+        $customerSelect.val(firstCustomerId);
     }
     
     // Trigger change event for Select2
     $customerSelect.trigger('change');
+    
+    // Store all selected customer IDs in a hidden field or data attribute
+    if (selectedCustomers.length > 1) {
+        // Add a hidden field to store multiple customer IDs
+        $('#pos-form').find('input[name="multiple_customer_ids"]').remove();
+        $('#pos-form').append('<input type="hidden" name="multiple_customer_ids" value="' + selectedCustomers.join(',') + '">');
+        
+        // Show notification
+        toastr.success(selectedCustomers.length + ' customer(s) selected for this sale');
+    }
     
     // Close related customers modal
     $('#related_customers_modal').modal('hide');
@@ -3710,6 +3783,22 @@ $(document).on('click', '.btn-select-customer, .related-customer-item', function
             $('#modal_payment').modal('show');
         }, 300);
     }
+});
+
+// Legacy support: Handle old single-select button (if any old code still uses it)
+$(document).on('click', '.btn-select-customer', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    var customerId = $(this).data('customer-id');
+    var $checkbox = $('.customer-checkbox[data-customer-id="' + customerId + '"]');
+    
+    // Check only this checkbox
+    $('.customer-checkbox').prop('checked', false);
+    $checkbox.prop('checked', true).trigger('change');
+    
+    // Trigger confirm button
+    $('#confirm_customer_selection').click();
 });
 
 // Add hover effect for related customer items
