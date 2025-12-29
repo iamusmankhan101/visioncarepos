@@ -3625,13 +3625,14 @@ function showRelatedCustomersModal(customers, callback) {
     
     var html = '';
     customers.forEach(function(customer) {
-        var isCurrentClass = customer.is_current ? 'border-primary' : '';
         var isCurrentBadge = customer.is_current ? '<span class="label label-primary" style="margin-left: 10px;">Currently Selected</span>' : '';
         var isChecked = customer.is_current ? 'checked' : '';
+        var borderColor = customer.is_current ? '#48b2ee' : '#ddd';
+        var bgColor = customer.is_current ? '#f0f8ff' : 'white';
         
-        html += '<div class="related-customer-item" style="border: 2px solid #ddd; border-radius: 8px; padding: 15px; margin-bottom: 15px; transition: all 0.3s; ' + (customer.is_current ? 'border-color: #48b2ee; background-color: #f0f8ff;' : '') + '" data-customer-id="' + customer.id + '">';
+        html += '<div class="related-customer-item" style="border: 2px solid ' + borderColor + '; border-radius: 8px; padding: 15px; margin-bottom: 15px; transition: all 0.3s; background-color: ' + bgColor + ';" data-customer-id="' + customer.id + '">';
         html += '  <div class="row">';
-        html += '    <div class="col-md-1" style="padding-top: 10px;">';
+        html += '    <div class="col-md-1" style="padding-top: 10px; text-align: center;">';
         html += '      <input type="checkbox" class="customer-checkbox" data-customer-id="' + customer.id + '" ' + isChecked + ' style="width: 20px; height: 20px; cursor: pointer;">';
         html += '    </div>';
         html += '    <div class="col-md-11">';
@@ -3648,8 +3649,14 @@ function showRelatedCustomersModal(customers, callback) {
         html += '</div>';
     });
     
+    console.log('Generated HTML:', html);
     $('#related_customers_list').html(html);
     $('#related_customers_modal').modal('show');
+    
+    // Debug: Check if checkboxes were added
+    setTimeout(function() {
+        console.log('Checkboxes found:', $('.customer-checkbox').length);
+    }, 100);
 }
 
 
