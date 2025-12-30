@@ -494,20 +494,24 @@ class SellPosController extends Controller
 
                 $transaction = $this->transactionUtil->createSellTransaction($business_id, $input, $invoice_total, $user_id);
 
-                // Save multiple customer names if provided
-                if (!empty($input['multiple_customer_names'])) {
-                    \Log::info('Multiple customers detected:', [
-                        'customer_ids' => $input['multiple_customer_ids'] ?? 'not set',
-                        'customer_names' => $input['multiple_customer_names']
-                    ]);
+                // Store multiple customer IDs if provided (for separate invoice printing)
+                $additional_customer_ids = [];
+                if (!empty($input['multiple_customer_ids'])) {
+                    $customer_ids = explode(',', $input['multiple_customer_ids']);
+                    // Remove the first customer (already set as main contact_id)
+                    $additional_customer_ids = array_slice($customer_ids, 1);
                     
-                    $transaction->additional_notes = (!empty($transaction->additional_notes) ? $transaction->additional_notes . "\n" : '') . 
-                                                    'Additional Customers: ' . $input['multiple_customer_names'];
-                    $transaction->save();
-                    
-                    \Log::info('Saved additional_notes:', ['notes' => $transaction->additional_notes]);
-                } else {
-                    \Log::info('No multiple customers in request', ['input_keys' => array_keys($input)]);
+                    if (!empty($additional_customer_ids)) {
+                        \Log::info('Multiple customers for separate invoices:', [
+                            'main_customer' => $transaction->contact_id,
+                            'additional_customers' => $additional_customer_ids
+                        ]);
+                        
+                        // Store additional customer IDs in additional_notes for later retrieval
+                        $transaction->additional_notes = (!empty($transaction->additional_notes) ? $transaction->additional_notes . "\n" : '') . 
+                                                        'MULTI_INVOICE_CUSTOMERS:' . implode(',', $additional_customer_ids);
+                        $transaction->save();
+                    }
                 }
 
                 //Upload Shipping documents
@@ -1791,10 +1795,46 @@ class SellPosController extends Controller
                 $is_delivery_note = !empty($request->input('delivery_note')) ? true : false;
 
                 $invoice_layout_id = $transaction->is_direct_sale ? $transaction->location->sale_invoice_layout_id : null;
+                
+                // Check if there are multiple customers for separate invoices
+                $additional_customer_ids = [];
+                if (!empty($transaction->additional_notes) && strpos($transaction->additional_notes, 'MULTI_INVOICE_CUSTOMERS:') !== false) {
+                    preg_match('/MULTI_INVOICE_CUSTOMERS:([0-9,]+)/', $transaction->additional_notes, $matches);
+                    if (!empty($matches[1])) {
+                        $additional_customer_ids = explode(',', $matches[1]);
+                    }
+                }
+                
+                // Generate receipt for main customer
                 $receipt = $this->receiptContent($business_id, $transaction->location_id, $transaction_id, $printer_type, $is_package_slip, false, $invoice_layout_id, $is_delivery_note);
+                
+                // Generate receipts for additional customers
+                $additional_receipts = [];
+                if (!empty($additional_customer_ids)) {
+                    $original_contact_id = $transaction->contact_id;
+                    
+                    foreach ($additional_customer_ids as $customer_id) {
+                        // Temporarily change the contact_id
+                        $transaction->contact_id = $customer_id;
+                        $transaction->save();
+                        
+                        // Generate receipt for this customer
+                        $additional_receipt = $this->receiptContent($business_id, $transaction->location_id, $transaction_id, $printer_type, $is_package_slip, false, $invoice_layout_id, $is_delivery_note);
+                        $additional_receipts[] = $additional_receipt;
+                    }
+                    
+                    // Restore original contact_id
+                    $transaction->contact_id = $original_contact_id;
+                    $transaction->save();
+                }
 
                 if (!empty($receipt)) {
-                    $output = ['success' => 1, 'receipt' => $receipt];
+                    $output = [
+                        'success' => 1, 
+                        'receipt' => $receipt,
+                        'additional_receipts' => $additional_receipts,
+                        'has_multiple' => !empty($additional_receipts)
+                    ];
                 }
             } catch (\Exception $e) {
                 \Log::emergency('File:' . $e->getFile() . 'Line:' . $e->getLine() . 'Message:' . $e->getMessage());

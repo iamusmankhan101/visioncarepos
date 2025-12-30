@@ -2554,6 +2554,21 @@ function pos_print(receipt) {
             document.title = title;
         }, 1200);
     }
+    
+    // Print additional receipts if they exist (for multiple customers)
+    if (receipt.additional_receipts && receipt.additional_receipts.length > 0) {
+        console.log('Printing ' + receipt.additional_receipts.length + ' additional receipts');
+        
+        receipt.additional_receipts.forEach(function(additional_receipt, index) {
+            setTimeout(function() {
+                if (additional_receipt.html_content != '') {
+                    $('#receipt_section').html(additional_receipt.html_content);
+                    __currency_convert_recursively($('#receipt_section'));
+                    __print_receipt('receipt_section');
+                }
+            }, (index + 1) * 2000); // 2 second delay between each print
+        });
+    }
 }
 
 function calculate_discounted_unit_price(row) {
