@@ -494,6 +494,13 @@ class SellPosController extends Controller
 
                 $transaction = $this->transactionUtil->createSellTransaction($business_id, $input, $invoice_total, $user_id);
 
+                // Save multiple customer names if provided
+                if (!empty($input['multiple_customer_names'])) {
+                    $transaction->additional_notes = (!empty($transaction->additional_notes) ? $transaction->additional_notes . "\n" : '') . 
+                                                    'Additional Customers: ' . $input['multiple_customer_names'];
+                    $transaction->save();
+                }
+
                 //Upload Shipping documents
                 Media::uploadMedia($business_id, $transaction, $request, 'shipping_documents', false, 'shipping_document');
 

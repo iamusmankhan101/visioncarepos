@@ -1193,6 +1193,15 @@ class TransactionUtil extends Util
             $output['customer_total_rp'] = $customer->total_rp;
         }
 
+        // Extract additional customers from additional_notes
+        $output['additional_customers'] = '';
+        if (!empty($transaction->additional_notes) && strpos($transaction->additional_notes, 'Additional Customers:') !== false) {
+            preg_match('/Additional Customers: (.+?)(\n|$)/', $transaction->additional_notes, $matches);
+            if (!empty($matches[1])) {
+                $output['additional_customers'] = trim($matches[1]);
+            }
+        }
+
         $output['client_id'] = '';
         $output['client_id_label'] = '';
         if ($il->show_client_id == 1) {

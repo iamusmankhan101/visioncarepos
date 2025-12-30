@@ -125,6 +125,12 @@
 					<br/>
 					<b>{{ $receipt_details->customer_label }}</b> <br> {!! $receipt_details->customer_info !!} <br>
 				@endif
+				@if(!empty($receipt_details->additional_customers))
+					<span style="font-size: 0.9em; color: #666;">
+						<i>(Also for: {{ $receipt_details->additional_customers }})</i>
+					</span>
+					<br/>
+				@endif
 				@if(!empty($receipt_details->client_id_label))
 					<br/>
 					<b>{{ $receipt_details->client_id_label }}</b> {{ $receipt_details->client_id }}

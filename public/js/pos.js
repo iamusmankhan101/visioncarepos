@@ -3730,8 +3730,20 @@ $(document).on('click', '#confirm_customer_selection', function(e) {
     e.preventDefault();
     
     var selectedCustomers = [];
+    var selectedCustomerNames = [];
+    
     $('.customer-checkbox:checked').each(function() {
-        selectedCustomers.push($(this).data('customer-id'));
+        var customerId = $(this).data('customer-id');
+        var customerName = $(this)
+            .closest('.related-customer-item')
+            .find('.customer-name-click')
+            .clone() // Clone to avoid modifying original
+            .find('.label').remove().end() // Remove badge
+            .text()
+            .trim();
+        
+        selectedCustomers.push(customerId);
+        selectedCustomerNames.push(customerName);
     });
     
     if (selectedCustomers.length === 0) {
@@ -3740,24 +3752,17 @@ $(document).on('click', '#confirm_customer_selection', function(e) {
     }
     
     console.log('Selected customers:', selectedCustomers);
+    console.log('Selected customer names:', selectedCustomerNames);
     
     // Update the customer dropdown with the first selected customer
     var $customerSelect = $('#customer_id');
     var firstCustomerId = selectedCustomers[0];
+    var firstCustomerName = selectedCustomerNames[0];
     
     // Check if the option exists, if not create it
     if ($customerSelect.find("option[value='" + firstCustomerId + "']").length === 0) {
-        // Get customer name from the modal
-        var customerName = $('.customer-checkbox[data-customer-id="' + firstCustomerId + '"]')
-            .closest('.related-customer-item')
-            .find('.customer-name-click')
-            .text()
-            .trim()
-            .replace('Currently Selected', '')
-            .trim();
-        
         // Create new option
-        var newOption = new Option(customerName, firstCustomerId, true, true);
+        var newOption = new Option(firstCustomerName, firstCustomerId, true, true);
         $customerSelect.append(newOption);
     } else {
         // Option exists, just select it
@@ -3767,11 +3772,14 @@ $(document).on('click', '#confirm_customer_selection', function(e) {
     // Trigger change event for Select2
     $customerSelect.trigger('change');
     
-    // Store all selected customer IDs in a hidden field or data attribute
+    // Store all selected customer IDs and names
+    $('#pos-form').find('input[name="multiple_customer_ids"]').remove();
+    $('#pos-form').find('input[name="multiple_customer_names"]').remove();
+    
     if (selectedCustomers.length > 1) {
-        // Add a hidden field to store multiple customer IDs
-        $('#pos-form').find('input[name="multiple_customer_ids"]').remove();
+        // Add hidden fields to store multiple customer IDs and names
         $('#pos-form').append('<input type="hidden" name="multiple_customer_ids" value="' + selectedCustomers.join(',') + '">');
+        $('#pos-form').append('<input type="hidden" name="multiple_customer_names" value="' + selectedCustomerNames.join(', ') + '">');
         
         // Show notification
         toastr.success(selectedCustomers.length + ' customer(s) selected for this sale');
