@@ -496,9 +496,18 @@ class SellPosController extends Controller
 
                 // Save multiple customer names if provided
                 if (!empty($input['multiple_customer_names'])) {
+                    \Log::info('Multiple customers detected:', [
+                        'customer_ids' => $input['multiple_customer_ids'] ?? 'not set',
+                        'customer_names' => $input['multiple_customer_names']
+                    ]);
+                    
                     $transaction->additional_notes = (!empty($transaction->additional_notes) ? $transaction->additional_notes . "\n" : '') . 
                                                     'Additional Customers: ' . $input['multiple_customer_names'];
                     $transaction->save();
+                    
+                    \Log::info('Saved additional_notes:', ['notes' => $transaction->additional_notes]);
+                } else {
+                    \Log::info('No multiple customers in request', ['input_keys' => array_keys($input)]);
                 }
 
                 //Upload Shipping documents

@@ -3778,11 +3778,18 @@ $(document).on('click', '#confirm_customer_selection', function(e) {
     
     if (selectedCustomers.length > 1) {
         // Add hidden fields to store multiple customer IDs and names
+        var customerNamesString = selectedCustomerNames.slice(1).join(', '); // Skip first customer
         $('#pos-form').append('<input type="hidden" name="multiple_customer_ids" value="' + selectedCustomers.join(',') + '">');
-        $('#pos-form').append('<input type="hidden" name="multiple_customer_names" value="' + selectedCustomerNames.join(', ') + '">');
+        $('#pos-form').append('<input type="hidden" name="multiple_customer_names" value="' + customerNamesString + '">');
+        
+        console.log('Added hidden fields:');
+        console.log('  multiple_customer_ids:', selectedCustomers.join(','));
+        console.log('  multiple_customer_names:', customerNamesString);
         
         // Show notification
         toastr.success(selectedCustomers.length + ' customer(s) selected for this sale');
+    } else {
+        console.log('Only one customer selected, no additional customers to store');
     }
     
     // Close related customers modal
