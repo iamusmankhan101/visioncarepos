@@ -2524,6 +2524,10 @@ function round_row_to_iraqi_dinnar(row) {
 }
 
 function pos_print(receipt) {
+    console.log('pos_print called with receipt:', receipt);
+    console.log('Has additional_receipts?', receipt.additional_receipts);
+    console.log('Additional receipts count:', receipt.additional_receipts ? receipt.additional_receipts.length : 0);
+    
     //If printer type then connect with websocket
     if (receipt.print_type == 'printer') {
         var content = receipt;
@@ -2545,6 +2549,7 @@ function pos_print(receipt) {
             document.title = receipt.print_title;
         }
 
+        console.log('Printing main receipt');
         //If printer type browser then print content
         $('#receipt_section').html(receipt.html_content);
         __currency_convert_recursively($('#receipt_section'));
@@ -2560,14 +2565,20 @@ function pos_print(receipt) {
         console.log('Printing ' + receipt.additional_receipts.length + ' additional receipts');
         
         receipt.additional_receipts.forEach(function(additional_receipt, index) {
+            console.log('Scheduling additional receipt ' + (index + 1) + ' in ' + ((index + 1) * 2000) + 'ms');
             setTimeout(function() {
+                console.log('Printing additional receipt ' + (index + 1));
                 if (additional_receipt.html_content != '') {
                     $('#receipt_section').html(additional_receipt.html_content);
                     __currency_convert_recursively($('#receipt_section'));
                     __print_receipt('receipt_section');
+                } else {
+                    console.log('Additional receipt ' + (index + 1) + ' has no html_content');
                 }
             }, (index + 1) * 2000); // 2 second delay between each print
         });
+    } else {
+        console.log('No additional receipts to print');
     }
 }
 
