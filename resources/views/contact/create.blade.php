@@ -767,12 +767,33 @@
           // Remove any elements with payment-related labels
           $basicFields.find('label').filter(function() {
             var text = $(this).text().toLowerCase();
-            return text.includes('amount') || text.includes('payment method') || text.includes('payment note');
+            return text.includes('amount') || text.includes('payment method') || text.includes('payment note') ||
+                   text.includes('advance balance') || text.includes('sell note') || text.includes('staff note') ||
+                   text.includes('suspend note');
           }).closest('.form-group, .col-md-4, .col-md-6, .col-md-12').remove();
           
           $moreDiv.find('label').filter(function() {
             var text = $(this).text().toLowerCase();
-            return text.includes('amount') || text.includes('payment method') || text.includes('payment note');
+            return text.includes('amount') || text.includes('payment method') || text.includes('payment note') ||
+                   text.includes('advance balance') || text.includes('sell note') || text.includes('staff note') ||
+                   text.includes('suspend note');
+          }).closest('.form-group, .col-md-4, .col-md-6, .col-md-12').remove();
+          
+          // Remove any transaction/sale-related fields
+          $basicFields.find('[name*="advance"], [name*="sell_note"], [name*="staff_note"], [name*="suspend"], [id*="advance"], [id*="sell_note"], [id*="staff_note"], [id*="suspend"]').closest('.form-group, .col-md-4, .col-md-6, .col-md-12').remove();
+          $moreDiv.find('[name*="advance"], [name*="sell_note"], [name*="staff_note"], [name*="suspend"], [id*="advance"], [id*="sell_note"], [id*="staff_note"], [id*="suspend"]').closest('.form-group, .col-md-4, .col-md-6, .col-md-12').remove();
+          
+          // Remove any elements containing transaction-related text
+          $basicFields.find('*').filter(function() {
+            var text = $(this).text().toLowerCase();
+            return text.includes('advance balance') || text.includes('sell note') || 
+                   text.includes('staff note') || text.includes('suspend note');
+          }).closest('.form-group, .col-md-4, .col-md-6, .col-md-12').remove();
+          
+          $moreDiv.find('*').filter(function() {
+            var text = $(this).text().toLowerCase();
+            return text.includes('advance balance') || text.includes('sell note') || 
+                   text.includes('staff note') || text.includes('suspend note');
           }).closest('.form-group, .col-md-4, .col-md-6, .col-md-12').remove();
           
           // Update the more_div ID to be unique
