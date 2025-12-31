@@ -670,9 +670,15 @@ $(document).ready(function() {
                         pos_print(result.receipt);
                         
                         // Check if there are additional customers to print invoices for
-                        if (window.selectedCustomersForInvoice && window.selectedCustomersForInvoice.ids.length > 1) {
+                        var selectedCustomers = window.selectedCustomersForInvoice || JSON.parse(sessionStorage.getItem('selectedCustomersForInvoice') || 'null');
+                        console.log('Checking for additional customers:', selectedCustomers);
+                        
+                        if (selectedCustomers && selectedCustomers.ids && selectedCustomers.ids.length > 1) {
                             var transactionId = result.transaction_id || result.receipt.transaction_id;
-                            showAdditionalCustomerPrintModal(transactionId, window.selectedCustomersForInvoice);
+                            console.log('Transaction ID:', transactionId);
+                            showAdditionalCustomerPrintModal(transactionId, selectedCustomers);
+                            // Clear after showing modal
+                            sessionStorage.removeItem('selectedCustomersForInvoice');
                         }
                     }
                 } else {
@@ -1000,9 +1006,15 @@ $(document).ready(function() {
                                 pos_print(result.receipt);
                                 
                                 // Check if there are additional customers to print invoices for
-                                if (window.selectedCustomersForInvoice && window.selectedCustomersForInvoice.ids.length > 1) {
+                                var selectedCustomers = window.selectedCustomersForInvoice || JSON.parse(sessionStorage.getItem('selectedCustomersForInvoice') || 'null');
+                                console.log('Checking for additional customers (express):', selectedCustomers);
+                                
+                                if (selectedCustomers && selectedCustomers.ids && selectedCustomers.ids.length > 1) {
                                     var transactionId = result.transaction_id || result.receipt.transaction_id;
-                                    showAdditionalCustomerPrintModal(transactionId, window.selectedCustomersForInvoice);
+                                    console.log('Transaction ID (express):', transactionId);
+                                    showAdditionalCustomerPrintModal(transactionId, selectedCustomers);
+                                    // Clear after showing modal
+                                    sessionStorage.removeItem('selectedCustomersForInvoice');
                                 }
                             }
                         } else {
@@ -3818,7 +3830,11 @@ $(document).on('click', '#confirm_customer_selection', function(e) {
         names: selectedCustomerNames
     };
     
+    // Also store in sessionStorage for persistence
+    sessionStorage.setItem('selectedCustomersForInvoice', JSON.stringify(window.selectedCustomersForInvoice));
+    
     console.log('Stored customers globally:', window.selectedCustomersForInvoice);
+    console.log('Stored in sessionStorage:', sessionStorage.getItem('selectedCustomersForInvoice'));
     
     // Store all selected customer IDs and names
     $('#pos-form').find('input[name="multiple_customer_ids"]').remove();
