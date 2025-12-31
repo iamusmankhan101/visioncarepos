@@ -314,7 +314,101 @@
               </button>
           </h5>
           <hr>
-          <iframe id="add-customer-iframe" src="" style="width: 100%; height: 600px; border: none;"></iframe>
+          
+          <!-- Clean inline form instead of iframe -->
+          <div id="inline-customer-form-content">
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="related_relationship_type">Relationship:</label>
+                  <div class="input-group">
+                    <span class="input-group-addon"><i class="fa fa-users"></i></span>
+                    <select name="related_relationship_type" class="form-control" id="related_relationship_type">
+                      <option value="">Select Relationship</option>
+                      <option value="self">Self (Primary)</option>
+                      <option value="spouse">Spouse</option>
+                      <option value="child">Child</option>
+                      <option value="parent">Parent</option>
+                      <option value="sibling">Sibling</option>
+                      <option value="relative">Other Relative</option>
+                      <option value="friend">Friend</option>
+                    </select>
+                  </div>
+                  <p class="help-block" style="color: #48b2ee;">
+                    <i class="fa fa-info-circle"></i> This customer is linked with other customers added in this form
+                  </p>
+                </div>
+              </div>
+              <div class="clearfix"></div>
+            </div>
+            
+            <!-- Lens Prescription Section -->
+            <div class="col-md-12">
+              <hr/>
+              <h4 style="color: #48b2ee;">
+                <i class="fa fa-eye"></i> Lens Prescription
+              </h4>
+            </div>
+            
+            <div class="col-md-12">
+              <div class="table-responsive">
+                <table class="table table-bordered" style="background-color: #fff;">
+                  <thead style="background-color: #48b2ee; color: white;">
+                    <tr>
+                      <th style="width: 15%;">Eye</th>
+                      <th style="width: 15%;">Type</th>
+                      <th style="width: 23%;">Sph.</th>
+                      <th style="width: 23%;">Cyl.</th>
+                      <th style="width: 24%;">Axis</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <!-- RIGHT EYE - Distance -->
+                    <tr>
+                      <td rowspan="2" style="vertical-align: middle; font-weight: bold; background-color: #f8f9fa;">
+                        <i class="fa fa-arrow-right" style="color: #48b2ee;"></i> RIGHT EYE
+                      </td>
+                      <td style="font-weight: 600;">Distance</td>
+                      <td><input type="text" name="related_custom_field1" class="form-control" placeholder="e.g., -2.00"></td>
+                      <td><input type="text" name="related_custom_field2" class="form-control" placeholder="e.g., -1.00"></td>
+                      <td><input type="text" name="related_custom_field3" class="form-control" placeholder="e.g., 180"></td>
+                    </tr>
+                    <!-- RIGHT EYE - Near -->
+                    <tr>
+                      <td style="font-weight: 600;">Near</td>
+                      <td><input type="text" name="related_custom_field4" class="form-control" placeholder="e.g., -2.00"></td>
+                      <td><input type="text" name="related_custom_field5" class="form-control" placeholder="e.g., -1.00"></td>
+                      <td><input type="text" name="related_custom_field6" class="form-control" placeholder="e.g., 180"></td>
+                    </tr>
+                    <!-- LEFT EYE - Distance -->
+                    <tr>
+                      <td rowspan="2" style="vertical-align: middle; font-weight: bold; background-color: #f8f9fa;">
+                        <i class="fa fa-arrow-left" style="color: #48b2ee;"></i> LEFT EYE
+                      </td>
+                      <td style="font-weight: 600;">Distance</td>
+                      <td><input type="text" name="related_custom_field7" class="form-control" placeholder="e.g., -2.00"></td>
+                      <td><input type="text" name="related_custom_field8" class="form-control" placeholder="e.g., -1.00"></td>
+                      <td><input type="text" name="related_custom_field9" class="form-control" placeholder="e.g., 180"></td>
+                    </tr>
+                    <!-- LEFT EYE - Near -->
+                    <tr>
+                      <td style="font-weight: 600;">Near</td>
+                      <td><input type="text" name="related_custom_field10" class="form-control" placeholder="e.g., -2.00"></td>
+                      <td><input type="text" name="related_shipping_custom_field_1" class="form-control" placeholder="e.g., -1.00"></td>
+                      <td><input type="text" name="related_shipping_custom_field_2" class="form-control" placeholder="e.g., 180"></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            
+            <!-- Save Button -->
+            <div class="col-md-12 text-center" style="margin-top: 20px;">
+              <button type="button" class="btn btn-primary" id="save-related-customer">
+                <i class="fa fa-save"></i> Save Related Customer
+              </button>
+            </div>
+          </div>
       </div>
       
       <div class="clearfix"></div>
@@ -611,14 +705,12 @@ $(document).on('click', '.add-related-customer', function(e) {
 $(document).on('click', '#toggle-add-customer-form', function(e) {
     e.preventDefault();
     var $form = $('#inline-add-customer-form');
-    var $iframe = $('#add-customer-iframe');
     
     if ($form.is(':visible')) {
         $form.slideUp();
     } else {
-        // Get group ID and load the form
-        var groupId = $('#customer_group_id_link').val();
-        $iframe.attr('src', '/contacts/create?quick_add=1&group_id=' + groupId + '&inline=1');
+        // Clear the form fields
+        $form.find('input, select, textarea').val('');
         $form.slideDown();
     }
 });
@@ -627,16 +719,59 @@ $(document).on('click', '#toggle-add-customer-form', function(e) {
 $(document).on('click', '#cancel-add-customer', function(e) {
     e.preventDefault();
     $('#inline-add-customer-form').slideUp();
-    $('#add-customer-iframe').attr('src', '');
 });
 
-// Listen for message from iframe when customer is saved
-window.addEventListener('message', function(event) {
-    if (event.data === 'customer-saved') {
-        $('#inline-add-customer-form').slideUp();
-        $('#add-customer-iframe').attr('src', '');
-        // Reload the page to show new related customer
-        location.reload();
+// Handle save related customer
+$(document).on('click', '#save-related-customer', function(e) {
+    e.preventDefault();
+    
+    var relationshipType = $('#related_relationship_type').val();
+    if (!relationshipType) {
+        alert('Please select a relationship type');
+        return;
     }
+    
+    // Collect form data
+    var formData = {
+        relationship_type: relationshipType,
+        custom_field1: $('input[name="related_custom_field1"]').val(),
+        custom_field2: $('input[name="related_custom_field2"]').val(),
+        custom_field3: $('input[name="related_custom_field3"]').val(),
+        custom_field4: $('input[name="related_custom_field4"]').val(),
+        custom_field5: $('input[name="related_custom_field5"]').val(),
+        custom_field6: $('input[name="related_custom_field6"]').val(),
+        custom_field7: $('input[name="related_custom_field7"]').val(),
+        custom_field8: $('input[name="related_custom_field8"]').val(),
+        custom_field9: $('input[name="related_custom_field9"]').val(),
+        custom_field10: $('input[name="related_custom_field10"]').val(),
+        shipping_custom_field_1: $('input[name="related_shipping_custom_field_1"]').val(),
+        shipping_custom_field_2: $('input[name="related_shipping_custom_field_2"]').val(),
+        customer_group_id_link: $('#customer_group_id_link').val(),
+        _token: $('meta[name="csrf-token"]').attr('content')
+    };
+    
+    // Show loading
+    $('#save-related-customer').prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Saving...');
+    
+    // Save via AJAX
+    $.ajax({
+        url: '/contacts',
+        method: 'POST',
+        data: formData,
+        success: function(response) {
+            if (response.success) {
+                $('#inline-add-customer-form').slideUp();
+                // Reload the page to show new related customer
+                location.reload();
+            } else {
+                alert('Error saving customer');
+                $('#save-related-customer').prop('disabled', false).html('<i class="fa fa-save"></i> Save Related Customer');
+            }
+        },
+        error: function() {
+            alert('Error saving customer');
+            $('#save-related-customer').prop('disabled', false).html('<i class="fa fa-save"></i> Save Related Customer');
+        }
+    });
 });
 </script>
