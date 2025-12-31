@@ -724,152 +724,44 @@
           e.preventDefault();
           customerFormCount++;
           
-          // Clone ALL the basic customer fields properly
-          var $modalBody = $('.modal-body').first();
-          var $basicFields = $modalBody.find('.row').first().clone(true, true);
-          var $groupLinkField = $('.customer-group-link').clone();
-          var $moreInfoRow = $modalBody.find('.row').eq(2).clone(true, true);
-          var $moreDiv = $('#more_div').clone(true, true);
+          // Create a clean, minimal structure for related customers
+          // Instead of cloning everything, build only what we need
           
-          // Ensure we have all the essential customer fields by cloning the entire first row structure
-          if ($basicFields.find('[name="type"]').length === 0) {
-            // If the basic fields don't contain the contact type, clone more comprehensively
-            $basicFields = $modalBody.children('.row').first().clone(true, true);
-          }
+          var $customerContainer = $('<div class="customer-form-container" data-customer="' + customerFormCount + '" style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;"></div>');
           
-          // Verify we have essential fields, if not, clone them specifically
-          var essentialFields = ['type', 'contact_id', 'mobile', 'email'];
-          var missingFields = [];
+          // Add header
+          var $separator = $('<div class="col-md-12"><hr style="border-top: 2px solid #48b2ee; margin: 30px 0 20px 0;"/><h4 style="color: #48b2ee; margin-bottom: 10px;"><i class="fa fa-user-plus"></i> Related Customer #' + (customerFormCount + 1) + '</h4><p style="color: #6c757d; font-size: 13px;"><i class="fa fa-link"></i> This customer will be linked to the primary customer</p></div>');
           
-          essentialFields.forEach(function(fieldName) {
-            if ($basicFields.find('[name="' + fieldName + '"]').length === 0) {
-              missingFields.push(fieldName);
-            }
-          });
+          // Create relationship section
+          var relationshipHtml = '<div class="col-md-6">' +
+            '<div class="form-group">' +
+            '<label for="relationship_type_' + customerFormCount + '">Relationship:</label>' +
+            '<div class="input-group">' +
+            '<span class="input-group-addon"><i class="fa fa-users"></i></span>' +
+            '<select name="customers[' + customerFormCount + '][relationship_type]" class="form-control" id="relationship_type_' + customerFormCount + '">' +
+            '<option value="">Select Relationship</option>' +
+            '<option value="self">Self (Primary)</option>' +
+            '<option value="spouse">Spouse</option>' +
+            '<option value="child">Child</option>' +
+            '<option value="parent">Parent</option>' +
+            '<option value="sibling">Sibling</option>' +
+            '<option value="relative">Other Relative</option>' +
+            '<option value="friend">Friend</option>' +
+            '</select>' +
+            '</div>' +
+            '<p class="help-block" style="color: #48b2ee;"><i class="fa fa-info-circle"></i> This customer is linked with other customers added in this form</p>' +
+            '</div>' +
+            '</div>';
           
-          // If we're missing essential fields, try to find and clone them from the original form
-          if (missingFields.length > 0) {
-            missingFields.forEach(function(fieldName) {
-              var $originalField = $modalBody.find('[name="' + fieldName + '"]').closest('.col-md-4, .col-md-3, .col-md-6');
-              if ($originalField.length > 0) {
-                $basicFields.append($originalField.clone(true, true));
-              }
-            });
-          }
+          var $relationshipSection = $(relationshipHtml);
           
-          // Remove any payment-related fields from cloned content
-          $basicFields.find('.payment-amount, .payment_types_dropdown, [name*="payment"], [id*="payment"], .cash_denomination_div, [class*="payment"]').closest('.form-group, .col-md-4, .col-md-6, .col-md-12').remove();
-          $moreDiv.find('.payment-amount, .payment_types_dropdown, [name*="payment"], [id*="payment"], .cash_denomination_div, [class*="payment"]').closest('.form-group, .col-md-4, .col-md-6, .col-md-12').remove();
+          // Clone only the prescription table from the original form
+          var $prescriptionSection = $('#more_div').find('.col-md-12').filter(function() {
+            return $(this).find('h4').text().includes('Lens Prescription');
+          }).clone(true, true);
           
-          // Remove any elements containing payment-related text
-          $basicFields.find('*').filter(function() {
-            var text = $(this).text().toLowerCase();
-            return text.includes('amount') && text.includes('payment') || 
-                   text.includes('payment method') || 
-                   text.includes('add payment row') ||
-                   text.includes('payment note');
-          }).closest('.form-group, .col-md-4, .col-md-6, .col-md-12').remove();
-          
-          $moreDiv.find('*').filter(function() {
-            var text = $(this).text().toLowerCase();
-            return text.includes('amount') && text.includes('payment') || 
-                   text.includes('payment method') || 
-                   text.includes('add payment row') ||
-                   text.includes('payment note');
-          }).closest('.form-group, .col-md-4, .col-md-6, .col-md-12').remove();
-          
-          // Remove any buttons with payment-related text
-          $basicFields.find('button').filter(function() {
-            return $(this).text().toLowerCase().includes('payment');
-          }).remove();
-          
-          $moreDiv.find('button').filter(function() {
-            return $(this).text().toLowerCase().includes('payment');
-          }).remove();
-          
-          // Remove any orange payment summary boxes
-          $basicFields.find('.box.box-solid.bg-orange, [style*="background-color: #f39c12"], [style*="background-color: orange"]').remove();
-          $moreDiv.find('.box.box-solid.bg-orange, [style*="background-color: #f39c12"], [style*="background-color: orange"]').remove();
-          
-          // Remove any elements with payment-related labels
-          $basicFields.find('label').filter(function() {
-            var text = $(this).text().toLowerCase();
-            return text.includes('amount') || text.includes('payment method') || text.includes('payment note') ||
-                   text.includes('advance balance') || text.includes('sell note') || text.includes('staff note') ||
-                   text.includes('suspend note');
-          }).closest('.form-group, .col-md-4, .col-md-6, .col-md-12').remove();
-          
-          $moreDiv.find('label').filter(function() {
-            var text = $(this).text().toLowerCase();
-            return text.includes('amount') || text.includes('payment method') || text.includes('payment note') ||
-                   text.includes('advance balance') || text.includes('sell note') || text.includes('staff note') ||
-                   text.includes('suspend note');
-          }).closest('.form-group, .col-md-4, .col-md-6, .col-md-12').remove();
-          
-          // Remove any transaction/sale-related fields
-          $basicFields.find('[name*="advance"], [name*="sell_note"], [name*="staff_note"], [name*="suspend"], [id*="advance"], [id*="sell_note"], [id*="staff_note"], [id*="suspend"]').closest('.form-group, .col-md-4, .col-md-6, .col-md-12').remove();
-          $moreDiv.find('[name*="advance"], [name*="sell_note"], [name*="staff_note"], [name*="suspend"], [id*="advance"], [id*="sell_note"], [id*="staff_note"], [id*="suspend"]').closest('.form-group, .col-md-4, .col-md-6, .col-md-12').remove();
-          
-          // Remove any elements containing transaction-related text
-          $basicFields.find('*').filter(function() {
-            var text = $(this).text().toLowerCase();
-            return text.includes('advance balance') || text.includes('sell note') || 
-                   text.includes('staff note') || text.includes('suspend note');
-          }).closest('.form-group, .col-md-4, .col-md-6, .col-md-12').remove();
-          
-          $moreDiv.find('*').filter(function() {
-            var text = $(this).text().toLowerCase();
-            return text.includes('advance balance') || text.includes('sell note') || 
-                   text.includes('staff note') || text.includes('suspend note');
-          }).closest('.form-group, .col-md-4, .col-md-6, .col-md-12').remove();
-          
-          // Remove specific unwanted sections by looking for exact text matches
-          $basicFields.find('label, h4, h5, strong').filter(function() {
-            var text = $(this).text().trim();
-            return text === 'Suspend Note:' || text === 'Suspend Note' ||
-                   text === 'Sell note:' || text === 'Sell note' ||
-                   text === 'Staff note:' || text === 'Staff note' ||
-                   text === 'Advance Balance:' || text === 'Advance Balance';
-          }).closest('.form-group, .col-md-4, .col-md-6, .col-md-12, .row').remove();
-          
-          $moreDiv.find('label, h4, h5, strong').filter(function() {
-            var text = $(this).text().trim();
-            return text === 'Suspend Note:' || text === 'Suspend Note' ||
-                   text === 'Sell note:' || text === 'Sell note' ||
-                   text === 'Staff note:' || text === 'Staff note' ||
-                   text === 'Advance Balance:' || text === 'Advance Balance';
-          }).closest('.form-group, .col-md-4, .col-md-6, .col-md-12, .row').remove();
-          
-          // Additional aggressive filtering for stubborn fields
-          $basicFields.find('*').each(function() {
-            var $this = $(this);
-            var text = $this.text().toLowerCase();
-            if (text.includes('suspend note') || text.includes('sell note') || text.includes('staff note')) {
-              $this.closest('.form-group, .col-md-12, .row').remove();
-            }
-          });
-          
-          $moreDiv.find('*').each(function() {
-            var $this = $(this);
-            var text = $this.text().toLowerCase();
-            if (text.includes('suspend note') || text.includes('sell note') || text.includes('staff note')) {
-              $this.closest('.form-group, .col-md-12, .row').remove();
-            }
-          });
-          
-          // Remove any textarea or input fields that might be related to notes
-          $basicFields.find('textarea[name*="note"], input[name*="note"]').not('[name*="mobile"]').not('[name*="phone"]').closest('.form-group, .col-md-12, .row').remove();
-          $moreDiv.find('textarea[name*="note"], input[name*="note"]').not('[name*="mobile"]').not('[name*="phone"]').closest('.form-group, .col-md-12, .row').remove();
-          
-          // Update the more_div ID to be unique
-          $moreDiv.attr('id', 'more_div_' + customerFormCount);
-          $moreDiv.removeClass('hide');
-          
-          // Update the More Info button target
-          $moreInfoRow.find('.more_btn').attr('data-target', '#more_div_' + customerFormCount);
-          
-          // Update IDs and clear values in basic fields
-          $basicFields.find('input, select, textarea').each(function() {
+          // Update prescription field names for the new customer
+          $prescriptionSection.find('input, select, textarea').each(function() {
             var $field = $(this);
             var name = $field.attr('name');
             var id = $field.attr('id');
@@ -884,73 +776,25 @@
             
             // Clear the value
             if ($field.is('select')) {
-              $field.val('').trigger('change');
-            } else if ($field.attr('type') !== 'radio' && $field.attr('type') !== 'checkbox') {
               $field.val('');
-            } else if ($field.attr('type') === 'radio' || $field.attr('type') === 'checkbox') {
-              $field.prop('checked', false);
+            } else {
+              $field.val('');
             }
           });
           
-          // Update the group link field
+          // Add group link field
+          var $groupLinkField = $('.customer-group-link').clone();
           $groupLinkField.attr('name', 'customers[' + customerFormCount + '][customer_group_id_link]');
           $groupLinkField.attr('id', 'customer_group_id_link_' + customerFormCount);
           $groupLinkField.val(customerGroupLinkId);
           
-          // Update IDs and clear values in more_div fields
-          $moreDiv.find('input, select, textarea').each(function() {
-            var $field = $(this);
-            var name = $field.attr('name');
-            var id = $field.attr('id');
-            
-            if (name) {
-              $field.attr('name', 'customers[' + customerFormCount + '][' + name + ']');
-            }
-            
-            if (id) {
-              $field.attr('id', id + '_' + customerFormCount);
-            }
-            
-            // Clear the value except for relationship_type
-            if ($field.attr('id') && $field.attr('id').includes('relationship_type')) {
-              $field.val('');
-            } else if ($field.is('select')) {
-              $field.val('').trigger('change');
-            } else if ($field.attr('type') !== 'radio' && $field.attr('type') !== 'checkbox') {
-              $field.val('');
-            }
-          });
-          
-          // Create a container for the new customer
-          var $customerContainer = $('<div class="customer-form-container" data-customer="' + customerFormCount + '" style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;"></div>');
-          
-          // Add a separator and heading
-          var $separator = $('<div class="col-md-12"><hr style="border-top: 2px solid #48b2ee; margin: 30px 0 20px 0;"/><h4 style="color: #48b2ee; margin-bottom: 10px;"><i class="fa fa-user-plus"></i> Related Customer #' + (customerFormCount + 1) + '</h4><p style="color: #6c757d; font-size: 13px;"><i class="fa fa-link"></i> This customer will be linked to the primary customer</p></div>');
-          
-          // Append everything
+          // Assemble the clean structure
           $customerContainer.append($separator);
-          $customerContainer.append($basicFields);
+          $customerContainer.append('<div class="row"></div>');
+          $customerContainer.find('.row').append($relationshipSection);
+          $customerContainer.find('.row').append('<div class="clearfix"></div>');
+          $customerContainer.append($prescriptionSection);
           $customerContainer.append($groupLinkField);
-          $customerContainer.append($moreInfoRow);
-          $customerContainer.append($moreDiv);
-          
-          // Final cleanup - remove any remaining unwanted elements after appending
-          setTimeout(function() {
-            $customerContainer.find('*').filter(function() {
-              var text = $(this).text().toLowerCase();
-              return text.includes('suspend note') || text.includes('sell note') || 
-                     text.includes('staff note') || text.includes('advance balance');
-            }).closest('.form-group, .col-md-12, .row').remove();
-            
-            // Remove any remaining note fields that aren't contact-related
-            $customerContainer.find('textarea, input').filter(function() {
-              var name = $(this).attr('name') || '';
-              var id = $(this).attr('id') || '';
-              return (name.includes('note') || id.includes('note')) && 
-                     !name.includes('mobile') && !name.includes('phone') && 
-                     !name.includes('contact') && !name.includes('alternate');
-            }).closest('.form-group, .col-md-12, .row').remove();
-          }, 100);
           
           // Insert before button
           $('.add-another-customer-btn').closest('.row').before($customerContainer);
