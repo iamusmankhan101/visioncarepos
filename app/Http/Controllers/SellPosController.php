@@ -670,6 +670,32 @@ class SellPosController extends Controller
 
                 if ($print_invoice) {
                     $receipt = $this->receiptContent($business_id, $input['location_id'], $transaction->id, null, false, true, $invoice_layout_id);
+                    
+                    // Generate additional receipts for multiple customers
+                    $additional_receipts = [];
+                    if (!empty($additional_customer_ids)) {
+                        $original_contact_id = $transaction->contact_id;
+                        
+                        foreach ($additional_customer_ids as $customer_id) {
+                            // Temporarily change the contact_id
+                            $transaction->contact_id = $customer_id;
+                            $transaction->save();
+                            
+                            // Generate receipt for this customer
+                            $additional_receipt = $this->receiptContent($business_id, $input['location_id'], $transaction->id, null, false, true, $invoice_layout_id);
+                            $additional_receipts[] = $additional_receipt;
+                        }
+                        
+                        // Restore original contact_id
+                        $transaction->contact_id = $original_contact_id;
+                        $transaction->save();
+                        
+                        // Add additional receipts to the main receipt
+                        $receipt['additional_receipts'] = $additional_receipts;
+                        $receipt['has_multiple'] = true;
+                        
+                        \Log::info('Generated additional receipts', ['count' => count($additional_receipts)]);
+                    }
                 }
 
                 $output = ['success' => 1, 'msg' => $msg, 'receipt' => $receipt];
