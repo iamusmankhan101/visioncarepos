@@ -16,15 +16,200 @@
       $sources = [];
       $life_stages = [];
     }
+    
+    $is_inline = request()->get('inline') == '1';
   @endphp
+  
+  @if($is_inline)
+    <style>
+      body { 
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        background-color: #f8f9fa;
+        margin: 0;
+        padding: 20px;
+      }
+      .form-control {
+        display: block;
+        width: 100%;
+        padding: 6px 12px;
+        font-size: 14px;
+        line-height: 1.42857143;
+        color: #555;
+        background-color: #fff;
+        background-image: none;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-shadow: inset 0 1px 1px rgba(0,0,0,.075);
+        transition: border-color ease-in-out .15s,box-shadow ease-in-out .15s;
+      }
+      .form-group {
+        margin-bottom: 15px;
+      }
+      .input-group {
+        position: relative;
+        display: table;
+        border-collapse: separate;
+        width: 100%;
+      }
+      .input-group-addon {
+        padding: 6px 12px;
+        font-size: 14px;
+        font-weight: 400;
+        line-height: 1;
+        color: #555;
+        text-align: center;
+        background-color: #eee;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        width: 1%;
+        white-space: nowrap;
+        vertical-align: middle;
+        display: table-cell;
+        border-right: 0;
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+      }
+      .input-group .form-control {
+        position: relative;
+        z-index: 2;
+        float: left;
+        width: 100%;
+        margin-bottom: 0;
+        display: table-cell;
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+      }
+      .col-md-4, .col-md-6, .col-md-12 {
+        position: relative;
+        min-height: 1px;
+        padding-left: 15px;
+        padding-right: 15px;
+        float: left;
+      }
+      .col-md-4 { width: 33.33333333%; }
+      .col-md-6 { width: 50%; }
+      .col-md-12 { width: 100%; }
+      .row {
+        margin-left: -15px;
+        margin-right: -15px;
+      }
+      .row:before, .row:after {
+        content: " ";
+        display: table;
+      }
+      .row:after {
+        clear: both;
+      }
+      .clearfix:before, .clearfix:after {
+        content: " ";
+        display: table;
+      }
+      .clearfix:after {
+        clear: both;
+      }
+      .btn {
+        display: inline-block;
+        margin-bottom: 0;
+        font-weight: 400;
+        text-align: center;
+        vertical-align: middle;
+        touch-action: manipulation;
+        cursor: pointer;
+        background-image: none;
+        border: 1px solid transparent;
+        white-space: nowrap;
+        padding: 6px 12px;
+        font-size: 14px;
+        line-height: 1.42857143;
+        border-radius: 4px;
+        user-select: none;
+        text-decoration: none;
+      }
+      .tw-dw-btn-primary {
+        color: #fff;
+        background-color: #48b2ee;
+        border-color: #48b2ee;
+      }
+      .tw-dw-btn-neutral {
+        color: #333;
+        background-color: #fff;
+        border-color: #ccc;
+      }
+      label {
+        display: inline-block;
+        max-width: 100%;
+        margin-bottom: 5px;
+        font-weight: 700;
+      }
+      select.form-control {
+        height: 34px;
+      }
+      .radio-inline {
+        position: relative;
+        display: inline-block;
+        padding-left: 20px;
+        margin-bottom: 0;
+        vertical-align: middle;
+        font-weight: 400;
+        cursor: pointer;
+        margin-right: 10px;
+      }
+      .hide { display: none !important; }
+      .text-center { text-align: center; }
+      .help-block {
+        display: block;
+        margin-top: 5px;
+        margin-bottom: 10px;
+        color: #737373;
+        font-size: 12px;
+      }
+      .table {
+        width: 100%;
+        max-width: 100%;
+        margin-bottom: 20px;
+        background-color: transparent;
+        border-collapse: collapse;
+      }
+      .table th, .table td {
+        padding: 8px;
+        line-height: 1.42857143;
+        vertical-align: top;
+        border-top: 1px solid #ddd;
+      }
+      .table thead th {
+        vertical-align: bottom;
+        border-bottom: 2px solid #ddd;
+        background-color: #48b2ee;
+        color: white;
+      }
+      .table-bordered {
+        border: 1px solid #ddd;
+      }
+      .table-bordered th, .table-bordered td {
+        border: 1px solid #ddd;
+      }
+      .table-responsive {
+        overflow-x: auto;
+        min-height: 0.01%;
+      }
+    </style>
+  @endif
     {!! Form::open(['url' => $url, 'method' => 'post', 'id' => $form_id ]) !!}
 
+    @if(!$is_inline)
     <div class="modal-header">
       <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
       <h4 class="modal-title">@lang('contact.add_contact')</h4>
     </div>
+    @else
+    <div style="margin-bottom: 20px;">
+      <h4 style="color: #48b2ee; margin: 0;">
+        <i class="fa fa-user-plus"></i> @lang('contact.add_contact')
+      </h4>
+    </div>
+    @endif
 
-    <div class="modal-body">
+    <div class="@if(!$is_inline) modal-body @endif">
         <div class="row">            
             <div class="col-md-4 contact_type_div">
                 <div class="form-group">
@@ -442,11 +627,13 @@
         @include('layouts.partials.module_form_part')
     </div>
     
-    <div class="modal-footer">
+    <div class="@if(!$is_inline) modal-footer @else text-center @endif" @if($is_inline) style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #ddd;" @endif>
       <button type="submit" class="tw-dw-btn tw-dw-btn-primary tw-text-white" style="background-color: #48b2ee !important;">
         <i class="fa fa-save"></i> @lang( 'messages.save' )
       </button>
+      @if(!$is_inline)
       <button type="button" class="tw-dw-btn tw-dw-btn-neutral tw-text-white" data-dismiss="modal">@lang( 'messages.close' )</button>
+      @endif
     </div>
 
     {!! Form::close() !!}
@@ -479,6 +666,49 @@
         } else {
           // Show the "Add Another Customer" section if we're in the right context
           $('#add-another-customer-section').show();
+        }
+        
+        // Handle inline form submission
+        if (window.location.href.includes('inline=1')) {
+          $('form#' + '{{ $form_id }}').on('submit', function(e) {
+            e.preventDefault();
+            
+            $.ajax({
+              url: $(this).attr('action'),
+              method: 'POST',
+              data: $(this).serialize(),
+              success: function(response) {
+                if (response.success) {
+                  // Notify parent window that customer was saved
+                  if (window.parent) {
+                    window.parent.postMessage('customer-saved', '*');
+                  }
+                  
+                  // Show success message
+                  if (typeof toastr !== 'undefined') {
+                    toastr.success('Customer added successfully');
+                  } else {
+                    alert('Customer added successfully');
+                  }
+                } else {
+                  if (typeof toastr !== 'undefined') {
+                    toastr.error('Error adding customer');
+                  } else {
+                    alert('Error adding customer');
+                  }
+                }
+              },
+              error: function() {
+                if (typeof toastr !== 'undefined') {
+                  toastr.error('Error adding customer');
+                } else {
+                  alert('Error adding customer');
+                }
+              }
+            });
+          });
+          
+          return; // Don't run the multiple customer functionality in inline mode
         }
         
         // Counter for multiple customer forms
