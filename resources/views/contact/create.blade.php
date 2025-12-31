@@ -755,32 +755,66 @@
           
           var $relationshipSection = $(relationshipHtml);
           
-          // Clone only the prescription table from the original form
-          var $prescriptionSection = $('#more_div').find('.col-md-12').filter(function() {
-            return $(this).find('h4').text().includes('Lens Prescription');
-          }).clone(true, true);
+          // Create the prescription table directly instead of cloning
+          var prescriptionHtml = '<div class="col-md-12">' +
+            '<hr/>' +
+            '<h4 style="color: #48b2ee;">' +
+            '<i class="fa fa-eye"></i> Lens Prescription' +
+            '</h4>' +
+            '</div>' +
+            '<div class="col-md-12">' +
+            '<div class="table-responsive">' +
+            '<table class="table table-bordered" style="background-color: #fff;">' +
+            '<thead style="background-color: #48b2ee; color: white;">' +
+            '<tr>' +
+            '<th style="width: 15%;">Eye</th>' +
+            '<th style="width: 15%;">Type</th>' +
+            '<th style="width: 23%;">Sph.</th>' +
+            '<th style="width: 23%;">Cyl.</th>' +
+            '<th style="width: 24%;">Axis</th>' +
+            '</tr>' +
+            '</thead>' +
+            '<tbody>' +
+            '<!-- RIGHT EYE - Distance -->' +
+            '<tr>' +
+            '<td rowspan="2" style="vertical-align: middle; font-weight: bold; background-color: #f8f9fa;">' +
+            '<i class="fa fa-arrow-right" style="color: #48b2ee;"></i> RIGHT EYE' +
+            '</td>' +
+            '<td style="font-weight: 600;">Distance</td>' +
+            '<td><input type="text" name="customers[' + customerFormCount + '][custom_field1]" class="form-control" placeholder="e.g., -2.00"></td>' +
+            '<td><input type="text" name="customers[' + customerFormCount + '][custom_field2]" class="form-control" placeholder="e.g., -1.00"></td>' +
+            '<td><input type="text" name="customers[' + customerFormCount + '][custom_field3]" class="form-control" placeholder="e.g., 180"></td>' +
+            '</tr>' +
+            '<!-- RIGHT EYE - Near -->' +
+            '<tr>' +
+            '<td style="font-weight: 600;">Near</td>' +
+            '<td><input type="text" name="customers[' + customerFormCount + '][custom_field4]" class="form-control" placeholder="e.g., -2.00"></td>' +
+            '<td><input type="text" name="customers[' + customerFormCount + '][custom_field5]" class="form-control" placeholder="e.g., -1.00"></td>' +
+            '<td><input type="text" name="customers[' + customerFormCount + '][custom_field6]" class="form-control" placeholder="e.g., 180"></td>' +
+            '</tr>' +
+            '<!-- LEFT EYE - Distance -->' +
+            '<tr>' +
+            '<td rowspan="2" style="vertical-align: middle; font-weight: bold; background-color: #f8f9fa;">' +
+            '<i class="fa fa-arrow-left" style="color: #48b2ee;"></i> LEFT EYE' +
+            '</td>' +
+            '<td style="font-weight: 600;">Distance</td>' +
+            '<td><input type="text" name="customers[' + customerFormCount + '][custom_field7]" class="form-control" placeholder="e.g., -2.00"></td>' +
+            '<td><input type="text" name="customers[' + customerFormCount + '][custom_field8]" class="form-control" placeholder="e.g., -1.00"></td>' +
+            '<td><input type="text" name="customers[' + customerFormCount + '][custom_field9]" class="form-control" placeholder="e.g., 180"></td>' +
+            '</tr>' +
+            '<!-- LEFT EYE - Near -->' +
+            '<tr>' +
+            '<td style="font-weight: 600;">Near</td>' +
+            '<td><input type="text" name="customers[' + customerFormCount + '][custom_field10]" class="form-control" placeholder="e.g., -2.00"></td>' +
+            '<td><input type="text" name="customers[' + customerFormCount + '][shipping_custom_field_details][shipping_custom_field_1]" class="form-control" placeholder="e.g., -1.00"></td>' +
+            '<td><input type="text" name="customers[' + customerFormCount + '][shipping_custom_field_details][shipping_custom_field_2]" class="form-control" placeholder="e.g., 180"></td>' +
+            '</tr>' +
+            '</tbody>' +
+            '</table>' +
+            '</div>' +
+            '</div>';
           
-          // Update prescription field names for the new customer
-          $prescriptionSection.find('input, select, textarea').each(function() {
-            var $field = $(this);
-            var name = $field.attr('name');
-            var id = $field.attr('id');
-            
-            if (name) {
-              $field.attr('name', 'customers[' + customerFormCount + '][' + name + ']');
-            }
-            
-            if (id) {
-              $field.attr('id', id + '_' + customerFormCount);
-            }
-            
-            // Clear the value
-            if ($field.is('select')) {
-              $field.val('');
-            } else {
-              $field.val('');
-            }
-          });
+          var $prescriptionSection = $(prescriptionHtml);
           
           // Add group link field
           var $groupLinkField = $('.customer-group-link').clone();
