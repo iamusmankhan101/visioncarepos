@@ -653,10 +653,12 @@
       $(document).ready(function() {
         // Only enable multiple customer functionality in specific contexts
         // Check if we're in a context where multiple customers should be allowed
-        var allowMultipleCustomers = window.location.href.includes('/contacts/') && 
+        var allowMultipleCustomers = (window.location.href.includes('/contacts/') && 
                                    (window.location.href.includes('/edit') || 
                                     $('.contact-edit-page').length > 0 ||
-                                    $('#allow-multiple-customers').length > 0);
+                                    $('#allow-multiple-customers').length > 0)) ||
+                                   window.location.href.includes('/pos/create') ||
+                                   $('.contact_modal').length > 0;
         
         if (!allowMultipleCustomers) {
           // Remove the "Add Another Customer" button if we're not in the right context
