@@ -668,6 +668,12 @@ $(document).ready(function() {
                     //Check if enabled or not
                     if (result.receipt.is_enabled) {
                         pos_print(result.receipt);
+                        
+                        // Check if there are additional customers to print invoices for
+                        if (window.selectedCustomersForInvoice && window.selectedCustomersForInvoice.ids.length > 1) {
+                            var transactionId = result.transaction_id || result.receipt.transaction_id;
+                            showAdditionalCustomerPrintModal(transactionId, window.selectedCustomersForInvoice);
+                        }
                     }
                 } else {
                     toastr.error(result.msg);
@@ -3800,6 +3806,14 @@ $(document).on('click', '#confirm_customer_selection', function(e) {
     // Trigger change event for Select2
     $customerSelect.trigger('change');
     
+    // Store all selected customer IDs and names globally for later use
+    window.selectedCustomersForInvoice = {
+        ids: selectedCustomers,
+        names: selectedCustomerNames
+    };
+    
+    console.log('Stored customers globally:', window.selectedCustomersForInvoice);
+    
     // Store all selected customer IDs and names
     $('#pos-form').find('input[name="multiple_customer_ids"]').remove();
     $('#pos-form').find('input[name="multiple_customer_names"]').remove();
@@ -3827,7 +3841,7 @@ $(document).on('click', '#confirm_customer_selection', function(e) {
     var callback = window.relatedCustomerCallback;
     
     // Execute callback if exists (for express checkout)
-    if (callback && typeof callback === 'function') {
+    if (callback && typeof callback === 'function) {
         console.log('Executing callback for express checkout');
         setTimeout(function() {
             callback();
@@ -3870,5 +3884,97 @@ $(document).on('mouseenter', '.related-customer-item', function() {
         'border-color': '#ddd',
         'background-color': 'white',
         'transform': 'scale(1)'
+    });
+});
+
+
+// Function to show modal for printing additional customer invoices
+function showAdditionalCustomerPrintModal(transactionId, customersData) {
+    console.log('Showing additional customer print modal', {transactionId, customersData});
+    
+    // Skip the first customer (already printed)
+    var additionalCustomers = customersData.ids.slice(1);
+    var additionalNames = customersData.names.slice(1);
+    
+    if (additionalCustomers.length === 0) {
+        return;
+    }
+    
+    var modalHtml = '<div class="modal fade" id="additional_invoices_modal" tabindex="-1" role="dialog">';
+    modalHtml += '  <div class="modal-dialog" role="document">';
+    modalHtml += '    <div class="modal-content">';
+    modalHtml += '      <div class="modal-header" style="background-color: #48b2ee; color: white;">';
+    modalHtml += '        <button type="button" class="close" data-dismiss="modal"><span style="color: white;">&times;</span></button>';
+    modalHtml += '        <h4 class="modal-title"><i class="fa fa-print"></i> Print Additional Invoices</h4>';
+    modalHtml += '      </div>';
+    modalHtml += '      <div class="modal-body">';
+    modalHtml += '        <p style="margin-bottom: 15px;">You selected multiple customers. Click below to print invoices for each:</p>';
+    
+    additionalCustomers.forEach(function(customerId, index) {
+        var customerName = additionalNames[index];
+        modalHtml += '        <div style="margin-bottom: 10px;">';
+        modalHtml += '          <button type="button" class="btn btn-primary btn-block print-additional-invoice" ';
+        modalHtml += '                  data-transaction-id="' + transactionId + '" ';
+        modalHtml += '                  data-customer-id="' + customerId + '" ';
+        modalHtml += '                  data-customer-name="' + customerName + '">';
+        modalHtml += '            <i class="fa fa-print"></i> Print Invoice for ' + customerName;
+        modalHtml += '          </button>';
+        modalHtml += '        </div>';
+    });
+    
+    modalHtml += '      </div>';
+    modalHtml += '      <div class="modal-footer">';
+    modalHtml += '        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>';
+    modalHtml += '      </div>';
+    modalHtml += '    </div>';
+    modalHtml += '  </div>';
+    modalHtml += '</div>';
+    
+    // Remove existing modal if any
+    $('#additional_invoices_modal').remove();
+    
+    // Add modal to body
+    $('body').append(modalHtml);
+    
+    // Show modal after a short delay
+    setTimeout(function() {
+        $('#additional_invoices_modal').modal('show');
+    }, 1500);
+}
+
+// Handle click on print additional invoice button
+$(document).on('click', '.print-additional-invoice', function() {
+    var $btn = $(this);
+    var transactionId = $btn.data('transaction-id');
+    var customerId = $btn.data('customer-id');
+    var customerName = $btn.data('customer-name');
+    
+    console.log('Printing invoice for additional customer:', {transactionId, customerId, customerName});
+    
+    // Disable button and show loading
+    $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Printing...');
+    
+    // Call the print invoice endpoint with custom customer ID
+    $.ajax({
+        url: '/sells/pos/print/' + transactionId,
+        method: 'GET',
+        data: {
+            customer_id: customerId
+        },
+        dataType: 'json',
+        success: function(result) {
+            if (result.success == 1 && result.receipt) {
+                pos_print(result.receipt);
+                toastr.success('Invoice printed for ' + customerName);
+                $btn.prop('disabled', false).html('<i class="fa fa-check"></i> Printed');
+            } else {
+                toastr.error('Failed to print invoice');
+                $btn.prop('disabled', false).html('<i class="fa fa-print"></i> Print Invoice for ' + customerName);
+            }
+        },
+        error: function() {
+            toastr.error('Error printing invoice');
+            $btn.prop('disabled', false).html('<i class="fa fa-print"></i> Print Invoice for ' + customerName);
+        }
     });
 });

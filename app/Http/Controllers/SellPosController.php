@@ -719,7 +719,7 @@ class SellPosController extends Controller
                     }
                 }
 
-                $output = ['success' => 1, 'msg' => $msg, 'receipt' => $receipt];
+                $output = ['success' => 1, 'msg' => $msg, 'receipt' => $receipt, 'transaction_id' => $transaction->id];
 
                 if (!empty($whatsapp_link)) {
                     $output['whatsapp_link'] = $whatsapp_link;
@@ -1832,6 +1832,21 @@ class SellPosController extends Controller
                 if (empty($transaction)) {
                     return $output;
                 }
+                
+                // Check if a custom customer_id is provided (for printing additional customer invoices)
+                $custom_customer_id = $request->input('customer_id');
+                if (!empty($custom_customer_id)) {
+                    \Log::info('Printing invoice with custom customer', [
+                        'transaction_id' => $transaction_id,
+                        'original_customer' => $transaction->contact_id,
+                        'custom_customer' => $custom_customer_id
+                    ]);
+                    
+                    // Temporarily change the contact_id
+                    $original_contact_id = $transaction->contact_id;
+                    $transaction->contact_id = $custom_customer_id;
+                    $transaction->save();
+                }
 
                 $printer_type = 'browser';
                 if (!empty(request()->input('check_location')) && request()->input('check_location') == true) {
@@ -1843,34 +1858,11 @@ class SellPosController extends Controller
 
                 $invoice_layout_id = $transaction->is_direct_sale ? $transaction->location->sale_invoice_layout_id : null;
                 
-                // Check if there are multiple customers for separate invoices
-                $additional_customer_ids = [];
-                if (!empty($transaction->additional_notes) && strpos($transaction->additional_notes, 'MULTI_INVOICE_CUSTOMERS:') !== false) {
-                    preg_match('/MULTI_INVOICE_CUSTOMERS:([0-9,]+)/', $transaction->additional_notes, $matches);
-                    if (!empty($matches[1])) {
-                        $additional_customer_ids = explode(',', $matches[1]);
-                    }
-                }
-                
-                // Generate receipt for main customer
+                // Generate receipt
                 $receipt = $this->receiptContent($business_id, $transaction->location_id, $transaction_id, $printer_type, $is_package_slip, false, $invoice_layout_id, $is_delivery_note);
                 
-                // Generate receipts for additional customers
-                $additional_receipts = [];
-                if (!empty($additional_customer_ids)) {
-                    $original_contact_id = $transaction->contact_id;
-                    
-                    foreach ($additional_customer_ids as $customer_id) {
-                        // Temporarily change the contact_id
-                        $transaction->contact_id = $customer_id;
-                        $transaction->save();
-                        
-                        // Generate receipt for this customer
-                        $additional_receipt = $this->receiptContent($business_id, $transaction->location_id, $transaction_id, $printer_type, $is_package_slip, false, $invoice_layout_id, $is_delivery_note);
-                        $additional_receipts[] = $additional_receipt;
-                    }
-                    
-                    // Restore original contact_id
+                // Restore original contact_id if it was changed
+                if (!empty($custom_customer_id) && isset($original_contact_id)) {
                     $transaction->contact_id = $original_contact_id;
                     $transaction->save();
                 }
@@ -1878,9 +1870,7 @@ class SellPosController extends Controller
                 if (!empty($receipt)) {
                     $output = [
                         'success' => 1, 
-                        'receipt' => $receipt,
-                        'additional_receipts' => $additional_receipts,
-                        'has_multiple' => !empty($additional_receipts)
+                        'receipt' => $receipt
                     ];
                 }
             } catch (\Exception $e) {
