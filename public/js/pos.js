@@ -998,6 +998,12 @@ $(document).ready(function() {
                             //Check if enabled or not
                             if (result.receipt.is_enabled) {
                                 pos_print(result.receipt);
+                                
+                                // Check if there are additional customers to print invoices for
+                                if (window.selectedCustomersForInvoice && window.selectedCustomersForInvoice.ids.length > 1) {
+                                    var transactionId = result.transaction_id || result.receipt.transaction_id;
+                                    showAdditionalCustomerPrintModal(transactionId, window.selectedCustomersForInvoice);
+                                }
                             }
                         } else {
                             toastr.error(result.msg);
