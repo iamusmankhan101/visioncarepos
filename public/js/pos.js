@@ -4000,3 +4000,59 @@ $(document).on('click', '.print-additional-invoice', function() {
         }
     });
 });
+
+// Handle "Proceed with Selected Customers" button click
+$(document).on('click', '#proceed_with_selected_customers', function() {
+    console.log('Proceed with selected customers clicked');
+    
+    var selectedCustomers = [];
+    $('.customer-checkbox:checked').each(function() {
+        var customerId = $(this).data('customer-id');
+        selectedCustomers.push(customerId);
+    });
+    
+    console.log('Selected customers:', selectedCustomers);
+    
+    if (selectedCustomers.length === 0) {
+        toastr.error('Please select at least one customer');
+        return;
+    }
+    
+    // Store selected customers for later use
+    window.selectedRelatedCustomers = selectedCustomers;
+    
+    // Close the modal
+    $('#related_customers_modal').modal('hide');
+    
+    // Execute the callback if it exists
+    if (window.relatedCustomerCallback && typeof window.relatedCustomerCallback === 'function') {
+        window.relatedCustomerCallback();
+    } else {
+        // Default action: show payment modal
+        $('#modal_payment').modal('show');
+    }
+});
+
+// Handle clicking on customer name to select/deselect
+$(document).on('click', '.customer-name-click', function(e) {
+    e.preventDefault();
+    var customerId = $(this).data('customer-id');
+    var $checkbox = $('.customer-checkbox[data-customer-id="' + customerId + '"]');
+    
+    // Toggle checkbox
+    $checkbox.prop('checked', !$checkbox.prop('checked')).trigger('change');
+});
+
+// Handle clicking on customer item to select/deselect
+$(document).on('click', '.related-customer-item', function(e) {
+    // Don't trigger if clicking on checkbox directly
+    if ($(e.target).hasClass('customer-checkbox')) {
+        return;
+    }
+    
+    var customerId = $(this).data('customer-id');
+    var $checkbox = $('.customer-checkbox[data-customer-id="' + customerId + '"]');
+    
+    // Toggle checkbox
+    $checkbox.prop('checked', !$checkbox.prop('checked')).trigger('change');
+});

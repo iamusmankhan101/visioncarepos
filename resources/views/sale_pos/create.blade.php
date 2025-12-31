@@ -96,6 +96,47 @@
 
     @include('sale_pos.partials.weighing_scale_modal')
 
+    <!-- Related Customers Modal -->
+    <div class="modal fade" id="related_customers_modal" tabindex="-1" role="dialog" aria-labelledby="relatedCustomersModalLabel">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title" id="relatedCustomersModalLabel">
+                        <i class="fa fa-users"></i> Select Customers for Invoice
+                    </h4>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="fa fa-info-circle"></i> 
+                        Multiple customers are linked to this account. Please select which customers should be included in this invoice.
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="checkbox-inline">
+                            <input type="checkbox" id="select_all_customers"> 
+                            <strong>Select All Customers</strong>
+                        </label>
+                    </div>
+                    
+                    <div id="related_customers_list">
+                        <!-- Customer list will be populated by JavaScript -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">
+                        <i class="fa fa-times"></i> Cancel
+                    </button>
+                    <button type="button" class="btn btn-primary" id="proceed_with_selected_customers">
+                        <i class="fa fa-check"></i> Proceed with Selected Customers
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 @stop
 @section('css')
     <!-- include module css -->

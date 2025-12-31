@@ -658,14 +658,18 @@ class ContactController extends Controller
 
             // Handle multiple customers (related customers)
             if ($request->has('customers') && is_array($request->input('customers'))) {
+                \Log::info('Creating related customers', ['customers' => $request->input('customers')]);
                 $primary_contact_id = $output['data']->id;
                 $customers = $request->input('customers');
                 
                 foreach ($customers as $customer_data) {
+                    \Log::info('Processing related customer', ['customer_data' => $customer_data]);
+                    
                     // Create each related customer
                     $related_input = $customer_data;
                     $related_input['business_id'] = $business_id;
                     $related_input['created_by'] = $request->session()->get('user.id');
+                    $related_input['type'] = 'customer'; // Ensure type is set
                     
                     // Build name for related customer
                     $name_array = [];
@@ -675,6 +679,11 @@ class ContactController extends Controller
                     if (!empty($related_input['last_name'])) $name_array[] = $related_input['last_name'];
                     $related_input['name'] = trim(implode(' ', $name_array));
                     
+                    // Set default mobile if not provided
+                    if (empty($related_input['mobile'])) {
+                        $related_input['mobile'] = $input['mobile'] ?? '0000000000';
+                    }
+                    
                     if (!empty($related_input['dob'])) {
                         $related_input['dob'] = $this->commonUtil->uf_date($related_input['dob']);
                     }
@@ -682,12 +691,16 @@ class ContactController extends Controller
                     $related_input['credit_limit'] = isset($related_input['credit_limit']) && $related_input['credit_limit'] != '' ? $this->commonUtil->num_uf($related_input['credit_limit']) : null;
                     $related_input['opening_balance'] = isset($related_input['opening_balance']) ? $this->commonUtil->num_uf($related_input['opening_balance']) : 0;
                     
+                    \Log::info('Creating related contact with input', ['related_input' => $related_input]);
+                    
                     // Create the related contact
                     $related_output = $this->contactUtil->createNewContact($related_input);
                     
+                    \Log::info('Related contact creation result', ['related_output' => $related_output]);
+                    
                     if ($related_output['success']) {
                         // Save the relationship
-                        \App\ContactRelationship::create([
+                        $relationship1 = \App\ContactRelationship::create([
                             'contact_id' => $primary_contact_id,
                             'related_contact_id' => $related_output['data']->id,
                             'relationship_type' => $related_input['relationship_type'] ?? null,
@@ -695,14 +708,23 @@ class ContactController extends Controller
                         ]);
                         
                         // Also create reverse relationship for easy querying
-                        \App\ContactRelationship::create([
+                        $relationship2 = \App\ContactRelationship::create([
                             'contact_id' => $related_output['data']->id,
                             'related_contact_id' => $primary_contact_id,
                             'relationship_type' => $related_input['relationship_type'] ?? null,
                             'business_id' => $business_id
                         ]);
+                        
+                        \Log::info('Created relationships', [
+                            'relationship1' => $relationship1->id,
+                            'relationship2' => $relationship2->id
+                        ]);
+                    } else {
+                        \Log::error('Failed to create related contact', ['error' => $related_output]);
                     }
                 }
+            } else {
+                \Log::info('No related customers to create', ['has_customers' => $request->has('customers'), 'customers_data' => $request->input('customers')]);
             }
 
             DB::commit();
@@ -1861,6 +1883,8 @@ class ContactController extends Controller
     public function getRelatedCustomers($contact_id)
     {
         if (request()->ajax()) {
+            \Log::info('Getting related customers for contact', ['contact_id' => $contact_id]);
+            
             $business_id = request()->session()->get('user.business_id');
             
             $contact = Contact::where('business_id', $business_id)
@@ -1868,6 +1892,7 @@ class ContactController extends Controller
                 ->first();
             
             if (!$contact) {
+                \Log::error('Contact not found', ['contact_id' => $contact_id, 'business_id' => $business_id]);
                 return response()->json(['success' => false, 'msg' => 'Contact not found']);
             }
             
@@ -1879,6 +1904,8 @@ class ContactController extends Controller
                           ->orWhere('related_contact_id', $contact_id);
                 })
                 ->get();
+            
+            \Log::info('Found relationships', ['count' => $related_ids->count(), 'relationships' => $related_ids->toArray()]);
             
             // Collect all unique contact IDs
             $contact_ids = collect([$contact_id]); // Include the current contact
@@ -1893,8 +1920,10 @@ class ContactController extends Controller
             }
             
             $contact_ids = $contact_ids->unique()->values();
+            \Log::info('Unique contact IDs', ['contact_ids' => $contact_ids->toArray()]);
             
             if ($contact_ids->count() <= 1) {
+                \Log::info('No related customers found');
                 return response()->json([
                     'success' => true,
                     'has_related' => false,
@@ -1907,6 +1936,8 @@ class ContactController extends Controller
                 ->whereIn('id', $contact_ids)
                 ->select('id', 'name', 'mobile', 'contact_id', 'custom_field1', 'custom_field2', 'custom_field3', 'custom_field4', 'custom_field5', 'custom_field6', 'custom_field7', 'custom_field8', 'custom_field9', 'custom_field10')
                 ->get();
+            
+            \Log::info('Found related contacts', ['count' => $related_contacts->count()]);
             
             $customers = [];
             foreach ($related_contacts as $related) {
