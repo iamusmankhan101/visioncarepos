@@ -589,8 +589,24 @@ class ContactController extends Controller
                 return $this->moduleUtil->expiredResponse();
             }
 
+            // Basic validation
+            $validator = \Validator::make($request->all(), [
+                'first_name' => 'required|string|max:255',
+                'mobile' => 'required|string|max:20',
+                'email' => 'nullable|email|max:255',
+                'contact_id' => 'nullable|string|max:255',
+                'type' => 'required|in:customer,supplier,both'
+            ]);
+
+            if ($validator->fails()) {
+                return [
+                    'success' => false,
+                    'msg' => 'Validation failed: ' . $validator->errors()->first()
+                ];
+            }
+
             $input = $request->only(['type', 'supplier_business_name',
-                'prefix', 'first_name', 'middle_name', 'last_name', 'tax_number', 'pay_term_number', 'pay_term_type', 'mobile', 'landline', 'alternate_number', 'city', 'state', 'country', 'address_line_1', 'address_line_2', 'customer_group_id', 'zip_code', 'contact_id', 'custom_field1', 'custom_field2', 'custom_field3', 'custom_field4', 'custom_field5', 'custom_field6', 'custom_field7', 'custom_field8', 'custom_field9', 'custom_field10', 'email', 'shipping_address', 'position', 'dob', 'shipping_custom_field_details', 'assigned_to_users', 'land_mark', 'street_name', 'building_number', 'additional_number']);
+                'prefix', 'first_name', 'middle_name', 'last_name', 'tax_number', 'pay_term_number', 'pay_term_type', 'mobile', 'landline', 'alternate_number', 'city', 'state', 'country', 'address_line_1', 'address_line_2', 'customer_group_id', 'zip_code', 'contact_id', 'custom_field1', 'custom_field2', 'custom_field3', 'custom_field4', 'custom_field5', 'custom_field6', 'custom_field7', 'custom_field8', 'custom_field9', 'custom_field10', 'email', 'shipping_address', 'position', 'dob', 'shipping_custom_field_details', 'assigned_to_users', 'land_mark', 'street_name', 'building_number', 'additional_number', 'customer_group_id_link', 'relationship_type']);
 
             $name_array = [];
 
@@ -699,9 +715,29 @@ class ContactController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             \Log::emergency('File:'.$e->getFile().'Line:'.$e->getLine().'Message:'.$e->getMessage());
+            \Log::emergency('Stack trace: '.$e->getTraceAsString());
+            \Log::emergency('Request data: '.json_encode($request->all()));
+
+            // Provide more specific error messages
+            $error_msg = __('messages.something_went_wrong');
+            
+            if (strpos($e->getMessage(), 'contact_id') !== false) {
+                $error_msg = 'Contact ID already exists. Please try again.';
+            } elseif (strpos($e->getMessage(), 'email') !== false) {
+                $error_msg = 'Email address is invalid or already exists.';
+            } elseif (strpos($e->getMessage(), 'mobile') !== false) {
+                $error_msg = 'Mobile number format is invalid.';
+            } elseif (strpos($e->getMessage(), 'Duplicate entry') !== false) {
+                $error_msg = 'A contact with this information already exists.';
+            } elseif (strpos($e->getMessage(), 'Data too long') !== false) {
+                $error_msg = 'One of the fields contains too much data. Please shorten your input.';
+            } elseif (strpos($e->getMessage(), 'cannot be null') !== false) {
+                $error_msg = 'Required field is missing. Please fill all required fields.';
+            }
 
             $output = ['success' => false,
-                'msg' => __('messages.something_went_wrong'),
+                'msg' => $error_msg,
+                'debug_msg' => config('app.debug') ? $e->getMessage() : null
             ];
         }
 
