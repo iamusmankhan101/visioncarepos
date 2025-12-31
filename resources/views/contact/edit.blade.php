@@ -334,10 +334,21 @@
                       <option value="friend">Friend</option>
                     </select>
                   </div>
-                  <p class="help-block" style="color: #48b2ee;">
-                    <i class="fa fa-info-circle"></i> This customer is linked with other customers added in this form
-                  </p>
                 </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="related_first_name">Name:*</label>
+                  <div class="input-group">
+                    <span class="input-group-addon"><i class="fa fa-user"></i></span>
+                    <input type="text" name="related_first_name" class="form-control" id="related_first_name" placeholder="Enter customer name" required>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-12">
+                <p class="help-block" style="color: #48b2ee;">
+                  <i class="fa fa-info-circle"></i> This customer is linked with other customers added in this form
+                </p>
               </div>
               <div class="clearfix"></div>
             </div>
@@ -726,14 +737,22 @@ $(document).on('click', '#save-related-customer', function(e) {
     e.preventDefault();
     
     var relationshipType = $('#related_relationship_type').val();
+    var customerName = $('#related_first_name').val();
+    
     if (!relationshipType) {
         alert('Please select a relationship type');
+        return;
+    }
+    
+    if (!customerName.trim()) {
+        alert('Please enter a customer name');
         return;
     }
     
     // Collect form data
     var formData = {
         relationship_type: relationshipType,
+        first_name: customerName,
         custom_field1: $('input[name="related_custom_field1"]').val(),
         custom_field2: $('input[name="related_custom_field2"]').val(),
         custom_field3: $('input[name="related_custom_field3"]').val(),

@@ -732,7 +732,7 @@
           // Add header
           var $separator = $('<div class="col-md-12"><hr style="border-top: 2px solid #48b2ee; margin: 30px 0 20px 0;"/><h4 style="color: #48b2ee; margin-bottom: 10px;"><i class="fa fa-user-plus"></i> Related Customer #' + (customerFormCount + 1) + '</h4><p style="color: #6c757d; font-size: 13px;"><i class="fa fa-link"></i> This customer will be linked to the primary customer</p></div>');
           
-          // Create relationship section
+          // Create relationship section with name field
           var relationshipHtml = '<div class="col-md-6">' +
             '<div class="form-group">' +
             '<label for="relationship_type_' + customerFormCount + '">Relationship:</label>' +
@@ -749,8 +749,19 @@
             '<option value="friend">Friend</option>' +
             '</select>' +
             '</div>' +
-            '<p class="help-block" style="color: #48b2ee;"><i class="fa fa-info-circle"></i> This customer is linked with other customers added in this form</p>' +
             '</div>' +
+            '</div>' +
+            '<div class="col-md-6">' +
+            '<div class="form-group">' +
+            '<label for="first_name_' + customerFormCount + '">Name:*</label>' +
+            '<div class="input-group">' +
+            '<span class="input-group-addon"><i class="fa fa-user"></i></span>' +
+            '<input type="text" name="customers[' + customerFormCount + '][first_name]" class="form-control" id="first_name_' + customerFormCount + '" placeholder="Enter customer name" required>' +
+            '</div>' +
+            '</div>' +
+            '</div>' +
+            '<div class="col-md-12">' +
+            '<p class="help-block" style="color: #48b2ee;"><i class="fa fa-info-circle"></i> This customer is linked with other customers added in this form</p>' +
             '</div>';
           
           var $relationshipSection = $(relationshipHtml);
