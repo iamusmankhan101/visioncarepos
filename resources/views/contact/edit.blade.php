@@ -345,6 +345,24 @@
                   </div>
                 </div>
               </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="related_mobile">Mobile:</label>
+                  <div class="input-group">
+                    <span class="input-group-addon"><i class="fa fa-mobile"></i></span>
+                    <input type="text" name="related_mobile" class="form-control" id="related_mobile" placeholder="Enter mobile number">
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="related_email">Email:</label>
+                  <div class="input-group">
+                    <span class="input-group-addon"><i class="fa fa-envelope"></i></span>
+                    <input type="email" name="related_email" class="form-control" id="related_email" placeholder="Enter email address">
+                  </div>
+                </div>
+              </div>
               <div class="col-md-12">
                 <p class="help-block" style="color: #48b2ee;">
                   <i class="fa fa-info-circle"></i> This customer is linked with other customers added in this form
@@ -738,6 +756,8 @@ $(document).on('click', '#save-related-customer', function(e) {
     
     var relationshipType = $('#related_relationship_type').val();
     var customerName = $('#related_first_name').val();
+    var customerMobile = $('#related_mobile').val();
+    var customerEmail = $('#related_email').val();
     
     if (!relationshipType) {
         alert('Please select a relationship type');
@@ -751,8 +771,12 @@ $(document).on('click', '#save-related-customer', function(e) {
     
     // Collect form data
     var formData = {
+        type: 'customer', // Set contact type
+        contact_type_radio: 'individual', // Set individual type
         relationship_type: relationshipType,
         first_name: customerName,
+        mobile: customerMobile || '', // Use entered mobile or empty
+        email: customerEmail || '', // Use entered email or empty
         custom_field1: $('input[name="related_custom_field1"]').val(),
         custom_field2: $('input[name="related_custom_field2"]').val(),
         custom_field3: $('input[name="related_custom_field3"]').val(),
@@ -763,8 +787,8 @@ $(document).on('click', '#save-related-customer', function(e) {
         custom_field8: $('input[name="related_custom_field8"]').val(),
         custom_field9: $('input[name="related_custom_field9"]').val(),
         custom_field10: $('input[name="related_custom_field10"]').val(),
-        shipping_custom_field_1: $('input[name="related_shipping_custom_field_1"]').val(),
-        shipping_custom_field_2: $('input[name="related_shipping_custom_field_2"]').val(),
+        'shipping_custom_field_details[shipping_custom_field_1]': $('input[name="related_shipping_custom_field_1"]').val(),
+        'shipping_custom_field_details[shipping_custom_field_2]': $('input[name="related_shipping_custom_field_2"]').val(),
         customer_group_id_link: $('#customer_group_id_link').val(),
         _token: $('meta[name="csrf-token"]').attr('content')
     };
@@ -777,18 +801,40 @@ $(document).on('click', '#save-related-customer', function(e) {
         url: '/contacts',
         method: 'POST',
         data: formData,
+        dataType: 'json',
         success: function(response) {
+            console.log('Success response:', response);
             if (response.success) {
                 $('#inline-add-customer-form').slideUp();
+                if (typeof toastr !== 'undefined') {
+                    toastr.success('Related customer added successfully');
+                }
                 // Reload the page to show new related customer
-                location.reload();
+                setTimeout(function() {
+                    location.reload();
+                }, 1000);
             } else {
-                alert('Error saving customer');
+                console.log('Error in response:', response);
+                alert('Error saving customer: ' + (response.msg || 'Unknown error'));
                 $('#save-related-customer').prop('disabled', false).html('<i class="fa fa-save"></i> Save Related Customer');
             }
         },
-        error: function() {
-            alert('Error saving customer');
+        error: function(xhr, status, error) {
+            console.log('AJAX Error:', xhr.responseText);
+            var errorMsg = 'Error saving customer';
+            try {
+                var response = JSON.parse(xhr.responseText);
+                if (response.message) {
+                    errorMsg += ': ' + response.message;
+                }
+                if (response.errors) {
+                    var errors = Object.values(response.errors).flat();
+                    errorMsg += ': ' + errors.join(', ');
+                }
+            } catch (e) {
+                errorMsg += ': ' + error;
+            }
+            alert(errorMsg);
             $('#save-related-customer').prop('disabled', false).html('<i class="fa fa-save"></i> Save Related Customer');
         }
     });
