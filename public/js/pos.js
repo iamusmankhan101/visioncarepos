@@ -3962,7 +3962,7 @@ $(document).on('click', '.print-additional-invoice', function() {
     
     // Call the print invoice endpoint with custom customer ID
     $.ajax({
-        url: '/sells/pos/print/' + transactionId,
+        url: '/sells/' + transactionId + '/print',
         method: 'GET',
         data: {
             customer_id: customerId
