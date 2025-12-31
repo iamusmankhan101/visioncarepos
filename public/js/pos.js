@@ -3841,7 +3841,7 @@ $(document).on('click', '#confirm_customer_selection', function(e) {
     var callback = window.relatedCustomerCallback;
     
     // Execute callback if exists (for express checkout)
-    if (callback && typeof callback === 'function) {
+    if (callback && typeof callback === 'function') {
         console.log('Executing callback for express checkout');
         setTimeout(function() {
             callback();
