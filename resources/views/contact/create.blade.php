@@ -730,6 +730,51 @@
           var $moreInfoRow = $('.modal-body > .row').eq(2).clone();
           var $moreDiv = $('#more_div').clone();
           
+          // Remove any payment-related fields from cloned content
+          $basicFields.find('.payment-amount, .payment_types_dropdown, [name*="payment"], [id*="payment"], .cash_denomination_div, [class*="payment"]').closest('.form-group, .col-md-4, .col-md-6, .col-md-12').remove();
+          $moreDiv.find('.payment-amount, .payment_types_dropdown, [name*="payment"], [id*="payment"], .cash_denomination_div, [class*="payment"]').closest('.form-group, .col-md-4, .col-md-6, .col-md-12').remove();
+          
+          // Remove any elements containing payment-related text
+          $basicFields.find('*').filter(function() {
+            var text = $(this).text().toLowerCase();
+            return text.includes('amount') && text.includes('payment') || 
+                   text.includes('payment method') || 
+                   text.includes('add payment row') ||
+                   text.includes('payment note');
+          }).closest('.form-group, .col-md-4, .col-md-6, .col-md-12').remove();
+          
+          $moreDiv.find('*').filter(function() {
+            var text = $(this).text().toLowerCase();
+            return text.includes('amount') && text.includes('payment') || 
+                   text.includes('payment method') || 
+                   text.includes('add payment row') ||
+                   text.includes('payment note');
+          }).closest('.form-group, .col-md-4, .col-md-6, .col-md-12').remove();
+          
+          // Remove any buttons with payment-related text
+          $basicFields.find('button').filter(function() {
+            return $(this).text().toLowerCase().includes('payment');
+          }).remove();
+          
+          $moreDiv.find('button').filter(function() {
+            return $(this).text().toLowerCase().includes('payment');
+          }).remove();
+          
+          // Remove any orange payment summary boxes
+          $basicFields.find('.box.box-solid.bg-orange, [style*="background-color: #f39c12"], [style*="background-color: orange"]').remove();
+          $moreDiv.find('.box.box-solid.bg-orange, [style*="background-color: #f39c12"], [style*="background-color: orange"]').remove();
+          
+          // Remove any elements with payment-related labels
+          $basicFields.find('label').filter(function() {
+            var text = $(this).text().toLowerCase();
+            return text.includes('amount') || text.includes('payment method') || text.includes('payment note');
+          }).closest('.form-group, .col-md-4, .col-md-6, .col-md-12').remove();
+          
+          $moreDiv.find('label').filter(function() {
+            var text = $(this).text().toLowerCase();
+            return text.includes('amount') || text.includes('payment method') || text.includes('payment note');
+          }).closest('.form-group, .col-md-4, .col-md-6, .col-md-12').remove();
+          
           // Update the more_div ID to be unique
           $moreDiv.attr('id', 'more_div_' + customerFormCount);
           $moreDiv.removeClass('hide');
