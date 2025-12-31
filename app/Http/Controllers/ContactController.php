@@ -729,6 +729,38 @@ class ContactController extends Controller
 
             DB::commit();
             
+            // Handle single related customer (from edit form)
+            if (!empty($input['customer_group_id_link'])) {
+                \Log::info('Creating relationship for single related customer', [
+                    'parent_contact_id' => $input['customer_group_id_link'],
+                    'new_contact_id' => $output['data']->id,
+                    'relationship_type' => $input['relationship_type'] ?? null
+                ]);
+                
+                $parent_contact_id = $input['customer_group_id_link'];
+                $new_contact_id = $output['data']->id;
+                
+                // Create bidirectional relationships
+                $relationship1 = \App\ContactRelationship::create([
+                    'contact_id' => $parent_contact_id,
+                    'related_contact_id' => $new_contact_id,
+                    'relationship_type' => $input['relationship_type'] ?? null,
+                    'business_id' => $business_id
+                ]);
+                
+                $relationship2 = \App\ContactRelationship::create([
+                    'contact_id' => $new_contact_id,
+                    'related_contact_id' => $parent_contact_id,
+                    'relationship_type' => $input['relationship_type'] ?? null,
+                    'business_id' => $business_id
+                ]);
+                
+                \Log::info('Created single customer relationships', [
+                    'relationship1' => $relationship1->id,
+                    'relationship2' => $relationship2->id
+                ]);
+            }
+            
             // Check if user wants to add another contact
             if ($request->input('add_another') == '1') {
                 $output['add_another'] = true;
@@ -988,6 +1020,96 @@ class ContactController extends Controller
                 event(new ContactCreatedOrModified($output['data'], 'updated'));
 
                 $this->contactUtil->activityLog($output['data'], 'edited');
+
+                // Handle multiple customers (related customers) for updates
+                if ($request->has('customers') && is_array($request->input('customers'))) {
+                    \Log::info('Updating related customers', ['contact_id' => $id, 'customers' => $request->input('customers')]);
+                    
+                    // First, remove existing relationships for this contact
+                    \App\ContactRelationship::where('business_id', $business_id)
+                        ->where(function($query) use ($id) {
+                            $query->where('contact_id', $id)
+                                  ->orWhere('related_contact_id', $id);
+                        })
+                        ->delete();
+                    
+                    \Log::info('Removed existing relationships for contact', ['contact_id' => $id]);
+                    
+                    $customers = $request->input('customers');
+                    
+                    foreach ($customers as $customer_data) {
+                        \Log::info('Processing related customer for update', ['customer_data' => $customer_data]);
+                        
+                        // Check if this is an existing customer (has ID) or new customer
+                        if (!empty($customer_data['id']) && $customer_data['id'] != 'new') {
+                            // Existing customer - just create relationship
+                            $related_contact_id = $customer_data['id'];
+                            \Log::info('Creating relationship with existing customer', ['related_contact_id' => $related_contact_id]);
+                        } else {
+                            // New customer - create the contact first
+                            $related_input = $customer_data;
+                            $related_input['business_id'] = $business_id;
+                            $related_input['created_by'] = $request->session()->get('user.id');
+                            $related_input['type'] = 'customer';
+                            
+                            // Build name for related customer
+                            $name_array = [];
+                            if (!empty($related_input['prefix'])) $name_array[] = $related_input['prefix'];
+                            if (!empty($related_input['first_name'])) $name_array[] = $related_input['first_name'];
+                            if (!empty($related_input['middle_name'])) $name_array[] = $related_input['middle_name'];
+                            if (!empty($related_input['last_name'])) $name_array[] = $related_input['last_name'];
+                            $related_input['name'] = trim(implode(' ', $name_array));
+                            
+                            // Set default mobile if not provided
+                            if (empty($related_input['mobile'])) {
+                                $related_input['mobile'] = $input['mobile'] ?? '0000000000';
+                            }
+                            
+                            if (!empty($related_input['dob'])) {
+                                $related_input['dob'] = $this->commonUtil->uf_date($related_input['dob']);
+                            }
+                            
+                            $related_input['credit_limit'] = isset($related_input['credit_limit']) && $related_input['credit_limit'] != '' ? $this->commonUtil->num_uf($related_input['credit_limit']) : null;
+                            $related_input['opening_balance'] = isset($related_input['opening_balance']) ? $this->commonUtil->num_uf($related_input['opening_balance']) : 0;
+                            
+                            \Log::info('Creating new related contact with input', ['related_input' => $related_input]);
+                            
+                            // Create the related contact
+                            $related_output = $this->contactUtil->createNewContact($related_input);
+                            
+                            \Log::info('Related contact creation result', ['related_output' => $related_output]);
+                            
+                            if (!$related_output['success']) {
+                                \Log::error('Failed to create related contact', ['error' => $related_output]);
+                                continue;
+                            }
+                            
+                            $related_contact_id = $related_output['data']->id;
+                        }
+                        
+                        // Create the relationships (both directions)
+                        $relationship1 = \App\ContactRelationship::create([
+                            'contact_id' => $id,
+                            'related_contact_id' => $related_contact_id,
+                            'relationship_type' => $customer_data['relationship_type'] ?? null,
+                            'business_id' => $business_id
+                        ]);
+                        
+                        $relationship2 = \App\ContactRelationship::create([
+                            'contact_id' => $related_contact_id,
+                            'related_contact_id' => $id,
+                            'relationship_type' => $customer_data['relationship_type'] ?? null,
+                            'business_id' => $business_id
+                        ]);
+                        
+                        \Log::info('Created relationships for update', [
+                            'relationship1' => $relationship1->id,
+                            'relationship2' => $relationship2->id
+                        ]);
+                    }
+                } else {
+                    \Log::info('No related customers to update', ['has_customers' => $request->has('customers'), 'customers_data' => $request->input('customers')]);
+                }
             } catch (\Exception $e) {
                 \Log::emergency('File:'.$e->getFile().'Line:'.$e->getLine().'Message:'.$e->getMessage());
 

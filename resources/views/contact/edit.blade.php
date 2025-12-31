@@ -18,6 +18,9 @@
   @endphp
 
     {!! Form::open(['url' => $url, 'method' => 'PUT', 'id' => 'contact_edit_form']) !!}
+    
+    <!-- Hidden field to store current contact ID for related customer linking -->
+    <input type="hidden" id="customer_group_id_link" value="{{ $contact->id }}">
 
     <div class="modal-header">
       <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
