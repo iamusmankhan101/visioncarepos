@@ -724,11 +724,38 @@
           e.preventDefault();
           customerFormCount++;
           
-          // Clone ONLY customer-related fields, exclude payment fields
-          var $basicFields = $('.modal-body > .row').first().clone();
+          // Clone ALL the basic customer fields properly
+          var $modalBody = $('.modal-body').first();
+          var $basicFields = $modalBody.find('.row').first().clone(true, true);
           var $groupLinkField = $('.customer-group-link').clone();
-          var $moreInfoRow = $('.modal-body > .row').eq(2).clone();
-          var $moreDiv = $('#more_div').clone();
+          var $moreInfoRow = $modalBody.find('.row').eq(2).clone(true, true);
+          var $moreDiv = $('#more_div').clone(true, true);
+          
+          // Ensure we have all the essential customer fields by cloning the entire first row structure
+          if ($basicFields.find('[name="type"]').length === 0) {
+            // If the basic fields don't contain the contact type, clone more comprehensively
+            $basicFields = $modalBody.children('.row').first().clone(true, true);
+          }
+          
+          // Verify we have essential fields, if not, clone them specifically
+          var essentialFields = ['type', 'contact_id', 'mobile', 'email'];
+          var missingFields = [];
+          
+          essentialFields.forEach(function(fieldName) {
+            if ($basicFields.find('[name="' + fieldName + '"]').length === 0) {
+              missingFields.push(fieldName);
+            }
+          });
+          
+          // If we're missing essential fields, try to find and clone them from the original form
+          if (missingFields.length > 0) {
+            missingFields.forEach(function(fieldName) {
+              var $originalField = $modalBody.find('[name="' + fieldName + '"]').closest('.col-md-4, .col-md-3, .col-md-6');
+              if ($originalField.length > 0) {
+                $basicFields.append($originalField.clone(true, true));
+              }
+            });
+          }
           
           // Remove any payment-related fields from cloned content
           $basicFields.find('.payment-amount, .payment_types_dropdown, [name*="payment"], [id*="payment"], .cash_denomination_div, [class*="payment"]').closest('.form-group, .col-md-4, .col-md-6, .col-md-12').remove();
@@ -795,6 +822,44 @@
             return text.includes('advance balance') || text.includes('sell note') || 
                    text.includes('staff note') || text.includes('suspend note');
           }).closest('.form-group, .col-md-4, .col-md-6, .col-md-12').remove();
+          
+          // Remove specific unwanted sections by looking for exact text matches
+          $basicFields.find('label, h4, h5, strong').filter(function() {
+            var text = $(this).text().trim();
+            return text === 'Suspend Note:' || text === 'Suspend Note' ||
+                   text === 'Sell note:' || text === 'Sell note' ||
+                   text === 'Staff note:' || text === 'Staff note' ||
+                   text === 'Advance Balance:' || text === 'Advance Balance';
+          }).closest('.form-group, .col-md-4, .col-md-6, .col-md-12, .row').remove();
+          
+          $moreDiv.find('label, h4, h5, strong').filter(function() {
+            var text = $(this).text().trim();
+            return text === 'Suspend Note:' || text === 'Suspend Note' ||
+                   text === 'Sell note:' || text === 'Sell note' ||
+                   text === 'Staff note:' || text === 'Staff note' ||
+                   text === 'Advance Balance:' || text === 'Advance Balance';
+          }).closest('.form-group, .col-md-4, .col-md-6, .col-md-12, .row').remove();
+          
+          // Additional aggressive filtering for stubborn fields
+          $basicFields.find('*').each(function() {
+            var $this = $(this);
+            var text = $this.text().toLowerCase();
+            if (text.includes('suspend note') || text.includes('sell note') || text.includes('staff note')) {
+              $this.closest('.form-group, .col-md-12, .row').remove();
+            }
+          });
+          
+          $moreDiv.find('*').each(function() {
+            var $this = $(this);
+            var text = $this.text().toLowerCase();
+            if (text.includes('suspend note') || text.includes('sell note') || text.includes('staff note')) {
+              $this.closest('.form-group, .col-md-12, .row').remove();
+            }
+          });
+          
+          // Remove any textarea or input fields that might be related to notes
+          $basicFields.find('textarea[name*="note"], input[name*="note"]').not('[name*="mobile"]').not('[name*="phone"]').closest('.form-group, .col-md-12, .row').remove();
+          $moreDiv.find('textarea[name*="note"], input[name*="note"]').not('[name*="mobile"]').not('[name*="phone"]').closest('.form-group, .col-md-12, .row').remove();
           
           // Update the more_div ID to be unique
           $moreDiv.attr('id', 'more_div_' + customerFormCount);
@@ -868,6 +933,24 @@
           $customerContainer.append($groupLinkField);
           $customerContainer.append($moreInfoRow);
           $customerContainer.append($moreDiv);
+          
+          // Final cleanup - remove any remaining unwanted elements after appending
+          setTimeout(function() {
+            $customerContainer.find('*').filter(function() {
+              var text = $(this).text().toLowerCase();
+              return text.includes('suspend note') || text.includes('sell note') || 
+                     text.includes('staff note') || text.includes('advance balance');
+            }).closest('.form-group, .col-md-12, .row').remove();
+            
+            // Remove any remaining note fields that aren't contact-related
+            $customerContainer.find('textarea, input').filter(function() {
+              var name = $(this).attr('name') || '';
+              var id = $(this).attr('id') || '';
+              return (name.includes('note') || id.includes('note')) && 
+                     !name.includes('mobile') && !name.includes('phone') && 
+                     !name.includes('contact') && !name.includes('alternate');
+            }).closest('.form-group, .col-md-12, .row').remove();
+          }, 100);
           
           // Insert before button
           $('.add-another-customer-btn').closest('.row').before($customerContainer);
