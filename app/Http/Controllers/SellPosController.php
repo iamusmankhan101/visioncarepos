@@ -669,32 +669,53 @@ class SellPosController extends Controller
                 }
 
                 if ($print_invoice) {
+                    \Log::info('Generating receipt', [
+                        'has_multiple_customer_ids' => !empty($input['multiple_customer_ids']),
+                        'multiple_customer_ids' => $input['multiple_customer_ids'] ?? 'not set',
+                        'additional_customer_ids_defined' => isset($additional_customer_ids),
+                        'additional_customer_ids_value' => $additional_customer_ids ?? 'not defined'
+                    ]);
+                    
                     $receipt = $this->receiptContent($business_id, $input['location_id'], $transaction->id, null, false, true, $invoice_layout_id);
                     
                     // Generate additional receipts for multiple customers
                     $additional_receipts = [];
-                    if (!empty($additional_customer_ids)) {
-                        $original_contact_id = $transaction->contact_id;
+                    
+                    // Re-extract additional customer IDs from input
+                    if (!empty($input['multiple_customer_ids'])) {
+                        $customer_ids = explode(',', $input['multiple_customer_ids']);
+                        $additional_customer_ids_for_receipt = array_slice($customer_ids, 1);
                         
-                        foreach ($additional_customer_ids as $customer_id) {
-                            // Temporarily change the contact_id
-                            $transaction->contact_id = $customer_id;
+                        \Log::info('Processing additional receipts', [
+                            'all_customer_ids' => $customer_ids,
+                            'additional_ids' => $additional_customer_ids_for_receipt
+                        ]);
+                        
+                        if (!empty($additional_customer_ids_for_receipt)) {
+                            $original_contact_id = $transaction->contact_id;
+                            
+                            foreach ($additional_customer_ids_for_receipt as $customer_id) {
+                                \Log::info('Generating receipt for customer', ['customer_id' => $customer_id]);
+                                
+                                // Temporarily change the contact_id
+                                $transaction->contact_id = $customer_id;
+                                $transaction->save();
+                                
+                                // Generate receipt for this customer
+                                $additional_receipt = $this->receiptContent($business_id, $input['location_id'], $transaction->id, null, false, true, $invoice_layout_id);
+                                $additional_receipts[] = $additional_receipt;
+                            }
+                            
+                            // Restore original contact_id
+                            $transaction->contact_id = $original_contact_id;
                             $transaction->save();
                             
-                            // Generate receipt for this customer
-                            $additional_receipt = $this->receiptContent($business_id, $input['location_id'], $transaction->id, null, false, true, $invoice_layout_id);
-                            $additional_receipts[] = $additional_receipt;
+                            // Add additional receipts to the main receipt
+                            $receipt['additional_receipts'] = $additional_receipts;
+                            $receipt['has_multiple'] = true;
+                            
+                            \Log::info('Generated additional receipts', ['count' => count($additional_receipts)]);
                         }
-                        
-                        // Restore original contact_id
-                        $transaction->contact_id = $original_contact_id;
-                        $transaction->save();
-                        
-                        // Add additional receipts to the main receipt
-                        $receipt['additional_receipts'] = $additional_receipts;
-                        $receipt['has_multiple'] = true;
-                        
-                        \Log::info('Generated additional receipts', ['count' => count($additional_receipts)]);
                     }
                 }
 
