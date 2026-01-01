@@ -840,6 +840,8 @@ $(document).ready(function() {
         } else if (pay_method == 'suspend') {
             $('div#confirmSuspendModal').modal('show');
         } else {
+            // Add selected customers to form before submission
+            addSelectedCustomersToForm();
             pos_form_obj.submit();
         }
     }
@@ -865,12 +867,16 @@ $(document).ready(function() {
         $('input#card_security_0').val($('#card_security').val());
 
         $('div#card_details_modal').modal('hide');
+        // Add selected customers to form before submission
+        addSelectedCustomersToForm();
         pos_form_obj.submit();
     });
 
     $('button#pos-suspend').click(function() {
         $('input#is_suspend').val(1);
         $('div#confirmSuspendModal').modal('hide');
+        // Add selected customers to form before submission
+        addSelectedCustomersToForm();
         pos_form_obj.submit();
         $('input#is_suspend').val(0);
     });
@@ -4143,4 +4149,25 @@ function debugCheckboxStates() {
 // Add debug button click handler for testing
 $(document).on('click', '#debug_checkboxes', function() {
     debugCheckboxStates();
-});
+});// Function 
+to add selected customers to form before submission
+function addSelectedCustomersToForm() {
+    console.log('Adding selected customers to form');
+    
+    // Remove any existing selected customers fields
+    $('input[name^="selected_customers"]').remove();
+    
+    // Add selected customers if they exist
+    if (window.selectedRelatedCustomers && window.selectedRelatedCustomers.length > 0) {
+        console.log('Adding selected customers:', window.selectedRelatedCustomers);
+        
+        window.selectedRelatedCustomers.forEach(function(customerId, index) {
+            var input = $('<input type="hidden" name="selected_customers[]" value="' + customerId + '">');
+            pos_form_obj.append(input);
+        });
+        
+        console.log('Added ' + window.selectedRelatedCustomers.length + ' selected customers to form');
+    } else {
+        console.log('No selected customers to add');
+    }
+}
