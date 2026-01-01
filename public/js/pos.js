@@ -3673,26 +3673,29 @@ function showRelatedCustomersModal(customers, callback) {
     // Store callback for later use
     window.relatedCustomerCallback = callback;
     
+    // Clear any existing event handlers
+    $('#related_customers_modal').off();
+    
     var html = '';
-    customers.forEach(function(customer) {
+    customers.forEach(function(customer, index) {
         var isCurrentBadge = customer.is_current ? '<span class="label label-primary" style="margin-left: 10px;">Currently Selected</span>' : '';
-        var isChecked = customer.is_current ? 'checked' : '';
+        var isChecked = customer.is_current ? 'checked="checked"' : '';
         var borderColor = customer.is_current ? '#48b2ee' : '#ddd';
         var bgColor = customer.is_current ? '#f0f8ff' : 'white';
         
-        html += '<div class="related-customer-item" style="border: 2px solid ' + borderColor + '; border-radius: 8px; padding: 15px; margin-bottom: 15px; transition: all 0.3s; background-color: ' + bgColor + '; cursor: pointer;" data-customer-id="' + customer.id + '">';
+        html += '<div class="related-customer-item" style="border: 2px solid ' + borderColor + '; border-radius: 8px; padding: 15px; margin-bottom: 15px; transition: all 0.3s; background-color: ' + bgColor + ';" data-customer-id="' + customer.id + '">';
         html += '  <div class="row">';
         html += '    <div class="col-md-1" style="padding-top: 10px; text-align: center;">';
-        html += '      <input type="checkbox" class="customer-checkbox" id="customer_checkbox_' + customer.id + '" data-customer-id="' + customer.id + '" ' + isChecked + ' style="width: 20px; height: 20px; cursor: pointer;">';
+        html += '      <input type="checkbox" class="customer-checkbox" name="selected_customers[]" value="' + customer.id + '" id="customer_' + customer.id + '" ' + isChecked + ' style="width: 20px; height: 20px; cursor: pointer; margin: 0;">';
         html += '    </div>';
-        html += '    <div class="col-md-11">';
-        html += '      <h5 style="margin-top: 0; color: #48b2ee;" class="customer-name-click" data-customer-id="' + customer.id + '">';
+        html += '    <div class="col-md-11" style="cursor: pointer;" onclick="toggleCustomerCheckbox(' + customer.id + ')">';
+        html += '      <h5 style="margin-top: 0; color: #48b2ee;">';
         html += '        <i class="fa fa-user"></i> ' + customer.name + isCurrentBadge;
         html += '      </h5>';
-        html += '      <p style="margin-bottom: 5px; pointer-events: none;"><strong>Contact ID:</strong> ' + (customer.contact_id || 'N/A') + '</p>';
-        html += '      <p style="margin-bottom: 5px; pointer-events: none;"><strong>Mobile:</strong> ' + (customer.mobile || 'N/A') + '</p>';
+        html += '      <p style="margin-bottom: 5px;"><strong>Contact ID:</strong> ' + (customer.contact_id || 'N/A') + '</p>';
+        html += '      <p style="margin-bottom: 5px;"><strong>Mobile:</strong> ' + (customer.mobile || 'N/A') + '</p>';
         if (customer.prescription_summary) {
-            html += '      <p style="margin-bottom: 0; color: #6c757d; pointer-events: none;"><strong>Prescription:</strong> ' + customer.prescription_summary + '</p>';
+            html += '      <p style="margin-bottom: 0; color: #6c757d;"><strong>Prescription:</strong> ' + customer.prescription_summary + '</p>';
         }
         html += '    </div>';
         html += '  </div>';
@@ -3703,10 +3706,72 @@ function showRelatedCustomersModal(customers, callback) {
     $('#related_customers_list').html(html);
     $('#related_customers_modal').modal('show');
     
-    // Debug: Check if checkboxes were added
-    setTimeout(function() {
-        console.log('Checkboxes found:', $('.customer-checkbox').length);
-    }, 100);
+    // Set up event handlers after modal is shown
+    $('#related_customers_modal').on('shown.bs.modal', function() {
+        setupCheckboxHandlers();
+    });
+}
+
+// Function to toggle checkbox when clicking on customer info
+function toggleCustomerCheckbox(customerId) {
+    var checkbox = document.getElementById('customer_' + customerId);
+    if (checkbox) {
+        checkbox.checked = !checkbox.checked;
+        updateCustomerItemStyle(customerId, checkbox.checked);
+        updateSelectAllState();
+    }
+}
+
+// Function to update visual style of customer item
+function updateCustomerItemStyle(customerId, isChecked) {
+    var item = $('[data-customer-id="' + customerId + '"]');
+    if (isChecked) {
+        item.css({
+            'border-color': '#48b2ee',
+            'background-color': '#f0f8ff'
+        });
+    } else {
+        item.css({
+            'border-color': '#ddd',
+            'background-color': 'white'
+        });
+    }
+}
+
+// Function to update Select All checkbox state
+function updateSelectAllState() {
+    var totalCheckboxes = $('.customer-checkbox').length;
+    var checkedCheckboxes = $('.customer-checkbox:checked').length;
+    $('#select_all_customers').prop('checked', totalCheckboxes === checkedCheckboxes);
+}
+
+// Setup checkbox event handlers
+function setupCheckboxHandlers() {
+    console.log('Setting up checkbox handlers');
+    
+    // Handle individual checkbox changes
+    $('.customer-checkbox').off('change').on('change', function() {
+        var customerId = $(this).val();
+        var isChecked = $(this).is(':checked');
+        console.log('Checkbox changed for customer:', customerId, 'checked:', isChecked);
+        
+        updateCustomerItemStyle(customerId, isChecked);
+        updateSelectAllState();
+    });
+    
+    // Handle Select All checkbox
+    $('#select_all_customers').off('change').on('change', function() {
+        var isChecked = $(this).is(':checked');
+        console.log('Select All changed to:', isChecked);
+        
+        $('.customer-checkbox').each(function() {
+            $(this).prop('checked', isChecked);
+            var customerId = $(this).val();
+            updateCustomerItemStyle(customerId, isChecked);
+        });
+    });
+    
+    console.log('Checkbox handlers set up. Total checkboxes:', $('.customer-checkbox').length);
 }
 
 
@@ -4014,7 +4079,7 @@ $(document).on('click', '#proceed_with_selected_customers', function() {
     
     var selectedCustomers = [];
     $('.customer-checkbox:checked').each(function() {
-        var customerId = $(this).data('customer-id');
+        var customerId = $(this).val(); // Use .val() instead of .data()
         selectedCustomers.push(customerId);
     });
     
