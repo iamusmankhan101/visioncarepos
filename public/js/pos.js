@@ -3797,7 +3797,8 @@ $(document).on('change', '#select_all_customers', function() {
 
 // Handle individual checkbox changes
 $(document).on('change', '.customer-checkbox', function(e) {
-    console.log('Checkbox changed:', $(this).data('customer-id'), 'checked:', $(this).is(':checked'));
+    var customerId = $(this).val(); // Use .val() to get the value attribute
+    console.log('Checkbox changed:', customerId, 'checked:', $(this).is(':checked'));
     
     var $item = $(this).closest('.related-customer-item');
     var isChecked = $(this).is(':checked');
@@ -3843,7 +3844,7 @@ $(document).on('click', '.customer-name-click, .related-customer-item', function
     
     console.log('Toggling checkbox for customer:', customerId);
     
-    var $checkbox = $('.customer-checkbox[data-customer-id="' + customerId + '"]');
+    var $checkbox = $('.customer-checkbox[value="' + customerId + '"]');
     if ($checkbox.length > 0) {
         var newState = !$checkbox.is(':checked');
         console.log('Setting checkbox to:', newState);
@@ -3863,7 +3864,7 @@ $(document).on('click', '#confirm_customer_selection', function(e) {
     var selectedCustomerNames = [];
     
     $('.customer-checkbox:checked').each(function() {
-        var customerId = $(this).data('customer-id');
+        var customerId = $(this).val(); // Use .val() to get the value attribute
         var customerName = $(this)
             .closest('.related-customer-item')
             .find('.customer-name-click')
@@ -3969,7 +3970,7 @@ $(document).on('click', '.btn-select-customer', function(e) {
     e.stopPropagation();
     
     var customerId = $(this).data('customer-id');
-    var $checkbox = $('.customer-checkbox[data-customer-id="' + customerId + '"]');
+    var $checkbox = $('.customer-checkbox[value="' + customerId + '"]');
     
     // Check only this checkbox
     $('.customer-checkbox').prop('checked', false);
@@ -4128,7 +4129,7 @@ $(document).on('click', '#proceed_with_selected_customers', function() {
 $(document).on('click', '.customer-name-click', function(e) {
     e.preventDefault();
     var customerId = $(this).data('customer-id');
-    var $checkbox = $('.customer-checkbox[data-customer-id="' + customerId + '"]');
+    var $checkbox = $('.customer-checkbox[value="' + customerId + '"]');
     
     // Toggle checkbox
     $checkbox.prop('checked', !$checkbox.prop('checked')).trigger('change');
@@ -4142,7 +4143,7 @@ $(document).on('click', '.related-customer-item', function(e) {
     }
     
     var customerId = $(this).data('customer-id');
-    var $checkbox = $('.customer-checkbox[data-customer-id="' + customerId + '"]');
+    var $checkbox = $('.customer-checkbox[value="' + customerId + '"]');
     
     // Toggle checkbox
     $checkbox.prop('checked', !$checkbox.prop('checked')).trigger('change');
@@ -4152,7 +4153,7 @@ $(document).on('click', '.related-customer-item', function(e) {
 function debugCheckboxStates() {
     console.log('=== Checkbox Debug ===');
     $('.customer-checkbox').each(function() {
-        console.log('Checkbox ID:', $(this).attr('id'), 'Customer ID:', $(this).data('customer-id'), 'Checked:', $(this).is(':checked'));
+        console.log('Checkbox ID:', $(this).attr('id'), 'Customer ID:', $(this).val(), 'Checked:', $(this).is(':checked'));
     });
     console.log('Total checkboxes:', $('.customer-checkbox').length);
     console.log('Checked checkboxes:', $('.customer-checkbox:checked').length);
