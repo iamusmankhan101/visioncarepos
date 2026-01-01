@@ -690,49 +690,46 @@ $(document).on('click', '.edit-related-customer', function(e) {
     e.preventDefault();
     e.stopPropagation();
     
+    // Prevent multiple clicks
+    if ($(this).prop('disabled')) {
+        return;
+    }
+    
+    $(this).prop('disabled', true);
+    
     var contactId = $(this).data('contact-id');
+    var $button = $(this);
+    
     if (contactId) {
-        // Instead of opening full edit form, create a simplified edit form
-        // First get the customer data
+        // Get the customer data
         $.ajax({
             method: 'get',
             url: '/contacts/' + contactId + '/edit',
             dataType: 'json',
-            success: function(contact) {
+            success: function(response) {
+                console.log('Contact data received:', response);
                 // Create simplified edit modal
-                showRelatedCustomerEditModal(contact);
+                showRelatedCustomerEditModal(response.contact || response);
+                $button.prop('disabled', false);
             },
-            error: function() {
-                // Fallback to full form if JSON fails
-                $.ajax({
-                    method: 'get',
-                    url: '/contacts/' + contactId + '/edit',
-                    dataType: 'html',
-                    success: function(result) {
-                        var $newModal = $('<div class="modal fade" tabindex="-1" role="dialog"></div>');
-                        $newModal.html(result);
-                        $('body').append($newModal);
-                        $newModal.modal('show');
-                        
-                        $newModal.on('shown.bs.modal', function() {
-                            var $moreDiv = $newModal.find('#more_div');
-                            if ($moreDiv.length > 0) {
-                                $moreDiv.removeClass('hide').show();
-                            }
-                        });
-                        
-                        $newModal.on('hidden.bs.modal', function() {
-                            $(this).remove();
-                        });
-                    }
-                });
+            error: function(xhr, status, error) {
+                console.error('Error fetching contact data:', error, xhr.responseText);
+                alert('Error loading customer data. Please try again.');
+                $button.prop('disabled', false);
             }
         });
+    } else {
+        $button.prop('disabled', false);
     }
 });
 
 // Function to show simplified related customer edit modal
 function showRelatedCustomerEditModal(contact) {
+    console.log('Creating edit modal for contact:', contact);
+    
+    // Remove any existing modal first
+    $('#edit-related-customer-modal').remove();
+    
     var modalHtml = '<div class="modal fade" id="edit-related-customer-modal" tabindex="-1" role="dialog">' +
         '<div class="modal-dialog modal-lg" role="document">' +
         '<div class="modal-content">' +
@@ -742,24 +739,6 @@ function showRelatedCustomerEditModal(contact) {
         '</div>' +
         '<div class="modal-body">' +
         '<div class="row">' +
-        '<div class="col-md-6">' +
-        '<div class="form-group">' +
-        '<label for="edit_relationship_type">Relationship:</label>' +
-        '<div class="input-group">' +
-        '<span class="input-group-addon"><i class="fa fa-users"></i></span>' +
-        '<select name="edit_relationship_type" class="form-control" id="edit_relationship_type">' +
-        '<option value="">Select Relationship</option>' +
-        '<option value="self">Self (Primary)</option>' +
-        '<option value="spouse">Spouse</option>' +
-        '<option value="child">Child</option>' +
-        '<option value="parent">Parent</option>' +
-        '<option value="sibling">Sibling</option>' +
-        '<option value="relative">Other Relative</option>' +
-        '<option value="friend">Friend</option>' +
-        '</select>' +
-        '</div>' +
-        '</div>' +
-        '</div>' +
         '<div class="col-md-6">' +
         '<div class="form-group">' +
         '<label for="edit_first_name">Name:*</label>' +
@@ -787,6 +766,15 @@ function showRelatedCustomerEditModal(contact) {
         '</div>' +
         '</div>' +
         '</div>' +
+        '<div class="col-md-6">' +
+        '<div class="form-group">' +
+        '<label for="edit_contact_id">Contact ID:</label>' +
+        '<div class="input-group">' +
+        '<span class="input-group-addon"><i class="fa fa-id-badge"></i></span>' +
+        '<input type="text" name="edit_contact_id" class="form-control" id="edit_contact_id" placeholder="Contact ID">' +
+        '</div>' +
+        '</div>' +
+        '</div>' +
         '</div>' +
         '</div>' +
         '<div class="modal-footer">' +
@@ -799,31 +787,45 @@ function showRelatedCustomerEditModal(contact) {
         '</div>' +
         '</div>';
     
-    // Remove existing modal if any
-    $('#edit-related-customer-modal').remove();
-    
     // Add modal to body
     $('body').append(modalHtml);
     
-    // Populate form with existing data
-    $('#edit_first_name').val(contact.first_name || '');
-    $('#edit_mobile').val(contact.mobile || '');
-    $('#edit_email').val(contact.email || '');
-    // Set relationship if available (you might need to get this from relationships table)
+    // Populate form with existing data - handle different possible data structures
+    var firstName = contact.first_name || contact.name || '';
+    var mobile = contact.mobile || '';
+    var email = contact.email || '';
+    var contactId = contact.contact_id || '';
+    
+    console.log('Populating form with:', {firstName, mobile, email, contactId});
+    
+    $('#edit_first_name').val(firstName);
+    $('#edit_mobile').val(mobile);
+    $('#edit_email').val(email);
+    $('#edit_contact_id').val(contactId);
     
     // Show modal
     $('#edit-related-customer-modal').modal('show');
+    
+    // Clean up when modal is closed
+    $('#edit-related-customer-modal').on('hidden.bs.modal', function() {
+        $(this).remove();
+    });
 }
 
 // Handle update related customer
 $(document).on('click', '#update-related-customer', function(e) {
     e.preventDefault();
     
+    // Prevent multiple submissions
+    if ($(this).prop('disabled')) {
+        return;
+    }
+    
     var contactId = $(this).data('contact-id');
     var customerName = $('#edit_first_name').val();
     var customerMobile = $('#edit_mobile').val();
     var customerEmail = $('#edit_email').val();
-    var relationshipType = $('#edit_relationship_type').val();
+    var contactIdField = $('#edit_contact_id').val();
     
     if (!customerName.trim()) {
         alert('Please enter a customer name');
@@ -833,12 +835,17 @@ $(document).on('click', '#update-related-customer', function(e) {
     // Collect form data
     var formData = {
         first_name: customerName,
+        name: customerName, // Also set name field
         mobile: customerMobile || '',
         email: customerEmail || '',
-        relationship_type: relationshipType,
+        contact_id: contactIdField || '',
+        type: 'customer',
+        contact_type_radio: 'individual',
         _token: $('meta[name="csrf-token"]').attr('content'),
         _method: 'PUT'
     };
+    
+    console.log('Updating contact with data:', formData);
     
     // Show loading
     $('#update-related-customer').prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Updating...');
