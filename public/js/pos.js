@@ -4190,4 +4190,44 @@ function addSelectedCustomersToForm() {
     }
     
     console.log('=== addSelectedCustomersToForm completed ===');
+}// Test fun
+ction to manually set selected customers (for debugging)
+function testSelectedCustomers() {
+    console.log('=== Testing Selected Customers ===');
+    window.selectedRelatedCustomers = ['123', '456']; // Test with dummy IDs
+    console.log('Set test customers:', window.selectedRelatedCustomers);
+    addSelectedCustomersToForm();
+    console.log('Form fields after adding:', $('input[name="selected_customers[]"]').length);
 }
+
+// Add a button click handler for testing (you can call this from console)
+window.testSelectedCustomers = testSelectedCustomers;// Emer
+gency bypass function for testing - sets selected customers directly
+function bypassModalAndSetCustomers(customerIds) {
+    console.log('=== BYPASS: Setting customers directly ===');
+    console.log('Customer IDs:', customerIds);
+    
+    window.selectedRelatedCustomers = customerIds;
+    console.log('Set window.selectedRelatedCustomers to:', window.selectedRelatedCustomers);
+    
+    // Test adding to form
+    addSelectedCustomersToForm();
+    
+    console.log('=== BYPASS COMPLETE ===');
+}
+
+// Make it globally accessible
+window.bypassModalAndSetCustomers = bypassModalAndSetCustomers;
+
+// Also add a function to check current state
+function checkCurrentState() {
+    console.log('=== CURRENT STATE CHECK ===');
+    console.log('window.selectedRelatedCustomers:', window.selectedRelatedCustomers);
+    console.log('Form fields with name selected_customers[]:', $('input[name="selected_customers[]"]').length);
+    console.log('Customer checkboxes:', $('.customer-checkbox').length);
+    console.log('Checked checkboxes:', $('.customer-checkbox:checked').length);
+    console.log('pos_form_obj defined:', typeof pos_form_obj !== 'undefined');
+    console.log('=== END STATE CHECK ===');
+}
+
+window.checkCurrentState = checkCurrentState;
