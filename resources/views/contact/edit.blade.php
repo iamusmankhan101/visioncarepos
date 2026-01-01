@@ -766,6 +766,83 @@ $(document).on('click', '.edit-related-customer', function(e) {
                     
                     // Focus on first input
                     $newModal.find('input:visible:first').focus();
+                    
+                    // Override form submission to use AJAX
+                    $newModal.find('form').on('submit', function(e) {
+                        e.preventDefault();
+                        
+                        var $form = $(this);
+                        var formData = $form.serialize();
+                        var submitUrl = $form.attr('action');
+                        
+                        console.log('Submitting form via AJAX to:', submitUrl);
+                        
+                        // Disable submit button
+                        var $submitBtn = $form.find('button[type="submit"], input[type="submit"]').first();
+                        var originalText = $submitBtn.html() || $submitBtn.val();
+                        $submitBtn.prop('disabled', true);
+                        if ($submitBtn.is('button')) {
+                            $submitBtn.html('<i class="fa fa-spinner fa-spin"></i> Updating...');
+                        } else {
+                            $submitBtn.val('Updating...');
+                        }
+                        
+                        $.ajax({
+                            url: submitUrl,
+                            method: 'POST',
+                            data: formData,
+                            dataType: 'json',
+                            success: function(response) {
+                                console.log('Update response:', response);
+                                if (response.success) {
+                                    $newModal.modal('hide');
+                                    if (typeof toastr !== 'undefined') {
+                                        toastr.success('Customer updated successfully');
+                                    } else {
+                                        alert('Customer updated successfully');
+                                    }
+                                    // Reload the page to show updated customer
+                                    setTimeout(function() {
+                                        location.reload();
+                                    }, 1000);
+                                } else {
+                                    console.log('Error in response:', response);
+                                    alert('Error updating customer: ' + (response.msg || 'Unknown error'));
+                                    // Re-enable submit button
+                                    $submitBtn.prop('disabled', false);
+                                    if ($submitBtn.is('button')) {
+                                        $submitBtn.html(originalText);
+                                    } else {
+                                        $submitBtn.val(originalText);
+                                    }
+                                }
+                            },
+                            error: function(xhr, status, error) {
+                                console.log('AJAX Error:', xhr.responseText);
+                                var errorMsg = 'Error updating customer';
+                                try {
+                                    var response = JSON.parse(xhr.responseText);
+                                    if (response.message) {
+                                        errorMsg += ': ' + response.message;
+                                    }
+                                    if (response.errors) {
+                                        var errors = Object.values(response.errors).flat();
+                                        errorMsg += ': ' + errors.join(', ');
+                                    }
+                                } catch (e) {
+                                    errorMsg += ': ' + error;
+                                }
+                                alert(errorMsg);
+                                // Re-enable submit button
+                                $submitBtn.prop('disabled', false);
+                                if ($submitBtn.is('button')) {
+                                    $submitBtn.html(originalText);
+                                } else {
+                                    $submitBtn.val(originalText);
+                                }
+                            }
+                        });
+                    });
                 });
                 
                 // Clean up when modal is closed
