@@ -999,7 +999,12 @@ $(document).ready(function() {
                     dataType: 'json',
                     success: function(result) {
                         if (result.success == 1) {
-                            if (result.whatsapp_link) {
+                            // Check if there are multiple customers selected
+                            var selectedCustomers = window.selectedCustomersForInvoice || JSON.parse(sessionStorage.getItem('selectedCustomersForInvoice') || 'null');
+                            var hasMultipleCustomers = selectedCustomers && selectedCustomers.ids && selectedCustomers.ids.length > 1;
+                            
+                            // Only open WhatsApp if there's a single customer (not multiple)
+                            if (result.whatsapp_link && !hasMultipleCustomers) {
                                 window.open(result.whatsapp_link);
                             }
                             $('#modal_payment').modal('hide');
@@ -1012,10 +1017,9 @@ $(document).ready(function() {
                                 pos_print(result.receipt);
                                 
                                 // Check if there are additional customers to print invoices for
-                                var selectedCustomers = window.selectedCustomersForInvoice || JSON.parse(sessionStorage.getItem('selectedCustomersForInvoice') || 'null');
                                 console.log('Checking for additional customers (express):', selectedCustomers);
                                 
-                                if (selectedCustomers && selectedCustomers.ids && selectedCustomers.ids.length > 1) {
+                                if (hasMultipleCustomers) {
                                     var transactionId = result.transaction_id || result.receipt.transaction_id;
                                     console.log('Transaction ID (express):', transactionId);
                                     showAdditionalCustomerPrintModal(transactionId, selectedCustomers);
