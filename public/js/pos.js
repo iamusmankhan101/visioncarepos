@@ -4149,8 +4149,9 @@ function debugCheckboxStates() {
 // Add debug button click handler for testing
 $(document).on('click', '#debug_checkboxes', function() {
     debugCheckboxStates();
-});// Function 
-to add selected customers to form before submission
+});
+
+// Function to add selected customers to form before submission
 function addSelectedCustomersToForm() {
     console.log('Adding selected customers to form');
     
