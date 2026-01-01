@@ -321,6 +321,11 @@ class SellPosController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
+        // Debug: Log selected customers from request
+        \Log::info('=== POS Store Method Called ===');
+        \Log::info('Selected customers from request:', $request->input('selected_customers', []));
+        \Log::info('All request data keys:', array_keys($request->all()));
+
         $is_direct_sale = false;
         if (!empty($request->input('is_direct_sale'))) {
             $is_direct_sale = true;

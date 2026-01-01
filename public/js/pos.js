@@ -4081,15 +4081,16 @@ $(document).on('click', '.print-additional-invoice', function() {
 
 // Handle "Proceed with Selected Customers" button click
 $(document).on('click', '#proceed_with_selected_customers', function() {
-    console.log('Proceed with selected customers clicked');
+    console.log('=== Proceed with selected customers clicked ===');
     
     var selectedCustomers = [];
     $('.customer-checkbox:checked').each(function() {
         var customerId = $(this).val(); // Use .val() instead of .data()
         selectedCustomers.push(customerId);
+        console.log('Found checked customer:', customerId);
     });
     
-    console.log('Selected customers:', selectedCustomers);
+    console.log('All selected customers:', selectedCustomers);
     
     if (selectedCustomers.length === 0) {
         toastr.error('Please select at least one customer');
@@ -4098,17 +4099,22 @@ $(document).on('click', '#proceed_with_selected_customers', function() {
     
     // Store selected customers for later use
     window.selectedRelatedCustomers = selectedCustomers;
+    console.log('Stored in window.selectedRelatedCustomers:', window.selectedRelatedCustomers);
     
     // Close the modal
     $('#related_customers_modal').modal('hide');
     
     // Execute the callback if it exists
     if (window.relatedCustomerCallback && typeof window.relatedCustomerCallback === 'function') {
+        console.log('Executing callback function');
         window.relatedCustomerCallback();
     } else {
+        console.log('No callback, showing payment modal');
         // Default action: show payment modal
         $('#modal_payment').modal('show');
     }
+    
+    console.log('=== Proceed completed ===');
 });
 
 // Handle clicking on customer name to select/deselect
@@ -4153,10 +4159,13 @@ $(document).on('click', '#debug_checkboxes', function() {
 
 // Function to add selected customers to form before submission
 function addSelectedCustomersToForm() {
-    console.log('Adding selected customers to form');
+    console.log('=== addSelectedCustomersToForm called ===');
+    console.log('window.selectedRelatedCustomers:', window.selectedRelatedCustomers);
     
     // Remove any existing selected customers fields
-    $('input[name^="selected_customers"]').remove();
+    var existingFields = $('input[name^="selected_customers"]');
+    console.log('Removing existing fields:', existingFields.length);
+    existingFields.remove();
     
     // Add selected customers if they exist
     if (window.selectedRelatedCustomers && window.selectedRelatedCustomers.length > 0) {
@@ -4165,10 +4174,20 @@ function addSelectedCustomersToForm() {
         window.selectedRelatedCustomers.forEach(function(customerId, index) {
             var input = $('<input type="hidden" name="selected_customers[]" value="' + customerId + '">');
             pos_form_obj.append(input);
+            console.log('Added hidden field for customer:', customerId);
         });
         
         console.log('Added ' + window.selectedRelatedCustomers.length + ' selected customers to form');
+        
+        // Verify the fields were added
+        var addedFields = $('input[name="selected_customers[]"]');
+        console.log('Verification - fields in form:', addedFields.length);
+        addedFields.each(function() {
+            console.log('Field value:', $(this).val());
+        });
     } else {
-        console.log('No selected customers to add');
+        console.log('No selected customers to add - window.selectedRelatedCustomers is:', window.selectedRelatedCustomers);
     }
+    
+    console.log('=== addSelectedCustomersToForm completed ===');
 }
