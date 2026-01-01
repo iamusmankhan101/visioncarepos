@@ -3917,15 +3917,22 @@ $(document).on('click', '#confirm_customer_selection', function(e) {
     // Store all selected customer IDs and names
     $('#pos-form').find('input[name="multiple_customer_ids"]').remove();
     $('#pos-form').find('input[name="multiple_customer_names"]').remove();
+    $('#pos-form').find('input[name^="selected_customers"]').remove();
     
     if (selectedCustomers.length > 1) {
-        // Add hidden fields to store multiple customer IDs and names
+        // Add hidden fields using the new selected_customers[] format
+        selectedCustomers.forEach(function(customerId) {
+            $('#pos-form').append('<input type="hidden" name="selected_customers[]" value="' + customerId + '">');
+        });
+        
+        // Also keep the legacy format for backward compatibility
         var customerNamesString = selectedCustomerNames.slice(1).join(', '); // Skip first customer
         $('#pos-form').append('<input type="hidden" name="multiple_customer_ids" value="' + selectedCustomers.join(',') + '">');
         $('#pos-form').append('<input type="hidden" name="multiple_customer_names" value="' + customerNamesString + '">');
         
         console.log('Added hidden fields:');
-        console.log('  multiple_customer_ids:', selectedCustomers.join(','));
+        console.log('  selected_customers[]:', selectedCustomers);
+        console.log('  multiple_customer_ids (legacy):', selectedCustomers.join(','));
         console.log('  multiple_customer_names:', customerNamesString);
         
         // Show notification
