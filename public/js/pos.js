@@ -3695,7 +3695,7 @@ function showRelatedCustomersModal(customers, callback) {
         html += '      <input type="checkbox" class="customer-checkbox" name="selected_customers[]" value="' + customer.id + '" id="customer_' + customer.id + '" ' + isChecked + ' style="width: 20px; height: 20px; cursor: pointer; margin: 0;">';
         html += '    </div>';
         html += '    <div class="col-md-11" style="cursor: pointer;" onclick="toggleCustomerCheckbox(' + customer.id + ')">';
-        html += '      <h5 style="margin-top: 0; color: #48b2ee;">';
+        html += '      <h5 class="customer-name-click" style="margin-top: 0; color: #48b2ee;" data-customer-id="' + customer.id + '">';
         html += '        <i class="fa fa-user"></i> ' + customer.name + isCurrentBadge;
         html += '      </h5>';
         html += '      <p style="margin-bottom: 5px;"><strong>Contact ID:</strong> ' + (customer.contact_id || 'N/A') + '</p>';
@@ -3867,10 +3867,11 @@ $(document).on('click', '#confirm_customer_selection', function(e) {
         var customerId = $(this).val(); // Use .val() to get the value attribute
         var customerName = $(this)
             .closest('.related-customer-item')
-            .find('.customer-name-click')
+            .find('h5')
             .clone() // Clone to avoid modifying original
-            .find('.label').remove().end() // Remove badge
+            .find('.label').remove().end() // Remove badge if any
             .text()
+            .replace(/^\s*\S+\s*/, '') // Remove the icon (first non-space character sequence)
             .trim();
         
         selectedCustomers.push(customerId);
