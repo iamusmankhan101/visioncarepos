@@ -17,7 +17,7 @@
     }
   @endphp
 
-    {!! Form::open(['url' => $url, 'method' => 'PUT', 'id' => 'contact_edit_form']) !!}
+    {!! Form::open(['url' => $url, 'method' => 'PUT', 'id' => 'contact_edit_form', 'novalidate' => true]) !!}
     
     <!-- Hidden field to store current contact ID for related customer linking -->
     <input type="hidden" id="customer_group_id_link" value="{{ $contact->id }}">
@@ -688,25 +688,27 @@
 <script type="text/javascript">
 // Prevent form validation errors from hidden required fields
 $(document).ready(function() {
+    // Initially remove required from hidden fields
+    $('#inline-add-customer-form').find('#related_first_name').removeAttr('required');
+    
     // Override form validation to ignore hidden required fields
     $('#contact_edit_form').on('submit', function(e) {
-        // Temporarily remove required attribute from hidden fields
-        var hiddenRequiredFields = $(this).find('input[required]:hidden, input[required]').filter(function() {
-            return $(this).closest('#inline-add-customer-form').is(':hidden');
+        // Ensure hidden form fields don't have required attribute
+        $('#inline-add-customer-form').find('input[required]').each(function() {
+            if ($(this).closest('#inline-add-customer-form').is(':hidden')) {
+                $(this).removeAttr('required');
+            }
         });
-        
-        hiddenRequiredFields.each(function() {
-            $(this).removeAttr('required').attr('data-was-required', 'true');
+    });
+    
+    // Also handle any other form submissions
+    $(document).on('submit', 'form', function(e) {
+        // Remove required from any hidden fields in any form
+        $(this).find('input[required]:hidden, input[required]').each(function() {
+            if (!$(this).is(':visible') || $(this).closest(':hidden').length > 0) {
+                $(this).removeAttr('required');
+            }
         });
-        
-        // Restore required attributes after a short delay
-        setTimeout(function() {
-            hiddenRequiredFields.each(function() {
-                if ($(this).attr('data-was-required')) {
-                    $(this).attr('required', 'required').removeAttr('data-was-required');
-                }
-            });
-        }, 100);
     });
 });
 
@@ -802,10 +804,13 @@ $(document).on('click', '#toggle-add-customer-form', function(e) {
     var $form = $('#inline-add-customer-form');
     
     if ($form.is(':visible')) {
+        // Hide form and remove required attributes to prevent validation issues
+        $form.find('input[data-was-required]').removeAttr('required');
         $form.slideUp();
     } else {
-        // Clear the form fields
+        // Clear the form fields and add required attributes back
         $form.find('input, select, textarea').val('');
+        $form.find('#related_first_name').attr('required', 'required').attr('data-was-required', 'true');
         $form.slideDown();
     }
 });
@@ -813,6 +818,8 @@ $(document).on('click', '#toggle-add-customer-form', function(e) {
 // Handle cancel button
 $(document).on('click', '#cancel-add-customer', function(e) {
     e.preventDefault();
+    // Remove required attributes when hiding
+    $('#inline-add-customer-form').find('input[data-was-required]').removeAttr('required');
     $('#inline-add-customer-form').slideUp();
 });
 
