@@ -704,12 +704,16 @@ $(document).on('click', '.edit-related-customer', function(e) {
         // Get the customer data
         $.ajax({
             method: 'get',
-            url: '/contacts/' + contactId + '/edit',
+            url: '/contacts/' + contactId + '/data',
             dataType: 'json',
             success: function(response) {
                 console.log('Contact data received:', response);
-                // Create simplified edit modal
-                showRelatedCustomerEditModal(response.contact || response);
+                if (response.success && response.contact) {
+                    // Create simplified edit modal
+                    showRelatedCustomerEditModal(response.contact);
+                } else {
+                    alert('Error loading customer data: ' + (response.msg || 'Unknown error'));
+                }
                 $button.prop('disabled', false);
             },
             error: function(xhr, status, error) {

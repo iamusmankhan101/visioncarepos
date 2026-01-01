@@ -166,6 +166,7 @@ Route::middleware(['setData', 'auth', 'SetSessionData', 'language', 'timezone', 
     
     Route::get('/contacts/customers', [ContactController::class, 'getCustomers']);
     Route::get('/contacts/{id}/related-customers', [ContactController::class, 'getRelatedCustomers']);
+    Route::get('/contacts/{id}/data', [ContactController::class, 'getContactData']);
     Route::resource('contacts', ContactController::class);
 
 

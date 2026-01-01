@@ -953,7 +953,32 @@ class ContactController extends Controller
 
             return view('contact.edit')
                 ->with(compact('contact', 'types', 'customer_groups', 'opening_balance', 'users', 'related_customers'));
+        } else {
+            // Handle non-AJAX requests (shouldn't happen for edit, but just in case)
+            return redirect()->back();
         }
+    }
+
+    /**
+     * Get contact data for AJAX requests (used by related customer edit)
+     */
+    public function getContactData($id)
+    {
+        if (request()->ajax()) {
+            $business_id = request()->session()->get('user.business_id');
+            $contact = Contact::where('business_id', $business_id)->find($id);
+            
+            if (!$contact) {
+                return response()->json(['success' => false, 'msg' => 'Contact not found']);
+            }
+            
+            return response()->json([
+                'success' => true,
+                'contact' => $contact
+            ]);
+        }
+        
+        return response()->json(['success' => false, 'msg' => 'Invalid request']);
     }
 
     /**
