@@ -3858,8 +3858,6 @@ $(document).on('click', '.customer-name-click, .related-customer-item', function
 $(document).on('click', '#confirm_customer_selection', function(e) {
     e.preventDefault();
     
-    alert('Confirm button clicked!'); // Debug alert
-    
     var selectedCustomers = [];
     var selectedCustomerNames = [];
     
