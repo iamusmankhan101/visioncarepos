@@ -344,7 +344,7 @@
                   <label for="related_first_name">Name:*</label>
                   <div class="input-group">
                     <span class="input-group-addon"><i class="fa fa-user"></i></span>
-                    <input type="text" name="related_first_name" class="form-control" id="related_first_name" placeholder="Enter customer name" required>
+                    <input type="text" name="related_first_name" class="form-control" id="related_first_name" placeholder="Enter customer name">
                   </div>
                 </div>
               </div>
@@ -686,6 +686,30 @@
 </div><!-- /.modal-dialog -->
 
 <script type="text/javascript">
+// Prevent form validation errors from hidden required fields
+$(document).ready(function() {
+    // Override form validation to ignore hidden required fields
+    $('#contact_edit_form').on('submit', function(e) {
+        // Temporarily remove required attribute from hidden fields
+        var hiddenRequiredFields = $(this).find('input[required]:hidden, input[required]').filter(function() {
+            return $(this).closest('#inline-add-customer-form').is(':hidden');
+        });
+        
+        hiddenRequiredFields.each(function() {
+            $(this).removeAttr('required').attr('data-was-required', 'true');
+        });
+        
+        // Restore required attributes after a short delay
+        setTimeout(function() {
+            hiddenRequiredFields.each(function() {
+                if ($(this).attr('data-was-required')) {
+                    $(this).attr('required', 'required').removeAttr('data-was-required');
+                }
+            });
+        }, 100);
+    });
+});
+
 $(document).on('click', '.edit-related-customer', function(e) {
     e.preventDefault();
     e.stopPropagation();
