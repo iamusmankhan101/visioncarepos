@@ -701,201 +701,63 @@ $(document).on('click', '.edit-related-customer', function(e) {
     var $button = $(this);
     
     if (contactId) {
-        // Get the customer data
+        // Open the full contact edit form
         $.ajax({
             method: 'get',
-            url: '/contacts/' + contactId + '/data',
-            dataType: 'json',
-            success: function(response) {
-                console.log('Contact data received:', response);
-                if (response.success && response.contact) {
-                    // Create simplified edit modal
-                    showRelatedCustomerEditModal(response.contact);
-                } else {
-                    alert('Error loading customer data: ' + (response.msg || 'Unknown error'));
-                }
+            url: '/contacts/' + contactId + '/edit',
+            dataType: 'html',
+            success: function(result) {
+                console.log('Full edit form loaded');
+                
+                // Remove any existing edit modals
+                $('.modal.fade').each(function() {
+                    if ($(this).find('.modal-title').text().includes('Edit') || 
+                        $(this).find('.modal-title').text().includes('contact')) {
+                        $(this).remove();
+                    }
+                });
+                
+                // Create new modal with full form
+                var $newModal = $('<div class="modal fade edit-contact-modal" tabindex="-1" role="dialog"></div>');
+                $newModal.html(result);
+                $('body').append($newModal);
+                
+                // Show modal
+                $newModal.modal('show');
+                
+                // Auto-expand More Info section when modal is shown
+                $newModal.on('shown.bs.modal', function() {
+                    var $moreDiv = $newModal.find('#more_div');
+                    if ($moreDiv.length > 0) {
+                        $moreDiv.removeClass('hide').show();
+                        
+                        // Also click the More Information button if it exists
+                        var $moreBtn = $newModal.find('button:contains("More Information")');
+                        if ($moreBtn.length > 0 && $moreBtn.attr('aria-expanded') !== 'true') {
+                            $moreBtn.click();
+                        }
+                    }
+                    
+                    // Focus on first input
+                    $newModal.find('input:visible:first').focus();
+                });
+                
+                // Clean up when modal is closed
+                $newModal.on('hidden.bs.modal', function() {
+                    $(this).remove();
+                });
+                
                 $button.prop('disabled', false);
             },
             error: function(xhr, status, error) {
-                console.error('Error fetching contact data:', error, xhr.responseText);
-                alert('Error loading customer data. Please try again.');
+                console.error('Error loading full edit form:', error, xhr.responseText);
+                alert('Error loading customer edit form. Please try again.');
                 $button.prop('disabled', false);
             }
         });
     } else {
         $button.prop('disabled', false);
     }
-});
-
-// Function to show simplified related customer edit modal
-function showRelatedCustomerEditModal(contact) {
-    console.log('Creating edit modal for contact:', contact);
-    
-    // Remove any existing modal first
-    $('#edit-related-customer-modal').remove();
-    
-    var modalHtml = '<div class="modal fade" id="edit-related-customer-modal" tabindex="-1" role="dialog">' +
-        '<div class="modal-dialog modal-lg" role="document">' +
-        '<div class="modal-content">' +
-        '<div class="modal-header" style="background-color: #48b2ee; color: white;">' +
-        '<button type="button" class="close" data-dismiss="modal"><span style="color: white;">&times;</span></button>' +
-        '<h4 class="modal-title"><i class="fa fa-edit"></i> Edit Related Customer</h4>' +
-        '</div>' +
-        '<div class="modal-body">' +
-        '<div class="row">' +
-        '<div class="col-md-6">' +
-        '<div class="form-group">' +
-        '<label for="edit_first_name">Name:*</label>' +
-        '<div class="input-group">' +
-        '<span class="input-group-addon"><i class="fa fa-user"></i></span>' +
-        '<input type="text" name="edit_first_name" class="form-control" id="edit_first_name" placeholder="Enter customer name" required>' +
-        '</div>' +
-        '</div>' +
-        '</div>' +
-        '<div class="col-md-6">' +
-        '<div class="form-group">' +
-        '<label for="edit_mobile">Mobile:</label>' +
-        '<div class="input-group">' +
-        '<span class="input-group-addon"><i class="fa fa-mobile"></i></span>' +
-        '<input type="text" name="edit_mobile" class="form-control" id="edit_mobile" placeholder="Enter mobile number">' +
-        '</div>' +
-        '</div>' +
-        '</div>' +
-        '<div class="col-md-6">' +
-        '<div class="form-group">' +
-        '<label for="edit_email">Email:</label>' +
-        '<div class="input-group">' +
-        '<span class="input-group-addon"><i class="fa fa-envelope"></i></span>' +
-        '<input type="email" name="edit_email" class="form-control" id="edit_email" placeholder="Enter email address">' +
-        '</div>' +
-        '</div>' +
-        '</div>' +
-        '<div class="col-md-6">' +
-        '<div class="form-group">' +
-        '<label for="edit_contact_id">Contact ID:</label>' +
-        '<div class="input-group">' +
-        '<span class="input-group-addon"><i class="fa fa-id-badge"></i></span>' +
-        '<input type="text" name="edit_contact_id" class="form-control" id="edit_contact_id" placeholder="Contact ID">' +
-        '</div>' +
-        '</div>' +
-        '</div>' +
-        '</div>' +
-        '</div>' +
-        '<div class="modal-footer">' +
-        '<button type="button" class="btn btn-primary" id="update-related-customer" data-contact-id="' + contact.id + '">' +
-        '<i class="fa fa-save"></i> Update Customer' +
-        '</button>' +
-        '<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>' +
-        '</div>' +
-        '</div>' +
-        '</div>' +
-        '</div>';
-    
-    // Add modal to body
-    $('body').append(modalHtml);
-    
-    // Populate form with existing data - handle different possible data structures
-    var firstName = contact.first_name || contact.name || '';
-    var mobile = contact.mobile || '';
-    var email = contact.email || '';
-    var contactId = contact.contact_id || '';
-    
-    console.log('Populating form with:', {firstName, mobile, email, contactId});
-    
-    $('#edit_first_name').val(firstName);
-    $('#edit_mobile').val(mobile);
-    $('#edit_email').val(email);
-    $('#edit_contact_id').val(contactId);
-    
-    // Show modal
-    $('#edit-related-customer-modal').modal('show');
-    
-    // Clean up when modal is closed
-    $('#edit-related-customer-modal').on('hidden.bs.modal', function() {
-        $(this).remove();
-    });
-}
-
-// Handle update related customer
-$(document).on('click', '#update-related-customer', function(e) {
-    e.preventDefault();
-    
-    // Prevent multiple submissions
-    if ($(this).prop('disabled')) {
-        return;
-    }
-    
-    var contactId = $(this).data('contact-id');
-    var customerName = $('#edit_first_name').val();
-    var customerMobile = $('#edit_mobile').val();
-    var customerEmail = $('#edit_email').val();
-    var contactIdField = $('#edit_contact_id').val();
-    
-    if (!customerName.trim()) {
-        alert('Please enter a customer name');
-        return;
-    }
-    
-    // Collect form data
-    var formData = {
-        first_name: customerName,
-        name: customerName, // Also set name field
-        mobile: customerMobile || '',
-        email: customerEmail || '',
-        contact_id: contactIdField || '',
-        type: 'customer',
-        contact_type_radio: 'individual',
-        _token: $('meta[name="csrf-token"]').attr('content'),
-        _method: 'PUT'
-    };
-    
-    console.log('Updating contact with data:', formData);
-    
-    // Show loading
-    $('#update-related-customer').prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Updating...');
-    
-    // Update via AJAX
-    $.ajax({
-        url: '/contacts/' + contactId,
-        method: 'POST',
-        data: formData,
-        dataType: 'json',
-        success: function(response) {
-            console.log('Update response:', response);
-            if (response.success) {
-                $('#edit-related-customer-modal').modal('hide');
-                if (typeof toastr !== 'undefined') {
-                    toastr.success('Related customer updated successfully');
-                }
-                // Reload the page to show updated customer
-                setTimeout(function() {
-                    location.reload();
-                }, 1000);
-            } else {
-                console.log('Error in response:', response);
-                alert('Error updating customer: ' + (response.msg || 'Unknown error'));
-                $('#update-related-customer').prop('disabled', false).html('<i class="fa fa-save"></i> Update Customer');
-            }
-        },
-        error: function(xhr, status, error) {
-            console.log('AJAX Error:', xhr.responseText);
-            var errorMsg = 'Error updating customer';
-            try {
-                var response = JSON.parse(xhr.responseText);
-                if (response.message) {
-                    errorMsg += ': ' + response.message;
-                }
-                if (response.errors) {
-                    var errors = Object.values(response.errors).flat();
-                    errorMsg += ': ' + errors.join(', ');
-                }
-            } catch (e) {
-                errorMsg += ': ' + error;
-            }
-            alert(errorMsg);
-            $('#update-related-customer').prop('disabled', false).html('<i class="fa fa-save"></i> Update Customer');
-        }
-    });
 });
 
 // Handle "Add Another Customer" button in Related Customers section
