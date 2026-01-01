@@ -4147,8 +4147,8 @@ $(document).on('click', '.related-customer-item', function(e) {
     // Toggle checkbox
     $checkbox.prop('checked', !$checkbox.prop('checked')).trigger('change');
 });
-/
-/ Debug function to check checkbox states
+
+// Debug function to check checkbox states
 function debugCheckboxStates() {
     console.log('=== Checkbox Debug ===');
     $('.customer-checkbox').each(function() {
@@ -4197,8 +4197,9 @@ function addSelectedCustomersToForm() {
     }
     
     console.log('=== addSelectedCustomersToForm completed ===');
-}// Test fun
-ction to manually set selected customers (for debugging)
+}
+
+// Test function to manually set selected customers (for debugging)
 function testSelectedCustomers() {
     console.log('=== Testing Selected Customers ===');
     window.selectedRelatedCustomers = ['123', '456']; // Test with dummy IDs
@@ -4208,8 +4209,9 @@ function testSelectedCustomers() {
 }
 
 // Add a button click handler for testing (you can call this from console)
-window.testSelectedCustomers = testSelectedCustomers;// Emer
-gency bypass function for testing - sets selected customers directly
+window.testSelectedCustomers = testSelectedCustomers;
+
+// Emergency bypass function for testing - sets selected customers directly
 function bypassModalAndSetCustomers(customerIds) {
     console.log('=== BYPASS: Setting customers directly ===');
     console.log('Customer IDs:', customerIds);
