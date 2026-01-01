@@ -3683,7 +3683,7 @@ function showRelatedCustomersModal(customers, callback) {
         html += '<div class="related-customer-item" style="border: 2px solid ' + borderColor + '; border-radius: 8px; padding: 15px; margin-bottom: 15px; transition: all 0.3s; background-color: ' + bgColor + '; cursor: pointer;" data-customer-id="' + customer.id + '">';
         html += '  <div class="row">';
         html += '    <div class="col-md-1" style="padding-top: 10px; text-align: center;">';
-        html += '      <input type="checkbox" class="customer-checkbox" data-customer-id="' + customer.id + '" ' + isChecked + ' style="width: 20px; height: 20px; cursor: pointer;">';
+        html += '      <input type="checkbox" class="customer-checkbox" id="customer_checkbox_' + customer.id + '" data-customer-id="' + customer.id + '" ' + isChecked + ' style="width: 20px; height: 20px; cursor: pointer;">';
         html += '    </div>';
         html += '    <div class="col-md-11">';
         html += '      <h5 style="margin-top: 0; color: #48b2ee;" class="customer-name-click" data-customer-id="' + customer.id + '">';
@@ -3713,26 +3713,21 @@ function showRelatedCustomersModal(customers, callback) {
 // Handle "Select All" checkbox
 $(document).on('change', '#select_all_customers', function() {
     var isChecked = $(this).is(':checked');
-    $('.customer-checkbox').prop('checked', isChecked);
+    console.log('Select All clicked, setting all checkboxes to:', isChecked);
     
-    // Update visual feedback
-    $('.related-customer-item').each(function() {
-        if (isChecked) {
-            $(this).css({
-                'border-color': '#48b2ee',
-                'background-color': '#f0f8ff'
-            });
-        } else {
-            $(this).css({
-                'border-color': '#ddd',
-                'background-color': 'white'
-            });
-        }
+    $('.customer-checkbox').each(function() {
+        $(this).prop('checked', isChecked);
+        console.log('Set checkbox', $(this).data('customer-id'), 'to', isChecked);
     });
+    
+    // Trigger change event for visual updates
+    $('.customer-checkbox').trigger('change');
 });
 
 // Handle individual checkbox changes
-$(document).on('change', '.customer-checkbox', function() {
+$(document).on('change', '.customer-checkbox', function(e) {
+    console.log('Checkbox changed:', $(this).data('customer-id'), 'checked:', $(this).is(':checked'));
+    
     var $item = $(this).closest('.related-customer-item');
     var isChecked = $(this).is(':checked');
     
@@ -3753,26 +3748,38 @@ $(document).on('change', '.customer-checkbox', function() {
     // Check if all checkboxes are checked to update "Select All"
     var totalCheckboxes = $('.customer-checkbox').length;
     var checkedCheckboxes = $('.customer-checkbox:checked').length;
+    console.log('Total checkboxes:', totalCheckboxes, 'Checked:', checkedCheckboxes);
     $('#select_all_customers').prop('checked', totalCheckboxes === checkedCheckboxes);
 });
 
 // Handle clicking on customer name to toggle checkbox
 $(document).on('click', '.customer-name-click, .related-customer-item', function(e) {
-    e.preventDefault();
-    e.stopPropagation();
+    console.log('Customer item clicked:', e.target, 'hasClass customer-checkbox:', $(e.target).hasClass('customer-checkbox'));
     
     // Don't trigger if clicking on checkbox itself or links
     if ($(e.target).hasClass('customer-checkbox') || $(e.target).is('a') || $(e.target).closest('a').length > 0) {
+        console.log('Ignoring click on checkbox or link');
         return;
     }
+    
+    e.preventDefault();
+    e.stopPropagation();
     
     var customerId = $(this).data('customer-id');
     if (!customerId) {
         customerId = $(this).closest('.related-customer-item').data('customer-id');
     }
     
+    console.log('Toggling checkbox for customer:', customerId);
+    
     var $checkbox = $('.customer-checkbox[data-customer-id="' + customerId + '"]');
-    $checkbox.prop('checked', !$checkbox.is(':checked')).trigger('change');
+    if ($checkbox.length > 0) {
+        var newState = !$checkbox.is(':checked');
+        console.log('Setting checkbox to:', newState);
+        $checkbox.prop('checked', newState).trigger('change');
+    } else {
+        console.log('Checkbox not found for customer:', customerId);
+    }
 });
 
 // Handle confirm button click
@@ -4055,4 +4062,20 @@ $(document).on('click', '.related-customer-item', function(e) {
     
     // Toggle checkbox
     $checkbox.prop('checked', !$checkbox.prop('checked')).trigger('change');
+});
+/
+/ Debug function to check checkbox states
+function debugCheckboxStates() {
+    console.log('=== Checkbox Debug ===');
+    $('.customer-checkbox').each(function() {
+        console.log('Checkbox ID:', $(this).attr('id'), 'Customer ID:', $(this).data('customer-id'), 'Checked:', $(this).is(':checked'));
+    });
+    console.log('Total checkboxes:', $('.customer-checkbox').length);
+    console.log('Checked checkboxes:', $('.customer-checkbox:checked').length);
+    console.log('=== End Debug ===');
+}
+
+// Add debug button click handler for testing
+$(document).on('click', '#debug_checkboxes', function() {
+    debugCheckboxStates();
 });
