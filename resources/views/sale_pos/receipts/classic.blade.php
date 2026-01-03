@@ -291,8 +291,17 @@
 	}
 @endphp
 
+{{-- Main Customer Prescription --}}
 <div class="row" style="color: #000000 !important; margin-top: 10px;">
 	<div class="col-xs-12">
+		@if($contact)
+			<h4 style="margin-bottom: 10px; color: #48b2ee;">
+				<i class="fa fa-eye"></i> Prescription - {{ $contact->name }}
+				@if($contact->contact_id)
+					(ID: {{ $contact->contact_id }})
+				@endif
+			</h4>
+		@endif
 		<table width="100%" style="border-collapse: collapse;">
 			<tr>
 				<!-- RIGHT EYE TABLE -->
@@ -356,6 +365,83 @@
 		</table>
 	</div>
 </div>
+
+{{-- Additional Customers' Prescriptions --}}
+@if(!empty($receipt_details->multiple_customers_data))
+	@foreach($receipt_details->multiple_customers_data as $additional_customer)
+		<div class="row" style="color: #000000 !important; margin-top: 15px; border-top: 1px solid #ddd; padding-top: 10px;">
+			<div class="col-xs-12">
+				<h4 style="margin-bottom: 10px; color: #48b2ee;">
+					<i class="fa fa-eye"></i> Prescription - {{ $additional_customer['name'] }}
+					@if($additional_customer['contact_id'])
+						(ID: {{ $additional_customer['contact_id'] }})
+					@endif
+				</h4>
+				<table width="100%" style="border-collapse: collapse;">
+					<tr>
+						<!-- RIGHT EYE TABLE -->
+						<td style="width: 48%; vertical-align: top; padding-right: 10px;">
+							<strong>RIGHT</strong>
+							<table class="table table-bordered table-condensed" style="margin-top: 5px; margin-bottom: 0;">
+								<thead>
+									<tr style="background-color: #f0f0f0;">
+										<th style="width: 25%;"></th>
+										<th style="width: 25%; text-align: center;">Sph.</th>
+										<th style="width: 25%; text-align: center;">Cyl.</th>
+										<th style="width: 25%; text-align: center;">Axis.</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr>
+										<td style="font-weight: 600;">Distance</td>
+										<td style="text-align: center;">{{ $additional_customer['prescription']['right_eye']['distance']['sph'] ?? '' }}</td>
+										<td style="text-align: center;">{{ $additional_customer['prescription']['right_eye']['distance']['cyl'] ?? '' }}</td>
+										<td style="text-align: center;">{{ $additional_customer['prescription']['right_eye']['distance']['axis'] ?? '' }}</td>
+									</tr>
+									<tr>
+										<td style="font-weight: 600;">Near</td>
+										<td style="text-align: center;">{{ $additional_customer['prescription']['right_eye']['near']['sph'] ?? '' }}</td>
+										<td style="text-align: center;">{{ $additional_customer['prescription']['right_eye']['near']['cyl'] ?? '' }}</td>
+										<td style="text-align: center;">{{ $additional_customer['prescription']['right_eye']['near']['axis'] ?? '' }}</td>
+									</tr>
+								</tbody>
+							</table>
+						</td>
+						
+						<!-- LEFT EYE TABLE -->
+						<td style="width: 48%; vertical-align: top; padding-left: 10px;">
+							<strong>Left</strong>
+							<table class="table table-bordered table-condensed" style="margin-top: 5px; margin-bottom: 0;">
+								<thead>
+									<tr style="background-color: #f0f0f0;">
+										<th style="width: 25%;"></th>
+										<th style="width: 25%; text-align: center;">Sph.</th>
+										<th style="width: 25%; text-align: center;">Cyl.</th>
+										<th style="width: 25%; text-align: center;">Axis.</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr>
+										<td style="font-weight: 600;">Distance</td>
+										<td style="text-align: center;">{{ $additional_customer['prescription']['left_eye']['distance']['sph'] ?? '' }}</td>
+										<td style="text-align: center;">{{ $additional_customer['prescription']['left_eye']['distance']['cyl'] ?? '' }}</td>
+										<td style="text-align: center;">{{ $additional_customer['prescription']['left_eye']['distance']['axis'] ?? '' }}</td>
+									</tr>
+									<tr>
+										<td style="font-weight: 600;">Near</td>
+										<td style="text-align: center;">{{ $additional_customer['prescription']['left_eye']['near']['sph'] ?? '' }}</td>
+										<td style="text-align: center;">{{ $additional_customer['prescription']['left_eye']['near']['cyl'] ?? '' }}</td>
+										<td style="text-align: center;">{{ $additional_customer['prescription']['left_eye']['near']['axis'] ?? '' }}</td>
+									</tr>
+								</tbody>
+							</table>
+						</td>
+					</tr>
+				</table>
+			</div>
+		</div>
+	@endforeach
+@endif
 
 <div class="row" style="color: #000000 !important;">
 	<div class="col-xs-12">
