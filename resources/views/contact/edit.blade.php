@@ -348,13 +348,16 @@
                   </div>
                 </div>
               </div>
-              <div class="col-md-6">
+              <div class="col-md-6" style="display: none;">
                 <div class="form-group">
                   <label for="related_mobile">Mobile:</label>
                   <div class="input-group">
                     <span class="input-group-addon"><i class="fa fa-mobile"></i></span>
-                    <input type="text" name="related_mobile" class="form-control" id="related_mobile" placeholder="Enter mobile number">
+                    <input type="text" name="related_mobile" class="form-control" id="related_mobile" placeholder="Will use primary customer's mobile number" readonly>
                   </div>
+                  <small class="text-muted">
+                    <i class="fa fa-info-circle"></i> Related customers will use the primary customer's mobile number
+                  </small>
                 </div>
               </div>
               <div class="col-md-6">
@@ -888,6 +891,14 @@ $(document).on('click', '#toggle-add-customer-form', function(e) {
         // Clear the form fields and add required attributes back
         $form.find('input, select, textarea').val('');
         $form.find('#related_first_name').attr('required', 'required').attr('data-was-required', 'true');
+        
+        // Auto-populate mobile field with primary customer's mobile number
+        var primaryMobile = $('#mobile').val();
+        if (primaryMobile) {
+            $('#related_mobile').val(primaryMobile);
+            console.log('Auto-populated related customer mobile with primary customer mobile:', primaryMobile);
+        }
+        
         $form.slideDown();
     }
 });
