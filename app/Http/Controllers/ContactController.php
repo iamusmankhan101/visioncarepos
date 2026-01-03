@@ -823,7 +823,6 @@ class ContactController extends Controller
                     'relationship2' => $relationship2->id,
                     'total_family_members' => $all_family_ids->count()
                 ]);
-                ]);
             }
             
             // Check if user wants to add another contact
