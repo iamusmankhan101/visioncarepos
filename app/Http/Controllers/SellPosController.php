@@ -690,12 +690,15 @@ class SellPosController extends Controller
                         $selected_customers = array_merge($selected_customers, $customer_ids);
                     }
                     
-                    // Remove duplicates
-                    $selected_customers = array_unique($selected_customers);
+                    // Remove duplicates and filter out empty values
+                    $selected_customers = array_unique(array_filter($selected_customers));
                     
                     \Log::info('Generating single receipt with multiple customers', [
                         'main_customer_id' => $transaction->contact_id,
-                        'all_selected_customers' => $selected_customers
+                        'input_selected_customers' => $input['selected_customers'] ?? 'not set',
+                        'input_multiple_customer_ids' => $input['multiple_customer_ids'] ?? 'not set',
+                        'final_selected_customers' => $selected_customers,
+                        'selected_customers_count' => count($selected_customers)
                     ]);
                     
                     // Generate single receipt with multiple customers' data

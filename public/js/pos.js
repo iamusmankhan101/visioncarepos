@@ -4125,9 +4125,18 @@ $(document).on('click', '#proceed_with_selected_customers', function() {
         return;
     }
     
-    // Store selected customers for later use
+    // Store selected customers for later use in both formats
     window.selectedRelatedCustomers = selectedCustomers;
+    window.selectedCustomersForInvoice = {
+        ids: selectedCustomers,
+        names: [] // We don't have names in this flow, but that's okay
+    };
+    
+    // Also store in sessionStorage for persistence
+    sessionStorage.setItem('selectedCustomersForInvoice', JSON.stringify(window.selectedCustomersForInvoice));
+    
     console.log('Stored in window.selectedRelatedCustomers:', window.selectedRelatedCustomers);
+    console.log('Stored in window.selectedCustomersForInvoice:', window.selectedCustomersForInvoice);
     
     // Close the modal
     $('#related_customers_modal').modal('hide');
@@ -4190,22 +4199,39 @@ function addSelectedCustomersToForm() {
     console.log('=== addSelectedCustomersToForm called ===');
     console.log('window.selectedRelatedCustomers:', window.selectedRelatedCustomers);
     
+    // Also check sessionStorage as backup
+    var selectedCustomersFromStorage = JSON.parse(sessionStorage.getItem('selectedCustomersForInvoice') || 'null');
+    console.log('selectedCustomersFromStorage:', selectedCustomersFromStorage);
+    
     // Remove any existing selected customers fields
     var existingFields = $('input[name^="selected_customers"]');
     console.log('Removing existing fields:', existingFields.length);
     existingFields.remove();
     
-    // Add selected customers if they exist
+    // Try to get selected customers from multiple sources
+    var selectedCustomers = null;
+    
     if (window.selectedRelatedCustomers && window.selectedRelatedCustomers.length > 0) {
-        console.log('Adding selected customers:', window.selectedRelatedCustomers);
+        selectedCustomers = window.selectedRelatedCustomers;
+        console.log('Using window.selectedRelatedCustomers:', selectedCustomers);
+    } else if (selectedCustomersFromStorage && selectedCustomersFromStorage.ids && selectedCustomersFromStorage.ids.length > 0) {
+        selectedCustomers = selectedCustomersFromStorage.ids;
+        console.log('Using selectedCustomersFromStorage.ids:', selectedCustomers);
+    }
+    
+    // Add selected customers if they exist
+    if (selectedCustomers && selectedCustomers.length > 0) {
+        console.log('Adding selected customers:', selectedCustomers);
         
-        window.selectedRelatedCustomers.forEach(function(customerId, index) {
-            var input = $('<input type="hidden" name="selected_customers[]" value="' + customerId + '">');
-            pos_form_obj.append(input);
-            console.log('Added hidden field for customer:', customerId);
+        selectedCustomers.forEach(function(customerId, index) {
+            if (customerId) { // Make sure customerId is not null/undefined
+                var input = $('<input type="hidden" name="selected_customers[]" value="' + customerId + '">');
+                pos_form_obj.append(input);
+                console.log('Added hidden field for customer:', customerId);
+            }
         });
         
-        console.log('Added ' + window.selectedRelatedCustomers.length + ' selected customers to form');
+        console.log('Added ' + selectedCustomers.length + ' selected customers to form');
         
         // Verify the fields were added
         var addedFields = $('input[name="selected_customers[]"]');
@@ -4214,7 +4240,9 @@ function addSelectedCustomersToForm() {
             console.log('Field value:', $(this).val());
         });
     } else {
-        console.log('No selected customers to add - window.selectedRelatedCustomers is:', window.selectedRelatedCustomers);
+        console.log('No selected customers to add');
+        console.log('- window.selectedRelatedCustomers:', window.selectedRelatedCustomers);
+        console.log('- selectedCustomersFromStorage:', selectedCustomersFromStorage);
     }
     
     console.log('=== addSelectedCustomersToForm completed ===');
