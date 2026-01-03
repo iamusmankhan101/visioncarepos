@@ -220,6 +220,12 @@ class SellController extends Controller
 
             $datatable = Datatables::of($sells)
                 ->addColumn(
+                    'checkbox',
+                    function ($row) {
+                        return '<input type="checkbox" class="invoice_checkbox" value="' . $row->id . '">';
+                    }
+                )
+                ->addColumn(
                     'action',
                     function ($row) use ($only_shipments, $is_admin, $sale_type, $is_zatca) {
 
@@ -1915,6 +1921,81 @@ class SellController extends Controller
         } else {
             echo 'false';
             exit;
+        }
+    }
+
+    /**
+     * Bulk print invoices
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function bulkPrint(Request $request)
+    {
+        try {
+            $business_id = $request->session()->get('user.business_id');
+            $transaction_ids = $request->input('transaction_ids', []);
+
+            if (empty($transaction_ids)) {
+                return response()->json([
+                    'success' => false,
+                    'msg' => __('lang_v1.no_invoices_selected')
+                ]);
+            }
+
+            // Validate that all transactions belong to the current business
+            $transactions = Transaction::where('business_id', $business_id)
+                ->whereIn('id', $transaction_ids)
+                ->with(['location'])
+                ->get();
+
+            if ($transactions->count() !== count($transaction_ids)) {
+                return response()->json([
+                    'success' => false,
+                    'msg' => __('messages.something_went_wrong')
+                ]);
+            }
+
+            $combined_receipts = '';
+            $sellPosController = new SellPosController();
+
+            foreach ($transactions as $transaction) {
+                // Create a new request for each transaction and simulate AJAX
+                $printRequest = new Request();
+                $printRequest->setSession($request->session());
+                $printRequest->headers->set('X-Requested-With', 'XMLHttpRequest');
+                
+                // Call the existing printInvoice method
+                $response = $sellPosController->printInvoice($printRequest, $transaction->id);
+                
+                if (is_array($response) && isset($response['success']) && $response['success'] == 1) {
+                    $combined_receipts .= $response['receipt'];
+                    // Add page break between receipts (except for the last one)
+                    if ($transaction !== $transactions->last()) {
+                        $combined_receipts .= '<div style="page-break-after: always;"></div>';
+                    }
+                }
+            }
+
+            if (!empty($combined_receipts)) {
+                return response()->json([
+                    'success' => true,
+                    'receipts' => $combined_receipts
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'msg' => __('messages.something_went_wrong')
+                ]);
+            }
+
+        } catch (\Exception $e) {
+            \Log::emergency('File:' . $e->getFile() . 'Line:' . $e->getLine() . 'Message:' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'msg' => __('messages.something_went_wrong')
+            ]);
         }
     }
 }

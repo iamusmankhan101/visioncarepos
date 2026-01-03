@@ -44,6 +44,14 @@
             @can('direct_sell.access')
                 @slot('tool')
                     <div class="box-tools">
+                        <button type="button" class="tw-dw-btn tw-bg-gradient-to-r tw-from-green-600 tw-to-green-500 tw-font-bold tw-text-white tw-border-none tw-rounded-full tw-mr-2" id="bulk_print_invoices" style="display: none;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-printer">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                <path d="M17 17h2a2 2 0 0 0 2 -2v-4a2 2 0 0 0 -2 -2h-14a2 2 0 0 0 -2 2v4a2 2 0 0 0 2 2h2"/>
+                                <path d="M17 9v-4a2 2 0 0 0 -2 -2h-6a2 2 0 0 0 -2 2v4"/>
+                                <path d="M7 13m0 2a2 2 0 0 1 2 -2h6a2 2 0 0 1 2 2v4a2 2 0 0 1 -2 2h-6a2 2 0 0 1 -2 -2z"/>
+                            </svg> @lang('lang_v1.print_selected') (<span id="selected_count">0</span>)
+                        </button>
                         <a class="tw-dw-btn tw-bg-gradient-to-r tw-from-indigo-600 tw-to-blue-500 tw-font-bold tw-text-white tw-border-none tw-rounded-full pull-right"
                             href="{{ action([\App\Http\Controllers\SellController::class, 'create']) }}">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
@@ -66,6 +74,7 @@
                 <table class="table table-bordered table-striped ajax_view" id="sell_table">
                     <thead>
                         <tr>
+                            <th><input type="checkbox" id="select_all_invoices" /></th>
                             <th>@lang('messages.action')</th>
                             <th>@lang('messages.date')</th>
                             <th>@lang('sale.invoice_no')</th>
@@ -98,7 +107,7 @@
                     <tbody></tbody>
                     <tfoot>
                         <tr class="bg-gray font-17 footer-total text-center">
-                            <td colspan="6"><strong>@lang('sale.total'):</strong></td>
+                            <td colspan="7"><strong>@lang('sale.total'):</strong></td>
                             <td class="footer_payment_status_count"></td>
                             <td class="payment_method_count"></td>
                             <td class="footer_sale_total"></td>
@@ -194,6 +203,13 @@
                 scrollX: true,
                 scrollCollapse: true,
                 columns: [{
+                        data: 'checkbox',
+                        name: 'checkbox',
+                        orderable: false,
+                        searchable: false,
+                        width: '30px'
+                    },
+                    {
                         data: 'action',
                         name: 'action',
                         orderable: false,
@@ -371,6 +387,76 @@
 
             $('#only_subscriptions').on('ifChanged', function(event) {
                 sell_table.ajax.reload();
+            });
+
+            // Bulk print functionality
+            $('#select_all_invoices').on('change', function() {
+                var isChecked = $(this).is(':checked');
+                $('.invoice_checkbox').prop('checked', isChecked);
+                updateBulkPrintButton();
+            });
+
+            $(document).on('change', '.invoice_checkbox', function() {
+                updateBulkPrintButton();
+                
+                // Update select all checkbox
+                var totalCheckboxes = $('.invoice_checkbox').length;
+                var checkedCheckboxes = $('.invoice_checkbox:checked').length;
+                $('#select_all_invoices').prop('checked', totalCheckboxes === checkedCheckboxes);
+            });
+
+            function updateBulkPrintButton() {
+                var selectedCount = $('.invoice_checkbox:checked').length;
+                $('#selected_count').text(selectedCount);
+                
+                if (selectedCount > 0) {
+                    $('#bulk_print_invoices').show();
+                } else {
+                    $('#bulk_print_invoices').hide();
+                }
+            }
+
+            $('#bulk_print_invoices').on('click', function() {
+                var selectedIds = [];
+                $('.invoice_checkbox:checked').each(function() {
+                    selectedIds.push($(this).val());
+                });
+
+                if (selectedIds.length === 0) {
+                    toastr.error('@lang("lang_v1.no_invoices_selected")');
+                    return;
+                }
+
+                // Show loading
+                $(this).prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> @lang("lang_v1.printing")...');
+
+                $.ajax({
+                    url: '/sells/bulk-print',
+                    method: 'POST',
+                    data: {
+                        transaction_ids: selectedIds,
+                        _token: $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            // Open print window with combined receipts
+                            var printWindow = window.open('', '_blank');
+                            printWindow.document.write(response.receipts);
+                            printWindow.document.close();
+                            printWindow.print();
+                            
+                            toastr.success('@lang("lang_v1.invoices_printed_successfully")');
+                        } else {
+                            toastr.error(response.msg || '@lang("messages.something_went_wrong")');
+                        }
+                    },
+                    error: function() {
+                        toastr.error('@lang("messages.something_went_wrong")');
+                    },
+                    complete: function() {
+                        $('#bulk_print_invoices').prop('disabled', false).html('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-printer"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M17 17h2a2 2 0 0 0 2 -2v-4a2 2 0 0 0 -2 -2h-14a2 2 0 0 0 -2 2v4a2 2 0 0 0 2 2h2"/><path d="M17 9v-4a2 2 0 0 0 -2 -2h-6a2 2 0 0 0 -2 2v4"/><path d="M7 13m0 2a2 2 0 0 1 2 -2h6a2 2 0 0 1 2 2v4a2 2 0 0 1 -2 2h-6a2 2 0 0 1 -2 -2z"/></svg> @lang("lang_v1.print_selected") (<span id="selected_count">0</span>)');
+                    }
+                });
             });
         });
     </script>
