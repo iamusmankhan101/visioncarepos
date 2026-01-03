@@ -92,7 +92,14 @@ $(document).ready(function() {
             if (data.supplier_business_name) {
                 template += data.supplier_business_name + "<br>";
             }
-            template += data.text + "<br>" + LANG.mobile + ": " + data.mobile;
+            template += data.text;
+            
+            // Show "Primary" label if customer has related customers
+            if (data.has_related_customers && data.has_related_customers > 0) {
+                template += ' <span class="label label-primary" style="font-size: 10px; margin-left: 5px;">Primary</span>';
+            }
+            
+            template += "<br>" + LANG.mobile + ": " + data.mobile;
 
             if (typeof(data.total_rp) != "undefined") {
                 var rp = data.total_rp ? data.total_rp : 0;

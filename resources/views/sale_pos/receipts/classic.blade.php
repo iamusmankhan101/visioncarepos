@@ -300,6 +300,9 @@
 				@if($contact->contact_id)
 					(ID: {{ $contact->contact_id }})
 				@endif
+				@if(!empty($receipt_details->multiple_customers_data))
+					<span class="label label-primary" style="margin-left: 10px; font-size: 12px;">Primary</span>
+				@endif
 			</h4>
 		@endif
 		<table width="100%" style="border-collapse: collapse;">
