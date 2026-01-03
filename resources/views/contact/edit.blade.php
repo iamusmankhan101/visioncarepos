@@ -318,6 +318,16 @@
           </h5>
           <hr>
           
+          <style>
+            /* Ensure mobile field is completely hidden for related customers */
+            #inline-add-customer-form .mobile-field-hidden {
+              display: none !important;
+              visibility: hidden !important;
+              height: 0 !important;
+              overflow: hidden !important;
+            }
+          </style>
+          
           <!-- Clean inline form instead of iframe -->
           <div id="inline-customer-form-content">
             <div class="row">
@@ -348,7 +358,8 @@
                   </div>
                 </div>
               </div>
-              <div class="col-md-6" style="display: none;">
+              <!-- Mobile field hidden for related customers - they use primary customer's mobile -->
+              <div class="col-md-6 mobile-field-hidden">
                 <div class="form-group">
                   <label for="related_mobile">Mobile:</label>
                   <div class="input-group">
@@ -360,7 +371,7 @@
                   </small>
                 </div>
               </div>
-              <div class="col-md-6">
+              <div class="col-md-12">
                 <div class="form-group">
                   <label for="related_email">Email:</label>
                   <div class="input-group">

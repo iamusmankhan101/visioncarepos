@@ -755,9 +755,74 @@ class ContactController extends Controller
                     'business_id' => $business_id
                 ]);
                 
+                // IMPORTANT: Connect this new contact to ALL existing family members
+                // Get all existing related contacts for the parent contact
+                $existing_related_ids = \DB::table('contact_relationships')
+                    ->where('business_id', $business_id)
+                    ->where(function($query) use ($parent_contact_id) {
+                        $query->where('contact_id', $parent_contact_id)
+                              ->orWhere('related_contact_id', $parent_contact_id);
+                    })
+                    ->get();
+                
+                $all_family_ids = collect([$parent_contact_id]); // Include parent contact
+                foreach ($existing_related_ids as $rel) {
+                    if ($rel->contact_id != $parent_contact_id && $rel->contact_id != $new_contact_id) {
+                        $all_family_ids->push($rel->contact_id);
+                    }
+                    if ($rel->related_contact_id != $parent_contact_id && $rel->related_contact_id != $new_contact_id) {
+                        $all_family_ids->push($rel->related_contact_id);
+                    }
+                }
+                
+                $all_family_ids = $all_family_ids->unique()->values();
+                
+                // Connect the new contact to all existing family members
+                foreach ($all_family_ids as $family_member_id) {
+                    if ($family_member_id != $new_contact_id && $family_member_id != $parent_contact_id) {
+                        // Check if relationship already exists
+                        $exists = \DB::table('contact_relationships')
+                            ->where('business_id', $business_id)
+                            ->where(function($query) use ($new_contact_id, $family_member_id) {
+                                $query->where(function($q) use ($new_contact_id, $family_member_id) {
+                                    $q->where('contact_id', $new_contact_id)
+                                      ->where('related_contact_id', $family_member_id);
+                                })->orWhere(function($q) use ($new_contact_id, $family_member_id) {
+                                    $q->where('contact_id', $family_member_id)
+                                      ->where('related_contact_id', $new_contact_id);
+                                });
+                            })
+                            ->exists();
+                        
+                        if (!$exists) {
+                            // Create bidirectional relationship
+                            \App\ContactRelationship::create([
+                                'contact_id' => $new_contact_id,
+                                'related_contact_id' => $family_member_id,
+                                'relationship_type' => 'family',
+                                'business_id' => $business_id
+                            ]);
+                            
+                            \App\ContactRelationship::create([
+                                'contact_id' => $family_member_id,
+                                'related_contact_id' => $new_contact_id,
+                                'relationship_type' => 'family',
+                                'business_id' => $business_id
+                            ]);
+                            
+                            \Log::info('Created cross-family relationship during creation', [
+                                'new_contact' => $new_contact_id,
+                                'existing_family_member' => $family_member_id
+                            ]);
+                        }
+                    }
+                }
+                
                 \Log::info('Created single customer relationships', [
                     'relationship1' => $relationship1->id,
-                    'relationship2' => $relationship2->id
+                    'relationship2' => $relationship2->id,
+                    'total_family_members' => $all_family_ids->count()
+                ]);
                 ]);
             }
             
@@ -1127,9 +1192,73 @@ class ContactController extends Controller
                             'business_id' => $business_id
                         ]);
                         
+                        // IMPORTANT: Connect this new contact to ALL existing family members
+                        // Get all existing related contacts for the current contact
+                        $existing_related_ids = \DB::table('contact_relationships')
+                            ->where('business_id', $business_id)
+                            ->where(function($query) use ($id) {
+                                $query->where('contact_id', $id)
+                                      ->orWhere('related_contact_id', $id);
+                            })
+                            ->get();
+                        
+                        $all_family_ids = collect([$id]); // Include current contact
+                        foreach ($existing_related_ids as $rel) {
+                            if ($rel->contact_id != $id && $rel->contact_id != $related_contact_id) {
+                                $all_family_ids->push($rel->contact_id);
+                            }
+                            if ($rel->related_contact_id != $id && $rel->related_contact_id != $related_contact_id) {
+                                $all_family_ids->push($rel->related_contact_id);
+                            }
+                        }
+                        
+                        $all_family_ids = $all_family_ids->unique()->values();
+                        
+                        // Connect the new contact to all existing family members
+                        foreach ($all_family_ids as $family_member_id) {
+                            if ($family_member_id != $related_contact_id && $family_member_id != $id) {
+                                // Check if relationship already exists
+                                $exists = \DB::table('contact_relationships')
+                                    ->where('business_id', $business_id)
+                                    ->where(function($query) use ($related_contact_id, $family_member_id) {
+                                        $query->where(function($q) use ($related_contact_id, $family_member_id) {
+                                            $q->where('contact_id', $related_contact_id)
+                                              ->where('related_contact_id', $family_member_id);
+                                        })->orWhere(function($q) use ($related_contact_id, $family_member_id) {
+                                            $q->where('contact_id', $family_member_id)
+                                              ->where('related_contact_id', $related_contact_id);
+                                        });
+                                    })
+                                    ->exists();
+                                
+                                if (!$exists) {
+                                    // Create bidirectional relationship
+                                    \App\ContactRelationship::create([
+                                        'contact_id' => $related_contact_id,
+                                        'related_contact_id' => $family_member_id,
+                                        'relationship_type' => 'family',
+                                        'business_id' => $business_id
+                                    ]);
+                                    
+                                    \App\ContactRelationship::create([
+                                        'contact_id' => $family_member_id,
+                                        'related_contact_id' => $related_contact_id,
+                                        'relationship_type' => 'family',
+                                        'business_id' => $business_id
+                                    ]);
+                                    
+                                    \Log::info('Created cross-family relationship', [
+                                        'new_contact' => $related_contact_id,
+                                        'existing_family_member' => $family_member_id
+                                    ]);
+                                }
+                            }
+                        }
+                        
                         \Log::info('Created relationships for update', [
                             'relationship1' => $relationship1->id,
-                            'relationship2' => $relationship2->id
+                            'relationship2' => $relationship2->id,
+                            'total_family_members' => $all_family_ids->count()
                         ]);
                     }
                 } else {
