@@ -452,7 +452,17 @@
                                     // Print the receipt
                                     var printWindow = window.open('', '_blank');
                                     printWindow.document.write('<html><head><title>Invoice</title>');
-                                    printWindow.document.write('<style>@media print { body { margin: 0; } }</style>');
+                                    printWindow.document.write('<style>');
+                                    printWindow.document.write('body { margin: 0; font-family: Arial, sans-serif; }');
+                                    printWindow.document.write('table { width: 100%; border-collapse: collapse; margin: 10px 0; }');
+                                    printWindow.document.write('table, th, td { border: 1px solid #000; }');
+                                    printWindow.document.write('th, td { padding: 8px; text-align: left; }');
+                                    printWindow.document.write('th { background-color: #f2f2f2; font-weight: bold; }');
+                                    printWindow.document.write('.text-center { text-align: center; }');
+                                    printWindow.document.write('.text-right { text-align: right; }');
+                                    printWindow.document.write('.font-weight-bold { font-weight: bold; }');
+                                    printWindow.document.write('@media print { body { margin: 0; } table { page-break-inside: avoid; } }');
+                                    printWindow.document.write('</style>');
                                     printWindow.document.write('</head><body>');
                                     printWindow.document.write(tempDiv.html());
                                     printWindow.document.write('</body></html>');
