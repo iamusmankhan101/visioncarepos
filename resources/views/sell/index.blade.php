@@ -430,42 +430,19 @@
                 // Show loading
                 $(this).prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> @lang("lang_v1.printing")...');
 
-                $.ajax({
-                    url: '/sells/bulk-print',
-                    method: 'POST',
-                    data: {
-                        transaction_ids: selectedIds,
-                        _token: $('meta[name="csrf-token"]').attr('content')
-                    },
-                    success: function(response) {
-                        if (response.success && response.print_urls) {
-                            // Open each invoice in a new tab/window for printing
-                            response.print_urls.forEach(function(url, index) {
-                                setTimeout(function() {
-                                    // Make AJAX request to get receipt content
-                                    $.get(url, function(data) {
-                                        if (data.success && data.receipt) {
-                                            var printWindow = window.open('', '_blank');
-                                            printWindow.document.write(data.receipt);
-                                            printWindow.document.close();
-                                            printWindow.print();
-                                        }
-                                    });
-                                }, index * 500); // Delay each print by 500ms
-                            });
-                            
-                            toastr.success('@lang("lang_v1.invoices_printed_successfully")');
-                        } else {
-                            toastr.error(response.msg || '@lang("messages.something_went_wrong")');
-                        }
-                    },
-                    error: function() {
-                        toastr.error('@lang("messages.something_went_wrong")');
-                    },
-                    complete: function() {
-                        $('#bulk_print_invoices').prop('disabled', false).html('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-printer"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M17 17h2a2 2 0 0 0 2 -2v-4a2 2 0 0 0 -2 -2h-14a2 2 0 0 0 -2 2v4a2 2 0 0 0 2 2h2"/><path d="M17 9v-4a2 2 0 0 0 -2 -2h-6a2 2 0 0 0 -2 2v4"/><path d="M7 13m0 2a2 2 0 0 1 2 -2h6a2 2 0 0 1 2 2v4a2 2 0 0 1 -2 2h-6a2 2 0 0 1 -2 -2z"/></svg> @lang("lang_v1.print_selected") (<span id="selected_count">0</span>)');
-                    }
+                // Open each invoice in a new tab for printing with a delay
+                selectedIds.forEach(function(id, index) {
+                    setTimeout(function() {
+                        var printUrl = '/sells/' + id + '/print';
+                        window.open(printUrl, '_blank');
+                    }, index * 1000); // 1 second delay between each
                 });
+
+                // Reset button after all windows are opened
+                setTimeout(function() {
+                    $('#bulk_print_invoices').prop('disabled', false).html('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-printer"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M17 17h2a2 2 0 0 0 2 -2v-4a2 2 0 0 0 -2 -2h-14a2 2 0 0 0 -2 2v4a2 2 0 0 0 2 2h2"/><path d="M17 9v-4a2 2 0 0 0 -2 -2h-6a2 2 0 0 0 -2 2v4"/><path d="M7 13m0 2a2 2 0 0 1 2 -2h6a2 2 0 0 1 2 2v4a2 2 0 0 1 -2 2h-6a2 2 0 0 1 -2 -2z"/></svg> @lang("lang_v1.print_selected") (<span id="selected_count">0</span>)');
+                    toastr.success('@lang("lang_v1.invoices_printed_successfully")');
+                }, selectedIds.length * 1000 + 500);
             });
         });
     </script>
