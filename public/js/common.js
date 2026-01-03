@@ -390,6 +390,9 @@ var dateRangeSettings = {
     ranges: ranges,
     startDate: moment().subtract(10, 'years'), // Default to "All" range start
     endDate: moment(), // Default to "All" range end (current date)
+    opens: 'left',
+    alwaysShowCalendars: true,
+    autoUpdateInput: true,
     locale: {
         cancelLabel: LANG.clear,
         applyLabel: LANG.apply,
