@@ -438,12 +438,21 @@
                         _token: $('meta[name="csrf-token"]').attr('content')
                     },
                     success: function(response) {
-                        if (response.success) {
-                            // Open print window with combined receipts
-                            var printWindow = window.open('', '_blank');
-                            printWindow.document.write(response.receipts);
-                            printWindow.document.close();
-                            printWindow.print();
+                        if (response.success && response.print_urls) {
+                            // Open each invoice in a new tab/window for printing
+                            response.print_urls.forEach(function(url, index) {
+                                setTimeout(function() {
+                                    // Make AJAX request to get receipt content
+                                    $.get(url, function(data) {
+                                        if (data.success && data.receipt) {
+                                            var printWindow = window.open('', '_blank');
+                                            printWindow.document.write(data.receipt);
+                                            printWindow.document.close();
+                                            printWindow.print();
+                                        }
+                                    });
+                                }, index * 500); // Delay each print by 500ms
+                            });
                             
                             toastr.success('@lang("lang_v1.invoices_printed_successfully")');
                         } else {

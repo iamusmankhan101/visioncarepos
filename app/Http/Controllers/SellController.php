@@ -1946,7 +1946,6 @@ class SellController extends Controller
             // Validate that all transactions belong to the current business
             $transactions = Transaction::where('business_id', $business_id)
                 ->whereIn('id', $transaction_ids)
-                ->with(['location'])
                 ->get();
 
             if ($transactions->count() !== count($transaction_ids)) {
@@ -1956,38 +1955,17 @@ class SellController extends Controller
                 ]);
             }
 
-            $combined_receipts = '';
-            $sellPosController = new SellPosController();
-
+            // Generate URLs for each invoice that can be printed
+            $print_urls = [];
             foreach ($transactions as $transaction) {
-                // Create a new request for each transaction and simulate AJAX
-                $printRequest = new Request();
-                $printRequest->setSession($request->session());
-                $printRequest->headers->set('X-Requested-With', 'XMLHttpRequest');
-                
-                // Call the existing printInvoice method
-                $response = $sellPosController->printInvoice($printRequest, $transaction->id);
-                
-                if (is_array($response) && isset($response['success']) && $response['success'] == 1) {
-                    $combined_receipts .= $response['receipt'];
-                    // Add page break between receipts (except for the last one)
-                    if ($transaction !== $transactions->last()) {
-                        $combined_receipts .= '<div style="page-break-after: always;"></div>';
-                    }
-                }
+                $print_urls[] = route('sell.printInvoice', ['transaction_id' => $transaction->id]);
             }
 
-            if (!empty($combined_receipts)) {
-                return response()->json([
-                    'success' => true,
-                    'receipts' => $combined_receipts
-                ]);
-            } else {
-                return response()->json([
-                    'success' => false,
-                    'msg' => __('messages.something_went_wrong')
-                ]);
-            }
+            return response()->json([
+                'success' => true,
+                'print_urls' => $print_urls,
+                'count' => count($print_urls)
+            ]);
 
         } catch (\Exception $e) {
             \Log::emergency('File:' . $e->getFile() . 'Line:' . $e->getLine() . 'Message:' . $e->getMessage());
