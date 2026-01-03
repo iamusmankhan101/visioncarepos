@@ -674,11 +674,11 @@ $(document).ready(function() {
                         console.log('Checking for additional customers:', selectedCustomers);
                         
                         if (selectedCustomers && selectedCustomers.ids && selectedCustomers.ids.length > 1) {
-                            var transactionId = result.transaction_id || result.receipt.transaction_id;
-                            console.log('Transaction ID:', transactionId);
-                            showAdditionalCustomerPrintModal(transactionId, selectedCustomers);
-                            // Clear after showing modal
+                            // Multiple customers selected - all details are already in the single receipt
+                            console.log('Multiple customers detected, all details included in single receipt');
+                            // Clear the session storage
                             sessionStorage.removeItem('selectedCustomersForInvoice');
+                            // No need to show additional invoices modal since everything is in one receipt
                         }
                     }
                 } else {
@@ -1020,11 +1020,11 @@ $(document).ready(function() {
                                 console.log('Checking for additional customers (express):', selectedCustomers);
                                 
                                 if (hasMultipleCustomers) {
-                                    var transactionId = result.transaction_id || result.receipt.transaction_id;
-                                    console.log('Transaction ID (express):', transactionId);
-                                    showAdditionalCustomerPrintModal(transactionId, selectedCustomers);
-                                    // Clear after showing modal
+                                    // Multiple customers selected - all details are already in the single receipt
+                                    console.log('Multiple customers detected (express), all details included in single receipt');
+                                    // Clear the session storage
                                     sessionStorage.removeItem('selectedCustomersForInvoice');
+                                    // No need to show additional invoices modal since everything is in one receipt
                                 }
                             }
                         } else {
