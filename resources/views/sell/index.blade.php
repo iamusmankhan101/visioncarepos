@@ -433,7 +433,7 @@
                 var printedCount = 0;
                 var totalCount = selectedIds.length;
 
-                // Function to print individual invoice
+                // Function to print individual invoice using the same method as individual print
                 function printInvoice(transactionId, index) {
                     setTimeout(function() {
                         $.ajax({
@@ -442,50 +442,27 @@
                             dataType: 'json',
                             success: function(result) {
                                 if (result.success == 1 && result.receipt.html_content != '') {
-                                    // Create a temporary div for this receipt
-                                    var tempDiv = $('<div>').html(result.receipt.html_content);
-                                    $('body').append(tempDiv);
+                                    // Use the same method as individual print - put content in receipt_section and call __print_receipt
+                                    $('#receipt_section').html(result.receipt.html_content);
+                                    __currency_convert_recursively($('#receipt_section'));
                                     
-                                    // Add inline styles to all tables to ensure borders show
-                                    tempDiv.find('table').each(function() {
-                                        $(this).attr('style', 'width: 100%; border-collapse: collapse; border: 2px solid #000; margin: 10px 0;');
-                                    });
+                                    // Set document title if provided
+                                    var originalTitle = document.title;
+                                    if (typeof result.receipt.print_title != 'undefined') {
+                                        document.title = result.receipt.print_title;
+                                    }
+                                    if (typeof result.print_title != 'undefined') {
+                                        document.title = result.print_title;
+                                    }
                                     
-                                    tempDiv.find('th, td').each(function() {
-                                        var currentStyle = $(this).attr('style') || '';
-                                        $(this).attr('style', currentStyle + '; border: 1px solid #000; padding: 8px;');
-                                    });
+                                    // Print using the same function as individual print
+                                    __print_receipt('receipt_section');
                                     
-                                    tempDiv.find('th').each(function() {
-                                        var currentStyle = $(this).attr('style') || '';
-                                        $(this).attr('style', currentStyle + '; background-color: #f0f0f0; font-weight: bold;');
-                                    });
-                                    
-                                    // Convert currency in the temp div
-                                    __currency_convert_recursively(tempDiv);
-                                    
-                                    // Print the receipt
-                                    var printWindow = window.open('', '_blank');
-                                    printWindow.document.write('<html><head><title>Invoice</title>');
-                                    printWindow.document.write('<style>');
-                                    printWindow.document.write('* { box-sizing: border-box; }');
-                                    printWindow.document.write('body { margin: 0; font-family: Arial, sans-serif; color: #000; }');
-                                    printWindow.document.write('table { width: 100% !important; border-collapse: collapse !important; border: 2px solid #000 !important; margin: 10px 0 !important; }');
-                                    printWindow.document.write('th, td { border: 1px solid #000 !important; padding: 8px !important; text-align: left !important; }');
-                                    printWindow.document.write('th { background-color: #f0f0f0 !important; font-weight: bold !important; }');
-                                    printWindow.document.write('.text-center { text-align: center !important; }');
-                                    printWindow.document.write('.text-right { text-align: right !important; }');
-                                    printWindow.document.write('strong, b { font-weight: bold !important; }');
-                                    printWindow.document.write('@media print { * { -webkit-print-color-adjust: exact !important; color-adjust: exact !important; } }');
-                                    printWindow.document.write('</style>');
-                                    printWindow.document.write('</head><body>');
-                                    printWindow.document.write(tempDiv.html());
-                                    printWindow.document.write('</body></html>');
-                                    printWindow.document.close();
-                                    printWindow.print();
-                                    
-                                    // Clean up temp div
-                                    tempDiv.remove();
+                                    // Restore original title
+                                    setTimeout(function() {
+                                        document.title = originalTitle;
+                                        $('#receipt_section').html(''); // Clear the section
+                                    }, 1200);
                                     
                                     printedCount++;
                                     if (printedCount === totalCount) {
@@ -499,7 +476,7 @@
                                 toastr.error('Error printing invoice ' + transactionId);
                             }
                         });
-                    }, index * 1000); // 1 second delay between each request
+                    }, index * 2000); // 2 second delay between each request to allow time for printing
                 }
 
                 // Print each invoice
@@ -510,7 +487,7 @@
                 // Reset button after all requests are sent
                 setTimeout(function() {
                     $('#bulk_print_invoices').prop('disabled', false).html('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-printer"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M17 17h2a2 2 0 0 0 2 -2v-4a2 2 0 0 0 -2 -2h-14a2 2 0 0 0 -2 2v4a2 2 0 0 0 2 2h2"/><path d="M17 9v-4a2 2 0 0 0 -2 -2h-6a2 2 0 0 0 -2 2v4"/><path d="M7 13m0 2a2 2 0 0 1 2 -2h6a2 2 0 0 1 2 2v4a2 2 0 0 1 -2 2h-6a2 2 0 0 1 -2 -2z"/></svg> @lang("lang_v1.print_selected") (<span id="selected_count">0</span>)');
-                }, totalCount * 1000 + 1000);
+                }, totalCount * 2000 + 1000);
             });
         });
     </script>
