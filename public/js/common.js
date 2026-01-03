@@ -359,7 +359,7 @@ $(document).ready(function () {
 
 //Default settings for daterangePicker
 var ranges = {};
-ranges[LANG.all] = [moment().subtract(10, 'years'), moment().add(1, 'year')]; // All records - wide date range
+ranges[LANG.all] = [moment().subtract(10, 'years'), moment()]; // All records - from 10 years ago to today
 ranges[LANG.today] = [moment(), moment()];
 ranges[LANG.yesterday] = [moment().subtract(1, 'days'), moment().subtract(1, 'days')];
 ranges[LANG.last_7_days] = [moment().subtract(6, 'days'), moment()];
@@ -388,8 +388,8 @@ var dateRangeSettings = {
     showDropdowns : true,
     linkedCalendars : false,
     ranges: ranges,
-    startDate: financial_year.start,
-    endDate: financial_year.end,
+    startDate: moment().subtract(10, 'years'), // Default to "All" range start
+    endDate: moment(), // Default to "All" range end (current date)
     locale: {
         cancelLabel: LANG.clear,
         applyLabel: LANG.apply,
