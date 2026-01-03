@@ -88,6 +88,9 @@ $(document).ready(function() {
             },
         },
         templateResult: function (data) { 
+            // Debug: log the data to see what we're receiving
+            console.log('Customer dropdown data:', data);
+            
             var template = '';
             if (data.supplier_business_name) {
                 template += data.supplier_business_name + "<br>";
@@ -97,6 +100,7 @@ $(document).ready(function() {
             // Show "Primary" label if customer has related customers
             if (data.has_related_customers && data.has_related_customers > 0) {
                 template += ' <span class="label label-primary" style="font-size: 10px; margin-left: 5px;">Primary</span>';
+                console.log('Adding Primary label for customer:', data.text, 'Related customers count:', data.has_related_customers);
             }
             
             template += "<br>" + LANG.mobile + ": " + data.mobile;
