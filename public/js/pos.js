@@ -1252,6 +1252,23 @@ $(document).ready(function() {
         $('form#quick_add_contact')[0].reset();
     });
 
+    // Handle contact type radio button changes
+    $('.contact_modal').on('shown.bs.modal', function(e) {
+        // Set up contact type radio button handlers
+        $('input[type=radio][name="contact_type_radio"]').off('change').on('change', function() {
+            if (this.value == 'individual') {
+                $('div.individual').show();
+                $('div.business').hide();
+            } else if (this.value == 'business') {
+                $('div.individual').hide();
+                $('div.business').show();
+            }
+        });
+        
+        // Trigger the change event for the currently selected radio button to set initial state
+        $('input[type=radio][name="contact_type_radio"]:checked').trigger('change');
+    });
+
     //Updates for add sell
     $('select#discount_type, input#discount_amount, input#shipping_charges, \
         input#rp_redeemed_amount').change(function() {
