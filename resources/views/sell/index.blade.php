@@ -446,6 +446,21 @@
                                     var tempDiv = $('<div>').html(result.receipt.html_content);
                                     $('body').append(tempDiv);
                                     
+                                    // Add inline styles to all tables to ensure borders show
+                                    tempDiv.find('table').each(function() {
+                                        $(this).attr('style', 'width: 100%; border-collapse: collapse; border: 2px solid #000; margin: 10px 0;');
+                                    });
+                                    
+                                    tempDiv.find('th, td').each(function() {
+                                        var currentStyle = $(this).attr('style') || '';
+                                        $(this).attr('style', currentStyle + '; border: 1px solid #000; padding: 8px;');
+                                    });
+                                    
+                                    tempDiv.find('th').each(function() {
+                                        var currentStyle = $(this).attr('style') || '';
+                                        $(this).attr('style', currentStyle + '; background-color: #f0f0f0; font-weight: bold;');
+                                    });
+                                    
                                     // Convert currency in the temp div
                                     __currency_convert_recursively(tempDiv);
                                     
@@ -453,29 +468,15 @@
                                     var printWindow = window.open('', '_blank');
                                     printWindow.document.write('<html><head><title>Invoice</title>');
                                     printWindow.document.write('<style>');
+                                    printWindow.document.write('* { box-sizing: border-box; }');
                                     printWindow.document.write('body { margin: 0; font-family: Arial, sans-serif; color: #000; }');
-                                    printWindow.document.write('.row { margin: 0; }');
-                                    printWindow.document.write('.col-xs-12 { width: 100%; }');
-                                    printWindow.document.write('.text-center { text-align: center; }');
-                                    printWindow.document.write('.text-left { text-align: left; }');
-                                    printWindow.document.write('.text-right { text-align: right; }');
-                                    printWindow.document.write('.pull-left { float: left; }');
-                                    printWindow.document.write('.pull-right { float: right; }');
-                                    printWindow.document.write('.font-weight-bold, strong, b { font-weight: bold; }');
-                                    printWindow.document.write('h1, h2, h3, h4, h5, h6 { margin: 10px 0; }');
-                                    printWindow.document.write('p { margin: 5px 0; }');
-                                    printWindow.document.write('small { font-size: 12px; }');
-                                    printWindow.document.write('.table { width: 100%; max-width: 100%; margin-bottom: 20px; border-collapse: collapse; }');
-                                    printWindow.document.write('.table > thead > tr > th, .table > tbody > tr > th, .table > tfoot > tr > th, .table > thead > tr > td, .table > tbody > tr > td, .table > tfoot > tr > td { padding: 8px; line-height: 1.42857143; vertical-align: top; }');
-                                    printWindow.document.write('.table > thead > tr > th { vertical-align: bottom; border-bottom: 2px solid #ddd; }');
-                                    printWindow.document.write('.table-bordered { border: 1px solid #ddd; }');
-                                    printWindow.document.write('.table-bordered > thead > tr > th, .table-bordered > tbody > tr > th, .table-bordered > tfoot > tr > th, .table-bordered > thead > tr > td, .table-bordered > tbody > tr > td, .table-bordered > tfoot > tr > td { border: 1px solid #ddd; }');
-                                    printWindow.document.write('.table-bordered > thead > tr > th, .table-bordered > thead > tr > td { border-bottom-width: 2px; }');
-                                    printWindow.document.write('.table-condensed > thead > tr > th, .table-condensed > tbody > tr > th, .table-condensed > tfoot > tr > th, .table-condensed > thead > tr > td, .table-condensed > tbody > tr > td, .table-condensed > tfoot > tr > td { padding: 5px; }');
-                                    printWindow.document.write('table { border-collapse: collapse; }');
-                                    printWindow.document.write('th, td { text-align: left; }');
-                                    printWindow.document.write('.word-wrap { word-wrap: break-word; }');
-                                    printWindow.document.write('@media print { body { margin: 0; } table { page-break-inside: avoid; } .no-print { display: none; } }');
+                                    printWindow.document.write('table { width: 100% !important; border-collapse: collapse !important; border: 2px solid #000 !important; margin: 10px 0 !important; }');
+                                    printWindow.document.write('th, td { border: 1px solid #000 !important; padding: 8px !important; text-align: left !important; }');
+                                    printWindow.document.write('th { background-color: #f0f0f0 !important; font-weight: bold !important; }');
+                                    printWindow.document.write('.text-center { text-align: center !important; }');
+                                    printWindow.document.write('.text-right { text-align: right !important; }');
+                                    printWindow.document.write('strong, b { font-weight: bold !important; }');
+                                    printWindow.document.write('@media print { * { -webkit-print-color-adjust: exact !important; color-adjust: exact !important; } }');
                                     printWindow.document.write('</style>');
                                     printWindow.document.write('</head><body>');
                                     printWindow.document.write(tempDiv.html());
