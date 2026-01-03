@@ -433,7 +433,7 @@
                 var printedCount = 0;
                 var totalCount = selectedIds.length;
 
-                // Function to print individual invoice using the same method as individual print
+                // Function to print individual invoice in new window
                 function printInvoice(transactionId, index) {
                     setTimeout(function() {
                         $.ajax({
@@ -442,27 +442,40 @@
                             dataType: 'json',
                             success: function(result) {
                                 if (result.success == 1 && result.receipt.html_content != '') {
-                                    // Use the same method as individual print - put content in receipt_section and call __print_receipt
-                                    $('#receipt_section').html(result.receipt.html_content);
-                                    __currency_convert_recursively($('#receipt_section'));
+                                    // Create new window for printing
+                                    var printWindow = window.open('', '_blank', 'width=800,height=600');
                                     
-                                    // Set document title if provided
-                                    var originalTitle = document.title;
-                                    if (typeof result.receipt.print_title != 'undefined') {
-                                        document.title = result.receipt.print_title;
-                                    }
-                                    if (typeof result.print_title != 'undefined') {
-                                        document.title = result.print_title;
-                                    }
+                                    // Get all CSS from current page
+                                    var cssLinks = '';
+                                    $('link[rel="stylesheet"]').each(function() {
+                                        cssLinks += '<link rel="stylesheet" href="' + $(this).attr('href') + '">';
+                                    });
                                     
-                                    // Print using the same function as individual print
-                                    __print_receipt('receipt_section');
+                                    var cssStyles = '';
+                                    $('style').each(function() {
+                                        cssStyles += '<style>' + $(this).html() + '</style>';
+                                    });
                                     
-                                    // Restore original title
+                                    // Write complete HTML with all CSS
+                                    printWindow.document.write('<!DOCTYPE html><html><head>');
+                                    printWindow.document.write('<title>Invoice</title>');
+                                    printWindow.document.write('<meta charset="utf-8">');
+                                    printWindow.document.write(cssLinks);
+                                    printWindow.document.write(cssStyles);
+                                    printWindow.document.write('</head><body>');
+                                    printWindow.document.write('<section class="invoice print_section" id="receipt_section">');
+                                    printWindow.document.write(result.receipt.html_content);
+                                    printWindow.document.write('</section>');
+                                    printWindow.document.write('</body></html>');
+                                    printWindow.document.close();
+                                    
+                                    // Wait for content to load then print
                                     setTimeout(function() {
-                                        document.title = originalTitle;
-                                        $('#receipt_section').html(''); // Clear the section
-                                    }, 1200);
+                                        printWindow.print();
+                                        setTimeout(function() {
+                                            printWindow.close();
+                                        }, 1000);
+                                    }, 500);
                                     
                                     printedCount++;
                                     if (printedCount === totalCount) {
@@ -476,7 +489,7 @@
                                 toastr.error('Error printing invoice ' + transactionId);
                             }
                         });
-                    }, index * 2000); // 2 second delay between each request to allow time for printing
+                    }, index * 2000); // 2 second delay between each request
                 }
 
                 // Print each invoice
