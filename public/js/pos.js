@@ -97,23 +97,23 @@ $(document).ready(function() {
             }
             template += data.text;
             
-            // Debug: Log all the data we're receiving
-            console.log('Customer data:', {
-                id: data.id,
-                text: data.text,
-                mobile: data.mobile,
-                has_related_customers: data.has_related_customers,
-                phone_group_primary_id: data.phone_group_primary_id
-            });
+            // Temporary debug to see actual values
+            if (data.text && (data.text.includes('raffy') || data.text.includes('CO00048') || data.text.includes('CO00049'))) {
+                console.log('DEBUG - Customer:', data.text, {
+                    id: data.id,
+                    mobile: data.mobile,
+                    has_related: data.has_related_customers,
+                    phone_primary_id: data.phone_group_primary_id,
+                    is_primary: (data.id == data.phone_group_primary_id)
+                });
+            }
             
-            // Show "Primary" label for customers who:
-            // 1. Have related customers (has_related_customers > 0)
-            // 2. Are the primary customer in their phone group (lowest ID with same phone number)
-            if (data.has_related_customers && data.has_related_customers > 0 && data.id == data.phone_group_primary_id) {
+            // Show "Primary" label ONLY for the primary customer in a phone group
+            // Primary customer = lowest ID among customers with same phone number AND has related customers
+            if (data.has_related_customers && data.has_related_customers > 0 && 
+                data.id == data.phone_group_primary_id && 
+                data.mobile && data.mobile.trim() !== '') {
                 template += ' <span class="label label-primary" style="font-size: 10px; margin-left: 5px;">Primary</span>';
-                console.log('Adding Primary label for:', data.text, 'Phone:', data.mobile);
-            } else {
-                console.log('NOT adding Primary label for:', data.text, 'Reason: has_related=', data.has_related_customers, 'id=', data.id, 'phone_primary_id=', data.phone_group_primary_id);
             }
             
             template += "<br>" + LANG.mobile + ": " + data.mobile;
