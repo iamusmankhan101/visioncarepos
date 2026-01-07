@@ -2182,6 +2182,13 @@ class ContactController extends Controller
                 ->orderBy('id', 'asc') // Order by ID to show primary customer first
                 ->get();
             
+            \Log::info('Phone-based query details', [
+                'contact_mobile' => $contact->mobile,
+                'query_mobile' => $contact->mobile,
+                'found_contacts' => $related_contacts->pluck('name', 'id')->toArray(),
+                'found_mobiles' => $related_contacts->pluck('mobile', 'id')->toArray()
+            ]);
+            
             \Log::info('Found phone-based related contacts', ['count' => $related_contacts->count(), 'phone' => $contact->mobile]);
             
             if ($related_contacts->count() <= 1) {
