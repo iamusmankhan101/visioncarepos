@@ -97,10 +97,11 @@ $(document).ready(function() {
             }
             template += data.text;
             
-            // Show "Primary" label if customer has related customers
-            if (data.has_related_customers && data.has_related_customers > 0) {
+            // Show "Primary" label only for customers who have related customers but are not related to others
+            // This identifies the actual primary customer in a family group
+            if (data.has_related_customers && data.has_related_customers > 0 && (!data.is_related_to_others || data.is_related_to_others == 0)) {
                 template += ' <span class="label label-primary" style="font-size: 10px; margin-left: 5px;">Primary</span>';
-                console.log('Adding Primary label for customer:', data.text, 'Related customers count:', data.has_related_customers);
+                console.log('Adding Primary label for customer:', data.text, 'Has related:', data.has_related_customers, 'Is related to others:', data.is_related_to_others);
             }
             
             template += "<br>" + LANG.mobile + ": " + data.mobile;

@@ -1390,7 +1390,8 @@ class ContactController extends Controller
                 'export_custom_field_4',
                 'export_custom_field_5',
                 'export_custom_field_6',
-                DB::raw("(SELECT COUNT(*) FROM contact_relationships cr WHERE cr.contact_id = contacts.id) as has_related_customers")
+                DB::raw("(SELECT COUNT(*) FROM contact_relationships cr WHERE cr.contact_id = contacts.id) as has_related_customers"),
+                DB::raw("(SELECT COUNT(*) FROM contact_relationships cr WHERE cr.related_contact_id = contacts.id AND cr.contact_id != contacts.id) as is_related_to_others")
             );
 
             if (request()->session()->get('business.enable_rp') == 1) {
