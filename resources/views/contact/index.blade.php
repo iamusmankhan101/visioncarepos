@@ -189,19 +189,6 @@
                                     <th>@lang('contact.total_sale_due')</th>
                                     <th>@lang('lang_v1.total_sell_return_due')</th>
                                 @endif
-                                @php
-                                    $custom_labels = json_decode(session('business.custom_labels'), true);
-                                @endphp
-                                <th>R-Dist-Sph</th>
-                                <th>R-Dist-Cyl</th>
-                                <th>R-Dist-Axis</th>
-                                <th>R-Near-Sph</th>
-                                <th>R-Near-Cyl</th>
-                                <th>R-Near-Axis</th>
-                                <th>L-Dist-Sph</th>
-                                <th>L-Dist-Cyl</th>
-                                <th>L-Dist-Axis</th>
-                                <th>L-Near-Sph</th>
                             </tr>
                         </thead>
                         <tfoot>
@@ -226,16 +213,6 @@
                                 </td>
                                 <td class="footer_contact_due"></td>
                                 <td class="footer_contact_return_due"></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
                             </tr>
                         </tfoot>
                     </table>
