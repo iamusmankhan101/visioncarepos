@@ -24,7 +24,12 @@
 
     <div class="modal-header">
       <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-      <h4 class="modal-title">@lang('contact.edit_contact')</h4>
+      <h4 class="modal-title">
+        @lang('contact.edit_contact')
+        @if($is_current_primary && !empty($related_customers))
+          <span class="label label-success" style="margin-left: 10px;">Primary</span>
+        @endif
+      </h4>
     </div>
 
     <div class="modal-body">
@@ -584,6 +589,11 @@
                                     @if(!empty($related['relationship_type']))
                                         <span class="label label-info" style="margin-left: 10px;">
                                             {{ ucfirst($related['relationship_type']) }}
+                                        </span>
+                                    @endif
+                                    @if(!empty($related['is_primary']))
+                                        <span class="label label-success" style="margin-left: 10px;">
+                                            Primary
                                         </span>
                                     @endif
                                 </h5>

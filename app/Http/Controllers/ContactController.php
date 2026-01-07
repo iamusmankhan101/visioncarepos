@@ -970,6 +970,7 @@ class ContactController extends Controller
 
             // Load related customers based on phone number (phone-based relationships)
             $related_customers = [];
+            $is_current_primary = false;
             
             if (!empty($contact->mobile)) {
                 $phone_related_contacts = Contact::where('business_id', $business_id)
@@ -977,7 +978,19 @@ class ContactController extends Controller
                     ->where('id', '!=', $id) // Exclude current contact
                     ->where('mobile', '!=', '')
                     ->whereNotNull('mobile')
+                    ->orderBy('id', 'asc') // Order by ID to identify primary customer
                     ->get();
+                
+                // Get the primary customer ID (lowest ID among all customers with same phone)
+                $all_phone_contacts = Contact::where('business_id', $business_id)
+                    ->where('mobile', $contact->mobile)
+                    ->where('mobile', '!=', '')
+                    ->whereNotNull('mobile')
+                    ->orderBy('id', 'asc')
+                    ->get();
+                
+                $primary_customer_id = $all_phone_contacts->min('id');
+                $is_current_primary = $contact->id == $primary_customer_id;
                 
                 foreach ($phone_related_contacts as $rc) {
                     $related_customers[] = [
@@ -987,6 +1000,7 @@ class ContactController extends Controller
                         'mobile' => $rc->mobile,
                         'email' => $rc->email,
                         'relationship_type' => 'family', // Default to family for phone-based relationships
+                        'is_primary' => $rc->id == $primary_customer_id,
                         'prescription' => [
                             'right_eye' => [
                                 'distance' => [
@@ -1018,7 +1032,7 @@ class ContactController extends Controller
             }
 
             return view('contact.edit')
-                ->with(compact('contact', 'types', 'customer_groups', 'opening_balance', 'users', 'related_customers'));
+                ->with(compact('contact', 'types', 'customer_groups', 'opening_balance', 'users', 'related_customers', 'is_current_primary'));
         } else {
             // Handle non-AJAX requests (shouldn't happen for edit, but just in case)
             return redirect()->back();
@@ -2203,6 +2217,8 @@ class ContactController extends Controller
             }
             
             $customers = [];
+            $primary_customer_id = $related_contacts->min('id'); // Get the lowest ID (primary customer)
+            
             foreach ($related_contacts as $related) {
                 $prescription_summary = '';
                 
@@ -2221,7 +2237,8 @@ class ContactController extends Controller
                     'mobile' => $related->mobile,
                     'contact_id' => $related->contact_id,
                     'prescription_summary' => $prescription_summary,
-                    'is_current' => $related->id == $contact_id
+                    'is_current' => $related->id == $contact_id,
+                    'is_primary' => $related->id == $primary_customer_id
                 ];
             }
             

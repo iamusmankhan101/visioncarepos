@@ -3719,6 +3719,7 @@ function showRelatedCustomersModal(customers, callback) {
     var html = '';
     customers.forEach(function(customer, index) {
         var isCurrentBadge = customer.is_current ? '<span class="label label-primary" style="margin-left: 10px;">Currently Selected</span>' : '';
+        var isPrimaryBadge = customer.is_primary ? '<span class="label label-success" style="margin-left: 10px;">Primary</span>' : '';
         var isChecked = customer.is_current ? 'checked="checked"' : '';
         var borderColor = customer.is_current ? '#48b2ee' : '#ddd';
         var bgColor = customer.is_current ? '#f0f8ff' : 'white';
@@ -3730,7 +3731,7 @@ function showRelatedCustomersModal(customers, callback) {
         html += '    </div>';
         html += '    <div class="col-md-9" style="cursor: pointer;" onclick="toggleCustomerCheckbox(' + customer.id + ')">';
         html += '      <h5 class="customer-name-click" style="margin-top: 0; color: #48b2ee;" data-customer-id="' + customer.id + '">';
-        html += '        <i class="fa fa-user"></i> ' + customer.name + isCurrentBadge;
+        html += '        <i class="fa fa-user"></i> ' + customer.name + isCurrentBadge + isPrimaryBadge;
         html += '      </h5>';
         html += '      <p style="margin-bottom: 5px;"><strong>Contact ID:</strong> ' + (customer.contact_id || 'N/A') + '</p>';
         html += '      <p style="margin-bottom: 5px;"><strong>Mobile:</strong> ' + (customer.mobile || 'N/A') + '</p>';
