@@ -1390,8 +1390,8 @@ class ContactController extends Controller
                 'export_custom_field_4',
                 'export_custom_field_5',
                 'export_custom_field_6',
-                DB::raw("(SELECT COUNT(*) FROM contact_relationships cr WHERE cr.contact_id = contacts.id) as has_related_customers"),
-                DB::raw("(SELECT MIN(c2.id) FROM contacts c2 INNER JOIN contact_relationships cr ON (c2.id = cr.contact_id OR c2.id = cr.related_contact_id) WHERE (cr.contact_id = contacts.id OR cr.related_contact_id = contacts.id) AND c2.business_id = contacts.business_id) as family_primary_id")
+                DB::raw("(SELECT COUNT(*) - 1 FROM contacts c2 WHERE c2.mobile = contacts.mobile AND c2.business_id = contacts.business_id AND c2.mobile IS NOT NULL AND c2.mobile != '') as has_related_customers"),
+                DB::raw("(SELECT MIN(c2.id) FROM contacts c2 WHERE c2.mobile = contacts.mobile AND c2.business_id = contacts.business_id AND c2.mobile IS NOT NULL AND c2.mobile != '') as phone_group_primary_id")
             );
 
             if (request()->session()->get('business.enable_rp') == 1) {
@@ -2173,31 +2173,20 @@ class ContactController extends Controller
                 return response()->json(['success' => false, 'msg' => 'Contact not found']);
             }
             
-            // Get all related contact IDs (both directions)
-            $related_ids = \DB::table('contact_relationships')
-                ->where('business_id', $business_id)
-                ->where(function($query) use ($contact_id) {
-                    $query->where('contact_id', $contact_id)
-                          ->orWhere('related_contact_id', $contact_id);
-                })
+            // Get all contacts with the same phone number (related customers)
+            $related_contacts = Contact::where('business_id', $business_id)
+                ->where('mobile', $contact->mobile)
+                ->where('mobile', '!=', '')
+                ->whereNotNull('mobile')
+                ->where('id', '!=', $contact_id) // Exclude the current contact
                 ->get();
             
-            \Log::info('Found relationships', ['count' => $related_ids->count(), 'relationships' => $related_ids->toArray()]);
+            \Log::info('Found related customers by phone', ['phone' => $contact->mobile, 'count' => $related_contacts->count()]);
             
-            // Collect all unique contact IDs
-            $contact_ids = collect([$contact_id]); // Include the current contact
+            // Include the current contact in the list
+            $all_contacts = collect([$contact])->merge($related_contacts);
             
-            foreach ($related_ids as $rel) {
-                if ($rel->contact_id != $contact_id) {
-                    $contact_ids->push($rel->contact_id);
-                }
-                if ($rel->related_contact_id != $contact_id) {
-                    $contact_ids->push($rel->related_contact_id);
-                }
-            }
-            
-            $contact_ids = $contact_ids->unique()->values();
-            \Log::info('Unique contact IDs', ['contact_ids' => $contact_ids->toArray()]);
+            \Log::info('All contacts in phone group', ['total_count' => $all_contacts->count()]);
             
             if ($contact_ids->count() <= 1) {
                 \Log::info('No related customers found');
@@ -2208,16 +2197,9 @@ class ContactController extends Controller
                 ]);
             }
             
-            // Get all contacts
-            $related_contacts = Contact::where('business_id', $business_id)
-                ->whereIn('id', $contact_ids)
-                ->select('id', 'name', 'mobile', 'contact_id', 'custom_field1', 'custom_field2', 'custom_field3', 'custom_field4', 'custom_field5', 'custom_field6', 'custom_field7', 'custom_field8', 'custom_field9', 'custom_field10')
-                ->get();
-            
-            \Log::info('Found related contacts', ['count' => $related_contacts->count()]);
             
             $customers = [];
-            foreach ($related_contacts as $related) {
+            foreach ($all_contacts as $related) {
                 $prescription_summary = '';
                 
                 // Build prescription summary
@@ -2246,5 +2228,3 @@ class ContactController extends Controller
             ]);
         }
     }
-}
-
