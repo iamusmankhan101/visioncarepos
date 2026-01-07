@@ -97,22 +97,10 @@ $(document).ready(function() {
             }
             template += data.text;
             
-            // Temporary debug to see actual values
-            if (data.text && (data.text.includes('raffy') || data.text.includes('CO00048') || data.text.includes('CO00049'))) {
-                console.log('DEBUG - Customer:', data.text, {
-                    id: data.id,
-                    mobile: data.mobile,
-                    has_related: data.has_related_customers,
-                    phone_primary_id: data.phone_group_primary_id,
-                    is_primary: (data.id == data.phone_group_primary_id)
-                });
-            }
-            
-            // Show "Primary" label ONLY for the primary customer in a phone group
-            // Primary customer = lowest ID among customers with same phone number AND has related customers
+            // Show "Primary" label ONLY for main customers (created first) who have related customers
+            // Main customer = has related customers AND is NOT related to any older customer
             if (data.has_related_customers && data.has_related_customers > 0 && 
-                data.id == data.phone_group_primary_id && 
-                data.mobile && data.mobile.trim() !== '') {
+                (!data.is_related_to_older_customer || data.is_related_to_older_customer == 0)) {
                 template += ' <span class="label label-primary" style="font-size: 10px; margin-left: 5px;">Primary</span>';
             }
             
