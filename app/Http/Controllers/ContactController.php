@@ -1389,9 +1389,7 @@ class ContactController extends Controller
                 'export_custom_field_3',
                 'export_custom_field_4',
                 'export_custom_field_5',
-                'export_custom_field_6',
-                DB::raw("(SELECT COUNT(*) - 1 FROM contacts c2 WHERE c2.mobile = contacts.mobile AND c2.business_id = contacts.business_id AND c2.mobile IS NOT NULL AND c2.mobile != '') as has_related_customers"),
-                DB::raw("(SELECT MIN(c2.id) FROM contacts c2 WHERE c2.mobile = contacts.mobile AND c2.business_id = contacts.business_id AND c2.mobile IS NOT NULL AND c2.mobile != '') as phone_group_primary_id")
+                'export_custom_field_6'
             );
 
             if (request()->session()->get('business.enable_rp') == 1) {
