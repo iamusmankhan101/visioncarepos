@@ -1391,7 +1391,7 @@ class ContactController extends Controller
                 'export_custom_field_5',
                 'export_custom_field_6',
                 DB::raw("(SELECT COUNT(*) FROM contact_relationships cr WHERE cr.contact_id = contacts.id) as has_related_customers"),
-                DB::raw("(SELECT COUNT(*) FROM contact_relationships cr WHERE cr.related_contact_id = contacts.id AND cr.contact_id != contacts.id) as is_related_to_others")
+                DB::raw("(SELECT MIN(c2.id) FROM contacts c2 INNER JOIN contact_relationships cr ON (c2.id = cr.contact_id OR c2.id = cr.related_contact_id) WHERE (cr.contact_id = contacts.id OR cr.related_contact_id = contacts.id) AND c2.business_id = contacts.business_id) as family_primary_id")
             );
 
             if (request()->session()->get('business.enable_rp') == 1) {
