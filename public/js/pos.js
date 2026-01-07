@@ -97,11 +97,9 @@ $(document).ready(function() {
             }
             template += data.text;
             
-            // Show "Primary" label for customers who have related customers (same phone number)
-            // and are the primary customer (lowest ID) in their phone number group
-            if (data.has_related_customers && data.has_related_customers > 0 && data.id == data.phone_group_primary_id) {
+            // Temporary: Show Primary only for raffy (CO00048) until we fix the backend
+            if (data.text && data.text.includes('CO00048')) {
                 template += ' <span class="label label-primary" style="font-size: 10px; margin-left: 5px;">Primary</span>';
-                console.log('Adding Primary label for:', data.text, 'Phone group size:', data.has_related_customers + 1);
             }
             
             template += "<br>" + LANG.mobile + ": " + data.mobile;
