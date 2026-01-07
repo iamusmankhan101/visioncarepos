@@ -1397,6 +1397,28 @@ class ContactController extends Controller
             }
             $contacts = $contacts->get();
 
+            // Add phone-based relationship data after getting the contacts
+            foreach ($contacts as $contact) {
+                if (!empty($contact->mobile)) {
+                    // Count other contacts with same phone number
+                    $related_count = Contact::where('business_id', $contact->business_id)
+                        ->where('mobile', $contact->mobile)
+                        ->where('id', '!=', $contact->id)
+                        ->count();
+                    
+                    // Get the primary contact ID (lowest ID with same phone)
+                    $primary_id = Contact::where('business_id', $contact->business_id)
+                        ->where('mobile', $contact->mobile)
+                        ->min('id');
+                    
+                    $contact->has_related_customers = $related_count;
+                    $contact->phone_group_primary_id = $primary_id;
+                } else {
+                    $contact->has_related_customers = 0;
+                    $contact->phone_group_primary_id = $contact->id;
+                }
+            }
+
             return json_encode($contacts);
         }
     }
