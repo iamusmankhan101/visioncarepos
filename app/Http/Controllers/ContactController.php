@@ -968,23 +968,25 @@ class ContactController extends Controller
             //Added check because $users is of no use if enable_contact_assign if false
             $users = config('constants.enable_contact_assign') ? User::forDropdown($business_id, false, false, false, true) : [];
 
-            // Load related customers from contact_relationships table
+            // Load related customers based on phone number (phone-based relationships)
             $related_customers = [];
-            $relationships = \App\ContactRelationship::where('contact_id', $id)
-                ->where('business_id', $business_id)
-                ->with('relatedContact')
-                ->get();
             
-            foreach ($relationships as $relationship) {
-                if ($relationship->relatedContact) {
-                    $rc = $relationship->relatedContact;
+            if (!empty($contact->mobile)) {
+                $phone_related_contacts = Contact::where('business_id', $business_id)
+                    ->where('mobile', $contact->mobile)
+                    ->where('id', '!=', $id) // Exclude current contact
+                    ->where('mobile', '!=', '')
+                    ->whereNotNull('mobile')
+                    ->get();
+                
+                foreach ($phone_related_contacts as $rc) {
                     $related_customers[] = [
                         'id' => $rc->id,
                         'name' => $rc->name,
                         'contact_id' => $rc->contact_id,
                         'mobile' => $rc->mobile,
                         'email' => $rc->email,
-                        'relationship_type' => $relationship->relationship_type,
+                        'relationship_type' => 'family', // Default to family for phone-based relationships
                         'prescription' => [
                             'right_eye' => [
                                 'distance' => [

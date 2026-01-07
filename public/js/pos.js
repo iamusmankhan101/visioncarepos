@@ -3728,7 +3728,7 @@ function showRelatedCustomersModal(customers, callback) {
         html += '    <div class="col-md-1" style="padding-top: 10px; text-align: center;">';
         html += '      <input type="checkbox" class="customer-checkbox" name="selected_customers[]" value="' + customer.id + '" id="customer_' + customer.id + '" ' + isChecked + ' style="width: 20px; height: 20px; cursor: pointer; margin: 0;">';
         html += '    </div>';
-        html += '    <div class="col-md-11" style="cursor: pointer;" onclick="toggleCustomerCheckbox(' + customer.id + ')">';
+        html += '    <div class="col-md-9" style="cursor: pointer;" onclick="toggleCustomerCheckbox(' + customer.id + ')">';
         html += '      <h5 class="customer-name-click" style="margin-top: 0; color: #48b2ee;" data-customer-id="' + customer.id + '">';
         html += '        <i class="fa fa-user"></i> ' + customer.name + isCurrentBadge;
         html += '      </h5>';
@@ -3737,6 +3737,11 @@ function showRelatedCustomersModal(customers, callback) {
         if (customer.prescription_summary) {
             html += '      <p style="margin-bottom: 0; color: #6c757d;"><strong>Prescription:</strong> ' + customer.prescription_summary + '</p>';
         }
+        html += '    </div>';
+        html += '    <div class="col-md-2" style="text-align: right; padding-top: 10px;">';
+        html += '      <button type="button" class="btn btn-sm btn-danger delete-customer-btn" data-customer-id="' + customer.id + '" data-customer-name="' + customer.name + '" style="margin-left: 5px;" onclick="event.stopPropagation();">';
+        html += '        <i class="fa fa-trash"></i> Delete';
+        html += '      </button>';
         html += '    </div>';
         html += '  </div>';
         html += '</div>';
@@ -4026,6 +4031,66 @@ $(document).on('mouseenter', '.related-customer-item', function() {
         'background-color': 'white',
         'transform': 'scale(1)'
     });
+});
+
+// Handle delete customer button click
+$(document).on('click', '.delete-customer-btn', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    var customerId = $(this).data('customer-id');
+    var customerName = $(this).data('customer-name');
+    
+    // Show confirmation dialog
+    if (confirm('Are you sure you want to delete customer "' + customerName + '"? This action cannot be undone.')) {
+        // Show loading state
+        $(this).prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Deleting...');
+        
+        // Make AJAX request to delete customer
+        $.ajax({
+            url: '/contacts/' + customerId,
+            type: 'DELETE',
+            data: {
+                _token: $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function(response) {
+                if (response.success) {
+                    toastr.success('Customer deleted successfully');
+                    
+                    // Remove the customer item from the modal
+                    $('[data-customer-id="' + customerId + '"]').fadeOut(300, function() {
+                        $(this).remove();
+                        
+                        // Check if there are any customers left
+                        if ($('.related-customer-item').length === 0) {
+                            $('#related_customers_modal').modal('hide');
+                            toastr.info('No related customers remaining');
+                        }
+                    });
+                } else {
+                    toastr.error(response.msg || 'Failed to delete customer');
+                    // Reset button state
+                    $('.delete-customer-btn[data-customer-id="' + customerId + '"]')
+                        .prop('disabled', false)
+                        .html('<i class="fa fa-trash"></i> Delete');
+                }
+            },
+            error: function(xhr) {
+                var errorMsg = 'Failed to delete customer';
+                if (xhr.responseJSON && xhr.responseJSON.msg) {
+                    errorMsg = xhr.responseJSON.msg;
+                } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMsg = xhr.responseJSON.message;
+                }
+                toastr.error(errorMsg);
+                
+                // Reset button state
+                $('.delete-customer-btn[data-customer-id="' + customerId + '"]')
+                    .prop('disabled', false)
+                    .html('<i class="fa fa-trash"></i> Delete');
+            }
+        });
+    }
 });
 
 

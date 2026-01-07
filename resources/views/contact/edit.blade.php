@@ -616,6 +616,13 @@
                                    style="margin-top: 15px; margin-left: 5px;">
                                     <i class="fa fa-edit"></i> Edit
                                 </button>
+                                <button type="button" 
+                                   class="btn btn-sm btn-danger delete-related-customer" 
+                                   data-contact-id="{{ $related['id'] }}"
+                                   data-contact-name="{{ $related['name'] }}"
+                                   style="margin-top: 15px; margin-left: 5px;">
+                                    <i class="fa fa-trash"></i> Delete
+                                </button>
                             </div>
                         </div>
                         
@@ -1010,5 +1017,77 @@ $(document).on('click', '#save-related-customer', function(e) {
             $('#save-related-customer').prop('disabled', false).html('<i class="fa fa-save"></i> Save Related Customer');
         }
     });
+});
+
+// Handle delete related customer button click
+$(document).on('click', '.delete-related-customer', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    var customerId = $(this).data('contact-id');
+    var customerName = $(this).data('contact-name');
+    var $button = $(this);
+    var $customerDiv = $button.closest('div[style*="background-color: #f8f9fa"]');
+    
+    // Show confirmation dialog
+    if (confirm('Are you sure you want to delete customer "' + customerName + '"? This action cannot be undone.')) {
+        // Show loading state
+        $button.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Deleting...');
+        
+        // Make AJAX request to delete customer
+        $.ajax({
+            url: '/contacts/' + customerId,
+            type: 'DELETE',
+            data: {
+                _token: $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function(response) {
+                if (response.success) {
+                    if (typeof toastr !== 'undefined') {
+                        toastr.success('Customer deleted successfully');
+                    } else {
+                        alert('Customer deleted successfully');
+                    }
+                    
+                    // Remove the customer item from the page
+                    $customerDiv.fadeOut(300, function() {
+                        $(this).remove();
+                        
+                        // Check if there are any related customers left
+                        if ($('.delete-related-customer').length === 0) {
+                            // Hide the entire related customers section
+                            $('h4:contains("Related Customers")').closest('.col-md-12').prev('div').hide(); // Hide the HR
+                            $('h4:contains("Related Customers")').closest('.col-md-12').hide(); // Hide the section
+                        }
+                    });
+                } else {
+                    if (typeof toastr !== 'undefined') {
+                        toastr.error(response.msg || 'Failed to delete customer');
+                    } else {
+                        alert(response.msg || 'Failed to delete customer');
+                    }
+                    // Reset button state
+                    $button.prop('disabled', false).html('<i class="fa fa-trash"></i> Delete');
+                }
+            },
+            error: function(xhr) {
+                var errorMsg = 'Failed to delete customer';
+                if (xhr.responseJSON && xhr.responseJSON.msg) {
+                    errorMsg = xhr.responseJSON.msg;
+                } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMsg = xhr.responseJSON.message;
+                }
+                
+                if (typeof toastr !== 'undefined') {
+                    toastr.error(errorMsg);
+                } else {
+                    alert(errorMsg);
+                }
+                
+                // Reset button state
+                $button.prop('disabled', false).html('<i class="fa fa-trash"></i> Delete');
+            }
+        });
+    }
 });
 </script>
