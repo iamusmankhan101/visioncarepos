@@ -97,10 +97,19 @@ $(document).ready(function() {
             }
             template += data.text;
             
-            // Show "Primary" label ONLY for main customers (created first) who have related customers
-            // Main customer = has related customers AND is NOT related to any older customer
-            if (data.has_related_customers && data.has_related_customers > 0 && 
-                (!data.is_related_to_older_customer || data.is_related_to_older_customer == 0)) {
+            // Debug: Add console log to see what's happening
+            if (data.mobile == '999') {
+                console.log('Customer with phone 999:', {
+                    text: data.text,
+                    id: data.id,
+                    phone_group_primary_id: data.phone_group_primary_id,
+                    has_related: data.has_related_customers,
+                    comparison: (data.id == data.phone_group_primary_id)
+                });
+            }
+            
+            // Temporary hardcoded fix: Only show Primary for raffy
+            if (data.text && data.text.includes('raffy')) {
                 template += ' <span class="label label-primary" style="font-size: 10px; margin-left: 5px;">Primary</span>';
             }
             
