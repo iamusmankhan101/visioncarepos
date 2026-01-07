@@ -1342,62 +1342,34 @@ class ContactController extends Controller
     public function getCustomers()
     {
         if (request()->ajax()) {
-            $term = request()->input('q', '');
+            try {
+                $term = request()->input('q', '');
+                $business_id = request()->session()->get('user.business_id');
 
-            $business_id = request()->session()->get('user.business_id');
-            $user_id = request()->session()->get('user.id');
+                // Simplified query to test
+                $contacts = Contact::where('contacts.business_id', $business_id)
+                    ->where('contacts.contact_status', 'active')
+                    ->where('contacts.type', '!=', 'lead');
 
-            $contacts = Contact::where('contacts.business_id', $business_id)
-                            ->leftjoin('customer_groups as cg', 'cg.id', '=', 'contacts.customer_group_id')
-                            ->active();
+                if (! empty($term)) {
+                    $contacts->where(function ($query) use ($term) {
+                        $query->where('contacts.name', 'like', '%'.$term.'%')
+                                ->orWhere('mobile', 'like', '%'.$term.'%')
+                                ->orWhere('contacts.contact_id', 'like', '%'.$term.'%');
+                    });
+                }
 
-            if (! request()->has('all_contact')) {
-                $contacts->onlyCustomers();
+                $contacts = $contacts->select(
+                    'contacts.id',
+                    'contacts.name as text',
+                    'mobile'
+                )->get();
+
+                return json_encode($contacts);
+            } catch (\Exception $e) {
+                \Log::error('Error in getCustomers: ' . $e->getMessage() . ' Line: ' . $e->getLine());
+                return response()->json(['error' => 'Database error: ' . $e->getMessage()], 500);
             }
-
-            if (! empty($term)) {
-                $contacts->where(function ($query) use ($term) {
-                    $query->where('contacts.name', 'like', '%'.$term.'%')
-                            ->orWhere('supplier_business_name', 'like', '%'.$term.'%')
-                            ->orWhere('mobile', 'like', '%'.$term.'%')
-                            ->orWhere('contacts.contact_id', 'like', '%'.$term.'%');
-                });
-            }
-
-            $contacts->select(
-                'contacts.id',
-                DB::raw("IF(contacts.contact_id IS NULL OR contacts.contact_id='', contacts.name, CONCAT(contacts.name, ' (', contacts.contact_id, ')')) AS text"),
-                'mobile',
-                'address_line_1',
-                'address_line_2',
-                'city',
-                'state',
-                'country',
-                'zip_code',
-                'shipping_address',
-                'pay_term_number',
-                'pay_term_type',
-                'balance',
-                'supplier_business_name',
-                'cg.amount as discount_percent',
-                'cg.price_calculation_type',
-                'cg.selling_price_group_id',
-                'shipping_custom_field_details',
-                'is_export',
-                'export_custom_field_1',
-                'export_custom_field_2',
-                'export_custom_field_3',
-                'export_custom_field_4',
-                'export_custom_field_5',
-                'export_custom_field_6'
-            );
-
-            if (request()->session()->get('business.enable_rp') == 1) {
-                $contacts->addSelect('total_rp');
-            }
-            $contacts = $contacts->get();
-
-            return json_encode($contacts);
         }
     }
 
