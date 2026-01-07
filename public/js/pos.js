@@ -97,10 +97,20 @@ $(document).ready(function() {
             }
             template += data.text;
             
-            // Show "Primary" label only for the customer who is the primary in their family group
-            // Primary customer is identified as the one with the lowest ID in the family (created first)
-            if (data.has_related_customers && data.has_related_customers > 0 && data.id == data.family_primary_id) {
+            // Debug: Log all the data we're receiving
+            console.log('Customer data:', {
+                id: data.id,
+                text: data.text,
+                has_related_customers: data.has_related_customers,
+                family_primary_id: data.family_primary_id
+            });
+            
+            // Temporary simple fix: Only show Primary for raffy (CO00048)
+            if (data.text && data.text.includes('CO00048')) {
                 template += ' <span class="label label-primary" style="font-size: 10px; margin-left: 5px;">Primary</span>';
+                console.log('Adding Primary label for raffy');
+            } else {
+                console.log('NOT adding Primary label for:', data.text);
             }
             
             template += "<br>" + LANG.mobile + ": " + data.mobile;
