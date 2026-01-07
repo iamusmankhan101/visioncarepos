@@ -1198,7 +1198,7 @@ class TransactionUtil extends Util
         $output['multiple_customers_data'] = [];
         
         if (!empty($selected_customers) && count($selected_customers) > 1) {
-            // Get details for all selected customers (existing logic for manual selection)
+            // Get details for all selected customers
             $customer_names = [];
             $customers_data = [];
             
@@ -1248,65 +1248,8 @@ class TransactionUtil extends Util
                 $output['multiple_customers_data'] = $customers_data;
             }
         } else {
-            // NEW: Automatically include all customers with the same phone number
-            $main_customer = Contact::find($transaction->contact_id);
-            if ($main_customer && !empty($main_customer->mobile)) {
-                $related_customers = Contact::where('business_id', $main_customer->business_id)
-                    ->where('mobile', $main_customer->mobile)
-                    ->where('mobile', '!=', '')
-                    ->whereNotNull('mobile')
-                    ->where('id', '!=', $transaction->contact_id) // Exclude the main customer
-                    ->get();
-                
-                if ($related_customers->count() > 0) {
-                    $customer_names = [];
-                    $customers_data = [];
-                    
-                    foreach ($related_customers as $additional_customer) {
-                        $customer_names[] = $additional_customer->name;
-                        $customers_data[] = [
-                            'id' => $additional_customer->id,
-                            'name' => $additional_customer->name,
-                            'contact_id' => $additional_customer->contact_id,
-                            'mobile' => $additional_customer->mobile,
-                            'prescription' => [
-                                'right_eye' => [
-                                    'distance' => [
-                                        'sph' => $additional_customer->custom_field1,
-                                        'cyl' => $additional_customer->custom_field2,
-                                        'axis' => $additional_customer->custom_field3,
-                                    ],
-                                    'near' => [
-                                        'sph' => $additional_customer->custom_field4,
-                                        'cyl' => $additional_customer->custom_field5,
-                                        'axis' => $additional_customer->custom_field6,
-                                    ],
-                                ],
-                                'left_eye' => [
-                                    'distance' => [
-                                        'sph' => $additional_customer->custom_field7,
-                                        'cyl' => $additional_customer->custom_field8,
-                                        'axis' => $additional_customer->custom_field9,
-                                    ],
-                                    'near' => [
-                                        'sph' => $additional_customer->custom_field10,
-                                        'cyl' => $additional_customer->shipping_custom_field_details['shipping_custom_field_1'] ?? '',
-                                        'axis' => $additional_customer->shipping_custom_field_details['shipping_custom_field_2'] ?? '',
-                                    ],
-                                ],
-                            ],
-                        ];
-                    }
-                    
-                    if (!empty($customer_names)) {
-                        $output['additional_customers'] = implode(', ', $customer_names);
-                        $output['multiple_customers_data'] = $customers_data;
-                    }
-                }
-            }
-            
             // Fallback to old method - extract from additional_notes
-            if (empty($output['multiple_customers_data']) && !empty($transaction->additional_notes) && strpos($transaction->additional_notes, 'Additional Customers:') !== false) {
+            if (!empty($transaction->additional_notes) && strpos($transaction->additional_notes, 'Additional Customers:') !== false) {
                 preg_match('/Additional Customers: (.+?)(\n|$)/', $transaction->additional_notes, $matches);
                 if (!empty($matches[1])) {
                     $output['additional_customers'] = trim($matches[1]);

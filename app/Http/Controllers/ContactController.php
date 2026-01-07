@@ -1342,34 +1342,64 @@ class ContactController extends Controller
     public function getCustomers()
     {
         if (request()->ajax()) {
-            try {
-                $term = request()->input('q', '');
-                $business_id = request()->session()->get('user.business_id');
+            $term = request()->input('q', '');
 
-                // Simplified query to test
-                $contacts = Contact::where('contacts.business_id', $business_id)
-                    ->where('contacts.contact_status', 'active')
-                    ->where('contacts.type', '!=', 'lead');
+            $business_id = request()->session()->get('user.business_id');
+            $user_id = request()->session()->get('user.id');
 
-                if (! empty($term)) {
-                    $contacts->where(function ($query) use ($term) {
-                        $query->where('contacts.name', 'like', '%'.$term.'%')
-                                ->orWhere('mobile', 'like', '%'.$term.'%')
-                                ->orWhere('contacts.contact_id', 'like', '%'.$term.'%');
-                    });
-                }
+            $contacts = Contact::where('contacts.business_id', $business_id)
+                            ->leftjoin('customer_groups as cg', 'cg.id', '=', 'contacts.customer_group_id')
+                            ->active();
 
-                $contacts = $contacts->select(
-                    'contacts.id',
-                    'contacts.name as text',
-                    'mobile'
-                )->get();
-
-                return json_encode($contacts);
-            } catch (\Exception $e) {
-                \Log::error('Error in getCustomers: ' . $e->getMessage() . ' Line: ' . $e->getLine());
-                return response()->json(['error' => 'Database error: ' . $e->getMessage()], 500);
+            if (! request()->has('all_contact')) {
+                $contacts->onlyCustomers();
             }
+
+            if (! empty($term)) {
+                $contacts->where(function ($query) use ($term) {
+                    $query->where('contacts.name', 'like', '%'.$term.'%')
+                            ->orWhere('supplier_business_name', 'like', '%'.$term.'%')
+                            ->orWhere('mobile', 'like', '%'.$term.'%')
+                            ->orWhere('contacts.contact_id', 'like', '%'.$term.'%');
+                });
+            }
+
+            $contacts->select(
+                'contacts.id',
+                DB::raw("IF(contacts.contact_id IS NULL OR contacts.contact_id='', contacts.name, CONCAT(contacts.name, ' (', contacts.contact_id, ')')) AS text"),
+                'mobile',
+                'address_line_1',
+                'address_line_2',
+                'city',
+                'state',
+                'country',
+                'zip_code',
+                'shipping_address',
+                'pay_term_number',
+                'pay_term_type',
+                'balance',
+                'supplier_business_name',
+                'cg.amount as discount_percent',
+                'cg.price_calculation_type',
+                'cg.selling_price_group_id',
+                'shipping_custom_field_details',
+                'is_export',
+                'export_custom_field_1',
+                'export_custom_field_2',
+                'export_custom_field_3',
+                'export_custom_field_4',
+                'export_custom_field_5',
+                'export_custom_field_6',
+                DB::raw("(SELECT COUNT(*) FROM contact_relationships cr WHERE cr.contact_id = contacts.id) as has_related_customers"),
+                DB::raw("(SELECT MIN(c2.id) FROM contacts c2 INNER JOIN contact_relationships cr ON (c2.id = cr.contact_id OR c2.id = cr.related_contact_id) WHERE (cr.contact_id = contacts.id OR cr.related_contact_id = contacts.id) AND c2.business_id = contacts.business_id) as family_primary_id")
+            );
+
+            if (request()->session()->get('business.enable_rp') == 1) {
+                $contacts->addSelect('total_rp');
+            }
+            $contacts = $contacts->get();
+
+            return json_encode($contacts);
         }
     }
 
@@ -2143,20 +2173,31 @@ class ContactController extends Controller
                 return response()->json(['success' => false, 'msg' => 'Contact not found']);
             }
             
-            // Get all contacts with the same phone number (related customers)
-            $related_contacts = Contact::where('business_id', $business_id)
-                ->where('mobile', $contact->mobile)
-                ->where('mobile', '!=', '')
-                ->whereNotNull('mobile')
-                ->where('id', '!=', $contact_id) // Exclude the current contact
+            // Get all related contact IDs (both directions)
+            $related_ids = \DB::table('contact_relationships')
+                ->where('business_id', $business_id)
+                ->where(function($query) use ($contact_id) {
+                    $query->where('contact_id', $contact_id)
+                          ->orWhere('related_contact_id', $contact_id);
+                })
                 ->get();
             
-            \Log::info('Found related customers by phone', ['phone' => $contact->mobile, 'count' => $related_contacts->count()]);
+            \Log::info('Found relationships', ['count' => $related_ids->count(), 'relationships' => $related_ids->toArray()]);
             
-            // Include the current contact in the list
-            $all_contacts = collect([$contact])->merge($related_contacts);
+            // Collect all unique contact IDs
+            $contact_ids = collect([$contact_id]); // Include the current contact
             
-            \Log::info('All contacts in phone group', ['total_count' => $all_contacts->count()]);
+            foreach ($related_ids as $rel) {
+                if ($rel->contact_id != $contact_id) {
+                    $contact_ids->push($rel->contact_id);
+                }
+                if ($rel->related_contact_id != $contact_id) {
+                    $contact_ids->push($rel->related_contact_id);
+                }
+            }
+            
+            $contact_ids = $contact_ids->unique()->values();
+            \Log::info('Unique contact IDs', ['contact_ids' => $contact_ids->toArray()]);
             
             if ($contact_ids->count() <= 1) {
                 \Log::info('No related customers found');
@@ -2167,9 +2208,16 @@ class ContactController extends Controller
                 ]);
             }
             
+            // Get all contacts
+            $related_contacts = Contact::where('business_id', $business_id)
+                ->whereIn('id', $contact_ids)
+                ->select('id', 'name', 'mobile', 'contact_id', 'custom_field1', 'custom_field2', 'custom_field3', 'custom_field4', 'custom_field5', 'custom_field6', 'custom_field7', 'custom_field8', 'custom_field9', 'custom_field10')
+                ->get();
+            
+            \Log::info('Found related contacts', ['count' => $related_contacts->count()]);
             
             $customers = [];
-            foreach ($all_contacts as $related) {
+            foreach ($related_contacts as $related) {
                 $prescription_summary = '';
                 
                 // Build prescription summary
@@ -2198,3 +2246,5 @@ class ContactController extends Controller
             ]);
         }
     }
+}
+
