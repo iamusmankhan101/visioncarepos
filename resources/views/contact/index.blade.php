@@ -122,16 +122,6 @@
                     auth()->user()->can('customer.view_own'))
                 @slot('tool')
                     <div class="box-tools">
-                        <button type="button" class="tw-dw-btn tw-bg-gradient-to-r tw-from-red-600 tw-to-red-500 tw-font-bold tw-text-white tw-border-none tw-rounded-full tw-mr-2" id="bulk_delete_contacts" style="display: none;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-trash">
-                                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                                <path d="M4 7l16 0"/>
-                                <path d="M10 11l0 6"/>
-                                <path d="M14 11l0 6"/>
-                                <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"/>
-                                <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"/>
-                            </svg> @lang('lang_v1.delete_selected') (<span id="selected_contacts_count">0</span>)
-                        </button>
                         <a class="tw-dw-btn tw-bg-gradient-to-r tw-from-indigo-600 tw-to-blue-500 tw-font-bold tw-text-white tw-border-none tw-rounded-full btn-modal"
                                 data-href="{{ action([\App\Http\Controllers\ContactController::class, 'create'], ['type' => $type]) }}"
                                 data-container=".contact_modal">
@@ -154,21 +144,53 @@
                     <table class="table table-bordered table-striped" id="contact_table">
                         <thead>
                             <tr>
-                                <th><input type="checkbox" id="select_all_contacts" /></th>
-                                <th>@lang('messages.action')</th>
+                                <th class="tw-w-full">@lang('messages.action')</th>
                                 <th>@lang('lang_v1.contact_id')</th>
-                                <th>@lang('business.business_name')</th>
-                                <th>@lang('contact.name')</th>
-                                <th>@lang('business.email')</th>
-                                <th>@lang('contact.tax_no')</th>
-                                <th>@lang('contact.pay_term')</th>
-                                <th>@lang('account.opening_balance')</th>
-                                <th>@lang('lang_v1.advance_balance')</th>
-                                <th>@lang('lang_v1.added_on')</th>
-                                <th>@lang('business.address')</th>
-                                <th>@lang('contact.mobile')</th>
-                                <th>@lang('contact.total_purchase_due')</th>
-                                <th>@lang('lang_v1.total_purchase_return_due')</th>
+                                @if ($type == 'supplier')
+                                    <th>@lang('business.business_name')</th>
+                                    <th>@lang('contact.name')</th>
+                                    <th>@lang('business.email')</th>
+                                    <th>@lang('contact.tax_no')</th>
+                                    <th>@lang('contact.pay_term')</th>
+                                    <th>@lang('account.opening_balance')</th>
+                                    <th>@lang('lang_v1.advance_balance')</th>
+                                    <th>@lang('lang_v1.added_on')</th>
+                                    <th>@lang('business.address')</th>
+                                    <th>@lang('contact.mobile')</th>
+                                    <th>@lang('contact.total_purchase_due')</th>
+                                    <th>@lang('lang_v1.total_purchase_return_due')</th>
+                                @elseif($type == 'customer')
+                                    <th>@lang('business.business_name')</th>
+                                    <th>@lang('user.name')</th>
+                                    <th>@lang('business.email')</th>
+                                    <th>@lang('contact.tax_no')</th>
+                                    <th>@lang('lang_v1.credit_limit')</th>
+                                    <th>@lang('contact.pay_term')</th>
+                                    <th>@lang('account.opening_balance')</th>
+                                    <th>@lang('lang_v1.advance_balance')</th>
+                                    <th>@lang('lang_v1.added_on')</th>
+                                    @if ($reward_enabled)
+                                        <th id="rp_col">{{ session('business.rp_name') }}</th>
+                                    @endif
+                                    <th>@lang('lang_v1.customer_group')</th>
+                                    <th>@lang('business.address')</th>
+                                    <th>@lang('contact.mobile')</th>
+                                    <th>@lang('contact.total_sale_due')</th>
+                                    <th>@lang('lang_v1.total_sell_return_due')</th>
+                                @endif
+                                @php
+                                    $custom_labels = json_decode(session('business.custom_labels'), true);
+                                @endphp
+                                <th>R-Dist-Sph</th>
+                                <th>R-Dist-Cyl</th>
+                                <th>R-Dist-Axis</th>
+                                <th>R-Near-Sph</th>
+                                <th>R-Near-Cyl</th>
+                                <th>R-Near-Axis</th>
+                                <th>L-Dist-Sph</th>
+                                <th>L-Dist-Cyl</th>
+                                <th>L-Dist-Axis</th>
+                                <th>L-Near-Sph</th>
                             </tr>
                         </thead>
                         <tfoot>
@@ -179,14 +201,29 @@
                                 <td></td>
                                 <td></td>
                                 <td></td>
-                                <td></td>
-                                <td colspan="6">
+                                <td @if ($type == 'supplier') colspan="6"
+                            @elseif($type == 'customer')
+                                @if ($reward_enabled)
+                                    colspan="9"
+                                @else
+                                    colspan="8" @endif
+                                    @endif>
                                     <strong>
                                         @lang('sale.total'):
                                     </strong>
                                 </td>
                                 <td class="footer_contact_due"></td>
                                 <td class="footer_contact_return_due"></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
                             </tr>
                         </tfoot>
                     </table>
@@ -299,123 +336,6 @@
         <script type="text/javascript">
             $(document).on('shown.bs.modal', '.contact_modal', function(e) {
                 initAutocomplete();
-            });
-
-            // Bulk delete functionality for contacts
-            $(document).ready(function() {
-                // Handle select all checkbox
-                $('#select_all_contacts').on('change', function() {
-                    var isChecked = $(this).is(':checked');
-                    $('.contact_checkbox').prop('checked', isChecked);
-                    updateBulkDeleteContactsButton();
-                });
-
-                // Handle individual checkbox changes
-                $(document).on('change', '.contact_checkbox', function() {
-                    updateBulkDeleteContactsButton();
-                    
-                    // Update select all checkbox
-                    var totalCheckboxes = $('.contact_checkbox').length;
-                    var checkedCheckboxes = $('.contact_checkbox:checked').length;
-                    $('#select_all_contacts').prop('checked', totalCheckboxes === checkedCheckboxes);
-                });
-
-                function updateBulkDeleteContactsButton() {
-                    var selectedCount = $('.contact_checkbox:checked').length;
-                    $('#selected_contacts_count').text(selectedCount);
-                    
-                    if (selectedCount > 0) {
-                        $('#bulk_delete_contacts').show();
-                    } else {
-                        $('#bulk_delete_contacts').hide();
-                    }
-                }
-
-                // Bulk delete handler
-                $('#bulk_delete_contacts').on('click', function() {
-                    var selectedIds = [];
-                    $('.contact_checkbox:checked').each(function() {
-                        selectedIds.push($(this).val());
-                    });
-
-                    if (selectedIds.length === 0) {
-                        toastr.error('@lang("lang_v1.no_contacts_selected")');
-                        return;
-                    }
-
-                    // Show confirmation dialog
-                    if (!confirm('@lang("lang_v1.are_you_sure_delete_selected_contacts")? This action cannot be undone.')) {
-                        return;
-                    }
-
-                    // Show loading
-                    $(this).prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> @lang("lang_v1.deleting")...');
-
-                    var deletedCount = 0;
-                    var totalCount = selectedIds.length;
-                    var failedCount = 0;
-
-                    // Function to delete individual contact
-                    function deleteContact(contactId, index) {
-                        setTimeout(function() {
-                            $.ajax({
-                                method: 'DELETE',
-                                url: '/contacts/' + contactId,
-                                data: {
-                                    _token: $('meta[name="csrf-token"]').attr('content')
-                                },
-                                success: function(result) {
-                                    if (result.success) {
-                                        deletedCount++;
-                                        // Remove the row from table
-                                        $('.contact_checkbox[value="' + contactId + '"]').closest('tr').fadeOut();
-                                    } else {
-                                        failedCount++;
-                                        console.log('Failed to delete contact ' + contactId + ': ' + (result.msg || 'Unknown error'));
-                                    }
-                                    
-                                    // Check if all requests are complete
-                                    if (deletedCount + failedCount === totalCount) {
-                                        if (deletedCount > 0) {
-                                            toastr.success(deletedCount + ' @lang("lang_v1.contacts_deleted_successfully")');
-                                            // Reload the page to refresh the table
-                                            location.reload();
-                                        }
-                                        if (failedCount > 0) {
-                                            toastr.warning(failedCount + ' @lang("lang_v1.contacts_could_not_be_deleted")');
-                                        }
-                                    }
-                                },
-                                error: function(xhr) {
-                                    failedCount++;
-                                    console.log('Error deleting contact ' + contactId + ':', xhr.responseText);
-                                    
-                                    // Check if all requests are complete
-                                    if (deletedCount + failedCount === totalCount) {
-                                        if (deletedCount > 0) {
-                                            toastr.success(deletedCount + ' @lang("lang_v1.contacts_deleted_successfully")');
-                                            // Reload the page to refresh the table
-                                            location.reload();
-                                        }
-                                        if (failedCount > 0) {
-                                            toastr.warning(failedCount + ' @lang("lang_v1.contacts_could_not_be_deleted")');
-                                        }
-                                    }
-                                }
-                            });
-                        }, index * 500); // 500ms delay between each request
-                    }
-
-                    // Delete each contact
-                    selectedIds.forEach(function(id, index) {
-                        deleteContact(id, index);
-                    });
-
-                    // Reset button after all requests are sent
-                    setTimeout(function() {
-                        $('#bulk_delete_contacts').prop('disabled', false).html('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-trash"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 7l16 0"/><path d="M10 11l0 6"/><path d="M14 11l0 6"/><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"/><path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"/></svg> @lang("lang_v1.delete_selected") (<span id="selected_contacts_count">0</span>)');
-                    }, totalCount * 500 + 1000);
-                });
             });
         </script>
     @endif
