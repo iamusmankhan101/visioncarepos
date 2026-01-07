@@ -377,6 +377,7 @@ $(document).ready(function() {
     var contact_table_type = $('#contact_type').val();
     if (contact_table_type == 'supplier') {
         var columns = [
+            { data: 'checkbox', name: 'checkbox', searchable: false, orderable: false },
             { data: 'action', searchable: false, orderable: false },
             { data: 'contact_id', name: 'contact_id' },
             { data: 'supplier_business_name', name: 'supplier_business_name' },
@@ -404,6 +405,7 @@ $(document).ready(function() {
         ];
     } else if (contact_table_type == 'customer') {
         var columns = [
+            { data: 'checkbox', name: 'checkbox', searchable: false, orderable: false },
             { data: 'action', searchable: false, orderable: false },
             { data: 'contact_id', name: 'contact_id' },
             { data: 'supplier_business_name', name: 'supplier_business_name' },

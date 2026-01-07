@@ -3739,7 +3739,7 @@ function showRelatedCustomersModal(customers, callback) {
         }
         html += '    </div>';
         html += '    <div class="col-md-2" style="text-align: right; padding-top: 10px;">';
-        html += '      <button type="button" class="btn btn-sm btn-danger delete-customer-btn" data-customer-id="' + customer.id + '" data-customer-name="' + customer.name + '" style="margin-left: 5px;" onclick="event.stopPropagation();">';
+        html += '      <button type="button" class="btn btn-sm btn-danger delete-customer-btn" data-customer-id="' + customer.id + '" data-customer-name="' + customer.name + '" style="margin-left: 5px;">';
         html += '        <i class="fa fa-trash"></i> Delete';
         html += '      </button>';
         html += '    </div>';

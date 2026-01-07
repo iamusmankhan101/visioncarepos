@@ -136,6 +136,9 @@ class ContactController extends Controller
         }
 
         return Datatables::of($contact)
+            ->addColumn('checkbox', function ($row) {
+                return '<input type="checkbox" class="contact_checkbox" value="'.$row->id.'">';
+            })
             ->addColumn('address', '{{implode(", ", array_filter([$address_line_1, $address_line_2, $city, $state, $country, $zip_code]))}}')
             ->addColumn(
                 'due',
@@ -274,7 +277,7 @@ class ContactController extends Controller
                     ->orWhereRaw("CONCAT(COALESCE(address_line_1, ''), ', ', COALESCE(address_line_2, ''), ', ', COALESCE(city, ''), ', ', COALESCE(state, ''), ', ', COALESCE(country, '') ) like ?", ["%{$keyword}%"]);
                 });
             })
-            ->rawColumns(['action', 'opening_balance', 'pay_term', 'due', 'return_due', 'name', 'balance'])
+            ->rawColumns(['checkbox', 'action', 'opening_balance', 'pay_term', 'due', 'return_due', 'name', 'balance'])
             ->make(true);
     }
 
@@ -362,6 +365,9 @@ class ContactController extends Controller
         }
 
         $contacts = Datatables::of($query)
+            ->addColumn('checkbox', function ($row) {
+                return '<input type="checkbox" class="contact_checkbox" value="'.$row->id.'">';
+            })
             ->addColumn('address', '{{implode(", ", array_filter([$address_line_1, $address_line_2, $city, $state, $country, $zip_code]))}}')
         //    + $sell_return_paid add this in due because after paymnet for sell return not calculated 
             ->addColumn(
@@ -525,7 +531,7 @@ class ContactController extends Controller
             $contacts->removeColumn('total_rp');
         }
 
-        return $contacts->rawColumns(['action', 'opening_balance', 'credit_limit', 'pay_term', 'due', 'return_due', 'name', 'balance'])
+        return $contacts->rawColumns(['checkbox', 'action', 'opening_balance', 'credit_limit', 'pay_term', 'due', 'return_due', 'name', 'balance'])
                         ->make(true);
     }
 

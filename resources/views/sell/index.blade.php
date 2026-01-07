@@ -52,6 +52,16 @@
                                 <path d="M7 13m0 2a2 2 0 0 1 2 -2h6a2 2 0 0 1 2 2v4a2 2 0 0 1 -2 2h-6a2 2 0 0 1 -2 -2z"/>
                             </svg> @lang('lang_v1.print_selected') (<span id="selected_count">0</span>)
                         </button>
+                        <button type="button" class="tw-dw-btn tw-bg-gradient-to-r tw-from-red-600 tw-to-red-500 tw-font-bold tw-text-white tw-border-none tw-rounded-full tw-mr-2" id="bulk_delete_sales" style="display: none;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-trash">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                <path d="M4 7l16 0"/>
+                                <path d="M10 11l0 6"/>
+                                <path d="M14 11l0 6"/>
+                                <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"/>
+                                <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"/>
+                            </svg> @lang('lang_v1.delete_selected') (<span id="selected_delete_count">0</span>)
+                        </button>
                         <a class="tw-dw-btn tw-bg-gradient-to-r tw-from-indigo-600 tw-to-blue-500 tw-font-bold tw-text-white tw-border-none tw-rounded-full pull-right"
                             href="{{ action([\App\Http\Controllers\SellController::class, 'create']) }}">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
@@ -408,11 +418,14 @@
             function updateBulkPrintButton() {
                 var selectedCount = $('.invoice_checkbox:checked').length;
                 $('#selected_count').text(selectedCount);
+                $('#selected_delete_count').text(selectedCount);
                 
                 if (selectedCount > 0) {
                     $('#bulk_print_invoices').show();
+                    $('#bulk_delete_sales').show();
                 } else {
                     $('#bulk_print_invoices').hide();
+                    $('#bulk_delete_sales').hide();
                 }
             }
 
@@ -501,6 +514,90 @@
                 setTimeout(function() {
                     $('#bulk_print_invoices').prop('disabled', false).html('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-printer"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M17 17h2a2 2 0 0 0 2 -2v-4a2 2 0 0 0 -2 -2h-14a2 2 0 0 0 -2 2v4a2 2 0 0 0 2 2h2"/><path d="M17 9v-4a2 2 0 0 0 -2 -2h-6a2 2 0 0 0 -2 2v4"/><path d="M7 13m0 2a2 2 0 0 1 2 -2h6a2 2 0 0 1 2 2v4a2 2 0 0 1 -2 2h-6a2 2 0 0 1 -2 -2z"/></svg> @lang("lang_v1.print_selected") (<span id="selected_count">0</span>)');
                 }, totalCount * 2000 + 1000);
+            });
+
+            // Bulk delete functionality
+            $('#bulk_delete_sales').on('click', function() {
+                var selectedIds = [];
+                $('.invoice_checkbox:checked').each(function() {
+                    selectedIds.push($(this).val());
+                });
+
+                if (selectedIds.length === 0) {
+                    toastr.error('@lang("lang_v1.no_sales_selected")');
+                    return;
+                }
+
+                // Show confirmation dialog
+                if (!confirm('@lang("lang_v1.are_you_sure_delete_selected_sales")? This action cannot be undone.')) {
+                    return;
+                }
+
+                // Show loading
+                $(this).prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> @lang("lang_v1.deleting")...');
+
+                var deletedCount = 0;
+                var totalCount = selectedIds.length;
+                var failedCount = 0;
+
+                // Function to delete individual sale
+                function deleteSale(transactionId, index) {
+                    setTimeout(function() {
+                        $.ajax({
+                            method: 'DELETE',
+                            url: '/pos/' + transactionId,
+                            data: {
+                                _token: $('meta[name="csrf-token"]').attr('content')
+                            },
+                            success: function(result) {
+                                if (result.success) {
+                                    deletedCount++;
+                                    // Remove the row from table
+                                    $('.invoice_checkbox[value="' + transactionId + '"]').closest('tr').fadeOut();
+                                } else {
+                                    failedCount++;
+                                    console.log('Failed to delete sale ' + transactionId + ': ' + (result.msg || 'Unknown error'));
+                                }
+                                
+                                // Check if all requests are complete
+                                if (deletedCount + failedCount === totalCount) {
+                                    if (deletedCount > 0) {
+                                        toastr.success(deletedCount + ' @lang("lang_v1.sales_deleted_successfully")');
+                                        sell_table.ajax.reload();
+                                    }
+                                    if (failedCount > 0) {
+                                        toastr.warning(failedCount + ' @lang("lang_v1.sales_could_not_be_deleted")');
+                                    }
+                                }
+                            },
+                            error: function(xhr) {
+                                failedCount++;
+                                console.log('Error deleting sale ' + transactionId + ':', xhr.responseText);
+                                
+                                // Check if all requests are complete
+                                if (deletedCount + failedCount === totalCount) {
+                                    if (deletedCount > 0) {
+                                        toastr.success(deletedCount + ' @lang("lang_v1.sales_deleted_successfully")');
+                                        sell_table.ajax.reload();
+                                    }
+                                    if (failedCount > 0) {
+                                        toastr.warning(failedCount + ' @lang("lang_v1.sales_could_not_be_deleted")');
+                                    }
+                                }
+                            }
+                        });
+                    }, index * 500); // 500ms delay between each request
+                }
+
+                // Delete each sale
+                selectedIds.forEach(function(id, index) {
+                    deleteSale(id, index);
+                });
+
+                // Reset button after all requests are sent
+                setTimeout(function() {
+                    $('#bulk_delete_sales').prop('disabled', false).html('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-trash"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 7l16 0"/><path d="M10 11l0 6"/><path d="M14 11l0 6"/><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"/><path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"/></svg> @lang("lang_v1.delete_selected") (<span id="selected_delete_count">0</span>)');
+                }, totalCount * 500 + 1000);
             });
         });
     </script>
