@@ -97,16 +97,15 @@ $(document).ready(function() {
             }
             template += data.text;
             
+            console.log('Processing customer dropdown item:', data);
+            
+            // Temporary: Show Primary for all customers to test if this code is running
+            template += ' <span class="label label-primary" style="font-size: 10px; margin-left: 5px;">Primary</span>';
+            console.log('Adding Primary label for customer:', data.text);
+            
             // Show "Primary" label only for customers who have related customers but are not related to others
             // This identifies the actual primary customer in a family group
             console.log('Customer:', data.text, 'Has related:', data.has_related_customers, 'Is related to others:', data.is_related_to_others);
-            
-            if (data.has_related_customers && data.has_related_customers > 0) {
-                // For now, let's show Primary for anyone with related customers
-                // We'll refine this logic based on the console output
-                template += ' <span class="label label-primary" style="font-size: 10px; margin-left: 5px;">Primary</span>';
-                console.log('Adding Primary label for customer:', data.text);
-            }
             
             template += "<br>" + LANG.mobile + ": " + data.mobile;
 
