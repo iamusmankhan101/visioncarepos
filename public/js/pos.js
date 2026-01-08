@@ -97,12 +97,15 @@ $(document).ready(function() {
             }
             template += data.text;
             
-            // Show "Primary" label only for customers who:
-            // 1. Have other customers with the same phone number (has_related_customers > 0)
-            // 2. Are the first customer created with that phone number (lowest ID)
-            if (data.has_related_customers && data.has_related_customers > 0 && 
-                data.id == data.phone_group_primary_id) {
-                template += ' <span class="label label-primary" style="font-size: 10px; margin-left: 5px;">Primary</span>';
+            // Show labels for customers with related customers
+            if (data.has_related_customers && data.has_related_customers > 0) {
+                if (data.id == data.phone_group_primary_id) {
+                    // Primary customer (lowest ID)
+                    template += ' <span class="label label-primary" style="font-size: 10px; margin-left: 5px;">Primary</span>';
+                } else {
+                    // Secondary customer (not the lowest ID)
+                    template += ' <span class="label label-success" style="font-size: 10px; margin-left: 5px;">Secondary</span>';
+                }
             }
             
             template += "<br>" + LANG.mobile + ": " + data.mobile;
@@ -3719,7 +3722,7 @@ function showRelatedCustomersModal(customers, callback) {
     var html = '';
     customers.forEach(function(customer, index) {
         var isCurrentBadge = customer.is_current ? '<span class="label label-primary" style="margin-left: 10px;">Currently Selected</span>' : '';
-        var isPrimaryBadge = customer.is_primary ? '<span class="label label-success" style="margin-left: 10px;">Primary</span>' : '';
+        var isPrimaryBadge = customer.is_primary ? '<span class="label label-success" style="margin-left: 10px;">Primary</span>' : '<span class="label label-warning" style="margin-left: 10px;">Secondary</span>';
         var isChecked = customer.is_current ? 'checked="checked"' : '';
         var borderColor = customer.is_current ? '#48b2ee' : '#ddd';
         var bgColor = customer.is_current ? '#f0f8ff' : 'white';

@@ -595,6 +595,10 @@
                                         <span class="label label-success" style="margin-left: 10px;">
                                             Primary
                                         </span>
+                                    @else
+                                        <span class="label label-warning" style="margin-left: 10px;">
+                                            Secondary
+                                        </span>
                                     @endif
                                 </h5>
                             </div>
