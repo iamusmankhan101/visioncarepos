@@ -90,6 +90,9 @@ $(document).ready(function() {
         templateResult: function (data) { 
             // Debug: log the data to see what we're receiving
             console.log('Customer dropdown data:', data);
+            console.log('has_related_customers:', data.has_related_customers);
+            console.log('phone_group_primary_id:', data.phone_group_primary_id);
+            console.log('current id:', data.id);
             
             var template = '';
             if (data.supplier_business_name) {
@@ -99,13 +102,18 @@ $(document).ready(function() {
             
             // Show labels for customers with related customers
             if (data.has_related_customers && data.has_related_customers > 0) {
+                console.log('Customer has related customers, checking if primary...');
                 if (data.id == data.phone_group_primary_id) {
                     // Primary customer (lowest ID)
-                    template += ' <span class="label label-primary" style="font-size: 10px; margin-left: 5px;">Primary</span>';
+                    console.log('Adding PRIMARY label for customer:', data.id);
+                    template += ' <span class="label label-success" style="font-size: 11px; margin-left: 8px; padding: 3px 6px; border-radius: 3px; background-color: #5cb85c; color: white; font-weight: bold;">Primary</span>';
                 } else {
                     // Secondary customer (not the lowest ID)
-                    template += ' <span class="label label-success" style="font-size: 10px; margin-left: 5px;">Secondary</span>';
+                    console.log('Adding SECONDARY label for customer:', data.id);
+                    template += ' <span class="label label-warning" style="font-size: 11px; margin-left: 8px; padding: 3px 6px; border-radius: 3px; background-color: #f0ad4e; color: white; font-weight: bold;">Secondary</span>';
                 }
+            } else {
+                console.log('Customer has no related customers, no label added');
             }
             
             template += "<br>" + LANG.mobile + ": " + data.mobile;

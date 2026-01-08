@@ -156,6 +156,31 @@
     
     <script type="text/javascript">
     $(document).ready(function() {
+        // Add CSS for customer dropdown labels
+        $('<style>')
+            .prop('type', 'text/css')
+            .html(`
+                .select2-results__option .label {
+                    display: inline-block !important;
+                    font-size: 11px !important;
+                    font-weight: bold !important;
+                    padding: 2px 6px !important;
+                    border-radius: 3px !important;
+                    margin-left: 8px !important;
+                    color: white !important;
+                }
+                .select2-results__option .label-success {
+                    background-color: #5cb85c !important;
+                }
+                .select2-results__option .label-warning {
+                    background-color: #f0ad4e !important;
+                }
+                .select2-results__option .label-primary {
+                    background-color: #337ab7 !important;
+                }
+            `)
+            .appendTo('head');
+            
         // Show/hide edit button when customer is selected
         $('#customer_id').on('change', function() {
             var customerId = $(this).val();
