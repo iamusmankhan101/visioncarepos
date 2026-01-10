@@ -100,10 +100,15 @@ $(document).ready(function() {
             }
             template += data.text;
             
+            // Debug: Force show labels for testing
+            console.log('Full data object:', JSON.stringify(data));
+            
             // Show labels for customers with related customers
             if (data.has_related_customers && data.has_related_customers > 0) {
                 console.log('Customer has related customers, checking if primary...');
-                if (data.id == data.phone_group_primary_id) {
+                console.log('Comparing:', parseInt(data.id), 'with', parseInt(data.phone_group_primary_id));
+                
+                if (parseInt(data.id) === parseInt(data.phone_group_primary_id)) {
                     // Primary customer (lowest ID)
                     console.log('Adding PRIMARY label for customer:', data.id);
                     template += ' <span class="label label-success" style="font-size: 11px; margin-left: 8px; padding: 3px 6px; border-radius: 3px; background-color: #5cb85c; color: white; font-weight: bold;">Primary</span>';
@@ -114,6 +119,11 @@ $(document).ready(function() {
                 }
             } else {
                 console.log('Customer has no related customers, no label added');
+                // Temporary test: Add a test label to see if labels work at all
+                if (data.mobile && data.mobile.includes('03058562523')) {
+                    console.log('Adding TEST label for debugging');
+                    template += ' <span class="label label-info" style="font-size: 11px; margin-left: 8px; padding: 3px 6px; border-radius: 3px; background-color: #5bc0de; color: white; font-weight: bold;">TEST</span>';
+                }
             }
             
             template += "<br>" + LANG.mobile + ": " + data.mobile;

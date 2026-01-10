@@ -178,6 +178,9 @@
                 .select2-results__option .label-primary {
                     background-color: #337ab7 !important;
                 }
+                .select2-results__option .label-info {
+                    background-color: #5bc0de !important;
+                }
             `)
             .appendTo('head');
             
