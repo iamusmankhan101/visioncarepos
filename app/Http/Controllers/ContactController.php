@@ -1414,18 +1414,6 @@ class ContactController extends Controller
                 $contacts->addSelect('total_rp');
             }
             $contacts = $contacts->get();
-            
-            // Debug: Log the data to see what we're returning
-            \Log::info('Customer dropdown data sample:', [
-                'count' => $contacts->count(),
-                'first_customer' => $contacts->first() ? [
-                    'id' => $contacts->first()->id,
-                    'name' => $contacts->first()->text,
-                    'mobile' => $contacts->first()->mobile,
-                    'has_related_customers' => $contacts->first()->has_related_customers,
-                    'phone_group_primary_id' => $contacts->first()->phone_group_primary_id,
-                ] : null
-            ]);
 
             return json_encode($contacts);
         }
