@@ -88,6 +88,11 @@ $(document).ready(function() {
             },
         },
         templateResult: function (data) { 
+            // Add debugging for primary customer
+            if (data.id == 9) {
+                console.log('FOUND PRIMARY CUSTOMER ID 9:', data);
+            }
+            
             var template = '';
             if (data.supplier_business_name) {
                 template += data.supplier_business_name + "<br>";
@@ -98,6 +103,7 @@ $(document).ready(function() {
             if (data.has_related_customers && data.has_related_customers > 0) {
                 if (parseInt(data.id) === parseInt(data.phone_group_primary_id)) {
                     // Primary customer (lowest ID)
+                    console.log('Adding PRIMARY label for customer:', data.id);
                     template += ' <span class="label label-success" style="font-size: 11px; margin-left: 8px; padding: 3px 6px; border-radius: 3px; background-color: #5cb85c; color: white; font-weight: bold;">Primary</span>';
                 } else {
                     // Secondary customer (not the lowest ID)

@@ -1372,11 +1372,31 @@ class ContactController extends Controller
             }
 
             if (! empty($term)) {
-                $contacts->where(function ($query) use ($term) {
+                $contacts->where(function ($query) use ($term, $business_id) {
                     $query->where('contacts.name', 'like', '%'.$term.'%')
                             ->orWhere('supplier_business_name', 'like', '%'.$term.'%')
                             ->orWhere('mobile', 'like', '%'.$term.'%')
-                            ->orWhere('contacts.contact_id', 'like', '%'.$term.'%');
+                            ->orWhere('contacts.contact_id', 'like', '%'.$term.'%')
+                            // Include primary customers of related groups
+                            ->orWhereIn('contacts.id', function($subQuery) use ($term, $business_id) {
+                                $subQuery->select(DB::raw('MIN(c2.id)'))
+                                    ->from('contacts as c2')
+                                    ->where('c2.business_id', $business_id)
+                                    ->whereNotNull('c2.mobile')
+                                    ->where('c2.mobile', '!=', '')
+                                    ->whereIn('c2.mobile', function($mobileQuery) use ($term, $business_id) {
+                                        $mobileQuery->select('c3.mobile')
+                                            ->from('contacts as c3')
+                                            ->where('c3.business_id', $business_id)
+                                            ->where(function($nameQuery) use ($term) {
+                                                $nameQuery->where('c3.name', 'like', '%'.$term.'%')
+                                                    ->orWhere('c3.supplier_business_name', 'like', '%'.$term.'%')
+                                                    ->orWhere('c3.mobile', 'like', '%'.$term.'%')
+                                                    ->orWhere('c3.contact_id', 'like', '%'.$term.'%');
+                                            });
+                                    })
+                                    ->groupBy('c2.mobile');
+                            });
                 });
             }
 
