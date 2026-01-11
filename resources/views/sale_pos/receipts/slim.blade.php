@@ -724,6 +724,14 @@
 				</p>
 			@endif
 			
+			{{-- Custom Footer Text --}}
+			<div style="margin-top: 15px; padding: 10px; border-top: 1px solid #ddd; font-size: 10px; text-align: center;">
+				<strong>Terms & Conditions:</strong><br>
+				• No Order will process without 50% Advance payment.<br>
+				• Orders with 100% Payment will be prioritised.<br>
+				• No refunds, but we can give you a voucher or exchange it within 3 days.
+			</div>
+			
         </div>
         <!-- <button id="btnPrint" class="hidden-print">Print</button>
         <script src="script.js"></script> -->
