@@ -821,6 +821,8 @@ $(document).ready(function() {
     
     // Function to add selected customers to form before submission
     function addSelectedCustomersToForm() {
+        // Temporarily disabled to fix 500 error
+        /*
         var selectedCustomers = window.selectedCustomersForInvoice || JSON.parse(sessionStorage.getItem('selectedCustomersForInvoice') || 'null');
         
         if (selectedCustomers && selectedCustomers.ids && selectedCustomers.ids.length > 0) {
@@ -830,6 +832,7 @@ $(document).ready(function() {
             // Add selected customers as hidden input
             pos_form_obj.append('<input type="hidden" name="multiple_customer_ids" value="' + selectedCustomers.ids.join(',') + '">');
         }
+        */
     }
 
     // Function to process express checkout

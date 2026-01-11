@@ -495,6 +495,8 @@ class SellPosController extends Controller
                 $transaction = $this->transactionUtil->createSellTransaction($business_id, $input, $invoice_total, $user_id);
 
                 // Store multiple customer IDs if provided (for separate invoice printing)
+                // Temporarily disabled to fix 500 error
+                /*
                 if (!empty($input['multiple_customer_ids'])) {
                     $customer_ids = explode(',', $input['multiple_customer_ids']);
                     // Remove the first customer (already set as main contact_id)
@@ -507,6 +509,7 @@ class SellPosController extends Controller
                         $transaction->save();
                     }
                 }
+                */
 
                 //Upload Shipping documents
                 Media::uploadMedia($business_id, $transaction, $request, 'shipping_documents', false, 'shipping_document');
