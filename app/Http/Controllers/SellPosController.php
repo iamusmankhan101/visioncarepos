@@ -321,9 +321,6 @@ class SellPosController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        // Debug: Log selected customers from request
-        \Log::info('POS Store Method Called - Multiple customer IDs:', $request->input('multiple_customer_ids', 'NOT_SET'));
-
         $is_direct_sale = false;
         if (!empty($request->input('is_direct_sale'))) {
             $is_direct_sale = true;
@@ -498,26 +495,16 @@ class SellPosController extends Controller
                 $transaction = $this->transactionUtil->createSellTransaction($business_id, $input, $invoice_total, $user_id);
 
                 // Store multiple customer IDs if provided (for separate invoice printing)
-                $additional_customer_ids = [];
                 if (!empty($input['multiple_customer_ids'])) {
-                    try {
-                        $customer_ids = explode(',', $input['multiple_customer_ids']);
-                        // Remove the first customer (already set as main contact_id)
-                        $additional_customer_ids = array_slice($customer_ids, 1);
-                        
-                        if (!empty($additional_customer_ids)) {
-                            \Log::info('Storing multiple customers:', [
-                                'main_customer' => $transaction->contact_id,
-                                'additional_customers' => $additional_customer_ids
-                            ]);
-                            
-                            // Store additional customer IDs in additional_notes for later retrieval
-                            $transaction->additional_notes = (!empty($transaction->additional_notes) ? $transaction->additional_notes . "\n" : '') . 
-                                                            'MULTI_INVOICE_CUSTOMERS:' . implode(',', $additional_customer_ids);
-                            $transaction->save();
-                        }
-                    } catch (\Exception $e) {
-                        \Log::error('Error processing multiple customers: ' . $e->getMessage());
+                    $customer_ids = explode(',', $input['multiple_customer_ids']);
+                    // Remove the first customer (already set as main contact_id)
+                    $additional_customer_ids = array_slice($customer_ids, 1);
+                    
+                    if (!empty($additional_customer_ids)) {
+                        // Store additional customer IDs in additional_notes for later retrieval
+                        $transaction->additional_notes = (!empty($transaction->additional_notes) ? $transaction->additional_notes . "\n" : '') . 
+                                                        'MULTI_INVOICE_CUSTOMERS:' . implode(',', $additional_customer_ids);
+                        $transaction->save();
                     }
                 }
 

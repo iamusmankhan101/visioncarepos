@@ -824,16 +824,11 @@ $(document).ready(function() {
         var selectedCustomers = window.selectedCustomersForInvoice || JSON.parse(sessionStorage.getItem('selectedCustomersForInvoice') || 'null');
         
         if (selectedCustomers && selectedCustomers.ids && selectedCustomers.ids.length > 0) {
-            console.log('Adding selected customers to form:', selectedCustomers.ids);
-            
             // Remove existing multiple_customer_ids input if any
             $('input[name="multiple_customer_ids"]').remove();
             
             // Add selected customers as hidden input
-            var customerIdsString = selectedCustomers.ids.join(',');
-            pos_form_obj.append('<input type="hidden" name="multiple_customer_ids" value="' + customerIdsString + '">');
-            
-            console.log('Added multiple_customer_ids:', customerIdsString);
+            pos_form_obj.append('<input type="hidden" name="multiple_customer_ids" value="' + selectedCustomers.ids.join(',') + '">');
         }
     }
 
