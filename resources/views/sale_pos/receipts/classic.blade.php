@@ -1,5 +1,24 @@
 <!-- business information here -->
 
+<script>
+// Hide URL from print
+window.addEventListener('beforeprint', function() {
+    // Hide any elements that might show URLs
+    var urlElements = document.querySelectorAll('[href], .url-display');
+    urlElements.forEach(function(el) {
+        el.style.display = 'none';
+    });
+});
+
+window.addEventListener('afterprint', function() {
+    // Restore elements after printing
+    var urlElements = document.querySelectorAll('[href], .url-display');
+    urlElements.forEach(function(el) {
+        el.style.display = '';
+    });
+});
+</script>
+
 <div class="row" style="color: #000000 !important;">
 		<!-- Logo -->
 		@if(empty($receipt_details->letter_head))
@@ -852,3 +871,27 @@
 		</div>
 	@endif
 </div>
+
+<style>
+@media print {
+	/* Hide URLs that browsers add automatically */
+	@page {
+		margin-bottom: 0;
+	}
+	
+	/* Hide any URL footers */
+	body::after {
+		display: none !important;
+	}
+	
+	/* Hide browser-generated URLs */
+	a[href]:after {
+		content: none !important;
+	}
+	
+	/* Hide any automatic URL display */
+	.url-display {
+		display: none !important;
+	}
+}
+</style>

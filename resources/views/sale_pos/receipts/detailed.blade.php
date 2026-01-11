@@ -898,5 +898,25 @@
         page-break-after: auto;
         page-break-before: auto;
     }
+    
+    /* Hide URLs that browsers add automatically */
+    @page {
+        margin-bottom: 0;
+    }
+    
+    /* Hide any URL footers */
+    body::after {
+        display: none !important;
+    }
+    
+    /* Hide browser-generated URLs */
+    a[href]:after {
+        content: none !important;
+    }
+    
+    /* Hide any automatic URL display */
+    .url-display {
+        display: none !important;
+    }
 }
 </style>

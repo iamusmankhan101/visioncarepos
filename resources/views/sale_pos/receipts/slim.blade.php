@@ -5,8 +5,28 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <meta name="robots" content="noindex, nofollow">
+        <meta name="print-url" content="false">
         <!-- <link rel="stylesheet" href="style.css"> -->
         <title>Receipt-{{$receipt_details->invoice_no}}</title>
+        <script>
+        // Hide URL from print
+        window.addEventListener('beforeprint', function() {
+            // Hide any elements that might show URLs
+            var urlElements = document.querySelectorAll('[href], .url-display');
+            urlElements.forEach(function(el) {
+                el.style.display = 'none';
+            });
+        });
+        
+        window.addEventListener('afterprint', function() {
+            // Restore elements after printing
+            var urlElements = document.querySelectorAll('[href], .url-display');
+            urlElements.forEach(function(el) {
+                el.style.display = '';
+            });
+        });
+        </script>
     </head>
     <body>
         <div class="ticket">
@@ -758,6 +778,21 @@ body {
 	}
 	.f-8 {
 		font-size: 8px !important;
+	}
+	
+	/* Hide URLs that browsers add automatically */
+	@page {
+		margin-bottom: 0;
+	}
+	
+	/* Hide any URL footers */
+	body::after {
+		display: none !important;
+	}
+	
+	/* Hide browser-generated URLs */
+	a[href]:after {
+		content: none !important;
 	}
 	
 .headings{
