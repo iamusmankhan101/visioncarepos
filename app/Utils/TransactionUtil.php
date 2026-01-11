@@ -1198,23 +1198,14 @@ class TransactionUtil extends Util
         $output['multiple_customers_data'] = [];
         
         if (!empty($selected_customers) && count($selected_customers) > 1) {
-            \Log::info('Processing multiple customers for receipt', [
-                'selected_customers' => $selected_customers,
-                'transaction_contact_id' => $transaction->contact_id
-            ]);
-            
             // Get details for all selected customers
             $customer_names = [];
             $customers_data = [];
             
             foreach ($selected_customers as $customer_id) {
-                \Log::info('Processing customer ID for receipt', ['customer_id' => $customer_id, 'transaction_contact_id' => $transaction->contact_id]);
-                
                 if ($customer_id && $customer_id != $transaction->contact_id) {
                     $additional_customer = Contact::find($customer_id);
                     if ($additional_customer) {
-                        \Log::info('Found additional customer for receipt', ['name' => $additional_customer->name, 'contact_id' => $additional_customer->contact_id]);
-                        
                         $customer_names[] = $additional_customer->name;
                         $customers_data[] = [
                             'id' => $additional_customer->id,
@@ -1255,18 +1246,8 @@ class TransactionUtil extends Util
             if (!empty($customer_names)) {
                 $output['additional_customers'] = implode(', ', $customer_names);
                 $output['multiple_customers_data'] = $customers_data;
-                
-                \Log::info('Multiple customers data prepared for receipt', [
-                    'additional_customers' => $output['additional_customers'],
-                    'customers_data_count' => count($customers_data),
-                    'customers_data' => $customers_data
-                ]);
             }
         } else {
-            \Log::info('No multiple customers for receipt', [
-                'selected_customers' => $selected_customers,
-                'selected_customers_count' => count($selected_customers ?? [])
-            ]);
             // Fallback to old method - extract from additional_notes
             if (!empty($transaction->additional_notes) && strpos($transaction->additional_notes, 'Additional Customers:') !== false) {
                 preg_match('/Additional Customers: (.+?)(\n|$)/', $transaction->additional_notes, $matches);
