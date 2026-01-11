@@ -820,6 +820,7 @@
     
 </div>
 <div class="row" style="color: #000000 !important;">
+	<!-- Footer Debug: '{{ $receipt_details->footer_text ?? 'NULL' }}' ({{ empty($receipt_details->footer_text) ? 'empty' : 'not empty' }}) -->
 	@if(!empty($receipt_details->footer_text))
 	<div class="@if($receipt_details->show_barcode || $receipt_details->show_qr_code) col-xs-8 @else col-xs-12 @endif">
 		{!! $receipt_details->footer_text !!}

@@ -2617,6 +2617,13 @@ function pos_print(receipt) {
     console.log('Has additional_receipts?', receipt.additional_receipts);
     console.log('Additional receipts count:', receipt.additional_receipts ? receipt.additional_receipts.length : 0);
     
+    // Check if we're in express mode (single receipt for multiple customers)
+    var selectedCustomers = window.selectedCustomersForInvoice || JSON.parse(sessionStorage.getItem('selectedCustomersForInvoice') || 'null');
+    var hasMultipleCustomers = selectedCustomers && selectedCustomers.ids && selectedCustomers.ids.length > 1;
+    var isExpressMode = hasMultipleCustomers;
+    
+    console.log('Express mode (single receipt for multiple customers):', isExpressMode);
+    
     //If printer type then connect with websocket
     if (receipt.print_type == 'printer') {
         var content = receipt;
@@ -2649,8 +2656,8 @@ function pos_print(receipt) {
         }, 1200);
     }
     
-    // Print additional receipts if they exist (for multiple customers)
-    if (receipt.additional_receipts && receipt.additional_receipts.length > 0) {
+    // Only print additional receipts if NOT in express mode
+    if (!isExpressMode && receipt.additional_receipts && receipt.additional_receipts.length > 0) {
         console.log('Printing ' + receipt.additional_receipts.length + ' additional receipts');
         
         receipt.additional_receipts.forEach(function(additional_receipt, index) {
@@ -2666,6 +2673,8 @@ function pos_print(receipt) {
                 }
             }, (index + 1) * 2000); // 2 second delay between each print
         });
+    } else if (isExpressMode) {
+        console.log('Skipping additional receipts - express mode enabled (single receipt for multiple customers)');
     } else {
         console.log('No additional receipts to print');
     }

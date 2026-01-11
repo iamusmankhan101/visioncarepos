@@ -1669,6 +1669,16 @@ class TransactionUtil extends Util
         //Additional notes
         $output['additional_notes'] = $transaction->additional_notes;
         $output['footer_text'] = $invoice_layout->footer_text;
+        
+        // Debug logging for footer text
+        \Log::info('Footer text debug', [
+            'invoice_layout_id' => $invoice_layout->id,
+            'invoice_layout_name' => $invoice_layout->name,
+            'footer_text_raw' => $invoice_layout->footer_text,
+            'footer_text_empty' => empty($invoice_layout->footer_text),
+            'footer_text_length' => strlen($invoice_layout->footer_text ?? ''),
+            'output_footer_text' => $output['footer_text']
+        ]);
 
         //Barcode related information.
         $output['show_barcode'] = ! empty($il->show_barcode) ? true : false;
