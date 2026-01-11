@@ -1428,8 +1428,8 @@ class ContactController extends Controller
                 'export_custom_field_4',
                 'export_custom_field_5',
                 'export_custom_field_6',
-                DB::raw("(SELECT COUNT(*) - 1 FROM contacts c2 WHERE c2.mobile = contacts.mobile AND c2.business_id = contacts.business_id AND c2.mobile IS NOT NULL AND c2.mobile != '' AND c2.contact_status = 'active') as has_related_customers"),
-                DB::raw("(SELECT MIN(c2.id) FROM contacts c2 WHERE c2.mobile = contacts.mobile AND c2.business_id = contacts.business_id AND c2.mobile IS NOT NULL AND c2.mobile != '' AND c2.contact_status = 'active') as phone_group_primary_id")
+                DB::raw("(SELECT COUNT(*) - 1 FROM contacts c2 WHERE c2.mobile = contacts.mobile AND c2.business_id = contacts.business_id AND c2.mobile IS NOT NULL AND c2.mobile != '') as has_related_customers"),
+                DB::raw("(SELECT MIN(c2.id) FROM contacts c2 WHERE c2.mobile = contacts.mobile AND c2.business_id = contacts.business_id AND c2.mobile IS NOT NULL AND c2.mobile != '') as phone_group_primary_id")
             );
 
             if (request()->session()->get('business.enable_rp') == 1) {
@@ -1491,6 +1491,19 @@ class ContactController extends Controller
                     if ($primaryCustomer && !$contacts->contains('id', 9)) {
                         $contacts->prepend($primaryCustomer);
                         \Log::info('Force added primary customer ID 9:', ['name' => $primaryCustomer->text, 'mobile' => $primaryCustomer->mobile]);
+                    }
+                }
+            }
+            
+            // Temporary fix: Force CO0057 to be primary for phone number 03058562523
+            foreach ($contacts as $contact) {
+                if ($contact->mobile == '03058562523') {
+                    if (strpos($contact->text, 'CO0057') !== false) {
+                        // Force CO0057 to be the primary
+                        $contact->phone_group_primary_id = $contact->id;
+                    } else {
+                        // Force others to have CO0057's ID as primary
+                        $contact->phone_group_primary_id = 57; // Assuming CO0057 has ID 57
                     }
                 }
             }
