@@ -788,15 +788,6 @@ class SellPosController extends Controller
         $selected_customers = [],
         $is_delivery_note = false
     ) {
-        \Log::info('ReceiptContent Debug - Start', [
-            'business_id' => $business_id,
-            'location_id' => $location_id,
-            'transaction_id' => $transaction_id,
-            'printer_type' => $printer_type,
-            'from_pos_screen' => $from_pos_screen,
-            'selected_customers_count' => count($selected_customers)
-        ]);
-        
         $output = ['is_enabled' => false,
             'print_type' => 'browser',
             'html_content' => null,
@@ -804,60 +795,40 @@ class SellPosController extends Controller
             'data' => [],
         ];
 
-        try {
-            $business_details = $this->businessUtil->getDetails($business_id);
-            \Log::info('ReceiptContent Debug - Business details loaded', [
-                'business_name' => $business_details->name ?? 'not_set'
-            ]);
-            
-            $location_details = BusinessLocation::find($location_id);
-            \Log::info('ReceiptContent Debug - Location details loaded', [
-                'location_name' => $location_details->name ?? 'not_set',
-                'print_receipt_on_invoice' => $location_details->print_receipt_on_invoice ?? 'not_set'
-            ]);
+        $business_details = $this->businessUtil->getDetails($business_id);
+        $location_details = BusinessLocation::find($location_id);
 
-            if ($from_pos_screen && $location_details->print_receipt_on_invoice != 1) {
-                \Log::info('ReceiptContent Debug - Receipt printing disabled for location');
-                return $output;
-            }
-            
-            //Check if printing of invoice is enabled or not.
-            //If enabled, get print type.
-            $output['is_enabled'] = true;
+        if ($from_pos_screen && $location_details->print_receipt_on_invoice != 1) {
+            return $output;
+        }
+        //Check if printing of invoice is enabled or not.
+        //If enabled, get print type.
+        $output['is_enabled'] = true;
 
-            $invoice_layout_id = !empty($invoice_layout_id) ? $invoice_layout_id : $location_details->invoice_layout_id;
-            $invoice_layout = $this->businessUtil->invoiceLayout($business_id, $invoice_layout_id);
-            \Log::info('ReceiptContent Debug - Invoice layout loaded', [
-                'invoice_layout_id' => $invoice_layout_id,
-                'layout_name' => $invoice_layout->name ?? 'not_set'
-            ]);
+        $invoice_layout_id = !empty($invoice_layout_id) ? $invoice_layout_id : $location_details->invoice_layout_id;
+        $invoice_layout = $this->businessUtil->invoiceLayout($business_id, $invoice_layout_id);
 
-            //Check if printer setting is provided.
-            $receipt_printer_type = is_null($printer_type) ? $location_details->receipt_printer_type : $printer_type;
+        //Check if printer setting is provided.
+        $receipt_printer_type = is_null($printer_type) ? $location_details->receipt_printer_type : $printer_type;
 
-            $receipt_details = $this->transactionUtil->getReceiptDetails($transaction_id, $location_id, $invoice_layout, $business_details, $location_details, $receipt_printer_type, $selected_customers);
-            \Log::info('ReceiptContent Debug - Receipt details loaded', [
-                'receipt_details_type' => gettype($receipt_details),
-                'has_invoice_no' => isset($receipt_details->invoice_no),
-                'invoice_no' => $receipt_details->invoice_no ?? 'not_set'
-            ]);
+        $receipt_details = $this->transactionUtil->getReceiptDetails($transaction_id, $location_id, $invoice_layout, $business_details, $location_details, $receipt_printer_type, $selected_customers);
 
-            $currency_details = [
-                'symbol' => $business_details->currency_symbol,
-                'thousand_separator' => $business_details->thousand_separator,
-                'decimal_separator' => $business_details->decimal_separator,
-            ];
+        $currency_details = [
+            'symbol' => $business_details->currency_symbol,
+            'thousand_separator' => $business_details->thousand_separator,
+            'decimal_separator' => $business_details->decimal_separator,
+        ];
         $receipt_details->currency = $currency_details;
 
         if ($is_package_slip) {
             $output['html_content'] = view('sale_pos.receipts.packing_slip', compact('receipt_details'))->render();
-            \Log::info('ReceiptContent Debug - Package slip generated');
+
             return $output;
         }
 
         if ($is_delivery_note) {
             $output['html_content'] = view('sale_pos.receipts.delivery_note', compact('receipt_details'))->render();
-            \Log::info('ReceiptContent Debug - Delivery note generated');
+
             return $output;
         }
 
@@ -867,45 +838,13 @@ class SellPosController extends Controller
             $output['print_type'] = 'printer';
             $output['printer_config'] = $this->businessUtil->printerConfig($business_id, $location_details->printer_id);
             $output['data'] = $receipt_details;
-            \Log::info('ReceiptContent Debug - Printer config generated');
         } else {
             $layout = !empty($receipt_details->design) ? 'sale_pos.receipts.' . $receipt_details->design : 'sale_pos.receipts.classic';
-            \Log::info('ReceiptContent Debug - Using layout', ['layout' => $layout]);
 
-            try {
-                $output['html_content'] = view($layout, compact('receipt_details'))->render();
-                \Log::info('ReceiptContent Debug - HTML content generated', [
-                    'html_length' => strlen($output['html_content']),
-                    'html_preview' => substr($output['html_content'], 0, 200)
-                ]);
-            } catch (\Exception $e) {
-                \Log::error('ReceiptContent Debug - View rendering failed', [
-                    'layout' => $layout,
-                    'error' => $e->getMessage(),
-                    'file' => $e->getFile(),
-                    'line' => $e->getLine()
-                ]);
-                throw $e;
-            }
+            $output['html_content'] = view($layout, compact('receipt_details'))->render();
         }
 
-        \Log::info('ReceiptContent Debug - Success', [
-            'output_keys' => array_keys($output),
-            'is_enabled' => $output['is_enabled'],
-            'has_html_content' => !empty($output['html_content'])
-        ]);
-        
         return $output;
-        
-        } catch (\Exception $e) {
-            \Log::error('ReceiptContent Debug - Exception caught', [
-                'error' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            throw $e;
-        }
     }
 
     /**
@@ -1871,12 +1810,6 @@ class SellPosController extends Controller
                 ];
 
                 $business_id = $request->session()->get('user.business_id');
-                
-                \Log::info('PrintInvoice Debug - Start', [
-                    'transaction_id' => $transaction_id,
-                    'business_id' => $business_id,
-                    'request_data' => $request->all()
-                ]);
 
                 $transaction = Transaction::where('business_id', $business_id)
                     ->where('id', $transaction_id)
@@ -1884,19 +1817,8 @@ class SellPosController extends Controller
                     ->first();
 
                 if (empty($transaction)) {
-                    \Log::error('PrintInvoice Debug - Transaction not found', [
-                        'transaction_id' => $transaction_id,
-                        'business_id' => $business_id
-                    ]);
                     return $output;
                 }
-                
-                \Log::info('PrintInvoice Debug - Transaction found', [
-                    'transaction_id' => $transaction->id,
-                    'contact_id' => $transaction->contact_id,
-                    'location_id' => $transaction->location_id,
-                    'additional_notes' => substr($transaction->additional_notes ?? '', 0, 200)
-                ]);
                 
                 // Check if a custom customer_id is provided (for printing additional customer invoices)
                 $custom_customer_id = $request->input('customer_id');
@@ -1923,22 +1845,8 @@ class SellPosController extends Controller
 
                 $invoice_layout_id = $transaction->is_direct_sale ? $transaction->location->sale_invoice_layout_id : null;
                 
-                \Log::info('PrintInvoice Debug - Before receiptContent', [
-                    'printer_type' => $printer_type,
-                    'is_package_slip' => $is_package_slip,
-                    'is_delivery_note' => $is_delivery_note,
-                    'invoice_layout_id' => $invoice_layout_id
-                ]);
-                
                 // Generate receipt
-                $receipt = $this->receiptContent($business_id, $transaction->location_id, $transaction_id, $printer_type, $is_package_slip, false, $invoice_layout_id, [], $is_delivery_note);
-                
-                \Log::info('PrintInvoice Debug - After receiptContent', [
-                    'receipt_is_empty' => empty($receipt),
-                    'receipt_keys' => !empty($receipt) ? array_keys($receipt) : [],
-                    'is_enabled' => $receipt['is_enabled'] ?? 'not_set',
-                    'html_content_length' => isset($receipt['html_content']) ? strlen($receipt['html_content']) : 0
-                ]);
+                $receipt = $this->receiptContent($business_id, $transaction->location_id, $transaction_id, $printer_type, $is_package_slip, false, $invoice_layout_id, $is_delivery_note);
                 
                 // Restore original contact_id if it was changed
                 if (!empty($custom_customer_id) && isset($original_contact_id)) {
@@ -1951,17 +1859,9 @@ class SellPosController extends Controller
                         'success' => 1, 
                         'receipt' => $receipt
                     ];
-                    \Log::info('PrintInvoice Debug - Success', ['output_success' => true]);
-                } else {
-                    \Log::error('PrintInvoice Debug - Empty receipt returned');
                 }
             } catch (\Exception $e) {
-                \Log::emergency('PrintInvoice Debug - Exception', [
-                    'file' => $e->getFile(),
-                    'line' => $e->getLine(),
-                    'message' => $e->getMessage(),
-                    'trace' => $e->getTraceAsString()
-                ]);
+                \Log::emergency('File:' . $e->getFile() . 'Line:' . $e->getLine() . 'Message:' . $e->getMessage());
 
                 $output = ['success' => 0,
                     'msg' => trans('messages.something_went_wrong'),
