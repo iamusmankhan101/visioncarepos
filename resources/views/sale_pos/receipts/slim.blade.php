@@ -41,12 +41,13 @@
 					@if(!empty($receipt_details->contact))
 						{!! $receipt_details->contact !!}
 					@endif
-					@if(!empty($receipt_details->contact) && !empty($receipt_details->website))
+					{{-- Website URL removed --}}
+					{{-- @if(!empty($receipt_details->contact) && !empty($receipt_details->website))
 						, 
 					@endif
 					@if(!empty($receipt_details->website))
 						{{ $receipt_details->website }}
-					@endif
+					@endif --}}
 					@if(!empty($receipt_details->location_custom_fields))
 						<br>{{ $receipt_details->location_custom_fields }}
 					@endif

@@ -245,9 +245,10 @@
                                     <br />{!! $receipt_details->contact !!}
                                 @endif
 
-                                @if (!empty($receipt_details->website))
+                                {{-- Website URL removed --}}
+                                {{-- @if (!empty($receipt_details->website))
                                     <br />{{ $receipt_details->website }}
-                                @endif
+                                @endif --}}
 
                                 @if (!empty($receipt_details->tax_info1))
                                     <br />{{ $receipt_details->tax_label1 }} {{ $receipt_details->tax_info1 }}
