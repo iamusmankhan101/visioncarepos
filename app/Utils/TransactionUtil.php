@@ -958,7 +958,7 @@ class TransactionUtil extends Util
      * @param  string  $receipt_printer_type
      * @return array
      */
-    public function getReceiptDetails($transaction_id, $location_id, $invoice_layout, $business_details, $location_details, $receipt_printer_type, $selected_customers = [])
+    public function getReceiptDetails($transaction_id, $location_id, $invoice_layout, $business_details, $location_details, $receipt_printer_type, $selected_customers = [], $override_customer_id = null)
     {
         $il = $invoice_layout;
 
@@ -1087,7 +1087,15 @@ class TransactionUtil extends Util
         }
 
         //Customer show_customer
-        $customer = Contact::find($transaction->contact_id);
+        $customer_id_to_use = $override_customer_id ?? $transaction->contact_id;
+        $customer = Contact::find($customer_id_to_use);
+        
+        \Log::info('Loading customer for receipt', [
+            'transaction_contact_id' => $transaction->contact_id,
+            'override_customer_id' => $override_customer_id,
+            'customer_id_used' => $customer_id_to_use,
+            'customer_name' => $customer ? $customer->name : 'not found'
+        ]);
 
         $output['contact_id'] = $customer->contact_id;
         $output['contact_name'] = $customer->name;
