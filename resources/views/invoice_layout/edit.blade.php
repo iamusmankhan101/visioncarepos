@@ -963,7 +963,7 @@
         <div class="col-sm-12">
           <div class="form-group">
             {!! Form::label('footer_text', __('invoice.footer_text') . ':' ) !!}
-              {!! Form::textarea('footer_text', $invoice_layout->footer_text, ['class' => 'form-control',
+            {!! Form::textarea('footer_text', $invoice_layout->footer_text, ['class' => 'form-control',
               'placeholder' => __('invoice.footer_text'), 'rows' => 3]); !!}
           </div>
         </div>
@@ -1195,6 +1195,58 @@
 
     $(document).ready(function(){
         letter_head_changed();
+        
+        // Ensure footer text field is properly displayed
+        var $footerTextGroup = $('label[for="footer_text"]').closest('.form-group');
+        console.log('Footer text group found:', $footerTextGroup.length);
+        
+        if ($footerTextGroup.length > 0) {
+            $footerTextGroup.show().css('display', 'block');
+            var $footerTextarea = $footerTextGroup.find('textarea[name="footer_text"]');
+            console.log('Footer textarea found:', $footerTextarea.length);
+            
+            if ($footerTextarea.length > 0) {
+                $footerTextarea.show().css({
+                    'display': 'block !important',
+                    'visibility': 'visible !important',
+                    'height': 'auto',
+                    'min-height': '80px',
+                    'width': '100%',
+                    'border': '1px solid #ccc',
+                    'padding': '6px 12px'
+                });
+                console.log('Footer text field found and made visible');
+            } else {
+                console.log('Footer text textarea not found');
+            }
+        } else {
+            console.log('Footer text form group not found');
+        }
+        
+        // Alternative approach - find by name directly
+        var $directTextarea = $('textarea[name="footer_text"]');
+        console.log('Direct textarea search found:', $directTextarea.length);
+        if ($directTextarea.length > 0) {
+            $directTextarea.show().css({
+                'display': 'block !important',
+                'visibility': 'visible !important',
+                'height': 'auto',
+                'min-height': '80px',
+                'width': '100%'
+            });
+        }
+        
+        // Add CSS to ensure textarea is always visible
+        $('<style>').prop('type', 'text/css').html(`
+            textarea[name="footer_text"] {
+                display: block !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+                height: auto !important;
+                min-height: 80px !important;
+                width: 100% !important;
+            }
+        `).appendTo('head');
     })
 </script>
 <script>
