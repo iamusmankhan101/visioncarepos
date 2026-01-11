@@ -496,16 +496,24 @@ class SellPosController extends Controller
 
                 // Store multiple customer IDs if provided (for separate invoice printing)
                 if (!empty($input['multiple_customer_ids'])) {
+                    \Log::info('Received multiple_customer_ids: ' . $input['multiple_customer_ids']);
+                    
                     $customer_ids = explode(',', $input['multiple_customer_ids']);
                     // Remove the first customer (already set as main contact_id)
                     $additional_customer_ids = array_slice($customer_ids, 1);
                     
                     if (!empty($additional_customer_ids)) {
+                        \Log::info('Storing additional customers: ' . implode(',', $additional_customer_ids));
+                        
                         // Store additional customer IDs in additional_notes for later retrieval
                         $transaction->additional_notes = (!empty($transaction->additional_notes) ? $transaction->additional_notes . "\n" : '') . 
                                                         'MULTI_INVOICE_CUSTOMERS:' . implode(',', $additional_customer_ids);
                         $transaction->save();
+                        
+                        \Log::info('Saved transaction with additional_notes: ' . $transaction->additional_notes);
                     }
+                } else {
+                    \Log::info('No multiple_customer_ids received in request');
                 }
 
                 //Upload Shipping documents

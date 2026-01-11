@@ -823,16 +823,23 @@ $(document).ready(function() {
     function addSelectedCustomersToForm() {
         try {
             var selectedCustomers = window.selectedCustomersForInvoice;
+            console.log('addSelectedCustomersToForm called, selectedCustomers:', selectedCustomers);
             
             if (selectedCustomers && selectedCustomers.ids && selectedCustomers.ids.length > 1) {
+                console.log('Multiple customers found, adding to form:', selectedCustomers.ids);
+                
                 // Remove existing multiple_customer_ids input if any
                 $('input[name="multiple_customer_ids"]').remove();
                 
                 // Add selected customers as hidden input
                 pos_form_obj.append('<input type="hidden" name="multiple_customer_ids" value="' + selectedCustomers.ids.join(',') + '">');
+                
+                console.log('Added multiple_customer_ids input to form');
+            } else {
+                console.log('No multiple customers to add (length:', selectedCustomers ? selectedCustomers.ids?.length : 'null', ')');
             }
         } catch (e) {
-            // Silently ignore errors to prevent form submission issues
+            console.error('Error in addSelectedCustomersToForm:', e);
         }
     }
 
