@@ -1854,7 +1854,20 @@ class SellPosController extends Controller
                         // Include the main customer plus all additional customers
                         $selected_customers = array_merge([$transaction->contact_id], $additional_customer_ids);
                         $selected_customers = array_unique(array_filter($selected_customers)); // Remove duplicates and empty values
+                        
+                        \Log::info('Multiple customers found for reprint', [
+                            'transaction_id' => $transaction_id,
+                            'main_customer' => $transaction->contact_id,
+                            'additional_customers' => $additional_customer_ids,
+                            'final_selected_customers' => $selected_customers
+                        ]);
                     }
+                } else {
+                    \Log::info('No multiple customers found for reprint', [
+                        'transaction_id' => $transaction_id,
+                        'has_additional_notes' => !empty($transaction->additional_notes),
+                        'additional_notes_preview' => substr($transaction->additional_notes ?? '', 0, 200)
+                    ]);
                 }
                 
                 // Generate receipt (with multiple customers if they exist)
