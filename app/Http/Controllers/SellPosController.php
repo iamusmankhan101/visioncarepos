@@ -518,6 +518,25 @@ class SellPosController extends Controller
                         $transaction->save();
                     }
                 }
+                
+                // Store selected customers for single receipt printing
+                $selected_customers = $input['selected_customers'] ?? [];
+                if (!empty($input['multiple_customer_ids'])) {
+                    $customer_ids = explode(',', $input['multiple_customer_ids']);
+                    $selected_customers = array_merge($selected_customers, $customer_ids);
+                }
+                $selected_customers = array_unique(array_filter($selected_customers));
+                
+                if (!empty($selected_customers) && count($selected_customers) > 1) {
+                    \Log::info('Storing selected customers for single receipt:', [
+                        'selected_customers' => $selected_customers
+                    ]);
+                    
+                    // Store selected customer IDs for single receipt printing
+                    $transaction->additional_notes = (!empty($transaction->additional_notes) ? $transaction->additional_notes . "\n" : '') . 
+                                                    'SELECTED_CUSTOMERS:' . implode(',', $selected_customers);
+                    $transaction->save();
+                }
 
                 //Upload Shipping documents
                 Media::uploadMedia($business_id, $transaction, $request, 'shipping_documents', false, 'shipping_document');
