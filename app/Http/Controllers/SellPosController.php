@@ -1933,8 +1933,10 @@ class SellPosController extends Controller
                     // Check if user explicitly requested to include related customers
                     $include_related = $request->input('include_related', false);
                     
-                    if ($include_related) {
-                        \Log::info('PrintInvoice - User requested to include related customers');
+                    // For recent transactions (not from POS screen), always check for related customers
+                    // This handles legacy transactions that don't have MULTI_INVOICE_CUSTOMERS data
+                    if ($include_related || true) { // Always check for related customers
+                        \Log::info('PrintInvoice - Checking for related customers (legacy transaction support)');
                         
                         // Auto-detect related customers based on phone number
                         $main_customer = Contact::find($transaction->contact_id);
@@ -1949,11 +1951,13 @@ class SellPosController extends Controller
                             
                             if (!empty($related_customers)) {
                                 $selected_customers = array_merge($selected_customers, $related_customers);
-                                \Log::info('PrintInvoice - Added related customers by user request', [
+                                \Log::info('PrintInvoice - Added related customers for legacy transaction', [
                                     'main_customer_phone' => $main_customer->mobile,
                                     'related_customers' => $related_customers,
                                     'final_selected_customers' => $selected_customers
                                 ]);
+                            } else {
+                                \Log::info('PrintInvoice - No related customers found');
                             }
                         }
                     } else {
