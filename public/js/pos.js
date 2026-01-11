@@ -822,6 +822,11 @@ $(document).ready(function() {
     // Function to add selected customers to form before submission
     function addSelectedCustomersToForm() {
         var selectedCustomers = window.selectedCustomersForInvoice || JSON.parse(sessionStorage.getItem('selectedCustomersForInvoice') || 'null');
+        console.log('=== addSelectedCustomersToForm called ===');
+        console.log('selectedCustomers from window:', window.selectedCustomersForInvoice);
+        console.log('selectedCustomers from sessionStorage:', sessionStorage.getItem('selectedCustomersForInvoice'));
+        console.log('Final selectedCustomers:', selectedCustomers);
+        
         if (selectedCustomers && selectedCustomers.ids && selectedCustomers.ids.length > 0) {
             console.log('Adding selected customers to form:', selectedCustomers.ids);
             
@@ -829,7 +834,13 @@ $(document).ready(function() {
             $('input[name="multiple_customer_ids"]').remove();
             
             // Add selected customers as hidden input
-            pos_form_obj.append('<input type="hidden" name="multiple_customer_ids" value="' + selectedCustomers.ids.join(',') + '">');
+            var customerIdsString = selectedCustomers.ids.join(',');
+            pos_form_obj.append('<input type="hidden" name="multiple_customer_ids" value="' + customerIdsString + '">');
+            
+            console.log('Added hidden input with value:', customerIdsString);
+            console.log('Form now contains multiple_customer_ids input:', $('input[name="multiple_customer_ids"]').length > 0);
+        } else {
+            console.log('No selected customers to add to form');
         }
     }
 
@@ -1027,6 +1038,10 @@ $(document).ready(function() {
 
                 var data = $(form).serialize();
                 data = data + '&status=final';
+                
+                console.log('=== Form submission data ===');
+                console.log('Serialized form data:', data);
+                console.log('Contains multiple_customer_ids:', data.includes('multiple_customer_ids'));
                 
                 var url = $(form).attr('action');
                 $.ajax({
