@@ -897,7 +897,16 @@ $(document).ready(function() {
 
         $('div#card_details_modal').modal('hide');
         // Add selected customers to form before submission
+        console.log('=== BEFORE CARD FORM SUBMISSION ===');
+        console.log('window.selectedRelatedCustomers:', window.selectedRelatedCustomers);
+        
         addSelectedCustomersToForm();
+        
+        // Debug: Check what's actually in the form
+        var formData = new FormData(pos_form_obj[0]);
+        var selectedCustomersInForm = formData.getAll('selected_customers[]');
+        console.log('selected_customers[] in card form:', selectedCustomersInForm);
+        
         pos_form_obj.submit();
     });
 
