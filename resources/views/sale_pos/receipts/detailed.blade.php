@@ -898,5 +898,36 @@
         page-break-after: auto;
         page-break-before: auto;
     }
+    
+    /* Hide browser-generated URLs and page info */
+    @page {
+        margin: 0;
+        size: auto;
+    }
+    
+    /* Hide any browser-added URLs */
+    body::after,
+    html::after,
+    *::after {
+        content: "" !important;
+    }
+    
+    /* Hide browser print headers and footers */
+    .no-print,
+    .hidden-print {
+        display: none !important;
+    }
+    
+    /* Ensure no URL is displayed */
+    a[href]:after {
+        content: "" !important;
+    }
+    
+    /* Hide any automatically generated content */
+    body {
+        -webkit-print-color-adjust: exact !important;
+        color-adjust: exact !important;
+    }
+}
 }
 </style>
