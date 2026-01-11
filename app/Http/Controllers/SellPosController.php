@@ -1901,7 +1901,8 @@ class SellPosController extends Controller
                 \Log::info('PrintInvoice - Transaction additional_notes', [
                     'transaction_id' => $transaction_id,
                     'additional_notes' => $transaction->additional_notes,
-                    'has_notes' => !empty($transaction->additional_notes)
+                    'has_notes' => !empty($transaction->additional_notes),
+                    'include_related_param' => $request->input('include_related', false)
                 ]);
                 
                 if (!empty($transaction->additional_notes)) {
