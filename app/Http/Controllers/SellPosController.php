@@ -1898,13 +1898,24 @@ class SellPosController extends Controller
                 // Extract selected customers from transaction's additional_notes if available
                 $selected_customers = [$transaction->contact_id]; // Always include main customer
                 
+                \Log::info('PrintInvoice - Transaction additional_notes', [
+                    'transaction_id' => $transaction_id,
+                    'additional_notes' => $transaction->additional_notes,
+                    'has_notes' => !empty($transaction->additional_notes)
+                ]);
+                
                 if (!empty($transaction->additional_notes)) {
                     // Check for MULTI_INVOICE_CUSTOMERS format
                     if (strpos($transaction->additional_notes, 'MULTI_INVOICE_CUSTOMERS:') !== false) {
                         preg_match('/MULTI_INVOICE_CUSTOMERS:([0-9,]+)/', $transaction->additional_notes, $matches);
+                        \Log::info('PrintInvoice - MULTI_INVOICE_CUSTOMERS regex matches', ['matches' => $matches]);
                         if (!empty($matches[1])) {
                             $additional_customer_ids = explode(',', $matches[1]);
                             $selected_customers = array_merge($selected_customers, $additional_customer_ids);
+                            \Log::info('PrintInvoice - Added additional customers', [
+                                'additional_customer_ids' => $additional_customer_ids,
+                                'final_selected_customers' => $selected_customers
+                            ]);
                         }
                     }
                     // Also check for old format
@@ -1913,6 +1924,29 @@ class SellPosController extends Controller
                         if (!empty($matches[1])) {
                             // This contains names, we need to find IDs - for now just log it
                             \Log::info('Found additional customers by names', ['names' => $matches[1]]);
+                        }
+                    }
+                } else {
+                    \Log::info('PrintInvoice - No additional_notes found, checking if we need to auto-detect related customers');
+                    
+                    // Auto-detect related customers based on phone number if no additional_notes
+                    $main_customer = Contact::find($transaction->contact_id);
+                    if ($main_customer && !empty($main_customer->mobile)) {
+                        $related_customers = Contact::where('business_id', $business_id)
+                            ->where('mobile', $main_customer->mobile)
+                            ->where('contact_status', 'active')
+                            ->where('type', 'customer')
+                            ->where('id', '!=', $transaction->contact_id)
+                            ->pluck('id')
+                            ->toArray();
+                        
+                        if (!empty($related_customers)) {
+                            $selected_customers = array_merge($selected_customers, $related_customers);
+                            \Log::info('PrintInvoice - Auto-detected related customers', [
+                                'main_customer_phone' => $main_customer->mobile,
+                                'related_customers' => $related_customers,
+                                'final_selected_customers' => $selected_customers
+                            ]);
                         }
                     }
                 }
