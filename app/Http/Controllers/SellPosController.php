@@ -844,6 +844,56 @@ class SellPosController extends Controller
             $output['html_content'] = view($layout, compact('receipt_details'))->render();
         }
 
+        // Generate additional receipts for multiple customers (separate receipts)
+        $output['additional_receipts'] = [];
+        
+        if (!empty($selected_customers) && count($selected_customers) > 1 && !$from_pos_screen) {
+            // When printing from recent transactions modal, generate separate receipts for each customer
+            $transaction = Transaction::find($transaction_id);
+            $original_contact_id = $transaction->contact_id;
+            
+            foreach ($selected_customers as $customer_id) {
+                if ($customer_id && $customer_id != $original_contact_id) {
+                    // Temporarily change the transaction's contact_id to generate receipt for this customer
+                    $transaction->contact_id = $customer_id;
+                    $transaction->save();
+                    
+                    // Generate receipt details for this specific customer
+                    $additional_receipt_details = $this->transactionUtil->getReceiptDetails(
+                        $transaction_id, 
+                        $location_id, 
+                        $invoice_layout, 
+                        $business_details, 
+                        $location_details, 
+                        $receipt_printer_type, 
+                        [$customer_id] // Pass only this customer
+                    );
+                    
+                    $additional_receipt_details->currency = $currency_details;
+                    
+                    // Generate HTML content for this customer's receipt
+                    $additional_html_content = view($layout, ['receipt_details' => $additional_receipt_details])->render();
+                    
+                    $output['additional_receipts'][] = [
+                        'html_content' => $additional_html_content,
+                        'print_title' => $additional_receipt_details->invoice_no . ' - ' . $additional_receipt_details->customer_name,
+                        'customer_id' => $customer_id,
+                        'customer_name' => $additional_receipt_details->customer_name
+                    ];
+                }
+            }
+            
+            // Restore original contact_id
+            $transaction->contact_id = $original_contact_id;
+            $transaction->save();
+            
+            \Log::info('Generated additional receipts', [
+                'main_receipt_customer' => $original_contact_id,
+                'additional_receipts_count' => count($output['additional_receipts']),
+                'additional_customers' => array_column($output['additional_receipts'], 'customer_id')
+            ]);
+        }
+
         return $output;
     }
 
@@ -1845,8 +1895,36 @@ class SellPosController extends Controller
 
                 $invoice_layout_id = $transaction->is_direct_sale ? $transaction->location->sale_invoice_layout_id : null;
                 
+                // Extract selected customers from transaction's additional_notes if available
+                $selected_customers = [$transaction->contact_id]; // Always include main customer
+                
+                if (!empty($transaction->additional_notes)) {
+                    // Check for MULTI_INVOICE_CUSTOMERS format
+                    if (strpos($transaction->additional_notes, 'MULTI_INVOICE_CUSTOMERS:') !== false) {
+                        preg_match('/MULTI_INVOICE_CUSTOMERS:([0-9,]+)/', $transaction->additional_notes, $matches);
+                        if (!empty($matches[1])) {
+                            $additional_customer_ids = explode(',', $matches[1]);
+                            $selected_customers = array_merge($selected_customers, $additional_customer_ids);
+                        }
+                    }
+                    // Also check for old format
+                    elseif (strpos($transaction->additional_notes, 'Additional Customers:') !== false) {
+                        preg_match('/Additional Customers: (.+?)(\n|$)/', $transaction->additional_notes, $matches);
+                        if (!empty($matches[1])) {
+                            // This contains names, we need to find IDs - for now just log it
+                            \Log::info('Found additional customers by names', ['names' => $matches[1]]);
+                        }
+                    }
+                }
+                
+                \Log::info('PrintInvoice - Selected customers for receipt generation', [
+                    'transaction_id' => $transaction_id,
+                    'selected_customers' => $selected_customers,
+                    'custom_customer_id' => $custom_customer_id
+                ]);
+                
                 // Generate receipt
-                $receipt = $this->receiptContent($business_id, $transaction->location_id, $transaction_id, $printer_type, $is_package_slip, false, $invoice_layout_id, $is_delivery_note);
+                $receipt = $this->receiptContent($business_id, $transaction->location_id, $transaction_id, $printer_type, $is_package_slip, false, $invoice_layout_id, $selected_customers, $is_delivery_note);
                 
                 // Restore original contact_id if it was changed
                 if (!empty($custom_customer_id) && isset($original_contact_id)) {
