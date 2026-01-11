@@ -822,8 +822,6 @@ $(document).ready(function() {
     // Function to add selected customers to form before submission
     function addSelectedCustomersToForm() {
         var selectedCustomers = window.selectedCustomersForInvoice || JSON.parse(sessionStorage.getItem('selectedCustomersForInvoice') || 'null');
-        console.log('addSelectedCustomersToForm called with:', selectedCustomers);
-        
         if (selectedCustomers && selectedCustomers.ids && selectedCustomers.ids.length > 0) {
             console.log('Adding selected customers to form:', selectedCustomers.ids);
             
@@ -831,13 +829,7 @@ $(document).ready(function() {
             $('input[name="multiple_customer_ids"]').remove();
             
             // Add selected customers as hidden input
-            var customerIdsString = selectedCustomers.ids.join(',');
-            pos_form_obj.append('<input type="hidden" name="multiple_customer_ids" value="' + customerIdsString + '">');
-            
-            console.log('Added hidden input with value:', customerIdsString);
-            console.log('Form now contains multiple_customer_ids input:', $('input[name="multiple_customer_ids"]').length > 0);
-        } else {
-            console.log('No selected customers to add to form');
+            pos_form_obj.append('<input type="hidden" name="multiple_customer_ids" value="' + selectedCustomers.ids.join(',') + '">');
         }
     }
 
