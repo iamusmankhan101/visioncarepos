@@ -860,7 +860,17 @@ $(document).ready(function() {
             $('div#confirmSuspendModal').modal('show');
         } else {
             // Add selected customers to form before submission
+            console.log('=== BEFORE FORM SUBMISSION ===');
+            console.log('window.selectedRelatedCustomers:', window.selectedRelatedCustomers);
+            console.log('sessionStorage selectedCustomersForInvoice:', sessionStorage.getItem('selectedCustomersForInvoice'));
+            
             addSelectedCustomersToForm();
+            
+            // Debug: Check what's actually in the form
+            var formData = new FormData(pos_form_obj[0]);
+            var selectedCustomersInForm = formData.getAll('selected_customers[]');
+            console.log('selected_customers[] in form:', selectedCustomersInForm);
+            
             pos_form_obj.submit();
         }
     }
