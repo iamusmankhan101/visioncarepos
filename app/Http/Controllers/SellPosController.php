@@ -1845,33 +1845,8 @@ class SellPosController extends Controller
 
                 $invoice_layout_id = $transaction->is_direct_sale ? $transaction->location->sale_invoice_layout_id : null;
                 
-                // Check if this transaction had multiple customers originally
-                $selected_customers = [];
-                if (!empty($transaction->additional_notes) && strpos($transaction->additional_notes, 'MULTI_INVOICE_CUSTOMERS:') !== false) {
-                    preg_match('/MULTI_INVOICE_CUSTOMERS:([^\n]+)/', $transaction->additional_notes, $matches);
-                    if (!empty($matches[1])) {
-                        $additional_customer_ids = explode(',', trim($matches[1]));
-                        // Include the main customer plus all additional customers
-                        $selected_customers = array_merge([$transaction->contact_id], $additional_customer_ids);
-                        $selected_customers = array_unique(array_filter($selected_customers)); // Remove duplicates and empty values
-                        
-                        \Log::info('Multiple customers found for reprint', [
-                            'transaction_id' => $transaction_id,
-                            'main_customer' => $transaction->contact_id,
-                            'additional_customers' => $additional_customer_ids,
-                            'final_selected_customers' => $selected_customers
-                        ]);
-                    }
-                } else {
-                    \Log::info('No multiple customers found for reprint', [
-                        'transaction_id' => $transaction_id,
-                        'has_additional_notes' => !empty($transaction->additional_notes),
-                        'additional_notes_preview' => substr($transaction->additional_notes ?? '', 0, 200)
-                    ]);
-                }
-                
-                // Generate receipt (with multiple customers if they exist)
-                $receipt = $this->receiptContent($business_id, $transaction->location_id, $transaction_id, $printer_type, $is_package_slip, false, $invoice_layout_id, $selected_customers, $is_delivery_note);
+                // Generate receipt
+                $receipt = $this->receiptContent($business_id, $transaction->location_id, $transaction_id, $printer_type, $is_package_slip, false, $invoice_layout_id, [], $is_delivery_note);
                 
                 // Restore original contact_id if it was changed
                 if (!empty($custom_customer_id) && isset($original_contact_id)) {
