@@ -8,52 +8,27 @@ The `printInvoice` method in `SellPosController` was not retrieving the stored m
 
 ## Solution
 
-### 1. Updated `printInvoice` Method in SellPosController
-- Added logic to retrieve stored multiple customer IDs from the transaction's `additional_notes` field
-- The system stores additional customers in the format `MULTI_INVOICE_CUSTOMERS:id1,id2,id3`
-- When reprinting, the method now extracts these IDs and passes them to the receipt generation
-- Falls back to using just the primary customer if no additional customers are found
-
-### 2. Enhanced TransactionUtil `getReceiptDetails` Method
-- Updated the fallback logic to handle the new `MULTI_INVOICE_CUSTOMERS:` format
-- Added support for retrieving full customer details (including prescriptions) for additional customers
-- Maintains backward compatibility with the old `Additional Customers:` format
+### Simple and Minimal Fix
+Updated the `printInvoice` method to check if the transaction originally had multiple customers by looking for the `MULTI_INVOICE_CUSTOMERS:` marker in the transaction's `additional_notes` field. If found, it retrieves all the customer IDs and passes them to the existing receipt generation logic.
 
 ## Key Changes
 
 ### SellPosController.php - printInvoice method
 ```php
-// Retrieve stored multiple customers for this transaction
+// Check if this transaction had multiple customers originally
 $selected_customers = [];
-if (!empty($transaction->additional_notes)) {
-    // Check for the new format first
-    if (strpos($transaction->additional_notes, 'MULTI_INVOICE_CUSTOMERS:') !== false) {
-        preg_match('/MULTI_INVOICE_CUSTOMERS:([^\n]+)/', $transaction->additional_notes, $matches);
-        if (!empty($matches[1])) {
-            $additional_customer_ids = explode(',', trim($matches[1]));
-            // Include the main customer as well
-            $selected_customers = array_merge([$transaction->contact_id], $additional_customer_ids);
-        }
-    }
-}
-
-// Pass selected customers to receipt generation
-$receipt = $this->receiptContent($business_id, $transaction->location_id, $transaction_id, $printer_type, $is_package_slip, false, $invoice_layout_id, $selected_customers, $is_delivery_note);
-```
-
-### TransactionUtil.php - getReceiptDetails method
-```php
-// Enhanced fallback logic to handle new format
-if (strpos($transaction->additional_notes, 'MULTI_INVOICE_CUSTOMERS:') !== false) {
+if (!empty($transaction->additional_notes) && strpos($transaction->additional_notes, 'MULTI_INVOICE_CUSTOMERS:') !== false) {
     preg_match('/MULTI_INVOICE_CUSTOMERS:([^\n]+)/', $transaction->additional_notes, $matches);
     if (!empty($matches[1])) {
         $additional_customer_ids = explode(',', trim($matches[1]));
-        // Get full customer details including prescriptions
-        foreach ($additional_customer_ids as $customer_id) {
-            // ... retrieve customer details and prescriptions
-        }
+        // Include the main customer plus all additional customers
+        $selected_customers = array_merge([$transaction->contact_id], $additional_customer_ids);
+        $selected_customers = array_unique(array_filter($selected_customers)); // Remove duplicates and empty values
     }
 }
+
+// Generate receipt (with multiple customers if they exist)
+$receipt = $this->receiptContent($business_id, $transaction->location_id, $transaction_id, $printer_type, $is_package_slip, false, $invoice_layout_id, $selected_customers, $is_delivery_note);
 ```
 
 ## How It Works
@@ -61,11 +36,12 @@ if (strpos($transaction->additional_notes, 'MULTI_INVOICE_CUSTOMERS:') !== false
 1. **During Transaction Creation**: When multiple customers are selected, their IDs are stored in the transaction's `additional_notes` field with the format `MULTI_INVOICE_CUSTOMERS:id1,id2,id3`
 
 2. **During Reprint from Recent Transactions**: 
-   - The `printInvoice` method retrieves the stored customer IDs from `additional_notes`
-   - It passes all customer IDs (including the primary customer) to the `receiptContent` method
-   - The receipt is generated with all customer information, prescriptions, and labels
+   - The `printInvoice` method checks the `additional_notes` field for the `MULTI_INVOICE_CUSTOMERS:` marker
+   - If found, it extracts all customer IDs and includes the primary customer
+   - It passes all customer IDs to the existing `receiptContent` method
+   - The existing receipt generation logic handles displaying all customers
 
-3. **Receipt Generation**: The `getReceiptDetails` method processes all selected customers and includes their information in the receipt template
+3. **Receipt Generation**: The existing `getReceiptDetails` method processes all selected customers and includes their information in the receipt template using the existing `multiple_customers_data` logic
 
 ## Testing
 
@@ -80,12 +56,21 @@ To test the fix:
 ## Benefits
 
 - ✅ Reprinting from recent transactions now shows all originally selected customers
+- ✅ Uses existing receipt generation logic - no changes to templates needed
+- ✅ Minimal code changes - reduces risk of breaking existing functionality
 - ✅ Maintains backward compatibility with existing transactions
-- ✅ No changes needed to the receipt templates
 - ✅ Consistent behavior between initial print and reprint
 - ✅ Preserves all customer prescription data in reprints
 
 ## Files Modified
 
-1. `app/Http/Controllers/SellPosController.php` - Updated `printInvoice` method
-2. `app/Utils/TransactionUtil.php` - Enhanced `getReceiptDetails` method fallback logic
+1. `app/Http/Controllers/SellPosController.php` - Updated `printInvoice` method (minimal change)
+
+## Technical Details
+
+The fix leverages the existing infrastructure:
+- The `receiptContent` method already accepts a `$selected_customers` parameter
+- The `getReceiptDetails` method in `TransactionUtil` already has logic to handle multiple customers
+- The receipt templates already support displaying multiple customers via `$receipt_details->multiple_customers_data`
+
+This approach ensures maximum compatibility and minimal risk while solving the core issue.
