@@ -1927,9 +1927,37 @@ class SellPosController extends Controller
                         }
                     }
                 } else {
-                    \Log::info('PrintInvoice - No additional_notes found, will only print for main customer');
-                    // Don't auto-detect related customers - only print for the main customer
-                    // This prevents printing unwanted receipts for all customers with same phone number
+                    \Log::info('PrintInvoice - No additional_notes found');
+                    
+                    // Check if user explicitly requested to include related customers
+                    $include_related = $request->input('include_related', false);
+                    
+                    if ($include_related) {
+                        \Log::info('PrintInvoice - User requested to include related customers');
+                        
+                        // Auto-detect related customers based on phone number
+                        $main_customer = Contact::find($transaction->contact_id);
+                        if ($main_customer && !empty($main_customer->mobile)) {
+                            $related_customers = Contact::where('business_id', $business_id)
+                                ->where('mobile', $main_customer->mobile)
+                                ->where('contact_status', 'active')
+                                ->where('type', 'customer')
+                                ->where('id', '!=', $transaction->contact_id)
+                                ->pluck('id')
+                                ->toArray();
+                            
+                            if (!empty($related_customers)) {
+                                $selected_customers = array_merge($selected_customers, $related_customers);
+                                \Log::info('PrintInvoice - Added related customers by user request', [
+                                    'main_customer_phone' => $main_customer->mobile,
+                                    'related_customers' => $related_customers,
+                                    'final_selected_customers' => $selected_customers
+                                ]);
+                            }
+                        }
+                    } else {
+                        \Log::info('PrintInvoice - Will only print for main customer (no related customers requested)');
+                    }
                 }
                 
                 \Log::info('PrintInvoice - Selected customers for receipt generation', [

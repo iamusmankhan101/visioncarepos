@@ -48,6 +48,11 @@
                         @lang('messages.print')
 	    			</a>
 
+	    			<a href="{{action([\App\Http\Controllers\SellPosController::class, 'printInvoice'], [$transaction->id])}}?include_related=1" class="print-invoice-link tw-dw-btn tw-dw-btn-outline tw-dw-btn-info">
+	    				<i class="fa fa-users text-muted" aria-hidden="true" title="Print for all related customers"></i>
+                        Print All
+	    			</a>
+
                     @if(auth()->user()->can('sell.delete') || auth()->user()->can('direct_sell.delete'))
 	    			    <a href="{{action([\App\Http\Controllers\SellPosController::class, 'destroy'], [$transaction->id])}}" class="delete-sale tw-dw-btn tw-dw-btn-outline tw-dw-btn-error">
                             <i class="fa fa-trash text-danger" title="{{__('lang_v1.click_to_delete')}}"></i>
