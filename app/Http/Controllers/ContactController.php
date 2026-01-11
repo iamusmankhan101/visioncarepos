@@ -978,7 +978,7 @@ class ContactController extends Controller
                     ->where('id', '!=', $id) // Exclude current contact
                     ->where('mobile', '!=', '')
                     ->whereNotNull('mobile')
-                    ->where('is_active', 1) // Only active contacts
+                    ->where('contact_status', 'active') // Only active contacts
                     ->orderBy('id', 'asc') // Order by ID to identify primary customer
                     ->get();
                 
@@ -987,7 +987,7 @@ class ContactController extends Controller
                     ->where('mobile', $contact->mobile)
                     ->where('mobile', '!=', '')
                     ->whereNotNull('mobile')
-                    ->where('is_active', 1) // Only active contacts
+                    ->where('contact_status', 'active') // Only active contacts
                     ->orderBy('id', 'asc')
                     ->get();
                 
@@ -1428,8 +1428,8 @@ class ContactController extends Controller
                 'export_custom_field_4',
                 'export_custom_field_5',
                 'export_custom_field_6',
-                DB::raw("(SELECT COUNT(*) - 1 FROM contacts c2 WHERE c2.mobile = contacts.mobile AND c2.business_id = contacts.business_id AND c2.mobile IS NOT NULL AND c2.mobile != '' AND c2.is_active = 1) as has_related_customers"),
-                DB::raw("(SELECT MIN(c2.id) FROM contacts c2 WHERE c2.mobile = contacts.mobile AND c2.business_id = contacts.business_id AND c2.mobile IS NOT NULL AND c2.mobile != '' AND c2.is_active = 1) as phone_group_primary_id")
+                DB::raw("(SELECT COUNT(*) - 1 FROM contacts c2 WHERE c2.mobile = contacts.mobile AND c2.business_id = contacts.business_id AND c2.mobile IS NOT NULL AND c2.mobile != '' AND c2.contact_status = 'active') as has_related_customers"),
+                DB::raw("(SELECT MIN(c2.id) FROM contacts c2 WHERE c2.mobile = contacts.mobile AND c2.business_id = contacts.business_id AND c2.mobile IS NOT NULL AND c2.mobile != '' AND c2.contact_status = 'active') as phone_group_primary_id")
             );
 
             if (request()->session()->get('business.enable_rp') == 1) {
@@ -2274,7 +2274,7 @@ class ContactController extends Controller
                 ->where('mobile', $contact->mobile)
                 ->where('mobile', '!=', '')
                 ->whereNotNull('mobile')
-                ->where('is_active', 1) // Only active contacts
+                ->where('contact_status', 'active') // Only active contacts
                 ->select('id', 'name', 'mobile', 'contact_id', 'custom_field1', 'custom_field2', 'custom_field3', 'custom_field4', 'custom_field5', 'custom_field6', 'custom_field7', 'custom_field8', 'custom_field9', 'custom_field10')
                 ->orderBy('id', 'asc') // Order by ID to show primary customer first
                 ->get();
