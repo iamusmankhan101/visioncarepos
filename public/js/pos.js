@@ -860,17 +860,7 @@ $(document).ready(function() {
             $('div#confirmSuspendModal').modal('show');
         } else {
             // Add selected customers to form before submission
-            console.log('=== BEFORE FORM SUBMISSION ===');
-            console.log('window.selectedRelatedCustomers:', window.selectedRelatedCustomers);
-            console.log('sessionStorage selectedCustomersForInvoice:', sessionStorage.getItem('selectedCustomersForInvoice'));
-            
             addSelectedCustomersToForm();
-            
-            // Debug: Check what's actually in the form
-            var formData = new FormData(pos_form_obj[0]);
-            var selectedCustomersInForm = formData.getAll('selected_customers[]');
-            console.log('selected_customers[] in form:', selectedCustomersInForm);
-            
             pos_form_obj.submit();
         }
     }
@@ -897,16 +887,7 @@ $(document).ready(function() {
 
         $('div#card_details_modal').modal('hide');
         // Add selected customers to form before submission
-        console.log('=== BEFORE CARD FORM SUBMISSION ===');
-        console.log('window.selectedRelatedCustomers:', window.selectedRelatedCustomers);
-        
         addSelectedCustomersToForm();
-        
-        // Debug: Check what's actually in the form
-        var formData = new FormData(pos_form_obj[0]);
-        var selectedCustomersInForm = formData.getAll('selected_customers[]');
-        console.log('selected_customers[] in card form:', selectedCustomersInForm);
-        
         pos_form_obj.submit();
     });
 
@@ -2617,13 +2598,6 @@ function pos_print(receipt) {
     console.log('Has additional_receipts?', receipt.additional_receipts);
     console.log('Additional receipts count:', receipt.additional_receipts ? receipt.additional_receipts.length : 0);
     
-    // Check if we're in express mode (single receipt for multiple customers)
-    var selectedCustomers = window.selectedCustomersForInvoice || JSON.parse(sessionStorage.getItem('selectedCustomersForInvoice') || 'null');
-    var hasMultipleCustomers = selectedCustomers && selectedCustomers.ids && selectedCustomers.ids.length > 1;
-    var isExpressMode = hasMultipleCustomers;
-    
-    console.log('Express mode (single receipt for multiple customers):', isExpressMode);
-    
     //If printer type then connect with websocket
     if (receipt.print_type == 'printer') {
         var content = receipt;
@@ -2656,8 +2630,8 @@ function pos_print(receipt) {
         }, 1200);
     }
     
-    // Only print additional receipts if NOT in express mode
-    if (!isExpressMode && receipt.additional_receipts && receipt.additional_receipts.length > 0) {
+    // Print additional receipts if they exist (for multiple customers)
+    if (receipt.additional_receipts && receipt.additional_receipts.length > 0) {
         console.log('Printing ' + receipt.additional_receipts.length + ' additional receipts');
         
         receipt.additional_receipts.forEach(function(additional_receipt, index) {
@@ -2673,8 +2647,6 @@ function pos_print(receipt) {
                 }
             }, (index + 1) * 2000); // 2 second delay between each print
         });
-    } else if (isExpressMode) {
-        console.log('Skipping additional receipts - express mode enabled (single receipt for multiple customers)');
     } else {
         console.log('No additional receipts to print');
     }

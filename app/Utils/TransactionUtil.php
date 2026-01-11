@@ -958,7 +958,7 @@ class TransactionUtil extends Util
      * @param  string  $receipt_printer_type
      * @return array
      */
-    public function getReceiptDetails($transaction_id, $location_id, $invoice_layout, $business_details, $location_details, $receipt_printer_type, $selected_customers = [], $override_customer_id = null)
+    public function getReceiptDetails($transaction_id, $location_id, $invoice_layout, $business_details, $location_details, $receipt_printer_type, $selected_customers = [])
     {
         $il = $invoice_layout;
 
@@ -1087,15 +1087,7 @@ class TransactionUtil extends Util
         }
 
         //Customer show_customer
-        $customer_id_to_use = $override_customer_id ?? $transaction->contact_id;
-        $customer = Contact::find($customer_id_to_use);
-        
-        \Log::info('Loading customer for receipt', [
-            'transaction_contact_id' => $transaction->contact_id,
-            'override_customer_id' => $override_customer_id,
-            'customer_id_used' => $customer_id_to_use,
-            'customer_name' => $customer ? $customer->name : 'not found'
-        ]);
+        $customer = Contact::find($transaction->contact_id);
 
         $output['contact_id'] = $customer->contact_id;
         $output['contact_name'] = $customer->name;
@@ -1669,16 +1661,6 @@ class TransactionUtil extends Util
         //Additional notes
         $output['additional_notes'] = $transaction->additional_notes;
         $output['footer_text'] = $invoice_layout->footer_text;
-        
-        // Debug logging for footer text
-        \Log::info('Footer text debug', [
-            'invoice_layout_id' => $invoice_layout->id,
-            'invoice_layout_name' => $invoice_layout->name,
-            'footer_text_raw' => $invoice_layout->footer_text,
-            'footer_text_empty' => empty($invoice_layout->footer_text),
-            'footer_text_length' => strlen($invoice_layout->footer_text ?? ''),
-            'output_footer_text' => $output['footer_text']
-        ]);
 
         //Barcode related information.
         $output['show_barcode'] = ! empty($il->show_barcode) ? true : false;

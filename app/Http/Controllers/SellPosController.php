@@ -518,25 +518,6 @@ class SellPosController extends Controller
                         $transaction->save();
                     }
                 }
-                
-                // Store selected customers for single receipt printing
-                $selected_customers = $input['selected_customers'] ?? [];
-                if (!empty($input['multiple_customer_ids'])) {
-                    $customer_ids = explode(',', $input['multiple_customer_ids']);
-                    $selected_customers = array_merge($selected_customers, $customer_ids);
-                }
-                $selected_customers = array_unique(array_filter($selected_customers));
-                
-                if (!empty($selected_customers) && count($selected_customers) > 1) {
-                    \Log::info('Storing selected customers for single receipt:', [
-                        'selected_customers' => $selected_customers
-                    ]);
-                    
-                    // Store selected customer IDs for single receipt printing
-                    $transaction->additional_notes = (!empty($transaction->additional_notes) ? $transaction->additional_notes . "\n" : '') . 
-                                                    'SELECTED_CUSTOMERS:' . implode(',', $selected_customers);
-                    $transaction->save();
-                }
 
                 //Upload Shipping documents
                 Media::uploadMedia($business_id, $transaction, $request, 'shipping_documents', false, 'shipping_document');
@@ -712,7 +693,7 @@ class SellPosController extends Controller
                     // Remove duplicates and filter out empty values
                     $selected_customers = array_unique(array_filter($selected_customers));
                     
-                    \Log::info('Generating receipts for multiple customers', [
+                    \Log::info('Generating single receipt with multiple customers', [
                         'main_customer_id' => $transaction->contact_id,
                         'input_selected_customers' => $input['selected_customers'] ?? 'not set',
                         'input_multiple_customer_ids' => $input['multiple_customer_ids'] ?? 'not set',
@@ -720,28 +701,8 @@ class SellPosController extends Controller
                         'selected_customers_count' => count($selected_customers)
                     ]);
                     
-                    // Generate main receipt for primary customer
-                    $receipt = $this->receiptContent($business_id, $input['location_id'], $transaction->id, null, false, true, $invoice_layout_id);
-                    
-                    // Generate additional receipts for other customers
-                    $additional_receipts = [];
-                    if (count($selected_customers) > 1) {
-                        foreach ($selected_customers as $customer_id) {
-                            if ($customer_id != $transaction->contact_id) {
-                                \Log::info('Generating additional receipt for customer', ['customer_id' => $customer_id]);
-                                
-                                // Generate receipt with specific customer ID
-                                $additional_receipt = $this->receiptContent($business_id, $input['location_id'], $transaction->id, null, false, true, $invoice_layout_id, [], false, $customer_id);
-                                $additional_receipts[] = $additional_receipt;
-                            }
-                        }
-                    }
-                    
-                    // Add additional receipts to the main receipt response
-                    if (!empty($additional_receipts)) {
-                        $receipt['additional_receipts'] = $additional_receipts;
-                        \Log::info('Added additional receipts', ['count' => count($additional_receipts)]);
-                    }
+                    // Generate single receipt with multiple customers' data
+                    $receipt = $this->receiptContent($business_id, $input['location_id'], $transaction->id, null, false, true, $invoice_layout_id, $selected_customers);
                 }
 
                 $output = ['success' => 1, 'msg' => $msg, 'receipt' => $receipt, 'transaction_id' => $transaction->id];
@@ -825,8 +786,7 @@ class SellPosController extends Controller
         $from_pos_screen = true,
         $invoice_layout_id = null,
         $selected_customers = [],
-        $is_delivery_note = false,
-        $override_customer_id = null
+        $is_delivery_note = false
     ) {
         $output = ['is_enabled' => false,
             'print_type' => 'browser',
@@ -851,7 +811,7 @@ class SellPosController extends Controller
         //Check if printer setting is provided.
         $receipt_printer_type = is_null($printer_type) ? $location_details->receipt_printer_type : $printer_type;
 
-        $receipt_details = $this->transactionUtil->getReceiptDetails($transaction_id, $location_id, $invoice_layout, $business_details, $location_details, $receipt_printer_type, $selected_customers, $override_customer_id);
+        $receipt_details = $this->transactionUtil->getReceiptDetails($transaction_id, $location_id, $invoice_layout, $business_details, $location_details, $receipt_printer_type, $selected_customers);
 
         $currency_details = [
             'symbol' => $business_details->currency_symbol,
