@@ -1249,10 +1249,69 @@ class TransactionUtil extends Util
             }
         } else {
             // Fallback to old method - extract from additional_notes
-            if (!empty($transaction->additional_notes) && strpos($transaction->additional_notes, 'Additional Customers:') !== false) {
-                preg_match('/Additional Customers: (.+?)(\n|$)/', $transaction->additional_notes, $matches);
-                if (!empty($matches[1])) {
-                    $output['additional_customers'] = trim($matches[1]);
+            if (!empty($transaction->additional_notes)) {
+                // Check for the new format first
+                if (strpos($transaction->additional_notes, 'MULTI_INVOICE_CUSTOMERS:') !== false) {
+                    preg_match('/MULTI_INVOICE_CUSTOMERS:([^\n]+)/', $transaction->additional_notes, $matches);
+                    if (!empty($matches[1])) {
+                        $additional_customer_ids = explode(',', trim($matches[1]));
+                        // Get customer details for all additional customers
+                        $customer_names = [];
+                        $customers_data = [];
+                        
+                        foreach ($additional_customer_ids as $customer_id) {
+                            if ($customer_id && $customer_id != $transaction->contact_id) {
+                                $additional_customer = Contact::find($customer_id);
+                                if ($additional_customer) {
+                                    $customer_names[] = $additional_customer->name;
+                                    $customers_data[] = [
+                                        'id' => $additional_customer->id,
+                                        'name' => $additional_customer->name,
+                                        'contact_id' => $additional_customer->contact_id,
+                                        'mobile' => $additional_customer->mobile,
+                                        'prescription' => [
+                                            'right_eye' => [
+                                                'distance' => [
+                                                    'sph' => $additional_customer->custom_field1,
+                                                    'cyl' => $additional_customer->custom_field2,
+                                                    'axis' => $additional_customer->custom_field3,
+                                                ],
+                                                'near' => [
+                                                    'sph' => $additional_customer->custom_field4,
+                                                    'cyl' => $additional_customer->custom_field5,
+                                                    'axis' => $additional_customer->custom_field6,
+                                                ],
+                                            ],
+                                            'left_eye' => [
+                                                'distance' => [
+                                                    'sph' => $additional_customer->custom_field7,
+                                                    'cyl' => $additional_customer->custom_field8,
+                                                    'axis' => $additional_customer->custom_field9,
+                                                ],
+                                                'near' => [
+                                                    'sph' => $additional_customer->custom_field10,
+                                                    'cyl' => $additional_customer->shipping_custom_field_details['shipping_custom_field_1'] ?? '',
+                                                    'axis' => $additional_customer->shipping_custom_field_details['shipping_custom_field_2'] ?? '',
+                                                ],
+                                            ],
+                                        ],
+                                    ];
+                                }
+                            }
+                        }
+                        
+                        if (!empty($customer_names)) {
+                            $output['additional_customers'] = implode(', ', $customer_names);
+                            $output['multiple_customers_data'] = $customers_data;
+                        }
+                    }
+                }
+                // Fallback to old format
+                elseif (strpos($transaction->additional_notes, 'Additional Customers:') !== false) {
+                    preg_match('/Additional Customers: (.+?)(\n|$)/', $transaction->additional_notes, $matches);
+                    if (!empty($matches[1])) {
+                        $output['additional_customers'] = trim($matches[1]);
+                    }
                 }
             }
         }

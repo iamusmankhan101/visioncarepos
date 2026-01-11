@@ -1845,8 +1845,42 @@ class SellPosController extends Controller
 
                 $invoice_layout_id = $transaction->is_direct_sale ? $transaction->location->sale_invoice_layout_id : null;
                 
-                // Generate receipt
-                $receipt = $this->receiptContent($business_id, $transaction->location_id, $transaction_id, $printer_type, $is_package_slip, false, $invoice_layout_id, $is_delivery_note);
+                // Retrieve stored multiple customers for this transaction
+                $selected_customers = [];
+                if (!empty($transaction->additional_notes)) {
+                    // Check for the new format first
+                    if (strpos($transaction->additional_notes, 'MULTI_INVOICE_CUSTOMERS:') !== false) {
+                        preg_match('/MULTI_INVOICE_CUSTOMERS:([^\n]+)/', $transaction->additional_notes, $matches);
+                        if (!empty($matches[1])) {
+                            $additional_customer_ids = explode(',', trim($matches[1]));
+                            // Include the main customer as well
+                            $selected_customers = array_merge([$transaction->contact_id], $additional_customer_ids);
+                        }
+                    }
+                    // Fallback to old format
+                    elseif (strpos($transaction->additional_notes, 'Additional Customers:') !== false) {
+                        preg_match('/Additional Customers: (.+?)(\n|$)/', $transaction->additional_notes, $matches);
+                        if (!empty($matches[1])) {
+                            // This contains names, we need to convert to IDs
+                            // For now, just include the main customer
+                            $selected_customers = [$transaction->contact_id];
+                        }
+                    }
+                }
+                
+                // If no stored customers found, just use the main customer
+                if (empty($selected_customers)) {
+                    $selected_customers = [$transaction->contact_id];
+                }
+                
+                \Log::info('Printing invoice with retrieved customers', [
+                    'transaction_id' => $transaction_id,
+                    'selected_customers' => $selected_customers,
+                    'additional_notes_preview' => substr($transaction->additional_notes ?? '', 0, 100)
+                ]);
+                
+                // Generate receipt with multiple customers
+                $receipt = $this->receiptContent($business_id, $transaction->location_id, $transaction_id, $printer_type, $is_package_slip, false, $invoice_layout_id, $selected_customers, $is_delivery_note);
                 
                 // Restore original contact_id if it was changed
                 if (!empty($custom_customer_id) && isset($original_contact_id)) {
