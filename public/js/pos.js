@@ -819,6 +819,20 @@ $(document).ready(function() {
         }
     });
     
+    // Function to add selected customers to form before submission
+    function addSelectedCustomersToForm() {
+        var selectedCustomers = window.selectedCustomersForInvoice || JSON.parse(sessionStorage.getItem('selectedCustomersForInvoice') || 'null');
+        if (selectedCustomers && selectedCustomers.ids && selectedCustomers.ids.length > 0) {
+            console.log('Adding selected customers to form:', selectedCustomers.ids);
+            
+            // Remove existing multiple_customer_ids input if any
+            $('input[name="multiple_customer_ids"]').remove();
+            
+            // Add selected customers as hidden input
+            pos_form_obj.append('<input type="hidden" name="multiple_customer_ids" value="' + selectedCustomers.ids.join(',') + '">');
+        }
+    }
+
     // Function to process express checkout
     function processExpressCheckout($button, pay_method) {
         //If pay method is credit sale submit form
@@ -1008,8 +1022,12 @@ $(document).ready(function() {
             if (cnf) {
                 disable_pos_form_actions();
 
+                // Add selected customers to form before serialization
+                addSelectedCustomersToForm();
+
                 var data = $(form).serialize();
                 data = data + '&status=final';
+                
                 var url = $(form).attr('action');
                 $.ajax({
                     method: 'POST',
