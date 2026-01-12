@@ -858,6 +858,9 @@ $(document).ready(function() {
             }
         }
 
+        console.log('=== Express checkout - checking for selected customers ===');
+        console.log('window.selectedCustomersForInvoice:', window.selectedCustomersForInvoice);
+
         //Check for remaining balance & add it in 1st payment row
         var total_payable = __read_number($('input#final_total_input'));
         var total_paying = __read_number($('input#total_paying_input'));
@@ -1042,8 +1045,12 @@ $(document).ready(function() {
                 var data = $(form).serialize();
                 data = data + '&status=final';
                 
-                console.log('Form data being sent:', data.substring(0, 200) + '...');
+                console.log('Form data being sent (first 500 chars):', data.substring(0, 500));
                 console.log('Contains multiple_customer_ids:', data.includes('multiple_customer_ids'));
+                if (data.includes('multiple_customer_ids')) {
+                    var match = data.match(/multiple_customer_ids=([^&]*)/);
+                    console.log('multiple_customer_ids value:', match ? decodeURIComponent(match[1]) : 'not found');
+                }
                 
                 var url = $(form).attr('action');
                 $.ajax({

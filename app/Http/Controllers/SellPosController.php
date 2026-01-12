@@ -326,6 +326,14 @@ class SellPosController extends Controller
             $is_direct_sale = true;
         }
 
+        // Debug: Check if we're receiving the multiple customer data
+        \Log::info('POS Store - Request keys: ' . implode(', ', array_keys($request->all())));
+        if ($request->has('multiple_customer_ids')) {
+            \Log::info('POS Store - Found multiple_customer_ids: ' . $request->input('multiple_customer_ids'));
+        } else {
+            \Log::info('POS Store - No multiple_customer_ids in request');
+        }
+
         //Check if there is a open register, if no then redirect to Create Register screen.
         if (!$is_direct_sale && $this->cashRegisterUtil->countOpenedRegister() == 0) {
             return redirect()->action([\App\Http\Controllers\CashRegisterController::class, 'create']);
