@@ -327,12 +327,16 @@ class SellPosController extends Controller
         }
 
         // Debug: Check if we're receiving the multiple customer data
-        \Log::info('POS Store - Request keys: ' . implode(', ', array_keys($request->all())));
+        $debugInfo = 'POS Store called at ' . date('Y-m-d H:i:s') . "\n";
+        $debugInfo .= 'Request keys: ' . implode(', ', array_keys($request->all())) . "\n";
+        
         if ($request->has('multiple_customer_ids')) {
-            \Log::info('POS Store - Found multiple_customer_ids: ' . $request->input('multiple_customer_ids'));
+            $debugInfo .= 'Found multiple_customer_ids: ' . $request->input('multiple_customer_ids') . "\n";
         } else {
-            \Log::info('POS Store - No multiple_customer_ids in request');
+            $debugInfo .= 'No multiple_customer_ids in request' . "\n";
         }
+        
+        file_put_contents(storage_path('logs/debug_multiple_customers.log'), $debugInfo, FILE_APPEND);
 
         //Check if there is a open register, if no then redirect to Create Register screen.
         if (!$is_direct_sale && $this->cashRegisterUtil->countOpenedRegister() == 0) {
