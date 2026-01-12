@@ -317,6 +317,9 @@ class SellPosController extends Controller
      */
     public function store(Request $request)
     {
+        // Debug: Add this at the very beginning to ensure it runs
+        file_put_contents(storage_path('logs/debug_store_called.log'), 'Store method called at ' . date('Y-m-d H:i:s') . "\n", FILE_APPEND);
+        
         if (!auth()->user()->can('sell.create') && !auth()->user()->can('direct_sell.access') && !auth()->user()->can('so.create')) {
             abort(403, 'Unauthorized action.');
         }
