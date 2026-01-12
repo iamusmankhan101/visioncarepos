@@ -1033,10 +1033,15 @@ $(document).ready(function() {
                 disable_pos_form_actions();
 
                 // Add selected customers to form before serialization
+                console.log('About to call addSelectedCustomersToForm...');
                 addSelectedCustomersToForm();
+                console.log('Called addSelectedCustomersToForm');
 
                 var data = $(form).serialize();
                 data = data + '&status=final';
+                
+                console.log('Form data being sent:', data.substring(0, 200) + '...');
+                console.log('Contains multiple_customer_ids:', data.includes('multiple_customer_ids'));
                 
                 var url = $(form).attr('action');
                 $.ajax({
