@@ -848,6 +848,8 @@ $(document).ready(function() {
         //If pay method is credit sale submit form
         if (pay_method == 'credit_sale') {
             $('#is_credit_sale').val(1);
+            // Add selected customers to form before submission
+            addSelectedCustomersToForm();
             pos_form_obj.submit();
             return true;
         } else {
