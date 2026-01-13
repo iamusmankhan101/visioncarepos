@@ -894,39 +894,138 @@ class SellController extends Controller
         $total_amount = 0;
         $total_paid = 0;
         
-        // Start building the consolidated invoice HTML
-        $html = '<div style="width: 100%; font-family: Arial, sans-serif;">';
+        // Start building the consolidated invoice HTML with print-specific styles
+        $html = '<!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="utf-8">
+            <title>Consolidated Sales Invoice</title>
+            <style>
+                @media print {
+                    body { margin: 0; }
+                    .no-print { display: none !important; }
+                }
+                body { 
+                    font-family: Arial, sans-serif; 
+                    font-size: 12px; 
+                    line-height: 1.4;
+                    margin: 20px;
+                    color: #000;
+                }
+                .header { 
+                    text-align: center; 
+                    margin-bottom: 30px; 
+                    border-bottom: 2px solid #000;
+                    padding-bottom: 15px;
+                }
+                .business-name { 
+                    font-size: 24px; 
+                    font-weight: bold; 
+                    margin-bottom: 5px; 
+                }
+                .business-info { 
+                    font-size: 14px; 
+                    margin-bottom: 3px; 
+                }
+                .invoice-title { 
+                    font-size: 20px; 
+                    font-weight: bold; 
+                    margin: 15px 0 10px 0; 
+                }
+                .period-info { 
+                    font-size: 14px; 
+                    margin-bottom: 5px; 
+                }
+                .summary-box { 
+                    background-color: #f9f9f9; 
+                    border: 1px solid #ddd; 
+                    padding: 15px; 
+                    margin: 20px 0; 
+                }
+                .summary-title { 
+                    font-size: 16px; 
+                    font-weight: bold; 
+                    margin-bottom: 10px; 
+                }
+                table { 
+                    width: 100%; 
+                    border-collapse: collapse; 
+                    margin: 20px 0; 
+                }
+                th { 
+                    background-color: #f5f5f5; 
+                    border: 1px solid #000; 
+                    padding: 8px; 
+                    font-weight: bold; 
+                    text-align: left; 
+                }
+                td { 
+                    border: 1px solid #000; 
+                    padding: 6px; 
+                }
+                .text-right { text-align: right; }
+                .text-center { text-align: center; }
+                .totals-box { 
+                    background-color: #f0f0f0; 
+                    border: 2px solid #000; 
+                    padding: 15px; 
+                    margin-top: 20px; 
+                }
+                .totals-title { 
+                    font-size: 18px; 
+                    font-weight: bold; 
+                    margin-bottom: 10px; 
+                }
+                .total-line { 
+                    font-size: 14px; 
+                    margin-bottom: 5px; 
+                }
+                .grand-total { 
+                    font-size: 16px; 
+                    font-weight: bold; 
+                    border-top: 1px solid #000; 
+                    padding-top: 5px; 
+                    margin-top: 10px; 
+                }
+            </style>
+        </head>
+        <body>';
         
         // Header
-        $html .= '<div style="text-align: center; margin-bottom: 20px;">';
-        $html .= '<h2>' . $business->name . '</h2>';
+        $html .= '<div class="header">';
+        $html .= '<div class="business-name">' . ($business->name ?? 'Business Name') . '</div>';
         if (!empty($business->address)) {
-            $html .= '<p>' . $business->address . '</p>';
+            $html .= '<div class="business-info">' . $business->address . '</div>';
         }
         if (!empty($business->mobile)) {
-            $html .= '<p>Mobile: ' . $business->mobile . '</p>';
+            $html .= '<div class="business-info">Mobile: ' . $business->mobile . '</div>';
         }
-        $html .= '<h3>Consolidated Sales Report</h3>';
-        $html .= '<p><strong>Period:</strong> ' . date('d/m/Y', strtotime($start_date)) . ' to ' . date('d/m/Y', strtotime($end_date)) . '</p>';
-        $html .= '<p><strong>Generated:</strong> ' . date('d/m/Y H:i:s') . '</p>';
+        if (!empty($business->email)) {
+            $html .= '<div class="business-info">Email: ' . $business->email . '</div>';
+        }
+        $html .= '<div class="invoice-title">CONSOLIDATED SALES INVOICE</div>';
+        $html .= '<div class="period-info"><strong>Period:</strong> ' . date('d/m/Y', strtotime($start_date)) . ' to ' . date('d/m/Y', strtotime($end_date)) . '</div>';
+        $html .= '<div class="period-info"><strong>Generated:</strong> ' . date('d/m/Y H:i:s') . '</div>';
         $html .= '</div>';
 
         // Summary
-        $html .= '<div style="margin-bottom: 20px; padding: 10px; border: 1px solid #ddd;">';
-        $html .= '<h4>Summary</h4>';
-        $html .= '<p><strong>Total Invoices:</strong> ' . count($transactions) . '</p>';
+        $html .= '<div class="summary-box">';
+        $html .= '<div class="summary-title">SALES SUMMARY</div>';
+        $html .= '<div><strong>Total Invoices:</strong> ' . count($transactions) . '</div>';
+        $html .= '<div><strong>Date Range:</strong> ' . date('d/m/Y', strtotime($start_date)) . ' - ' . date('d/m/Y', strtotime($end_date)) . '</div>';
         $html .= '</div>';
 
         // Transactions table
-        $html .= '<table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">';
+        $html .= '<table>';
         $html .= '<thead>';
-        $html .= '<tr style="background-color: #f5f5f5;">';
-        $html .= '<th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Date</th>';
-        $html .= '<th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Invoice #</th>';
-        $html .= '<th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Customer</th>';
-        $html .= '<th style="border: 1px solid #ddd; padding: 8px; text-align: right;">Amount</th>';
-        $html .= '<th style="border: 1px solid #ddd; padding: 8px; text-align: right;">Paid</th>';
-        $html .= '<th style="border: 1px solid #ddd; padding: 8px; text-align: center;">Status</th>';
+        $html .= '<tr>';
+        $html .= '<th style="width: 12%;">Date</th>';
+        $html .= '<th style="width: 15%;">Invoice No.</th>';
+        $html .= '<th style="width: 25%;">Customer</th>';
+        $html .= '<th style="width: 15%;">Mobile</th>';
+        $html .= '<th class="text-right" style="width: 13%;">Amount</th>';
+        $html .= '<th class="text-right" style="width: 13%;">Paid</th>';
+        $html .= '<th class="text-center" style="width: 7%;">Status</th>';
         $html .= '</tr>';
         $html .= '</thead>';
         $html .= '<tbody>';
@@ -936,12 +1035,13 @@ class SellController extends Controller
             $total_paid += $transaction->total_paid ?? 0;
             
             $html .= '<tr>';
-            $html .= '<td style="border: 1px solid #ddd; padding: 8px;">' . date('d/m/Y', strtotime($transaction->transaction_date)) . '</td>';
-            $html .= '<td style="border: 1px solid #ddd; padding: 8px;">' . $transaction->invoice_no . '</td>';
-            $html .= '<td style="border: 1px solid #ddd; padding: 8px;">' . ($transaction->name ?? 'Walk-in Customer') . '</td>';
-            $html .= '<td style="border: 1px solid #ddd; padding: 8px; text-align: right;">' . number_format($transaction->final_total, 2) . '</td>';
-            $html .= '<td style="border: 1px solid #ddd; padding: 8px; text-align: right;">' . number_format($transaction->total_paid ?? 0, 2) . '</td>';
-            $html .= '<td style="border: 1px solid #ddd; padding: 8px; text-align: center;">' . ucfirst($transaction->payment_status) . '</td>';
+            $html .= '<td>' . date('d/m/Y', strtotime($transaction->transaction_date)) . '</td>';
+            $html .= '<td><strong>' . $transaction->invoice_no . '</strong></td>';
+            $html .= '<td>' . ($transaction->name ?? 'Walk-in Customer') . '</td>';
+            $html .= '<td>' . ($transaction->mobile ?? '-') . '</td>';
+            $html .= '<td class="text-right">' . number_format($transaction->final_total, 2) . '</td>';
+            $html .= '<td class="text-right">' . number_format($transaction->total_paid ?? 0, 2) . '</td>';
+            $html .= '<td class="text-center">' . ucfirst($transaction->payment_status) . '</td>';
             $html .= '</tr>';
         }
 
@@ -949,14 +1049,21 @@ class SellController extends Controller
         $html .= '</table>';
 
         // Totals
-        $html .= '<div style="margin-top: 20px; padding: 15px; background-color: #f9f9f9; border: 1px solid #ddd;">';
-        $html .= '<h4>Totals</h4>';
-        $html .= '<p><strong>Total Amount: </strong>' . number_format($total_amount, 2) . '</p>';
-        $html .= '<p><strong>Total Paid: </strong>' . number_format($total_paid, 2) . '</p>';
-        $html .= '<p><strong>Total Due: </strong>' . number_format($total_amount - $total_paid, 2) . '</p>';
+        $html .= '<div class="totals-box">';
+        $html .= '<div class="totals-title">FINANCIAL SUMMARY</div>';
+        $html .= '<div class="total-line"><strong>Total Sales Amount:</strong> <span style="float: right;">' . number_format($total_amount, 2) . '</span></div>';
+        $html .= '<div class="total-line"><strong>Total Amount Paid:</strong> <span style="float: right;">' . number_format($total_paid, 2) . '</span></div>';
+        $html .= '<div class="total-line"><strong>Total Outstanding:</strong> <span style="float: right;">' . number_format($total_amount - $total_paid, 2) . '</span></div>';
+        $html .= '<div class="grand-total"><strong>NET SALES:</strong> <span style="float: right;">' . number_format($total_amount, 2) . '</span></div>';
         $html .= '</div>';
 
+        // Footer
+        $html .= '<div style="margin-top: 30px; text-align: center; font-size: 11px; color: #666;">';
+        $html .= '<p>This is a computer-generated consolidated sales report.</p>';
+        $html .= '<p>Generated on ' . date('d/m/Y \a\t H:i:s') . '</p>';
         $html .= '</div>';
+
+        $html .= '</body></html>';
 
         return [
             'html_content' => $html,
