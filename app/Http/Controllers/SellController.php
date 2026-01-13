@@ -899,18 +899,25 @@ class SellController extends Controller
         <html>
         <head>
             <meta charset="utf-8">
-            <title>Consolidated Sales Invoice</title>
+            <title>Sales Invoice</title>
             <style>
                 @media print {
                     body { margin: 0; }
                     .no-print { display: none !important; }
+                    @page { 
+                        margin: 0.5in; 
+                        size: A4;
+                    }
+                }
+                @media screen {
+                    body { margin: 20px; }
                 }
                 body { 
                     font-family: Arial, sans-serif; 
                     font-size: 12px; 
                     line-height: 1.4;
-                    margin: 20px;
                     color: #000;
+                    background: white;
                 }
                 .header { 
                     text-align: center; 
@@ -1003,16 +1010,16 @@ class SellController extends Controller
         if (!empty($business->email)) {
             $html .= '<div class="business-info">Email: ' . $business->email . '</div>';
         }
-        $html .= '<div class="invoice-title">CONSOLIDATED SALES INVOICE</div>';
+        $html .= '<div class="invoice-title">SALES INVOICE</div>';
         $html .= '<div class="period-info"><strong>Period:</strong> ' . date('d/m/Y', strtotime($start_date)) . ' to ' . date('d/m/Y', strtotime($end_date)) . '</div>';
-        $html .= '<div class="period-info"><strong>Generated:</strong> ' . date('d/m/Y H:i:s') . '</div>';
+        $html .= '<div class="period-info"><strong>Date:</strong> ' . date('d/m/Y H:i:s') . '</div>';
         $html .= '</div>';
 
         // Summary
         $html .= '<div class="summary-box">';
         $html .= '<div class="summary-title">SALES SUMMARY</div>';
-        $html .= '<div><strong>Total Invoices:</strong> ' . count($transactions) . '</div>';
-        $html .= '<div><strong>Date Range:</strong> ' . date('d/m/Y', strtotime($start_date)) . ' - ' . date('d/m/Y', strtotime($end_date)) . '</div>';
+        $html .= '<div><strong>Total Transactions:</strong> ' . count($transactions) . '</div>';
+        $html .= '<div><strong>Period:</strong> ' . date('d/m/Y', strtotime($start_date)) . ' - ' . date('d/m/Y', strtotime($end_date)) . '</div>';
         $html .= '</div>';
 
         // Transactions table
@@ -1055,12 +1062,6 @@ class SellController extends Controller
         $html .= '<div class="total-line"><strong>Total Amount Paid:</strong> <span style="float: right;">' . number_format($total_paid, 2) . '</span></div>';
         $html .= '<div class="total-line"><strong>Total Outstanding:</strong> <span style="float: right;">' . number_format($total_amount - $total_paid, 2) . '</span></div>';
         $html .= '<div class="grand-total"><strong>NET SALES:</strong> <span style="float: right;">' . number_format($total_amount, 2) . '</span></div>';
-        $html .= '</div>';
-
-        // Footer
-        $html .= '<div style="margin-top: 30px; text-align: center; font-size: 11px; color: #666;">';
-        $html .= '<p>This is a computer-generated consolidated sales report.</p>';
-        $html .= '<p>Generated on ' . date('d/m/Y \a\t H:i:s') . '</p>';
         $html .= '</div>';
 
         $html .= '</body></html>';
