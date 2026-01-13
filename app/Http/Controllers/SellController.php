@@ -710,7 +710,8 @@ class SellController extends Controller
                     'payment_status',
                     function ($row) {
                         $payment_status = Transaction::getPaymentStatus($row);
-                        return (string) view('sell.partials.payment_status', compact('payment_status', 'row'));
+                        $id = $row->id;
+                        return (string) view('sell.partials.payment_status', compact('payment_status', 'row', 'id'));
                     }
                 )
                 ->editColumn('additional_notes', function ($row) {
