@@ -228,20 +228,40 @@
                         },
                         dataType: 'json',
                         success: function(result) {
-                            if(result.success == 1 && result.receipts && result.receipts.length > 0) {
-                                // Print each receipt
-                                result.receipts.forEach(function(receipt, index) {
+                            if(result.success == 1 && result.transaction_ids && result.transaction_ids.length > 0) {
+                                // Print each invoice individually
+                                var printCount = 0;
+                                result.transaction_ids.forEach(function(transactionId, index) {
                                     setTimeout(function() {
-                                        pos_print(receipt);
+                                        $.ajax({
+                                            url: '/sells/' + transactionId + '/print',
+                                            type: 'GET',
+                                            data: { ajax: true },
+                                            dataType: 'json',
+                                            success: function(printResult) {
+                                                if(printResult.success == 1 && printResult.receipt) {
+                                                    pos_print(printResult.receipt);
+                                                    printCount++;
+                                                }
+                                            },
+                                            error: function() {
+                                                console.log('Failed to print invoice ' + transactionId);
+                                            }
+                                        });
                                     }, index * 1000); // 1 second delay between prints
                                 });
-                                toastr.success(result.receipts.length + ' @lang("lang_v1.invoices_sent_to_printer")');
+                                
+                                toastr.success(result.count + ' @lang("lang_v1.invoices_sent_to_printer")');
                             } else {
-                                toastr.error('@lang("lang_v1.no_invoices_found")');
+                                toastr.error(result.msg || '@lang("lang_v1.no_invoices_found")');
                             }
                         },
-                        error: function() {
-                            toastr.error('@lang("messages.something_went_wrong")');
+                        error: function(xhr) {
+                            var errorMsg = '@lang("messages.something_went_wrong")';
+                            if (xhr.responseJSON && xhr.responseJSON.msg) {
+                                errorMsg = xhr.responseJSON.msg;
+                            }
+                            toastr.error(errorMsg);
                         },
                         complete: function() {
                             // Reset button state

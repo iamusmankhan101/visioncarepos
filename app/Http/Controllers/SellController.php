@@ -866,35 +866,14 @@ class SellController extends Controller
                 ]);
             }
 
-            $receipts = [];
-            $sellPosController = new \App\Http\Controllers\SellPosController();
-            
-            foreach ($transactions as $transaction) {
-                try {
-                    // Create a mock request for the printInvoice method
-                    $mockRequest = new \Illuminate\Http\Request();
-                    $mockRequest->merge(['ajax' => true]);
-                    
-                    // Call the printInvoice method from SellPosController
-                    $response = $sellPosController->printInvoice($mockRequest, $transaction->id);
-                    
-                    if ($response instanceof \Illuminate\Http\JsonResponse) {
-                        $data = $response->getData(true);
-                        if (!empty($data['success']) && !empty($data['receipt'])) {
-                            $receipts[] = $data['receipt'];
-                        }
-                    }
-                } catch (\Exception $e) {
-                    // Skip this receipt if there's an error, but continue with others
-                    \Log::error('Bulk print error for transaction ' . $transaction->id . ': ' . $e->getMessage());
-                    continue;
-                }
-            }
+            // For now, just return the transaction IDs so the frontend can print them individually
+            $transaction_ids = $transactions->pluck('id')->toArray();
 
             return response()->json([
                 'success' => 1,
-                'receipts' => $receipts,
-                'msg' => count($receipts) . ' ' . __('lang_v1.invoices_ready_to_print')
+                'transaction_ids' => $transaction_ids,
+                'count' => count($transaction_ids),
+                'msg' => count($transaction_ids) . ' ' . __('lang_v1.invoices_ready_to_print')
             ]);
 
         } catch (\Exception $e) {
