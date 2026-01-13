@@ -287,4 +287,27 @@
             });
         });
     </script>
+    
+    <!-- Include POS JavaScript for printing functionality -->
+    <script src="{{ asset('js/pos.js?v=' . $asset_v) }}"></script>
+    
+    <script>
+        // Fallback pos_print function if not available from pos.js
+        if (typeof pos_print === 'undefined') {
+            function pos_print(receipt) {
+                console.log('Using fallback pos_print function');
+                if (receipt && receipt.html_content) {
+                    // Open print window
+                    var printWindow = window.open('', '_blank');
+                    printWindow.document.write(receipt.html_content);
+                    printWindow.document.close();
+                    printWindow.focus();
+                    printWindow.print();
+                    printWindow.close();
+                } else {
+                    console.error('Invalid receipt data for printing');
+                }
+            }
+        }
+    </script>
 @endsection
