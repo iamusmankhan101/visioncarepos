@@ -1600,6 +1600,7 @@ return [
     'invoices_sent_to_printer' => 'invoices sent to printer',
     'no_invoices_found' => 'No invoices found for the selected criteria',
     'please_select_date_range' => 'Please select a date range first',
+    'select_date_range_to_enable' => 'Select a date range to enable bulk printing',
     'no_permission_to_print' => 'You do not have permission to print invoices',
     'too_many_invoices_limit_50' => 'Too many invoices selected. Please limit to 50 invoices at once.',
     'invoices_ready_to_print' => 'invoices ready to print',

@@ -50,9 +50,13 @@
             <div class="col-md-3">
                 <div class="form-group">
                     <label>&nbsp;</label><br>
-                    <button type="button" class="btn btn-primary" id="bulk_print_invoices" disabled>
+                    <!-- Always show button for testing, but check permissions in backend -->
+                    <button type="button" class="btn btn-primary btn-block" id="bulk_print_invoices" disabled title="@lang('lang_v1.select_date_range_to_enable')">
                         <i class="fa fa-print"></i> @lang('lang_v1.print_invoices')
                     </button>
+                    @cannot('print_invoice')
+                        <small class="text-muted">@lang('lang_v1.no_permission_to_print')</small>
+                    @endcannot
                 </div>
             </div>
         </div>
@@ -189,15 +193,21 @@
 
             // Enable/disable bulk print button based on date filter
             $('#sales_date_filter').on('apply.daterangepicker', function(ev, picker) {
+                console.log('Date range applied, enabling bulk print button');
                 $('#bulk_print_invoices').prop('disabled', false);
             });
             
             $('#sales_date_filter').on('cancel.daterangepicker', function(ev, picker) {
+                console.log('Date range cancelled, disabling bulk print button');
                 $('#bulk_print_invoices').prop('disabled', true);
             });
 
+            // Debug: Check if button exists
+            console.log('Bulk print button found:', $('#bulk_print_invoices').length > 0);
+
             // Bulk print invoices functionality
             $('#bulk_print_invoices').click(function() {
+                console.log('Bulk print button clicked');
                 if($('#sales_date_filter').val()) {
                     var start = $('#sales_date_filter').data('daterangepicker').startDate.format('YYYY-MM-DD');
                     var end = $('#sales_date_filter').data('daterangepicker').endDate.format('YYYY-MM-DD');
