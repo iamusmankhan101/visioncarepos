@@ -706,12 +706,8 @@ class SellController extends Controller
                     '<span class="total-paid" data-orig-value="{{$total_paid}}">@format_currency($total_paid)</span>'
                 )
                 ->editColumn('transaction_date', '{{@format_datetime($transaction_date)}}')
-                ->addColumn('contact_name', '@if(!empty($supplier_business_name)) {{$supplier_business_name}}, <br> @endif {{$name}}')
-                ->filterColumn('contact_name', function ($query, $keyword) {
-                    $query->where(function ($q) use ($keyword) {
-                        $q->where('contacts.name', 'like', "%{$keyword}%")
-                        ->orWhere('contacts.supplier_business_name', 'like', "%{$keyword}%");
-                    });
+                ->addColumn('contact_name', function ($row) {
+                    return $row->name ?? '';
                 })
                 ->editColumn(
                     'payment_status',
