@@ -458,9 +458,9 @@ class SellController extends Controller
 
                     return $status;
                 })
-                ->addColumn('conatct_name', '@if(!empty($supplier_business_name)) {{$supplier_business_name}}, <br> @endif {{$name}}')
+                ->addColumn('contact_name', '@if(!empty($supplier_business_name)) {{$supplier_business_name}}, <br> @endif {{$name}}')
                 ->editColumn('total_items', '{{@format_quantity($total_items)}}')
-                ->filterColumn('conatct_name', function ($query, $keyword) {
+                ->filterColumn('contact_name', function ($query, $keyword) {
                     $query->where(function ($q) use ($keyword) {
                         $q->where('contacts.name', 'like', "%{$keyword}%")
                         ->orWhere('contacts.supplier_business_name', 'like', "%{$keyword}%");
@@ -596,7 +596,7 @@ class SellController extends Controller
                         }
                     }, ]);
 
-            $rawColumns = ['checkbox', 'final_total', 'action', 'total_paid', 'total_remaining', 'payment_status', 'invoice_no', 'discount_amount', 'tax_amount', 'total_before_tax', 'shipping_status', 'types_of_service_name', 'payment_methods', 'return_due', 'conatct_name', 'status', 'zatca_status', 'additional_notes'];
+            $rawColumns = ['checkbox', 'final_total', 'action', 'total_paid', 'total_remaining', 'payment_status', 'invoice_no', 'discount_amount', 'tax_amount', 'total_before_tax', 'shipping_status', 'types_of_service_name', 'payment_methods', 'return_due', 'contact_name', 'status', 'zatca_status', 'additional_notes'];
 
             // Restrict global search to indexed columns only to avoid full scans
             $datatable->filter(function ($query) {
@@ -1721,8 +1721,8 @@ class SellController extends Controller
                 ->editColumn('transaction_date', '{{@format_date($transaction_date)}}')
                 ->editColumn('total_items', '{{@format_quantity($total_items)}}')
                 ->editColumn('total_quantity', '{{@format_quantity($total_quantity)}}')
-                ->addColumn('conatct_name', '@if(!empty($supplier_business_name)) {{$supplier_business_name}}, <br>@endif {{$name}}')
-                ->filterColumn('conatct_name', function ($query, $keyword) {
+                ->addColumn('contact_name', '@if(!empty($supplier_business_name)) {{$supplier_business_name}}, <br>@endif {{$name}}')
+                ->filterColumn('contact_name', function ($query, $keyword) {
                     $query->where(function ($q) use ($keyword) {
                         $q->where('contacts.name', 'like', "%{$keyword}%")
                         ->orWhere('contacts.supplier_business_name', 'like', "%{$keyword}%");
@@ -1739,7 +1739,7 @@ class SellController extends Controller
                             return '';
                         }
                     }, ])
-                ->rawColumns(['action', 'invoice_no', 'transaction_date', 'conatct_name'])
+                ->rawColumns(['action', 'invoice_no', 'transaction_date', 'contact_name'])
                 ->make(true);
         }
     }
