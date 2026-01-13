@@ -505,4 +505,38 @@
         });
     </script>
     <script src="{{ asset('js/payment.js?v=' . $asset_v) }}"></script>
+
+    <!-- Multiple Customers Modal -->
+    <div class="modal fade" id="multipleCustomersModal" tabindex="-1" role="dialog" aria-labelledby="multipleCustomersModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title" id="multipleCustomersModalLabel">
+                        <i class="fa fa-users"></i> Multiple Customers
+                    </h4>
+                </div>
+                <div class="modal-body">
+                    <p><strong>This sale includes the following customers:</strong></p>
+                    <div id="customersList" style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; border-left: 4px solid #007bff;">
+                        <!-- Customer names will be populated here -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Handle multiple customers modal
+        $(document).on('click', '.multiple-customers-link', function(e) {
+            e.preventDefault();
+            var customers = $(this).data('customers');
+            $('#customersList').html('<i class="fa fa-users text-primary"></i> ' + customers);
+        });
+    </script>
 @endsection

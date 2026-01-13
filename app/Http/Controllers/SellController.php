@@ -516,6 +516,47 @@ class SellController extends Controller
                     return $status;
                 })
                 ->editColumn('so_qty_remaining', '{{@format_quantity($so_qty_remaining)}}')
+                ->editColumn('additional_notes', function ($row) {
+                    if (empty($row->additional_notes)) {
+                        return '';
+                    }
+                    
+                    // Check if this contains multiple customers information
+                    if (strpos($row->additional_notes, 'Multiple Customers:') !== false || 
+                        strpos($row->additional_notes, 'SELECTED_CUSTOMERS:') !== false ||
+                        strpos($row->additional_notes, 'MULTI_INVOICE_CUSTOMERS:') !== false) {
+                        
+                        // Extract customer information for the modal
+                        $customer_info = '';
+                        if (strpos($row->additional_notes, 'Multiple Customers:') !== false) {
+                            preg_match('/Multiple Customers: (.+?)(\n|$)/', $row->additional_notes, $matches);
+                            $customer_info = !empty($matches[1]) ? $matches[1] : '';
+                        } else if (strpos($row->additional_notes, 'SELECTED_CUSTOMERS:') !== false) {
+                            // Handle legacy format - get customer names from IDs
+                            preg_match('/SELECTED_CUSTOMERS:([0-9,]+)/', $row->additional_notes, $matches);
+                            if (!empty($matches[1])) {
+                                $customer_ids = explode(',', $matches[1]);
+                                $customer_names = [];
+                                foreach ($customer_ids as $customer_id) {
+                                    $customer = \App\Contact::find($customer_id);
+                                    if ($customer) {
+                                        $customer_names[] = $customer->name;
+                                    }
+                                }
+                                $customer_info = implode(', ', $customer_names);
+                            }
+                        }
+                        
+                        if (!empty($customer_info)) {
+                            return '<a href="#" class="multiple-customers-link" data-customers="' . htmlspecialchars($customer_info) . '" data-toggle="modal" data-target="#multipleCustomersModal">
+                                        <i class="fa fa-users"></i> Multiple Customers
+                                    </a>';
+                        }
+                    }
+                    
+                    // Return regular notes if not multiple customers
+                    return $row->additional_notes;
+                })
                 ->setRowAttr([
                     'data-href' => function ($row) {
                         if (auth()->user()->can('sell.view') || auth()->user()->can('view_own_sell_only')) {
@@ -525,7 +566,7 @@ class SellController extends Controller
                         }
                     }, ]);
 
-            $rawColumns = ['checkbox', 'final_total', 'action', 'total_paid', 'total_remaining', 'payment_status', 'invoice_no', 'discount_amount', 'tax_amount', 'total_before_tax', 'shipping_status', 'types_of_service_name', 'payment_methods', 'return_due', 'conatct_name', 'status', 'zatca_status'];
+            $rawColumns = ['checkbox', 'final_total', 'action', 'total_paid', 'total_remaining', 'payment_status', 'invoice_no', 'discount_amount', 'tax_amount', 'total_before_tax', 'shipping_status', 'types_of_service_name', 'payment_methods', 'return_due', 'conatct_name', 'status', 'zatca_status', 'additional_notes'];
 
             // Restrict global search to indexed columns only to avoid full scans
             $datatable->filter(function ($query) {
