@@ -1598,6 +1598,7 @@ return [
     'print_invoices' => 'Print Invoices',
     'processing' => 'Processing...',
     'invoices_sent_to_printer' => 'invoices sent to printer',
+    'invoices_consolidated_ready_to_print' => 'invoices consolidated and ready to print',
     'no_invoices_found' => 'No invoices found for the selected criteria',
     'please_select_date_range' => 'Please select a date range first',
     'select_date_range_to_enable' => 'Select a date range to enable bulk printing',

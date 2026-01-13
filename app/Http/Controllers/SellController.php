@@ -845,7 +845,7 @@ class SellController extends Controller
                 $sells->where('transactions.contact_id', $customer_id);
             }
 
-            // Get the transactions
+            // Get the transactions with full details
             $transactions = $sells->orderBy('transactions.transaction_date', 'desc')
                                  ->orderBy('transactions.id', 'desc')
                                  ->groupBy('transactions.id')
@@ -866,14 +866,14 @@ class SellController extends Controller
                 ]);
             }
 
-            // For now, just return the transaction IDs so the frontend can print them individually
-            $transaction_ids = $transactions->pluck('id')->toArray();
+            // Generate consolidated invoice
+            $consolidated_receipt = $this->generateConsolidatedInvoice($transactions, $start_date, $end_date, $business_id);
 
             return response()->json([
                 'success' => 1,
-                'transaction_ids' => $transaction_ids,
-                'count' => count($transaction_ids),
-                'msg' => count($transaction_ids) . ' ' . __('lang_v1.invoices_ready_to_print')
+                'receipt' => $consolidated_receipt,
+                'count' => count($transactions),
+                'msg' => count($transactions) . ' ' . __('lang_v1.invoices_consolidated_ready_to_print')
             ]);
 
         } catch (\Exception $e) {
@@ -883,6 +883,85 @@ class SellController extends Controller
                 'msg' => __('messages.something_went_wrong') . ': ' . $e->getMessage()
             ]);
         }
+    }
+
+    /**
+     * Generate consolidated invoice for multiple transactions
+     */
+    private function generateConsolidatedInvoice($transactions, $start_date, $end_date, $business_id)
+    {
+        $business = Business::find($business_id);
+        $total_amount = 0;
+        $total_paid = 0;
+        
+        // Start building the consolidated invoice HTML
+        $html = '<div style="width: 100%; font-family: Arial, sans-serif;">';
+        
+        // Header
+        $html .= '<div style="text-align: center; margin-bottom: 20px;">';
+        $html .= '<h2>' . $business->name . '</h2>';
+        if (!empty($business->address)) {
+            $html .= '<p>' . $business->address . '</p>';
+        }
+        if (!empty($business->mobile)) {
+            $html .= '<p>Mobile: ' . $business->mobile . '</p>';
+        }
+        $html .= '<h3>Consolidated Sales Report</h3>';
+        $html .= '<p><strong>Period:</strong> ' . date('d/m/Y', strtotime($start_date)) . ' to ' . date('d/m/Y', strtotime($end_date)) . '</p>';
+        $html .= '<p><strong>Generated:</strong> ' . date('d/m/Y H:i:s') . '</p>';
+        $html .= '</div>';
+
+        // Summary
+        $html .= '<div style="margin-bottom: 20px; padding: 10px; border: 1px solid #ddd;">';
+        $html .= '<h4>Summary</h4>';
+        $html .= '<p><strong>Total Invoices:</strong> ' . count($transactions) . '</p>';
+        $html .= '</div>';
+
+        // Transactions table
+        $html .= '<table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">';
+        $html .= '<thead>';
+        $html .= '<tr style="background-color: #f5f5f5;">';
+        $html .= '<th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Date</th>';
+        $html .= '<th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Invoice #</th>';
+        $html .= '<th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Customer</th>';
+        $html .= '<th style="border: 1px solid #ddd; padding: 8px; text-align: right;">Amount</th>';
+        $html .= '<th style="border: 1px solid #ddd; padding: 8px; text-align: right;">Paid</th>';
+        $html .= '<th style="border: 1px solid #ddd; padding: 8px; text-align: center;">Status</th>';
+        $html .= '</tr>';
+        $html .= '</thead>';
+        $html .= '<tbody>';
+
+        foreach ($transactions as $transaction) {
+            $total_amount += $transaction->final_total;
+            $total_paid += $transaction->total_paid ?? 0;
+            
+            $html .= '<tr>';
+            $html .= '<td style="border: 1px solid #ddd; padding: 8px;">' . date('d/m/Y', strtotime($transaction->transaction_date)) . '</td>';
+            $html .= '<td style="border: 1px solid #ddd; padding: 8px;">' . $transaction->invoice_no . '</td>';
+            $html .= '<td style="border: 1px solid #ddd; padding: 8px;">' . ($transaction->name ?? 'Walk-in Customer') . '</td>';
+            $html .= '<td style="border: 1px solid #ddd; padding: 8px; text-align: right;">' . number_format($transaction->final_total, 2) . '</td>';
+            $html .= '<td style="border: 1px solid #ddd; padding: 8px; text-align: right;">' . number_format($transaction->total_paid ?? 0, 2) . '</td>';
+            $html .= '<td style="border: 1px solid #ddd; padding: 8px; text-align: center;">' . ucfirst($transaction->payment_status) . '</td>';
+            $html .= '</tr>';
+        }
+
+        $html .= '</tbody>';
+        $html .= '</table>';
+
+        // Totals
+        $html .= '<div style="margin-top: 20px; padding: 15px; background-color: #f9f9f9; border: 1px solid #ddd;">';
+        $html .= '<h4>Totals</h4>';
+        $html .= '<p><strong>Total Amount: </strong>' . number_format($total_amount, 2) . '</p>';
+        $html .= '<p><strong>Total Paid: </strong>' . number_format($total_paid, 2) . '</p>';
+        $html .= '<p><strong>Total Due: </strong>' . number_format($total_amount - $total_paid, 2) . '</p>';
+        $html .= '</div>';
+
+        $html .= '</div>';
+
+        return [
+            'html_content' => $html,
+            'print_type' => 'browser'
+        ];
     }
 
     /**

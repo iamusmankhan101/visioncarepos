@@ -228,30 +228,10 @@
                         },
                         dataType: 'json',
                         success: function(result) {
-                            if(result.success == 1 && result.transaction_ids && result.transaction_ids.length > 0) {
-                                // Print each invoice individually
-                                var printCount = 0;
-                                result.transaction_ids.forEach(function(transactionId, index) {
-                                    setTimeout(function() {
-                                        $.ajax({
-                                            url: '/sells/' + transactionId + '/print',
-                                            type: 'GET',
-                                            data: { ajax: true },
-                                            dataType: 'json',
-                                            success: function(printResult) {
-                                                if(printResult.success == 1 && printResult.receipt) {
-                                                    pos_print(printResult.receipt);
-                                                    printCount++;
-                                                }
-                                            },
-                                            error: function() {
-                                                console.log('Failed to print invoice ' + transactionId);
-                                            }
-                                        });
-                                    }, index * 1000); // 1 second delay between prints
-                                });
-                                
-                                toastr.success(result.count + ' @lang("lang_v1.invoices_sent_to_printer")');
+                            if(result.success == 1 && result.receipt) {
+                                // Print the consolidated receipt
+                                pos_print(result.receipt);
+                                toastr.success(result.msg || (result.count + ' @lang("lang_v1.invoices_consolidated_ready_to_print")'));
                             } else {
                                 toastr.error(result.msg || '@lang("lang_v1.no_invoices_found")');
                             }
