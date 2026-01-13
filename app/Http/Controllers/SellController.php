@@ -521,16 +521,22 @@ class SellController extends Controller
                         return '';
                     }
                     
+                    // Debug: Log what we're processing
+                    \Log::info('Processing additional_notes for row ' . $row->id . ': ' . $row->additional_notes);
+                    
                     // Check if this contains multiple customers information
                     if (strpos($row->additional_notes, 'Multiple Customers:') !== false || 
                         strpos($row->additional_notes, 'SELECTED_CUSTOMERS:') !== false ||
                         strpos($row->additional_notes, 'MULTI_INVOICE_CUSTOMERS:') !== false) {
+                        
+                        \Log::info('Found multiple customer data in row ' . $row->id);
                         
                         // Extract customer information for the modal
                         $customer_info = '';
                         if (strpos($row->additional_notes, 'Multiple Customers:') !== false) {
                             preg_match('/Multiple Customers: (.+?)(\n|$)/', $row->additional_notes, $matches);
                             $customer_info = !empty($matches[1]) ? $matches[1] : '';
+                            \Log::info('Found Multiple Customers format: ' . $customer_info);
                         } else if (strpos($row->additional_notes, 'SELECTED_CUSTOMERS:') !== false) {
                             // Handle legacy format - get customer names from IDs
                             preg_match('/SELECTED_CUSTOMERS:([0-9,]+)/', $row->additional_notes, $matches);
@@ -544,10 +550,29 @@ class SellController extends Controller
                                     }
                                 }
                                 $customer_info = implode(', ', $customer_names);
+                                \Log::info('Found SELECTED_CUSTOMERS format: ' . $customer_info);
+                            }
+                        } else if (strpos($row->additional_notes, 'MULTI_INVOICE_CUSTOMERS:') !== false) {
+                            // Handle MULTI_INVOICE_CUSTOMERS format - get customer names from IDs
+                            preg_match('/MULTI_INVOICE_CUSTOMERS:([0-9,]+)/', $row->additional_notes, $matches);
+                            if (!empty($matches[1])) {
+                                $customer_ids = explode(',', $matches[1]);
+                                // Add the main customer ID to the list
+                                array_unshift($customer_ids, $row->contact_id);
+                                $customer_names = [];
+                                foreach ($customer_ids as $customer_id) {
+                                    $customer = \App\Contact::find($customer_id);
+                                    if ($customer) {
+                                        $customer_names[] = $customer->name;
+                                    }
+                                }
+                                $customer_info = implode(', ', $customer_names);
+                                \Log::info('Found MULTI_INVOICE_CUSTOMERS format: ' . $customer_info);
                             }
                         }
                         
                         if (!empty($customer_info)) {
+                            \Log::info('Returning Multiple Customers link for row ' . $row->id);
                             return '<a href="#" class="multiple-customers-link" data-customers="' . htmlspecialchars($customer_info) . '" data-toggle="modal" data-target="#multipleCustomersModal">
                                         <i class="fa fa-users"></i> Multiple Customers
                                     </a>';
@@ -555,6 +580,7 @@ class SellController extends Controller
                     }
                     
                     // Return regular notes if not multiple customers
+                    \Log::info('Returning regular notes for row ' . $row->id);
                     return $row->additional_notes;
                 })
                 ->setRowAttr([
