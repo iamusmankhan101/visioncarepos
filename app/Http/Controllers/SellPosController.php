@@ -514,18 +514,29 @@ class SellPosController extends Controller
                     \Log::info('Received multiple_customer_ids: ' . $input['multiple_customer_ids']);
                     
                     $customer_ids = explode(',', $input['multiple_customer_ids']);
-                    // Remove the first customer (already set as main contact_id)
-                    $additional_customer_ids = array_slice($customer_ids, 1);
                     
-                    if (!empty($additional_customer_ids)) {
-                        \Log::info('Storing additional customers: ' . implode(',', $additional_customer_ids));
+                    // Get customer names for the sell note
+                    $customer_names = [];
+                    foreach ($customer_ids as $customer_id) {
+                        $customer = Contact::find($customer_id);
+                        if ($customer) {
+                            $customer_names[] = $customer->name;
+                        }
+                    }
+                    
+                    if (!empty($customer_names)) {
+                        // Add customer names to sell note for easy identification
+                        $multiple_customers_note = 'Multiple Customers: ' . implode(', ', $customer_names);
+                        $transaction->additional_notes = (!empty($transaction->additional_notes) ? $transaction->additional_notes . "\n" : '') . $multiple_customers_note;
                         
-                        // Store additional customer IDs in additional_notes for later retrieval
-                        $transaction->additional_notes = (!empty($transaction->additional_notes) ? $transaction->additional_notes . "\n" : '') . 
-                                                        'MULTI_INVOICE_CUSTOMERS:' . implode(',', $additional_customer_ids);
+                        // Also store the IDs for printing functionality (excluding main customer)
+                        $additional_customer_ids = array_slice($customer_ids, 1);
+                        if (!empty($additional_customer_ids)) {
+                            $transaction->additional_notes .= "\nMULTI_INVOICE_CUSTOMERS:" . implode(',', $additional_customer_ids);
+                        }
+                        
                         $transaction->save();
-                        
-                        \Log::info('Saved transaction with additional_notes: ' . $transaction->additional_notes);
+                        \Log::info('Saved transaction with customer names: ' . $multiple_customers_note);
                     }
                 } else {
                     \Log::info('No multiple_customer_ids received in request');
