@@ -525,18 +525,19 @@ class SellPosController extends Controller
                     }
                     
                     if (!empty($customer_names)) {
-                        // Add customer names to sell note for easy identification
+                        // Store the IDs for printing functionality (excluding main customer)
+                        $additional_customer_ids = array_slice($customer_ids, 1);
+                        if (!empty($additional_customer_ids)) {
+                            $transaction->additional_notes = (!empty($transaction->additional_notes) ? $transaction->additional_notes . "\n" : '') . 
+                                                            'MULTI_INVOICE_CUSTOMERS:' . implode(',', $additional_customer_ids);
+                        }
+                        
+                        // Optionally add customer names to sell note for easy identification (this is optional)
                         $multiple_customers_note = 'Multiple Customers: ' . implode(', ', $customer_names);
                         $transaction->additional_notes = (!empty($transaction->additional_notes) ? $transaction->additional_notes . "\n" : '') . $multiple_customers_note;
                         
-                        // Also store the IDs for printing functionality (excluding main customer)
-                        $additional_customer_ids = array_slice($customer_ids, 1);
-                        if (!empty($additional_customer_ids)) {
-                            $transaction->additional_notes .= "\nMULTI_INVOICE_CUSTOMERS:" . implode(',', $additional_customer_ids);
-                        }
-                        
                         $transaction->save();
-                        \Log::info('Saved transaction with customer names: ' . $multiple_customers_note);
+                        \Log::info('Saved transaction with customer data (sale note optional): ' . $multiple_customers_note);
                     }
                 } else {
                     \Log::info('No multiple_customer_ids received in request');
@@ -1953,34 +1954,28 @@ class SellPosController extends Controller
                 } else {
                     \Log::info('PrintInvoice - No additional_notes found');
                     
-                    // Check if user explicitly requested to include related customers
-                    $include_related = $request->input('include_related', false);
-                    
-                    if ($include_related) {
-                        \Log::info('PrintInvoice - User explicitly requested to include related customers');
+                    // Always auto-detect related customers for printing (sale note is optional)
+                    // This ensures multiple customer receipts work regardless of sale note content
+                    $main_customer = Contact::find($transaction->contact_id);
+                    if ($main_customer && !empty($main_customer->mobile)) {
+                        $related_customers = Contact::where('business_id', $business_id)
+                            ->where('mobile', $main_customer->mobile)
+                            ->where('contact_status', 'active')
+                            ->where('type', 'customer')
+                            ->where('id', '!=', $transaction->contact_id)
+                            ->pluck('id')
+                            ->toArray();
                         
-                        // Auto-detect related customers based on phone number
-                        $main_customer = Contact::find($transaction->contact_id);
-                        if ($main_customer && !empty($main_customer->mobile)) {
-                            $related_customers = Contact::where('business_id', $business_id)
-                                ->where('mobile', $main_customer->mobile)
-                                ->where('contact_status', 'active')
-                                ->where('type', 'customer')
-                                ->where('id', '!=', $transaction->contact_id)
-                                ->pluck('id')
-                                ->toArray();
-                            
-                            if (!empty($related_customers)) {
-                                $selected_customers = array_merge($selected_customers, $related_customers);
-                                \Log::info('PrintInvoice - Added related customers by user request', [
-                                    'main_customer_phone' => $main_customer->mobile,
-                                    'related_customers' => $related_customers,
-                                    'final_selected_customers' => $selected_customers
-                                ]);
-                            }
+                        if (!empty($related_customers)) {
+                            $selected_customers = array_merge($selected_customers, $related_customers);
+                            \Log::info('PrintInvoice - Auto-detected related customers (sale note independent)', [
+                                'main_customer_phone' => $main_customer->mobile,
+                                'related_customers' => $related_customers,
+                                'final_selected_customers' => $selected_customers
+                            ]);
+                        } else {
+                            \Log::info('PrintInvoice - No related customers found for auto-detection');
                         }
-                    } else {
-                        \Log::info('PrintInvoice - Will only print for main customer (no related customers - use Print All button for related customers)');
                     }
                 }
                 
