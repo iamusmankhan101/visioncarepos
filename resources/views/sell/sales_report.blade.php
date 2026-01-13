@@ -12,7 +12,7 @@
 
 <!-- Main content -->
 <section class="content">
-    @component('components.widget', ['class' => 'box-primary', 'title' => __('business.all_sales')])
+    @component('components.widget', ['class' => 'box-primary'])
         @can('sell.create')
             @slot('tool')
                 <div class="box-tools">
