@@ -706,6 +706,13 @@ class SellController extends Controller
                     '<span class="total-paid" data-orig-value="{{$total_paid}}">@format_currency($total_paid)</span>'
                 )
                 ->editColumn('transaction_date', '{{@format_datetime($transaction_date)}}')
+                ->addColumn('contact_name', '@if(!empty($supplier_business_name)) {{$supplier_business_name}}, <br> @endif {{$name}}')
+                ->filterColumn('contact_name', function ($query, $keyword) {
+                    $query->where(function ($q) use ($keyword) {
+                        $q->where('contacts.name', 'like', "%{$keyword}%")
+                        ->orWhere('contacts.supplier_business_name', 'like', "%{$keyword}%");
+                    });
+                })
                 ->editColumn(
                     'payment_status',
                     function ($row) {
@@ -780,7 +787,7 @@ class SellController extends Controller
                         }
                     }, ]);
 
-            $rawColumns = ['action', 'final_total', 'total_paid', 'payment_status', 'additional_notes'];
+            $rawColumns = ['action', 'final_total', 'total_paid', 'payment_status', 'additional_notes', 'contact_name'];
 
             return $datatable->rawColumns($rawColumns)
                       ->make(true);
