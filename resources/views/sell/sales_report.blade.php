@@ -229,8 +229,19 @@
                         dataType: 'json',
                         success: function(result) {
                             if(result.success == 1 && result.receipt) {
-                                // Print the consolidated receipt
-                                pos_print(result.receipt);
+                                // Open the invoice in a new clean window
+                                var printWindow = window.open('', '_blank', 'width=800,height=600');
+                                printWindow.document.write(result.receipt.html_content);
+                                printWindow.document.close();
+                                
+                                // Wait for content to load then print
+                                printWindow.onload = function() {
+                                    setTimeout(function() {
+                                        printWindow.focus();
+                                        printWindow.print();
+                                    }, 500);
+                                };
+                                
                                 toastr.success(result.msg || (result.count + ' @lang("lang_v1.invoices_consolidated_ready_to_print")'));
                             } else {
                                 toastr.error(result.msg || '@lang("lang_v1.no_invoices_found")');
