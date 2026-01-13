@@ -648,6 +648,152 @@ class SellController extends Controller
     }
 
     /**
+     * Sales Report - Show all sales with date filtering
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function salesReport()
+    {
+        if (!auth()->user()->can('sell.view') && !auth()->user()->can('direct_sell.view')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $business_id = request()->session()->get('user.business_id');
+
+        if (request()->ajax()) {
+            $sells = $this->transactionUtil->getListSells($business_id, 'sell');
+
+            // Apply filters
+            $this->applySellListFilters($sells, $business_id, 'sell', false);
+
+            // Add default ordering to show latest transactions first
+            $sells->orderBy('transactions.transaction_date', 'desc')
+                  ->orderBy('transactions.id', 'desc');
+
+            $sells->groupBy('transactions.id');
+
+            $datatable = Datatables::of($sells)
+                ->addColumn(
+                    'action',
+                    function ($row) {
+                        $html = '<div class="btn-group">
+                                    <button type="button" class="tw-dw-btn tw-dw-btn-xs tw-dw-btn-outline tw-dw-btn-info tw-w-max dropdown-toggle"
+                                        data-toggle="dropdown" aria-expanded="false">' .
+                        __('messages.actions') .
+                            '<span class="caret"></span><span class="sr-only">Toggle Dropdown</span>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-left" role="menu">';
+
+                        if (auth()->user()->can('sell.view') || auth()->user()->can('direct_sell.view') || auth()->user()->can('view_own_sell_only')) {
+                            $html .= '<li><a href="#" data-href="'.action([\App\Http\Controllers\SellController::class, 'show'], [$row->id]).'" class="btn-modal" data-container=".view_modal"><i class="fas fa-eye" aria-hidden="true"></i> '.__('messages.view').'</a></li>';
+                        }
+
+                        if (auth()->user()->can('print_invoice')) {
+                            $html .= '<li><a href="#" class="print-invoice" data-href="'.route('sell.printInvoice', [$row->id]).'"><i class="fas fa-print" aria-hidden="true"></i> '.__('lang_v1.print_invoice').'</a></li>';
+                        }
+
+                        $html .= '</ul></div>';
+
+                        return $html;
+                    }
+                )
+                ->editColumn(
+                    'final_total',
+                    '<span class="final-total" data-orig-value="{{$final_total}}">@format_currency($final_total)</span>'
+                )
+                ->editColumn(
+                    'total_paid',
+                    '<span class="total-paid" data-orig-value="{{$total_paid}}">@format_currency($total_paid)</span>'
+                )
+                ->editColumn('transaction_date', '{{@format_datetime($transaction_date)}}')
+                ->editColumn(
+                    'payment_status',
+                    function ($row) {
+                        $payment_status = Transaction::getPaymentStatus($row);
+                        return (string) view('sell.partials.payment_status', compact('payment_status', 'row'));
+                    }
+                )
+                ->editColumn('additional_notes', function ($row) {
+                    if (empty($row->additional_notes)) {
+                        return '';
+                    }
+                    
+                    // Check if this contains multiple customers information
+                    if (strpos($row->additional_notes, 'Multiple Customers:') !== false || 
+                        strpos($row->additional_notes, 'SELECTED_CUSTOMERS:') !== false ||
+                        strpos($row->additional_notes, 'MULTI_INVOICE_CUSTOMERS:') !== false) {
+                        
+                        // Extract customer information for the modal
+                        $customer_info = '';
+                        if (strpos($row->additional_notes, 'Multiple Customers:') !== false) {
+                            preg_match('/Multiple Customers: (.+?)(\n|$)/', $row->additional_notes, $matches);
+                            $customer_info = !empty($matches[1]) ? $matches[1] : '';
+                        } else if (strpos($row->additional_notes, 'SELECTED_CUSTOMERS:') !== false) {
+                            // Handle legacy format - get customer names from IDs
+                            preg_match('/SELECTED_CUSTOMERS:([0-9,]+)/', $row->additional_notes, $matches);
+                            if (!empty($matches[1])) {
+                                $customer_ids = explode(',', $matches[1]);
+                                $customer_names = [];
+                                foreach ($customer_ids as $customer_id) {
+                                    $customer = \App\Contact::find($customer_id);
+                                    if ($customer) {
+                                        $customer_names[] = $customer->name;
+                                    }
+                                }
+                                $customer_info = implode(', ', $customer_names);
+                            }
+                        } else if (strpos($row->additional_notes, 'MULTI_INVOICE_CUSTOMERS:') !== false) {
+                            // Handle MULTI_INVOICE_CUSTOMERS format - get customer names from IDs
+                            preg_match('/MULTI_INVOICE_CUSTOMERS:([0-9,]+)/', $row->additional_notes, $matches);
+                            if (!empty($matches[1])) {
+                                $customer_ids = explode(',', $matches[1]);
+                                // Add the main customer ID to the list
+                                array_unshift($customer_ids, $row->contact_id);
+                                $customer_names = [];
+                                foreach ($customer_ids as $customer_id) {
+                                    $customer = \App\Contact::find($customer_id);
+                                    if ($customer) {
+                                        $customer_names[] = $customer->name;
+                                    }
+                                }
+                                $customer_info = implode(', ', $customer_names);
+                            }
+                        }
+                        
+                        if (!empty($customer_info)) {
+                            return '<a href="#" class="multiple-customers-link" data-customers="' . htmlspecialchars($customer_info) . '" data-toggle="modal" data-target="#multipleCustomersModal">
+                                        <i class="fa fa-users"></i> Multiple Customers
+                                    </a>';
+                        }
+                    }
+                    
+                    // Return regular notes if not multiple customers
+                    return $row->additional_notes;
+                })
+                ->setRowAttr([
+                    'data-href' => function ($row) {
+                        if (auth()->user()->can('sell.view') || auth()->user()->can('view_own_sell_only')) {
+                            return  action([\App\Http\Controllers\SellController::class, 'show'], [$row->id]);
+                        } else {
+                            return '';
+                        }
+                    }, ]);
+
+            $rawColumns = ['action', 'final_total', 'total_paid', 'payment_status', 'additional_notes'];
+
+            return $datatable->rawColumns($rawColumns)
+                      ->make(true);
+        }
+
+        $business_locations = BusinessLocation::forDropdown($business_id, false);
+        $customers = Contact::customersDropdown($business_id, false);
+
+        return view('sell.sales_report')
+        ->with(compact('business_locations', 'customers'));
+    }
+    }
+
+    /**
      * Show the form for creating a new resource.
      *
      * @return \Illuminate\Http\Response

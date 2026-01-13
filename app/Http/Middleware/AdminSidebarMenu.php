@@ -568,6 +568,15 @@ class AdminSidebarMenu
                                 ['icon' => '', 'active' => request()->segment(2) == 'profit-loss']
                             );
                         }
+                        
+                        // Add Sales report option
+                        if (auth()->user()->can('sell.view') || auth()->user()->can('direct_sell.view')) {
+                            $sub->url(
+                                action([\App\Http\Controllers\SellController::class, 'salesReport']),
+                                __('business.sales'),
+                                ['icon' => '', 'active' => request()->segment(2) == 'sales-report']
+                            );
+                        }
                         if (config('constants.show_report_606') == true) {
                             $sub->url(
                                 action([\App\Http\Controllers\ReportController::class, 'purchaseReport']),
