@@ -791,6 +791,115 @@ class SellController extends Controller
         return view('sell.sales_report')
         ->with(compact('business_locations', 'customers'));
     }
+
+    /**
+     * Bulk print invoices for selected date range
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function bulkPrintInvoices()
+    {
+        if (!auth()->user()->can('sell.view') && !auth()->user()->can('direct_sell.view')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        if (!auth()->user()->can('print_invoice')) {
+            return response()->json([
+                'success' => 0,
+                'msg' => __('lang_v1.no_permission_to_print')
+            ]);
+        }
+
+        $business_id = request()->session()->get('user.business_id');
+        $start_date = request()->get('start_date');
+        $end_date = request()->get('end_date');
+        $location_id = request()->get('location_id');
+        $customer_id = request()->get('customer_id');
+
+        if (empty($start_date) || empty($end_date)) {
+            return response()->json([
+                'success' => 0,
+                'msg' => __('lang_v1.please_select_date_range')
+            ]);
+        }
+
+        try {
+            // Get transactions for the date range
+            $sells = $this->transactionUtil->getListSells($business_id, 'sell');
+            
+            // Apply date filter
+            $sells->whereDate('transactions.transaction_date', '>=', $start_date)
+                  ->whereDate('transactions.transaction_date', '<=', $end_date);
+
+            // Apply location filter if provided
+            if (!empty($location_id)) {
+                $sells->where('transactions.location_id', $location_id);
+            }
+
+            // Apply customer filter if provided
+            if (!empty($customer_id)) {
+                $sells->where('transactions.contact_id', $customer_id);
+            }
+
+            // Get the transactions
+            $transactions = $sells->orderBy('transactions.transaction_date', 'desc')
+                                 ->orderBy('transactions.id', 'desc')
+                                 ->groupBy('transactions.id')
+                                 ->get();
+
+            if ($transactions->isEmpty()) {
+                return response()->json([
+                    'success' => 0,
+                    'msg' => __('lang_v1.no_invoices_found')
+                ]);
+            }
+
+            // Limit to prevent server overload (max 50 invoices at once)
+            if ($transactions->count() > 50) {
+                return response()->json([
+                    'success' => 0,
+                    'msg' => __('lang_v1.too_many_invoices_limit_50')
+                ]);
+            }
+
+            $receipts = [];
+            $sellPosController = new \App\Http\Controllers\SellPosController();
+            
+            foreach ($transactions as $transaction) {
+                try {
+                    // Create a mock request for the printInvoice method
+                    $mockRequest = new \Illuminate\Http\Request();
+                    $mockRequest->merge(['ajax' => true]);
+                    
+                    // Call the printInvoice method from SellPosController
+                    $response = $sellPosController->printInvoice($mockRequest, $transaction->id);
+                    
+                    if ($response instanceof \Illuminate\Http\JsonResponse) {
+                        $data = $response->getData(true);
+                        if (!empty($data['success']) && !empty($data['receipt'])) {
+                            $receipts[] = $data['receipt'];
+                        }
+                    }
+                } catch (\Exception $e) {
+                    // Skip this receipt if there's an error, but continue with others
+                    \Log::error('Bulk print error for transaction ' . $transaction->id . ': ' . $e->getMessage());
+                    continue;
+                }
+            }
+
+            return response()->json([
+                'success' => 1,
+                'receipts' => $receipts,
+                'msg' => count($receipts) . ' ' . __('lang_v1.invoices_ready_to_print')
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Bulk print invoices error: ' . $e->getMessage());
+            return response()->json([
+                'success' => 0,
+                'msg' => __('messages.something_went_wrong') . ': ' . $e->getMessage()
+            ]);
+        }
     }
 
     /**

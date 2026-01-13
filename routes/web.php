@@ -218,6 +218,7 @@ Route::middleware(['setData', 'auth', 'SetSessionData', 'language', 'timezone', 
     Route::get('/sells/quotations', [SellController::class, 'getQuotations']);
     Route::get('/sells/draft-dt', [SellController::class, 'getDraftDatables']);
     Route::get('/sells/sales-report', [SellController::class, 'salesReport']);
+    Route::get('/sells/bulk-print-invoices', [SellController::class, 'bulkPrintInvoices']);
     Route::resource('sells', SellController::class)->except(['show']);
     Route::get('/sells/copy-quotation/{id}', [SellPosController::class, 'copyQuotation']);
 

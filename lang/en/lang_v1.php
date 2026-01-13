@@ -1593,5 +1593,15 @@ return [
     'previous_balance_due' => 'Previous balance due',
     'previous_balance_due_help' => 'Shows customer balance before this sale (excludes current sale due).',
     'show_previous_balance_due' => 'Show previous balance due',
+    
+    // Bulk print translations
+    'print_invoices' => 'Print Invoices',
+    'processing' => 'Processing...',
+    'invoices_sent_to_printer' => 'invoices sent to printer',
+    'no_invoices_found' => 'No invoices found for the selected criteria',
+    'please_select_date_range' => 'Please select a date range first',
+    'no_permission_to_print' => 'You do not have permission to print invoices',
+    'too_many_invoices_limit_50' => 'Too many invoices selected. Please limit to 50 invoices at once.',
+    'invoices_ready_to_print' => 'invoices ready to print',
 
 ];

@@ -47,6 +47,14 @@
                     {!! Form::select('sales_customer_filter', $customers, null, ['class' => 'form-control select2', 'style' => 'width:100%', 'id' => 'sales_customer_filter', 'placeholder' => __('lang_v1.all')]); !!}
                 </div>
             </div>
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label>&nbsp;</label><br>
+                    <button type="button" class="btn btn-primary" id="bulk_print_invoices" disabled>
+                        <i class="fa fa-print"></i> @lang('lang_v1.print_invoices')
+                    </button>
+                </div>
+            </div>
         </div>
 
         @can('sell.view')
@@ -177,6 +185,62 @@
                 e.preventDefault();
                 var customers = $(this).data('customers');
                 $('#customersList').html('<i class="fa fa-users text-primary"></i> ' + customers);
+            });
+
+            // Enable/disable bulk print button based on date filter
+            $('#sales_date_filter').on('apply.daterangepicker', function(ev, picker) {
+                $('#bulk_print_invoices').prop('disabled', false);
+            });
+            
+            $('#sales_date_filter').on('cancel.daterangepicker', function(ev, picker) {
+                $('#bulk_print_invoices').prop('disabled', true);
+            });
+
+            // Bulk print invoices functionality
+            $('#bulk_print_invoices').click(function() {
+                if($('#sales_date_filter').val()) {
+                    var start = $('#sales_date_filter').data('daterangepicker').startDate.format('YYYY-MM-DD');
+                    var end = $('#sales_date_filter').data('daterangepicker').endDate.format('YYYY-MM-DD');
+                    var location_id = $('#sales_location_filter').val();
+                    var customer_id = $('#sales_customer_filter').val();
+                    
+                    // Show loading state
+                    $(this).prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> @lang("lang_v1.processing")');
+                    
+                    $.ajax({
+                        url: '/sells/bulk-print-invoices',
+                        type: 'GET',
+                        data: {
+                            start_date: start,
+                            end_date: end,
+                            location_id: location_id,
+                            customer_id: customer_id
+                        },
+                        dataType: 'json',
+                        success: function(result) {
+                            if(result.success == 1 && result.receipts && result.receipts.length > 0) {
+                                // Print each receipt
+                                result.receipts.forEach(function(receipt, index) {
+                                    setTimeout(function() {
+                                        pos_print(receipt);
+                                    }, index * 1000); // 1 second delay between prints
+                                });
+                                toastr.success(result.receipts.length + ' @lang("lang_v1.invoices_sent_to_printer")');
+                            } else {
+                                toastr.error('@lang("lang_v1.no_invoices_found")');
+                            }
+                        },
+                        error: function() {
+                            toastr.error('@lang("messages.something_went_wrong")');
+                        },
+                        complete: function() {
+                            // Reset button state
+                            $('#bulk_print_invoices').prop('disabled', false).html('<i class="fa fa-print"></i> @lang("lang_v1.print_invoices")');
+                        }
+                    });
+                } else {
+                    toastr.error('@lang("lang_v1.please_select_date_range")');
+                }
             });
         });
 
