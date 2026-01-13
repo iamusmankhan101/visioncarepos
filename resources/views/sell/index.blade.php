@@ -158,7 +158,7 @@
                 serverSide: true,
                 fixedHeader:false,
                 aaSorting: [
-                    [1, 'desc']
+                    [2, 'desc']
                 ],
                 "ajax": {
                     "url": "/sells",

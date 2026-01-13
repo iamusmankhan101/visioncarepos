@@ -218,6 +218,10 @@ class SellController extends Controller
             // Expose shipment-only flag to table rendering
             $only_shipments = request()->only_shipments == 'true' ? true : false;
 
+            // Add default ordering to show latest transactions first
+            $sells->orderBy('transactions.transaction_date', 'desc')
+                  ->orderBy('transactions.id', 'desc');
+
             $datatable = Datatables::of($sells)
                 ->addColumn(
                     'checkbox',
