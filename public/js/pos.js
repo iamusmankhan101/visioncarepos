@@ -1064,17 +1064,27 @@ $(document).ready(function() {
                             var selectedCustomers = window.selectedCustomersForInvoice || JSON.parse(sessionStorage.getItem('selectedCustomersForInvoice') || 'null');
                             var hasMultipleCustomers = selectedCustomers && selectedCustomers.ids && selectedCustomers.ids.length > 1;
                             
+                            console.log('WhatsApp Debug:', {
+                                hasMultipleCustomers: hasMultipleCustomers,
+                                whatsapp_link: result.whatsapp_link,
+                                whatsapp_links: result.whatsapp_links,
+                                whatsapp_links_length: result.whatsapp_links ? result.whatsapp_links.length : 0
+                            });
+                            
                             // Open WhatsApp for all customers
-                            if (result.whatsapp_link) {
+                            if (result.whatsapp_link || (result.whatsapp_links && result.whatsapp_links.length > 0)) {
                                 if (hasMultipleCustomers && result.whatsapp_links && result.whatsapp_links.length > 0) {
                                     // Multiple customers - open WhatsApp for each with delay
+                                    console.log('Opening multiple WhatsApp windows:', result.whatsapp_links.length);
                                     result.whatsapp_links.forEach(function(link, index) {
                                         setTimeout(function() {
+                                            console.log('Opening WhatsApp window', index + 1, ':', link);
                                             window.open(link, '_blank');
                                         }, index * 2000); // 2 second delay between each WhatsApp window
                                     });
-                                } else {
+                                } else if (result.whatsapp_link) {
                                     // Single customer - open WhatsApp normally
+                                    console.log('Opening single WhatsApp window:', result.whatsapp_link);
                                     window.open(result.whatsapp_link, '_blank');
                                 }
                             }
