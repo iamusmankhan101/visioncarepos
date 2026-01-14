@@ -642,6 +642,47 @@ class SellPosController extends Controller
 
                     //Auto send notification
                     $whatsapp_link = $this->notificationUtil->autoSendNotification($business_id, 'new_sale', $transaction, $transaction->contact);
+                    
+                    // Generate WhatsApp links for all selected customers
+                    $whatsapp_links = [];
+                    if (!empty($whatsapp_link)) {
+                        $whatsapp_links[] = $whatsapp_link; // Add primary customer's link
+                    }
+                    
+                    // Check for additional customers and generate WhatsApp links for them
+                    if (!empty($input['selected_customers']) && is_array($input['selected_customers'])) {
+                        foreach ($input['selected_customers'] as $customer_id) {
+                            if ($customer_id != $transaction->contact_id) { // Skip primary customer (already added)
+                                $customer = \App\Contact::find($customer_id);
+                                if ($customer) {
+                                    $additional_whatsapp_link = $this->notificationUtil->autoSendNotification($business_id, 'new_sale', $transaction, $customer);
+                                    if (!empty($additional_whatsapp_link)) {
+                                        $whatsapp_links[] = $additional_whatsapp_link;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Also handle legacy multiple_customer_ids format
+                    if (!empty($input['multiple_customer_ids'])) {
+                        $customer_ids = explode(',', $input['multiple_customer_ids']);
+                        foreach ($customer_ids as $customer_id) {
+                            $customer_id = trim($customer_id);
+                            if ($customer_id && $customer_id != $transaction->contact_id) { // Skip primary customer
+                                $customer = \App\Contact::find($customer_id);
+                                if ($customer) {
+                                    $additional_whatsapp_link = $this->notificationUtil->autoSendNotification($business_id, 'new_sale', $transaction, $customer);
+                                    if (!empty($additional_whatsapp_link)) {
+                                        $whatsapp_links[] = $additional_whatsapp_link;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Remove duplicate links
+                    $whatsapp_links = array_unique($whatsapp_links);
 
                     // zatca instant sync if status final type sell
                     if($transaction->type == 'sell'){
@@ -733,6 +774,11 @@ class SellPosController extends Controller
 
                 if (!empty($whatsapp_link)) {
                     $output['whatsapp_link'] = $whatsapp_link;
+                }
+                
+                // Add multiple WhatsApp links if available
+                if (!empty($whatsapp_links) && count($whatsapp_links) > 0) {
+                    $output['whatsapp_links'] = $whatsapp_links;
                 }
             } else {
                 $output = ['success' => 0,

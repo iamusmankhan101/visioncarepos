@@ -1064,9 +1064,19 @@ $(document).ready(function() {
                             var selectedCustomers = window.selectedCustomersForInvoice || JSON.parse(sessionStorage.getItem('selectedCustomersForInvoice') || 'null');
                             var hasMultipleCustomers = selectedCustomers && selectedCustomers.ids && selectedCustomers.ids.length > 1;
                             
-                            // Only open WhatsApp if there's a single customer (not multiple)
-                            if (result.whatsapp_link && !hasMultipleCustomers) {
-                                window.open(result.whatsapp_link);
+                            // Open WhatsApp for all customers
+                            if (result.whatsapp_link) {
+                                if (hasMultipleCustomers && result.whatsapp_links && result.whatsapp_links.length > 0) {
+                                    // Multiple customers - open WhatsApp for each with delay
+                                    result.whatsapp_links.forEach(function(link, index) {
+                                        setTimeout(function() {
+                                            window.open(link, '_blank');
+                                        }, index * 2000); // 2 second delay between each WhatsApp window
+                                    });
+                                } else {
+                                    // Single customer - open WhatsApp normally
+                                    window.open(result.whatsapp_link, '_blank');
+                                }
                             }
                             $('#modal_payment').modal('hide');
                             toastr.success(result.msg);
