@@ -889,8 +889,71 @@ $(document).ready(function() {
             $('div#confirmSuspendModal').modal('show');
         } else {
             // Add selected customers to form before submission
+            console.log('About to submit express checkout via AJAX...');
             addSelectedCustomersToForm();
-            pos_form_obj.submit();
+            
+            // Use AJAX for express checkout to enable WhatsApp functionality
+            disable_pos_form_actions();
+            
+            var data = pos_form_obj.serialize();
+            data = data + '&status=final';
+            
+            var url = pos_form_obj.attr('action');
+            $.ajax({
+                method: 'POST',
+                url: url,
+                data: data,
+                dataType: 'json',
+                success: function(result) {
+                    if (result.success == 1) {
+                        // Check if there are multiple customers selected
+                        var selectedCustomers = window.selectedCustomersForInvoice || JSON.parse(sessionStorage.getItem('selectedCustomersForInvoice') || 'null');
+                        var hasMultipleCustomers = selectedCustomers && selectedCustomers.ids && selectedCustomers.ids.length > 1;
+                        
+                        console.log('WhatsApp Debug (Express):', {
+                            hasMultipleCustomers: hasMultipleCustomers,
+                            whatsapp_link: result.whatsapp_link,
+                            whatsapp_links: result.whatsapp_links,
+                            whatsapp_links_length: result.whatsapp_links ? result.whatsapp_links.length : 0
+                        });
+                        
+                        // Open WhatsApp for all customers
+                        if (result.whatsapp_link || (result.whatsapp_links && result.whatsapp_links.length > 0)) {
+                            if (hasMultipleCustomers && result.whatsapp_links && result.whatsapp_links.length > 0) {
+                                // Multiple customers - open WhatsApp for each with delay
+                                console.log('Opening multiple WhatsApp windows (Express):', result.whatsapp_links.length);
+                                result.whatsapp_links.forEach(function(link, index) {
+                                    setTimeout(function() {
+                                        console.log('Opening WhatsApp window', index + 1, ':', link);
+                                        window.open(link, '_blank');
+                                    }, index * 2000); // 2 second delay between each WhatsApp window
+                                });
+                            } else if (result.whatsapp_link) {
+                                // Single customer - open WhatsApp normally
+                                console.log('Opening single WhatsApp window (Express):', result.whatsapp_link);
+                                window.open(result.whatsapp_link, '_blank');
+                            }
+                        }
+                        
+                        toastr.success(result.msg);
+                        reset_pos_form();
+                        
+                        //Check if enabled or not
+                        if (result.receipt.is_enabled) {
+                            pos_print(result.receipt);
+                        }
+                        
+                        enable_pos_form_actions();
+                    } else {
+                        toastr.error(result.msg);
+                        enable_pos_form_actions();
+                    }
+                },
+                error: function(xhr) {
+                    toastr.error('An error occurred while processing the sale');
+                    enable_pos_form_actions();
+                }
+            });
         }
     }
 
