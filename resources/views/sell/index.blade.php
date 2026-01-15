@@ -224,8 +224,8 @@
                         name: 'invoice_no'
                     },
                     {
-                        data: 'conatct_name',
-                        name: 'conatct_name'
+                        data: 'contact_name',
+                        name: 'contact_name'
                     },
                     {
                         data: 'mobile',

@@ -501,7 +501,7 @@ $(document).ready(function() {
             columns: [
                 { data: 'transaction_date', name: 'transaction_date' },
                 { data: 'invoice_no', name: 'invoice_no' },
-                { data: 'conatct_name', name: 'conatct_name' },
+                { data: 'contact_name', name: 'contact_name' },
                 { data: 'business_location', name: 'bl.name' },
                 { data: 'payment_status', name: 'payment_status' },
                 { data: 'final_total', name: 'final_total' },
@@ -609,7 +609,7 @@ $(document).ready(function() {
             columns: [
                 { data: 'transaction_date', name: 'transaction_date' },
                 { data: 'invoice_no', name: 'invoice_no' },
-                { data: 'conatct_name', name: 'conatct_name' },
+                { data: 'contact_name', name: 'contact_name' },
                 { data: 'business_location', name: 'bl.name' },
                 { data: 'payment_status', name: 'payment_status' },
                 { data: 'final_total', name: 'final_total' },

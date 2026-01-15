@@ -858,22 +858,22 @@ class SellController extends Controller
                 ]);
             }
 
-            // Limit to prevent server overload (max 50 invoices at once)
-            if ($transactions->count() > 50) {
+            // Limit to prevent server overload (max 20 invoices at once for individual receipts)
+            if ($transactions->count() > 20) {
                 return response()->json([
                     'success' => 0,
-                    'msg' => __('lang_v1.too_many_invoices_limit_50')
+                    'msg' => 'Too many invoices selected. Please limit to 20 invoices at once for individual receipt printing.'
                 ]);
             }
 
-            // Generate consolidated invoice
-            $consolidated_receipt = $this->generateConsolidatedInvoice($transactions, $start_date, $end_date, $business_id);
+            // Generate individual receipts for each transaction
+            $individual_receipts = $this->generateIndividualReceipts($transactions, $business_id);
 
             return response()->json([
                 'success' => 1,
-                'receipt' => $consolidated_receipt,
+                'receipt' => $individual_receipts,
                 'count' => count($transactions),
-                'msg' => count($transactions) . ' ' . __('lang_v1.invoices_consolidated_ready_to_print')
+                'msg' => count($transactions) . ' individual receipts ready to print'
             ]);
 
         } catch (\Exception $e) {
@@ -1068,6 +1068,73 @@ class SellController extends Controller
 
         return [
             'html_content' => $html,
+            'print_type' => 'browser'
+        ];
+    }
+
+    /**
+     * Generate individual receipts for multiple transactions
+     */
+    private function generateIndividualReceipts($transactions, $business_id)
+    {
+        $business = Business::find($business_id);
+        $all_receipts_html = '';
+        
+        foreach ($transactions as $index => $transaction) {
+            // Get full transaction details for each sale
+            $sell = Transaction::with([
+                'contact',
+                'sell_lines',
+                'sell_lines.product',
+                'sell_lines.variations',
+                'sell_lines.variations.product_variation',
+                'location',
+                'business',
+                'tax',
+                'sell_lines.modifiers',
+                'table'
+            ])->find($transaction->id);
+
+            if (!$sell) {
+                continue;
+            }
+
+            // Generate individual receipt using the existing receipt template
+            $receipt_details = $this->receiptContent($sell->id, $sell->location_id, 'browser', false, false);
+            
+            if ($receipt_details && isset($receipt_details['html_content'])) {
+                // Add page break between receipts (except for the last one)
+                if ($index > 0) {
+                    $all_receipts_html .= '<div style="page-break-before: always;"></div>';
+                }
+                $all_receipts_html .= $receipt_details['html_content'];
+            }
+        }
+
+        // Wrap all receipts in a single HTML document
+        $final_html = '<!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="utf-8">
+            <title>Bulk Print Receipts</title>
+            <style>
+                @media print {
+                    body { margin: 0; }
+                    .no-print { display: none !important; }
+                    @page { 
+                        margin: 0.5in; 
+                        size: A4;
+                    }
+                }
+                @media screen {
+                    body { margin: 10px; }
+                }
+            </style>
+        </head>
+        <body>' . $all_receipts_html . '</body></html>';
+
+        return [
+            'html_content' => $final_html,
             'print_type' => 'browser'
         ];
     }

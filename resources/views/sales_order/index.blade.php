@@ -135,7 +135,7 @@ $(document).ready( function(){
             { data: 'action', name: 'action'},
             { data: 'transaction_date', name: 'transaction_date'  },
             { data: 'invoice_no', name: 'invoice_no'},
-            { data: 'conatct_name', name: 'conatct_name'},
+            { data: 'contact_name', name: 'contact_name'},
             { data: 'mobile', name: 'contacts.mobile'},
             { data: 'business_location', name: 'bl.name'},
             { data: 'status', name: 'status'},
