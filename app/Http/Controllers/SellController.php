@@ -1100,7 +1100,7 @@ class SellController extends Controller
             }
 
             // Generate individual receipt using the existing receipt template
-            $receipt_details = $this->receiptContent($sell->id, $sell->location_id, 'browser', false, false);
+            $receipt_details = $this->receiptContent($business_id, $sell->location_id, $sell->id, 'browser', false, false);
             
             if ($receipt_details && isset($receipt_details['html_content'])) {
                 // Add page break between receipts (except for the last one)
@@ -2485,5 +2485,89 @@ class SellController extends Controller
             echo 'false';
             exit;
         }
+    }
+
+    /**
+     * Generate receipt content for a transaction
+     *
+     * @param  int  $business_id
+     * @param  int  $location_id
+     * @param  int  $transaction_id
+     * @param  string  $printer_type
+     * @param  bool  $is_package_slip
+     * @param  bool  $from_pos_screen
+     * @param  int  $invoice_layout_id
+     * @param  array  $selected_customers
+     * @param  bool  $is_delivery_note
+     * @return array
+     */
+    private function receiptContent(
+        $business_id,
+        $location_id,
+        $transaction_id,
+        $printer_type = null,
+        $is_package_slip = false,
+        $from_pos_screen = true,
+        $invoice_layout_id = null,
+        $selected_customers = [],
+        $is_delivery_note = false
+    ) {
+        $output = ['is_enabled' => false,
+            'print_type' => 'browser',
+            'html_content' => null,
+            'printer_config' => [],
+            'data' => [],
+        ];
+
+        $business_details = $this->businessUtil->getDetails($business_id);
+        $location_details = BusinessLocation::find($location_id);
+
+        if ($from_pos_screen && $location_details->print_receipt_on_invoice != 1) {
+            return $output;
+        }
+        //Check if printing of invoice is enabled or not.
+        //If enabled, get print type.
+        $output['is_enabled'] = true;
+
+        $invoice_layout_id = !empty($invoice_layout_id) ? $invoice_layout_id : $location_details->invoice_layout_id;
+        $invoice_layout = $this->businessUtil->invoiceLayout($business_id, $invoice_layout_id);
+
+        //Check if printer setting is provided.
+        $receipt_printer_type = is_null($printer_type) ? $location_details->receipt_printer_type : $printer_type;
+
+        $receipt_details = $this->transactionUtil->getReceiptDetails($transaction_id, $location_id, $invoice_layout, $business_details, $location_details, $receipt_printer_type, $selected_customers);
+
+        $currency_details = [
+            'symbol' => $business_details->currency_symbol,
+            'thousand_separator' => $business_details->thousand_separator,
+            'decimal_separator' => $business_details->decimal_separator,
+        ];
+        $receipt_details->currency = $currency_details;
+
+        if ($is_package_slip) {
+            $output['html_content'] = view('sale_pos.receipts.packing_slip', compact('receipt_details'))->render();
+
+            return $output;
+        }
+
+        if ($is_delivery_note) {
+            $output['html_content'] = view('sale_pos.receipts.delivery_note', compact('receipt_details'))->render();
+
+            return $output;
+        }
+
+        $output['print_title'] = $receipt_details->invoice_no;
+        //If print type browser - return the content, printer - return printer config data, and invoice format config
+        if ($receipt_printer_type == 'printer') {
+            $output['print_type'] = 'printer';
+            $output['printer_config'] = $this->businessUtil->printerConfig($business_id, $location_details->printer_id);
+            $output['data'] = $receipt_details;
+        } else {
+            $layout = !empty($receipt_details->design) ? 'sale_pos.receipts.' . $receipt_details->design : 'sale_pos.receipts.classic';
+
+            $output['html_content'] = view($layout, compact('receipt_details'))->render();
+        }
+
+        return $output;
     }
 }
