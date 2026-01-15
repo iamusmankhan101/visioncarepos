@@ -111,4 +111,5 @@ return [
     'building_number' => 'Building number',
     'additional_number' => 'Additional number',
     'additional_number_secondary' => 'Additional number/Secondary Number',
+    'sales' => 'Sales',
 ];
