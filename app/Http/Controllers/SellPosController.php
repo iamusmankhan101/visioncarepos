@@ -2054,7 +2054,7 @@ class SellPosController extends Controller
                 ]);
                 
                 // Generate receipt
-                $receipt = $this->receiptContent($business_id, $transaction->location_id, $transaction_id, $printer_type, $is_package_slip, true, $invoice_layout_id, $selected_customers, $is_delivery_note);
+                $receipt = $this->receiptContent($business_id, $transaction->location_id, $transaction_id, $printer_type, $is_package_slip, false, $invoice_layout_id, $selected_customers, $is_delivery_note);
                 
                 // Restore original contact_id if it was changed
                 if (!empty($custom_customer_id) && isset($original_contact_id)) {
