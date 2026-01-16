@@ -275,7 +275,20 @@
                 dataType: 'json',
                 success: function(result){
                     if(result.success == 1 && result.receipt){
-                        pos_print(result.receipt);
+                        // Use a clean print approach - open new window with only receipt content
+                        if (result.receipt.html_content) {
+                            var printWindow = window.open('', '_blank', 'width=800,height=600');
+                            printWindow.document.write(result.receipt.html_content);
+                            printWindow.document.close();
+                            
+                            // Wait for content to load then print
+                            printWindow.onload = function() {
+                                setTimeout(function() {
+                                    printWindow.focus();
+                                    printWindow.print();
+                                }, 500);
+                            };
+                        }
                     }
                 }
             });
