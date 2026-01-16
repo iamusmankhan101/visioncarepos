@@ -1099,8 +1099,42 @@ class SellController extends Controller
                 continue;
             }
 
+            // Extract selected customers from transaction additional_notes
+            $selected_customers = [];
+            if (!empty($sell->additional_notes)) {
+                // Check for MULTI_INVOICE_CUSTOMERS format
+                if (strpos($sell->additional_notes, 'MULTI_INVOICE_CUSTOMERS:') !== false) {
+                    preg_match('/MULTI_INVOICE_CUSTOMERS:([0-9,]+)/', $sell->additional_notes, $matches);
+                    if (!empty($matches[1])) {
+                        $customer_ids = explode(',', $matches[1]);
+                        // Add the main customer ID to the list at the beginning
+                        array_unshift($customer_ids, $sell->contact_id);
+                        $selected_customers = array_unique(array_map('intval', $customer_ids));
+                        
+                        \Log::info('Extracted selected customers for receipt', [
+                            'transaction_id' => $sell->id,
+                            'main_contact_id' => $sell->contact_id,
+                            'selected_customers' => $selected_customers
+                        ]);
+                    }
+                }
+                // Check for SELECTED_CUSTOMERS format (legacy)
+                elseif (strpos($sell->additional_notes, 'SELECTED_CUSTOMERS:') !== false) {
+                    preg_match('/SELECTED_CUSTOMERS:([0-9,]+)/', $sell->additional_notes, $matches);
+                    if (!empty($matches[1])) {
+                        $customer_ids = explode(',', $matches[1]);
+                        $selected_customers = array_unique(array_map('intval', $customer_ids));
+                        
+                        \Log::info('Extracted selected customers (legacy format) for receipt', [
+                            'transaction_id' => $sell->id,
+                            'selected_customers' => $selected_customers
+                        ]);
+                    }
+                }
+            }
+
             // Generate individual receipt using the existing receipt template
-            $receipt_details = $this->receiptContent($business_id, $sell->location_id, $sell->id, 'browser', false, false);
+            $receipt_details = $this->receiptContent($business_id, $sell->location_id, $sell->id, 'browser', false, false, null, $selected_customers);
             
             if ($receipt_details && isset($receipt_details['html_content'])) {
                 // Add page break between receipts (except for the last one)
