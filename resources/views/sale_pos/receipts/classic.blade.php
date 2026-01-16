@@ -91,13 +91,6 @@ window.addEventListener('afterprint', function() {
 				</p>
 			@endif
 
-
-			<!-- Title of receipt -->
-			@if(!empty($receipt_details->invoice_heading))
-				<h3 class="text-center">
-					{!! $receipt_details->invoice_heading !!}
-				</h3>
-			@endif
 		</div>
 		@if(!empty($receipt_details->letter_head))
 			<div class="col-xs-12 text-center">
@@ -116,7 +109,8 @@ window.addEventListener('afterprint', function() {
 			
 			@if(!empty($receipt_details->customer_info))
 				<span style="display: inline-block; margin-right: 20px;">
-					<b>{{ $receipt_details->customer_label }}</b> {!! strip_tags($receipt_details->customer_info) !!}
+					<b>{{ $receipt_details->customer_label }}</b> 
+					<span style="margin-left: 10px;">{!! strip_tags($receipt_details->customer_info) !!}</span>
 				</span>
 			@endif
 			
