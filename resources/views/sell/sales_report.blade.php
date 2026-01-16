@@ -112,6 +112,9 @@
         </div>
     </div>
 
+    <!-- Hidden div for receipt printing -->
+    <div id="receipt_section" style="display: none;"></div>
+
 </section>
 <!-- /.content -->
 @stop
