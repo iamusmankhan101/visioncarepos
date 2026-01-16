@@ -966,6 +966,7 @@ class TransactionUtil extends Util
         $transaction_type = $transaction->type;
 
         $output = [
+            'transaction_id' => $transaction_id,
             'header_text' => isset($il->header_text) ? $il->header_text : '',
             'business_name' => ($il->show_business_name == 1) ? $business_details->name : '',
             'location_name' => ($il->show_location_name == 1) ? $location_details->name : '',

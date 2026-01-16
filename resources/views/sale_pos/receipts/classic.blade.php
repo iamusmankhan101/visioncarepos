@@ -299,13 +299,27 @@ window.addEventListener('afterprint', function() {
 
 {{-- Prescription Form - Side by Side Layout --}}
 @php
-	$contact_id = $receipt_details->contact_id ?? null;
+	// Get contact from transaction - use the actual contact relationship
 	$contact = null;
-	if($contact_id) {
+	if(!empty($receipt_details->contact_id)) {
 		try {
-			// Find contact by contact_id field, not by primary key
-			$contact = \App\Contact::where('contact_id', $contact_id)->first();
+			// First try to find by contact_id field (string like CO0071)
+			$contact = \App\Contact::where('contact_id', $receipt_details->contact_id)->first();
+			
+			// If not found, it might be a database ID, try that
+			if(!$contact && is_numeric($receipt_details->contact_id)) {
+				$contact = \App\Contact::find($receipt_details->contact_id);
+			}
+			
+			// Last resort: get from transaction
+			if(!$contact) {
+				$transaction = \App\Transaction::find($receipt_details->transaction_id ?? null);
+				if($transaction && $transaction->contact) {
+					$contact = $transaction->contact;
+				}
+			}
 		} catch (\Exception $e) {
+			\Log::error('Error fetching contact for prescription: ' . $e->getMessage());
 			$contact = null;
 		}
 	}
@@ -330,27 +344,27 @@ window.addEventListener('afterprint', function() {
 				<!-- RIGHT EYE TABLE -->
 				<td style="width: 48%; vertical-align: top; padding-right: 10px;">
 					<strong>RIGHT</strong>
-					<table class="table table-bordered table-condensed" style="margin-top: 5px; margin-bottom: 0;">
+					<table class="table table-bordered table-condensed" style="margin-top: 5px; margin-bottom: 0; border: 1px solid #000 !important; border-collapse: collapse !important;">
 						<thead>
 							<tr style="background-color: #f0f0f0;">
-								<th style="width: 25%;"></th>
-								<th style="width: 25%; text-align: center;">Sph.</th>
-								<th style="width: 25%; text-align: center;">Cyl.</th>
-								<th style="width: 25%; text-align: center;">Axis.</th>
+								<th style="width: 25%; border: 1px solid #000 !important; padding: 5px;"></th>
+								<th style="width: 25%; text-align: center; border: 1px solid #000 !important; padding: 5px;">Sph.</th>
+								<th style="width: 25%; text-align: center; border: 1px solid #000 !important; padding: 5px;">Cyl.</th>
+								<th style="width: 25%; text-align: center; border: 1px solid #000 !important; padding: 5px;">Axis.</th>
 							</tr>
 						</thead>
 						<tbody>
 							<tr>
-								<td style="font-weight: 600;">Distance</td>
-								<td style="text-align: center;">{{ optional($contact)->custom_field1 }}</td>
-								<td style="text-align: center;">{{ optional($contact)->custom_field2 }}</td>
-								<td style="text-align: center;">{{ optional($contact)->custom_field3 }}</td>
+								<td style="font-weight: 600; border: 1px solid #000 !important; padding: 5px;">Distance</td>
+								<td style="text-align: center; border: 1px solid #000 !important; padding: 5px;">{{ optional($contact)->custom_field1 }}</td>
+								<td style="text-align: center; border: 1px solid #000 !important; padding: 5px;">{{ optional($contact)->custom_field2 }}</td>
+								<td style="text-align: center; border: 1px solid #000 !important; padding: 5px;">{{ optional($contact)->custom_field3 }}</td>
 							</tr>
 							<tr>
-								<td style="font-weight: 600;">Near</td>
-								<td style="text-align: center;">{{ optional($contact)->custom_field4 }}</td>
-								<td style="text-align: center;">{{ optional($contact)->custom_field5 }}</td>
-								<td style="text-align: center;">{{ optional($contact)->custom_field6 }}</td>
+								<td style="font-weight: 600; border: 1px solid #000 !important; padding: 5px;">Near</td>
+								<td style="text-align: center; border: 1px solid #000 !important; padding: 5px;">{{ optional($contact)->custom_field4 }}</td>
+								<td style="text-align: center; border: 1px solid #000 !important; padding: 5px;">{{ optional($contact)->custom_field5 }}</td>
+								<td style="text-align: center; border: 1px solid #000 !important; padding: 5px;">{{ optional($contact)->custom_field6 }}</td>
 							</tr>
 						</tbody>
 					</table>
@@ -359,27 +373,27 @@ window.addEventListener('afterprint', function() {
 				<!-- LEFT EYE TABLE -->
 				<td style="width: 48%; vertical-align: top; padding-left: 10px;">
 					<strong>Left</strong>
-					<table class="table table-bordered table-condensed" style="margin-top: 5px; margin-bottom: 0;">
+					<table class="table table-bordered table-condensed" style="margin-top: 5px; margin-bottom: 0; border: 1px solid #000 !important; border-collapse: collapse !important;">
 						<thead>
 							<tr style="background-color: #f0f0f0;">
-								<th style="width: 25%;"></th>
-								<th style="width: 25%; text-align: center;">Sph.</th>
-								<th style="width: 25%; text-align: center;">Cyl.</th>
-								<th style="width: 25%; text-align: center;">Axis.</th>
+								<th style="width: 25%; border: 1px solid #000 !important; padding: 5px;"></th>
+								<th style="width: 25%; text-align: center; border: 1px solid #000 !important; padding: 5px;">Sph.</th>
+								<th style="width: 25%; text-align: center; border: 1px solid #000 !important; padding: 5px;">Cyl.</th>
+								<th style="width: 25%; text-align: center; border: 1px solid #000 !important; padding: 5px;">Axis.</th>
 							</tr>
 						</thead>
 						<tbody>
 							<tr>
-								<td style="font-weight: 600;">Distance</td>
-								<td style="text-align: center;">{{ optional($contact)->custom_field7 }}</td>
-								<td style="text-align: center;">{{ optional($contact)->custom_field8 }}</td>
-								<td style="text-align: center;">{{ optional($contact)->custom_field9 }}</td>
+								<td style="font-weight: 600; border: 1px solid #000 !important; padding: 5px;">Distance</td>
+								<td style="text-align: center; border: 1px solid #000 !important; padding: 5px;">{{ optional($contact)->custom_field7 }}</td>
+								<td style="text-align: center; border: 1px solid #000 !important; padding: 5px;">{{ optional($contact)->custom_field8 }}</td>
+								<td style="text-align: center; border: 1px solid #000 !important; padding: 5px;">{{ optional($contact)->custom_field9 }}</td>
 							</tr>
 							<tr>
-								<td style="font-weight: 600;">Near</td>
-								<td style="text-align: center;">{{ optional($contact)->custom_field10 }}</td>
-								<td style="text-align: center;">{{ $contact && !empty($contact->shipping_custom_field_details['shipping_custom_field_1']) ? $contact->shipping_custom_field_details['shipping_custom_field_1'] : '' }}</td>
-								<td style="text-align: center;">{{ $contact && !empty($contact->shipping_custom_field_details['shipping_custom_field_2']) ? $contact->shipping_custom_field_details['shipping_custom_field_2'] : '' }}</td>
+								<td style="font-weight: 600; border: 1px solid #000 !important; padding: 5px;">Near</td>
+								<td style="text-align: center; border: 1px solid #000 !important; padding: 5px;">{{ optional($contact)->custom_field10 }}</td>
+								<td style="text-align: center; border: 1px solid #000 !important; padding: 5px;">{{ $contact && !empty($contact->shipping_custom_field_details['shipping_custom_field_1']) ? $contact->shipping_custom_field_details['shipping_custom_field_1'] : '' }}</td>
+								<td style="text-align: center; border: 1px solid #000 !important; padding: 5px;">{{ $contact && !empty($contact->shipping_custom_field_details['shipping_custom_field_2']) ? $contact->shipping_custom_field_details['shipping_custom_field_2'] : '' }}</td>
 							</tr>
 						</tbody>
 					</table>
@@ -405,27 +419,27 @@ window.addEventListener('afterprint', function() {
 						<!-- RIGHT EYE TABLE -->
 						<td style="width: 48%; vertical-align: top; padding-right: 10px;">
 							<strong>RIGHT</strong>
-							<table class="table table-bordered table-condensed" style="margin-top: 5px; margin-bottom: 0;">
+							<table class="table table-bordered table-condensed" style="margin-top: 5px; margin-bottom: 0; border: 1px solid #000 !important; border-collapse: collapse !important;">
 								<thead>
 									<tr style="background-color: #f0f0f0;">
-										<th style="width: 25%;"></th>
-										<th style="width: 25%; text-align: center;">Sph.</th>
-										<th style="width: 25%; text-align: center;">Cyl.</th>
-										<th style="width: 25%; text-align: center;">Axis.</th>
+										<th style="width: 25%; border: 1px solid #000 !important; padding: 5px;"></th>
+										<th style="width: 25%; text-align: center; border: 1px solid #000 !important; padding: 5px;">Sph.</th>
+										<th style="width: 25%; text-align: center; border: 1px solid #000 !important; padding: 5px;">Cyl.</th>
+										<th style="width: 25%; text-align: center; border: 1px solid #000 !important; padding: 5px;">Axis.</th>
 									</tr>
 								</thead>
 								<tbody>
 									<tr>
-										<td style="font-weight: 600;">Distance</td>
-										<td style="text-align: center;">{{ $additional_customer['prescription']['right_eye']['distance']['sph'] ?? '' }}</td>
-										<td style="text-align: center;">{{ $additional_customer['prescription']['right_eye']['distance']['cyl'] ?? '' }}</td>
-										<td style="text-align: center;">{{ $additional_customer['prescription']['right_eye']['distance']['axis'] ?? '' }}</td>
+										<td style="font-weight: 600; border: 1px solid #000 !important; padding: 5px;">Distance</td>
+										<td style="text-align: center; border: 1px solid #000 !important; padding: 5px;">{{ $additional_customer['prescription']['right_eye']['distance']['sph'] ?? '' }}</td>
+										<td style="text-align: center; border: 1px solid #000 !important; padding: 5px;">{{ $additional_customer['prescription']['right_eye']['distance']['cyl'] ?? '' }}</td>
+										<td style="text-align: center; border: 1px solid #000 !important; padding: 5px;">{{ $additional_customer['prescription']['right_eye']['distance']['axis'] ?? '' }}</td>
 									</tr>
 									<tr>
-										<td style="font-weight: 600;">Near</td>
-										<td style="text-align: center;">{{ $additional_customer['prescription']['right_eye']['near']['sph'] ?? '' }}</td>
-										<td style="text-align: center;">{{ $additional_customer['prescription']['right_eye']['near']['cyl'] ?? '' }}</td>
-										<td style="text-align: center;">{{ $additional_customer['prescription']['right_eye']['near']['axis'] ?? '' }}</td>
+										<td style="font-weight: 600; border: 1px solid #000 !important; padding: 5px;">Near</td>
+										<td style="text-align: center; border: 1px solid #000 !important; padding: 5px;">{{ $additional_customer['prescription']['right_eye']['near']['sph'] ?? '' }}</td>
+										<td style="text-align: center; border: 1px solid #000 !important; padding: 5px;">{{ $additional_customer['prescription']['right_eye']['near']['cyl'] ?? '' }}</td>
+										<td style="text-align: center; border: 1px solid #000 !important; padding: 5px;">{{ $additional_customer['prescription']['right_eye']['near']['axis'] ?? '' }}</td>
 									</tr>
 								</tbody>
 							</table>
@@ -434,27 +448,27 @@ window.addEventListener('afterprint', function() {
 						<!-- LEFT EYE TABLE -->
 						<td style="width: 48%; vertical-align: top; padding-left: 10px;">
 							<strong>Left</strong>
-							<table class="table table-bordered table-condensed" style="margin-top: 5px; margin-bottom: 0;">
+							<table class="table table-bordered table-condensed" style="margin-top: 5px; margin-bottom: 0; border: 1px solid #000 !important; border-collapse: collapse !important;">
 								<thead>
 									<tr style="background-color: #f0f0f0;">
-										<th style="width: 25%;"></th>
-										<th style="width: 25%; text-align: center;">Sph.</th>
-										<th style="width: 25%; text-align: center;">Cyl.</th>
-										<th style="width: 25%; text-align: center;">Axis.</th>
+										<th style="width: 25%; border: 1px solid #000 !important; padding: 5px;"></th>
+										<th style="width: 25%; text-align: center; border: 1px solid #000 !important; padding: 5px;">Sph.</th>
+										<th style="width: 25%; text-align: center; border: 1px solid #000 !important; padding: 5px;">Cyl.</th>
+										<th style="width: 25%; text-align: center; border: 1px solid #000 !important; padding: 5px;">Axis.</th>
 									</tr>
 								</thead>
 								<tbody>
 									<tr>
-										<td style="font-weight: 600;">Distance</td>
-										<td style="text-align: center;">{{ $additional_customer['prescription']['left_eye']['distance']['sph'] ?? '' }}</td>
-										<td style="text-align: center;">{{ $additional_customer['prescription']['left_eye']['distance']['cyl'] ?? '' }}</td>
-										<td style="text-align: center;">{{ $additional_customer['prescription']['left_eye']['distance']['axis'] ?? '' }}</td>
+										<td style="font-weight: 600; border: 1px solid #000 !important; padding: 5px;">Distance</td>
+										<td style="text-align: center; border: 1px solid #000 !important; padding: 5px;">{{ $additional_customer['prescription']['left_eye']['distance']['sph'] ?? '' }}</td>
+										<td style="text-align: center; border: 1px solid #000 !important; padding: 5px;">{{ $additional_customer['prescription']['left_eye']['distance']['cyl'] ?? '' }}</td>
+										<td style="text-align: center; border: 1px solid #000 !important; padding: 5px;">{{ $additional_customer['prescription']['left_eye']['distance']['axis'] ?? '' }}</td>
 									</tr>
 									<tr>
-										<td style="font-weight: 600;">Near</td>
-										<td style="text-align: center;">{{ $additional_customer['prescription']['left_eye']['near']['sph'] ?? '' }}</td>
-										<td style="text-align: center;">{{ $additional_customer['prescription']['left_eye']['near']['cyl'] ?? '' }}</td>
-										<td style="text-align: center;">{{ $additional_customer['prescription']['left_eye']['near']['axis'] ?? '' }}</td>
+										<td style="font-weight: 600; border: 1px solid #000 !important; padding: 5px;">Near</td>
+										<td style="text-align: center; border: 1px solid #000 !important; padding: 5px;">{{ $additional_customer['prescription']['left_eye']['near']['sph'] ?? '' }}</td>
+										<td style="text-align: center; border: 1px solid #000 !important; padding: 5px;">{{ $additional_customer['prescription']['left_eye']['near']['cyl'] ?? '' }}</td>
+										<td style="text-align: center; border: 1px solid #000 !important; padding: 5px;">{{ $additional_customer['prescription']['left_eye']['near']['axis'] ?? '' }}</td>
 									</tr>
 								</tbody>
 							</table>
