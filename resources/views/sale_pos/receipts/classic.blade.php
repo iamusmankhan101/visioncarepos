@@ -869,15 +869,15 @@ window.addEventListener('afterprint', function() {
 	@endif
 	
 	{{-- Custom Footer Text - ALWAYS VISIBLE --}}
-	<div class="col-xs-12" style="page-break-inside: avoid; margin-top: 20px;">
-		<hr style="border-top: 2px solid #000;">
-		<div style="padding: 15px; font-size: 12px; text-align: center; background-color: #f0f0f0; border: 2px solid #000;">
-			<strong style="font-size: 14px;">TERMS & CONDITIONS</strong><br><br>
+	<div class="col-xs-12" style="page-break-inside: avoid; margin-top: 15px;">
+		<hr style="border-top: 1px solid #000;">
+		<div style="padding: 8px; font-size: 9px; text-align: center; background-color: #f0f0f0; border: 1px solid #000;">
+			<strong style="font-size: 10px;">TERMS & CONDITIONS</strong><br>
 			<strong>• No Order will process without 50% Advance payment.</strong><br>
 			<strong>• Orders with 100% Payment will be prioritized.</strong><br>
 			<strong>• No refunds, but we can give you a voucher or exchange it within 3 days.</strong>
 		</div>
-		<hr style="border-top: 2px solid #000;">
+		<hr style="border-top: 1px solid #000;">
 	</div>
 	@if($receipt_details->show_barcode || $receipt_details->show_qr_code)
 		<div class="@if(!empty($receipt_details->footer_text)) col-xs-4 @else col-xs-12 @endif text-center">
