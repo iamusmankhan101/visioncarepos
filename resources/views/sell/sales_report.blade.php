@@ -3,23 +3,6 @@
 
 @section('content')
 
-<style>
-    /* Hide all page content when printing - only print from the separate invoice window */
-    @media print {
-        body * {
-            visibility: hidden !important;
-        }
-        body::after {
-            content: "Please use the print dialog from the invoice window that opened.";
-            visibility: visible !important;
-            display: block;
-            text-align: center;
-            margin-top: 50px;
-            font-size: 18px;
-        }
-    }
-</style>
-
 <!-- Content Header (Page header) -->
 <section class="content-header">
     <h1>@lang('business.sales')
@@ -303,10 +286,17 @@
                                 setTimeout(function() {
                                     printWindow.focus();
                                     printWindow.print();
+                                    // Optionally close the window after printing
+                                    // printWindow.close();
                                 }, 500);
                             };
                         }
+                    } else {
+                        toastr.error(result.msg || 'Failed to generate invoice');
                     }
+                },
+                error: function() {
+                    toastr.error('Failed to load invoice');
                 }
             });
         });
