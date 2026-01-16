@@ -1988,13 +1988,12 @@ class SellPosController extends Controller
                 $invoice_layout_id = $transaction->is_direct_sale ? $transaction->location->sale_invoice_layout_id : null;
                 
                 // Extract selected customers from transaction's additional_notes if available
-                $selected_customers = [$transaction->contact_id]; // Always include main customer
+                $selected_customers = []; // Start empty, will add main customer if needed
                 
                 \Log::info('PrintInvoice - Transaction additional_notes', [
                     'transaction_id' => $transaction_id,
                     'additional_notes' => $transaction->additional_notes,
-                    'has_notes' => !empty($transaction->additional_notes),
-                    'include_related_param' => $request->input('include_related', false)
+                    'has_notes' => !empty($transaction->additional_notes)
                 ]);
                 
                 if (!empty($transaction->additional_notes)) {
@@ -2004,53 +2003,41 @@ class SellPosController extends Controller
                         \Log::info('PrintInvoice - MULTI_INVOICE_CUSTOMERS regex matches', ['matches' => $matches]);
                         if (!empty($matches[1])) {
                             $additional_customer_ids = explode(',', $matches[1]);
-                            $selected_customers = array_merge($selected_customers, $additional_customer_ids);
-                            \Log::info('PrintInvoice - Added additional customers', [
+                            // Add main customer first, then additional customers
+                            $selected_customers = array_merge([$transaction->contact_id], $additional_customer_ids);
+                            $selected_customers = array_unique(array_map('intval', $selected_customers));
+                            \Log::info('PrintInvoice - Found MULTI_INVOICE_CUSTOMERS', [
+                                'main_customer' => $transaction->contact_id,
                                 'additional_customer_ids' => $additional_customer_ids,
                                 'final_selected_customers' => $selected_customers
                             ]);
                         }
                     }
-                    // Also check for old format
-                    elseif (strpos($transaction->additional_notes, 'Additional Customers:') !== false) {
-                        preg_match('/Additional Customers: (.+?)(\n|$)/', $transaction->additional_notes, $matches);
+                    // Also check for SELECTED_CUSTOMERS format (legacy)
+                    elseif (strpos($transaction->additional_notes, 'SELECTED_CUSTOMERS:') !== false) {
+                        preg_match('/SELECTED_CUSTOMERS:([0-9,]+)/', $transaction->additional_notes, $matches);
                         if (!empty($matches[1])) {
-                            // This contains names, we need to find IDs - for now just log it
-                            \Log::info('Found additional customers by names', ['names' => $matches[1]]);
-                        }
-                    }
-                } else {
-                    \Log::info('PrintInvoice - No additional_notes found');
-                    
-                    // Always auto-detect related customers for printing (sale note is optional)
-                    // This ensures multiple customer receipts work regardless of sale note content
-                    $main_customer = Contact::find($transaction->contact_id);
-                    if ($main_customer && !empty($main_customer->mobile)) {
-                        $related_customers = Contact::where('business_id', $business_id)
-                            ->where('mobile', $main_customer->mobile)
-                            ->where('contact_status', 'active')
-                            ->where('type', 'customer')
-                            ->where('id', '!=', $transaction->contact_id)
-                            ->pluck('id')
-                            ->toArray();
-                        
-                        if (!empty($related_customers)) {
-                            $selected_customers = array_merge($selected_customers, $related_customers);
-                            \Log::info('PrintInvoice - Auto-detected related customers (sale note independent)', [
-                                'main_customer_phone' => $main_customer->mobile,
-                                'related_customers' => $related_customers,
-                                'final_selected_customers' => $selected_customers
+                            $customer_ids = explode(',', $matches[1]);
+                            $selected_customers = array_unique(array_map('intval', $customer_ids));
+                            \Log::info('PrintInvoice - Found SELECTED_CUSTOMERS (legacy)', [
+                                'selected_customers' => $selected_customers
                             ]);
-                        } else {
-                            \Log::info('PrintInvoice - No related customers found for auto-detection');
                         }
                     }
                 }
                 
-                \Log::info('PrintInvoice - Selected customers for receipt generation', [
+                // If no customers found in additional_notes, just use the main customer
+                if (empty($selected_customers)) {
+                    $selected_customers = [$transaction->contact_id];
+                    \Log::info('PrintInvoice - No multiple customers found, using main customer only', [
+                        'main_customer' => $transaction->contact_id
+                    ]);
+                }
+                
+                \Log::info('PrintInvoice - Final selected customers for receipt generation', [
                     'transaction_id' => $transaction_id,
                     'selected_customers' => $selected_customers,
-                    'custom_customer_id' => $custom_customer_id
+                    'count' => count($selected_customers)
                 ]);
                 
                 // Generate receipt
