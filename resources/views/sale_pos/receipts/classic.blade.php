@@ -110,7 +110,7 @@ window.addEventListener('afterprint', function() {
 			@if(!empty($receipt_details->customer_info))
 				<span style="display: inline-block; margin-right: 20px;">
 					<b>{{ $receipt_details->customer_label }}</b> 
-					<span style="margin-left: 10px;">{!! strip_tags($receipt_details->customer_info) !!}</span>
+					<span style="margin-left: 10px;">{!! str_replace('Mobile:', '&nbsp;&nbsp;&nbsp;Mobile:', strip_tags($receipt_details->customer_info)) !!}</span>
 				</span>
 			@endif
 			
