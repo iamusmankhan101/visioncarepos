@@ -104,53 +104,67 @@ window.addEventListener('afterprint', function() {
 				<img style="width: 100%;margin-bottom: 10px;" src="{{$receipt_details->letter_head}}">
 			</div>
 		@endif
-	<div class="col-xs-12 text-center">
-		<!-- Invoice  number, Date  -->
-		<p style="width: 100% !important" class="word-wrap">
-			<span class="pull-left text-left word-wrap">
+	<div class="col-xs-12">
+		<!-- Invoice number, Customer, Mobile, Date in one row -->
+		<p style="width: 100% !important; margin-bottom: 10px;">
+			<span style="display: inline-block; margin-right: 20px;">
 				@if(!empty($receipt_details->invoice_no_prefix))
 					<b>{!! $receipt_details->invoice_no_prefix !!}</b>
 				@endif
-				{{$receipt_details->invoice_no}}
+				<b>{{$receipt_details->invoice_no}}</b>
+			</span>
+			
+			@if(!empty($receipt_details->customer_info))
+				<span style="display: inline-block; margin-right: 20px;">
+					<b>{{ $receipt_details->customer_label }}</b> {!! strip_tags($receipt_details->customer_info) !!}
+				</span>
+			@endif
+			
+			<span style="display: inline-block; float: right;">
+				<b>{{$receipt_details->date_label}}</b> {{$receipt_details->invoice_date}}
+			</span>
+		</p>
 
-				@if(!empty($receipt_details->types_of_service))
-					<br/>
-					<span class="pull-left text-left">
-						<strong>{!! $receipt_details->types_of_service_label !!}:</strong>
-						{{$receipt_details->types_of_service}}
-						<!-- Waiter info -->
-						@if(!empty($receipt_details->types_of_service_custom_fields))
-							@foreach($receipt_details->types_of_service_custom_fields as $key => $value)
-								<br><strong>{{$key}}: </strong> {{$value}}
-							@endforeach
-						@endif
-					</span>
-				@endif
+		@if(!empty($receipt_details->types_of_service))
+			<p style="width: 100% !important">
+				<span class="pull-left text-left">
+					<strong>{!! $receipt_details->types_of_service_label !!}:</strong>
+					{{$receipt_details->types_of_service}}
+					<!-- Waiter info -->
+					@if(!empty($receipt_details->types_of_service_custom_fields))
+						@foreach($receipt_details->types_of_service_custom_fields as $key => $value)
+							<br><strong>{{$key}}: </strong> {{$value}}
+						@endforeach
+					@endif
+				</span>
+			</p>
+		@endif
 
-				<!-- Table information-->
-		        @if(!empty($receipt_details->table_label) || !empty($receipt_details->table))
-		        	<br/>
-					<span class="pull-left text-left">
-						@if(!empty($receipt_details->table_label))
-							<b>{!! $receipt_details->table_label !!}</b>
-						@endif
-						{{$receipt_details->table}}
+		<!-- Table information-->
+		@if(!empty($receipt_details->table_label) || !empty($receipt_details->table))
+			<p style="width: 100% !important">
+				<span class="pull-left text-left">
+					@if(!empty($receipt_details->table_label))
+						<b>{!! $receipt_details->table_label !!}</b>
+					@endif
+					{{$receipt_details->table}}
+				</span>
+			</p>
+		@endif
 
-						<!-- Waiter info -->
-					</span>
-		        @endif
-
-				<!-- customer info -->
-				@if(!empty($receipt_details->customer_info))
-					<br/>
-					<b>{{ $receipt_details->customer_label }}</b> <br> {!! $receipt_details->customer_info !!} <br>
-				@endif
-				@if(!empty($receipt_details->additional_customers))
-					<span style="font-size: 0.9em; color: #666;">
-						<i>(Also for: {{ $receipt_details->additional_customers }})</i>
-					</span>
-					<br/>
-				@endif
+		<!-- Additional customer info if needed -->
+		@if(!empty($receipt_details->additional_customers))
+			<p style="width: 100% !important">
+				<span style="font-size: 0.9em; color: #666;">
+					<i>(Also for: {{ $receipt_details->additional_customers }})</i>
+				</span>
+			</p>
+		@endif
+	</div>
+	
+	<div class="col-xs-12">
+		<p style="width: 100% !important" class="word-wrap">
+			<span class="pull-left text-left word-wrap">
 				@if(!empty($receipt_details->client_id_label))
 					<br/>
 					<b>{{ $receipt_details->client_id_label }}</b> {{ $receipt_details->client_id }}
@@ -177,10 +191,9 @@ window.addEventListener('afterprint', function() {
 			</span>
 
 			<span class="pull-right text-left">
-				<b>{{$receipt_details->date_label}}</b> {{$receipt_details->invoice_date}}
-
 				@if(!empty($receipt_details->due_date_label))
-				<br><b>{{$receipt_details->due_date_label}}</b> {{$receipt_details->due_date ?? ''}}
+					<b>{{$receipt_details->due_date_label}}</b> {{$receipt_details->due_date ?? ''}}
+					<br>
 				@endif
 
 				@if(!empty($receipt_details->brand_label) || !empty($receipt_details->repair_brand))
