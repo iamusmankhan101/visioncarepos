@@ -29,7 +29,7 @@
                             {!! Form::label('voucher_discount_type', __('sale.discount_type') . ':') !!}
                             {!! Form::select('voucher_discount_type', 
                                 ['percentage' => __('lang_v1.percentage'), 'fixed' => __('lang_v1.fixed')], 
-                                'fixed', 
+                                'percentage', 
                                 ['class' => 'form-control', 'id' => 'voucher_discount_type']
                             ) !!}
                         </div>

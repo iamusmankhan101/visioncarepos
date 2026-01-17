@@ -246,7 +246,7 @@
             // Simple validation - you can enhance this with server-side validation
             if (voucher_code.length >= 3) {
                 $('#voucher_status').html('<i class="fa fa-check text-success"></i> @lang("lang_v1.voucher_valid")');
-                $('#voucher_discount_value').val('50'); // Default discount value
+                // Don't override the user's discount value - let them set it
                 toastr.success('@lang("lang_v1.voucher_validated")');
             } else {
                 $('#voucher_status').html('<i class="fa fa-times text-danger"></i> @lang("lang_v1.invalid_voucher")');
