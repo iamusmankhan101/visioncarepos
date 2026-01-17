@@ -29,11 +29,11 @@ class VoucherController extends Controller
                 ->addColumn(
                     'action',
                     '@can("tax_rate.update")
-                        <button data-href="{{action([\App\Http\Controllers\VoucherController::class, \'edit\'], [$id])}}" class="tw-dw-btn tw-dw-btn-xs tw-dw-btn-outline tw-dw-btn-primary btn-modal" data-container=".voucher_modal"><i class="glyphicon glyphicon-edit"></i> @lang("messages.edit")</button>
+                        <button data-href="{{route(\'tax-rates.edit\', [$id])}}" class="tw-dw-btn tw-dw-btn-xs tw-dw-btn-outline tw-dw-btn-primary btn-modal" data-container=".voucher_modal"><i class="glyphicon glyphicon-edit"></i> @lang("messages.edit")</button>
                         &nbsp;
                     @endcan
                     @can("tax_rate.delete")
-                        <button data-href="{{action([\App\Http\Controllers\VoucherController::class, \'destroy\'], [$id])}}" class="tw-dw-btn tw-dw-btn-xs tw-dw-btn-outline tw-dw-btn-error delete_voucher_button"><i class="glyphicon glyphicon-trash"></i> @lang("messages.delete")</button>
+                        <button data-href="{{route(\'tax-rates.destroy\', [$id])}}" class="tw-dw-btn tw-dw-btn-xs tw-dw-btn-outline tw-dw-btn-error delete_voucher_button"><i class="glyphicon glyphicon-trash"></i> @lang("messages.delete")</button>
                     @endcan'
                 )
                 ->editColumn('discount_type', function ($row) {

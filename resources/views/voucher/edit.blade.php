@@ -1,7 +1,7 @@
 <div class="modal-dialog" role="document">
   <div class="modal-content">
 
-    {!! Form::open(['url' => action([\App\Http\Controllers\VoucherController::class, 'update'], [$voucher->id]), 'method' => 'PUT', 'id' => 'voucher_edit_form' ]) !!}
+    {!! Form::open(['url' => route('tax-rates.update', [$voucher->id]), 'method' => 'PUT', 'id' => 'voucher_edit_form' ]) !!}
 
     <div class="modal-header">
       <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>

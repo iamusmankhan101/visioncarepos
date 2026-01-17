@@ -17,7 +17,7 @@
             @slot('tool')
                 <div class="box-tools">
                     <button type="button" class="btn btn-block btn-primary btn-modal" 
-                        data-href="{{action([\App\Http\Controllers\VoucherController::class, 'create'])}}" 
+                        data-href="{{route('tax-rates.create')}}" 
                         data-container=".voucher_modal">
                         <i class="fa fa-plus"></i> @lang('messages.add')</button>
                 </div>
