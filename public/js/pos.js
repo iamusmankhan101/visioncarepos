@@ -1235,6 +1235,10 @@ $(document).ready(function() {
 
         //$('input#shipping_charges').val(__read_number($('input#shipping_charges_modal')));
 
+        // Update the order status display
+        var selectedStatus = $('#shipping_status_modal option:selected').text();
+        $('#shipping_status_display').text(selectedStatus || 'Ordered');
+
         pos_total_row();
     });
 

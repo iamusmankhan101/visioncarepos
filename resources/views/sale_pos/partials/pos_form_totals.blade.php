@@ -64,14 +64,14 @@
 				<td>
 					<span class="tw-text-base md:tw-text-lg tw-font-semibold">
 
-						<b class="tw-text-base md:tw-text-lg tw-font-bold">@lang('sale.shipping')(+): @show_tooltip(__('tooltip.shipping'))</b> 
-						<i class="fas fa-edit cursor-pointer"  title="@lang('sale.shipping')" aria-hidden="true" data-toggle="modal" data-target="#posShippingModal"></i>
-						<span id="shipping_charges_amount">0</span>
+						<b class="tw-text-base md:tw-text-lg tw-font-bold">@lang('lang_v1.order_status'): @show_tooltip(__('tooltip.order_status'))</b> 
+						<i class="fas fa-edit cursor-pointer"  title="@lang('lang_v1.order_status')" aria-hidden="true" data-toggle="modal" data-target="#posShippingModal"></i>
+						<span id="shipping_status_display">@if(empty($edit)){{'Ordered'}}@else{{$shipping_statuses[$transaction->shipping_status] ?? 'Ordered'}}@endif</span>
 						<input type="hidden" name="shipping_details" id="shipping_details" value="@if(empty($edit)){{''}}@else{{$transaction->shipping_details}}@endif" data-default="">
 
 						<input type="hidden" name="shipping_address" id="shipping_address" value="@if(empty($edit)){{''}}@else{{$transaction->shipping_address}}@endif">
 
-						<input type="hidden" name="shipping_status" id="shipping_status" value="@if(empty($edit)){{''}}@else{{$transaction->shipping_status}}@endif">
+						<input type="hidden" name="shipping_status" id="shipping_status" value="@if(empty($edit)){{'ordered'}}@else{{$transaction->shipping_status}}@endif">
 
 						<input type="hidden" name="delivered_to" id="delivered_to" value="@if(empty($edit)){{''}}@else{{$transaction->delivered_to}}@endif">
 

@@ -80,6 +80,7 @@ return [
     'voucher_deleted_success' => 'Voucher deleted successfully',
     'confirm_delete_voucher' => 'Are you sure you want to delete this voucher?',
     'select_voucher_option' => '-- Select a voucher --',
+    'order_status' => 'Order Status',
     'apply_voucher' => 'Apply Voucher',
     'voucher_code' => 'Voucher Code',
     'enter_voucher_code' => 'Enter voucher code',

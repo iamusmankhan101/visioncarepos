@@ -4,7 +4,7 @@
 		<div class="modal-content">
 			<div class="modal-header">
 				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-				<h4 class="modal-title">@lang('sale.shipping')</h4>
+				<h4 class="modal-title">@lang('lang_v1.order_status')</h4>
 			</div>
 			<div class="modal-body">
 				<div class="row">
@@ -36,8 +36,8 @@
 
 				    <div class="col-md-6">
 				        <div class="form-group">
-				            {!! Form::label('shipping_status_modal', __('lang_v1.shipping_status') . ':' ) !!}
-				            {!! Form::select('shipping_status_modal',$shipping_statuses, !empty($transaction->shipping_status) ? $transaction->shipping_status : null, ['class' => 'form-control','placeholder' => __('messages.please_select')]); !!}
+				            {!! Form::label('shipping_status_modal', __('lang_v1.order_status') . ':*' ) !!}
+				            {!! Form::select('shipping_status_modal',$shipping_statuses, !empty($transaction->shipping_status) ? $transaction->shipping_status : 'ordered', ['class' => 'form-control','placeholder' => __('messages.please_select')]); !!}
 				        </div>
 				    </div>
 
