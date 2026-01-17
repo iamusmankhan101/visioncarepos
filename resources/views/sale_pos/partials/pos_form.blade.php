@@ -170,7 +170,11 @@
 	<div class="col-md-4 col-sm-6">
 		<div class="form-group">
 			{!! Form::label('shipping_status', __('lang_v1.order_status')) !!}
-			{!! Form::select('shipping_status', $shipping_statuses, 'ordered', ['class' => 'form-control', 'placeholder' => __('messages.please_select'), 'id' => 'shipping_status']); !!}
+			<select name="shipping_status" class="form-control" id="shipping_status">
+				<option value="ordered" selected>Ordered</option>
+				<option value="packed">Ready</option>
+				<option value="delivered">Delivered</option>
+			</select>
 		</div>
 	</div>
 	

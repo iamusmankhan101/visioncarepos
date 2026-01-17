@@ -63,9 +63,7 @@ class SellController extends Controller
         $this->shipping_status_colors = [
             'ordered' => 'bg-yellow',
             'packed' => 'bg-info',
-            'shipped' => 'bg-navy',
             'delivered' => 'bg-green',
-            'cancelled' => 'bg-red',
         ];
     }
 
@@ -456,7 +454,14 @@ class SellController extends Controller
                     // Set default status if none exists
                     $current_status = !empty($row->shipping_status) ? $row->shipping_status : 'ordered';
                     $status_color = ! empty($this->shipping_status_colors[$current_status]) ? $this->shipping_status_colors[$current_status] : 'bg-gray';
-                    $status_text = isset($shipping_statuses[$current_status]) ? $shipping_statuses[$current_status] : 'Ordered';
+                    
+                    // Custom status text for our 3 statuses
+                    $status_texts = [
+                        'ordered' => 'Ordered',
+                        'packed' => 'Ready', 
+                        'delivered' => 'Delivered'
+                    ];
+                    $status_text = isset($status_texts[$current_status]) ? $status_texts[$current_status] : 'Ordered';
                     
                     // Quick order status change link
                     $quick_url = url('sells/quick-order-status/'.$row->id);

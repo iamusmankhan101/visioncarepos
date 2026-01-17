@@ -13,11 +13,15 @@
             <div class="form-group">
                 <label for="order_status">@lang('lang_v1.order_status'):</label>
                 <select name="shipping_status" id="order_status" class="form-control" required>
-                    @foreach($shipping_statuses as $key => $status)
-                        <option value="{{ $key }}" {{ ($transaction->shipping_status == $key || (!$transaction->shipping_status && $key == 'ordered')) ? 'selected' : '' }}>
-                            {{ $status }}
-                        </option>
-                    @endforeach
+                    <option value="ordered" {{ ($transaction->shipping_status == 'ordered' || (!$transaction->shipping_status)) ? 'selected' : '' }}>
+                        @lang('lang_v1.ordered')
+                    </option>
+                    <option value="packed" {{ ($transaction->shipping_status == 'packed') ? 'selected' : '' }}>
+                        Ready
+                    </option>
+                    <option value="delivered" {{ ($transaction->shipping_status == 'delivered') ? 'selected' : '' }}>
+                        @lang('lang_v1.delivered')
+                    </option>
                 </select>
             </div>
         </div>
