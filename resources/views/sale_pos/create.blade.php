@@ -351,6 +351,83 @@
             pos_total_row();
             toastr.info('Voucher cleared');
         };
+        
+        // Voucher dropdown functionality
+        // Load active vouchers when modal is opened
+        $('#posVoucherModal').on('show.bs.modal', function() {
+            loadActiveVouchers();
+        });
+        
+        // Handle voucher selection from dropdown
+        $('#voucher_select').on('change', function() {
+            var selectedValue = $(this).val();
+            if (selectedValue) {
+                try {
+                    var voucherData = JSON.parse(selectedValue);
+                    
+                    // Fill in the voucher details
+                    $('#voucher_discount_type').val(voucherData.discount_type);
+                    $('#voucher_discount_value').val(voucherData.discount_value);
+                    
+                    // Show voucher is valid
+                    $('#voucher_status').html('<i class="fa fa-check text-success"></i> Voucher is valid');
+                } catch (e) {
+                    console.error('Error parsing voucher data:', e);
+                }
+            } else {
+                // Clear fields
+                $('#voucher_discount_type').val('percentage');
+                $('#voucher_discount_value').val('0');
+                $('#voucher_status').html('');
+            }
+        });
+        
+        function loadActiveVouchers() {
+            console.log('Loading active vouchers...');
+            $.ajax({
+                url: '/vouchers/active',
+                method: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    console.log('Vouchers response:', response);
+                    if (response.success) {
+                        var select = $('#voucher_select');
+                        select.empty();
+                        select.append('<option value="">-- Select a voucher --</option>');
+                        
+                        if (response.vouchers && response.vouchers.length > 0) {
+                            $.each(response.vouchers, function(index, voucher) {
+                                var displayText = voucher.name + ' (' + voucher.code + ') - ';
+                                if (voucher.discount_type === 'percentage') {
+                                    displayText += voucher.discount_value + '%';
+                                } else {
+                                    displayText += voucher.discount_value;
+                                }
+                                
+                                if (voucher.min_amount && voucher.min_amount > 0) {
+                                    displayText += ' (Min: ' + voucher.min_amount + ')';
+                                }
+                                
+                                var voucherJson = JSON.stringify(voucher).replace(/"/g, '&quot;');
+                                select.append('<option value="' + voucherJson + '">' + displayText + '</option>');
+                            });
+                            console.log('Added ' + response.vouchers.length + ' vouchers to dropdown');
+                        } else {
+                            select.append('<option value="" disabled>No active vouchers available</option>');
+                            console.log('No vouchers found');
+                        }
+                    } else {
+                        console.error('Failed to load vouchers:', response.msg);
+                        $('#voucher_select').append('<option value="" disabled>Error loading vouchers</option>');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('AJAX Error loading vouchers:', error);
+                    console.error('Response:', xhr.responseText);
+                    $('#voucher_select').append('<option value="" disabled>Error loading vouchers</option>');
+                }
+            });
+        }
     });
     </script>
 @endsection
