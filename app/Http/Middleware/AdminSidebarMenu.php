@@ -853,8 +853,8 @@ class AdminSidebarMenu
 
                         if (auth()->user()->can('tax_rate.view') || auth()->user()->can('tax_rate.create')) {
                             $sub->url(
-                                action([\App\Http\Controllers\TaxRateController::class, 'index']),
-                                __('tax_rate.tax_rates'),
+                                action([\App\Http\Controllers\VoucherController::class, 'index']),
+                                __('lang_v1.vouchers'),
                                 ['icon' => '', 'active' => request()->segment(1) == 'tax-rates']
                             );
                         }

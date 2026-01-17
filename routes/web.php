@@ -144,7 +144,7 @@ Route::middleware(['setData', 'auth', 'SetSessionData', 'language', 'timezone', 
 
     Route::resource('payment-account', AccountController::class);
 
-    Route::resource('tax-rates', TaxRateController::class);
+    Route::resource('tax-rates', VoucherController::class);
 
     Route::resource('units', UnitController::class);
 

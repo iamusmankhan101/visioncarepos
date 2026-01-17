@@ -264,6 +264,38 @@ $(document).ready(function() {
 
     //End: CRUD for tax Rate
 
+    //Start: CRUD for voucher
+    $(document).on('click', 'button.delete_voucher_button', function() {
+        swal({
+            title: LANG.sure,
+            text: 'Are you sure you want to delete this voucher?',
+            icon: 'warning',
+            buttons: true,
+            dangerMode: true,
+        }).then(willDelete => {
+            if (willDelete) {
+                var href = $(this).data('href');
+                var data = $(this).serialize();
+
+                $.ajax({
+                    method: 'DELETE',
+                    url: href,
+                    dataType: 'json',
+                    data: data,
+                    success: function(result) {
+                        if (result.success == true) {
+                            toastr.success(result.msg);
+                            $('#voucher_table').DataTable().ajax.reload();
+                        } else {
+                            toastr.error(result.msg);
+                        }
+                    },
+                });
+            }
+        });
+    });
+    //End: CRUD for voucher
+
     //Start: CRUD for unit
     //Unit table
     var units_table = $('#unit_table').DataTable({
