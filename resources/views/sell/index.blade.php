@@ -142,6 +142,17 @@
 @section('javascript')
     <script type="text/javascript">
         $(document).ready(function() {
+            console.log('Sales page JavaScript loaded'); // Debug log
+            
+            // Test if jQuery is working
+            console.log('jQuery version:', $.fn.jquery);
+            
+            // Add a basic click handler that should work
+            $(document).on('click', '.debug-btn', function() {
+                alert('Debug button clicked! Class found.');
+                console.log('Debug button clicked');
+            });
+            
             //Date range as a button
             var startLast30 = moment().subtract(29, 'days');
             var endLast = moment();
@@ -349,6 +360,16 @@
                 ],
                 "fnDrawCallback": function(oSettings) {
                     __currency_convert_recursively($('#sell_table'));
+                    
+                    // Debug: Check if our buttons exist after DataTable draw
+                    console.log('DataTable drawn. Quick order status buttons found:', $('.quick-order-status-btn').length);
+                    console.log('Debug buttons found:', $('.debug-btn').length);
+                    
+                    // Re-attach click handlers after DataTable redraw
+                    $('.debug-btn').off('click').on('click', function() {
+                        alert('Button clicked after DataTable draw!');
+                        console.log('Button data:', $(this).data());
+                    });
                 },
                 "footerCallback": function(row, data, start, end, display) {
                     var footer_sale_total = 0;

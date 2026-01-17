@@ -460,7 +460,7 @@ class SellController extends Controller
                     
                     // Quick order status change link
                     $quick_url = url('sells/quick-order-status/'.$row->id);
-                    $status = '<button type="button" class="btn btn-link p-0 quick-order-status-btn" data-href="'.$quick_url.'" data-transaction-id="'.$row->id.'" data-current-status="'.$current_status.'" title="Click to change order status" style="border:none;background:none;"><span class="label '.$status_color.'">'.$status_text.'</span></button>';
+                    $status = '<button type="button" class="btn btn-link p-0 quick-order-status-btn debug-btn" data-href="'.$quick_url.'" data-transaction-id="'.$row->id.'" data-current-status="'.$current_status.'" title="Click to change order status - DEBUG" style="border:none;background:none;cursor:pointer;"><span class="label '.$status_color.'">'.$status_text.'</span></button>';
 
                     return $status;
                 })
