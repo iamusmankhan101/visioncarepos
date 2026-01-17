@@ -459,7 +459,8 @@ class SellController extends Controller
                     $status_text = isset($shipping_statuses[$current_status]) ? $shipping_statuses[$current_status] : 'Ordered';
                     
                     // Quick order status change link
-                    $status = '<a href="#" class="quick-order-status-link" data-href="'.url('sells/quick-order-status/'.$row->id).'" data-transaction-id="'.$row->id.'" data-current-status="'.$current_status.'"><span class="label '.$status_color.'">'.$status_text.'</span></a>';
+                    $quick_url = url('sells/quick-order-status/'.$row->id);
+                    $status = '<button type="button" class="btn btn-link p-0 quick-order-status-btn" data-href="'.$quick_url.'" data-transaction-id="'.$row->id.'" data-current-status="'.$current_status.'" title="Click to change order status" style="border:none;background:none;"><span class="label '.$status_color.'">'.$status_text.'</span></button>';
 
                     return $status;
                 })

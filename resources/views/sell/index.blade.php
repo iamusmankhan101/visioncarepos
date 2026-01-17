@@ -507,22 +507,56 @@
             });
         });
 
-        // Handle quick order status link clicks
-        $(document).on('click', '.quick-order-status-link', function(e) {
+        // Handle quick order status button clicks
+        $(document).on('click', '.quick-order-status-btn', function(e) {
             e.preventDefault();
+            e.stopPropagation();
             
             var url = $(this).data('href');
+            var transactionId = $(this).data('transaction-id');
+            
+            // Debug: Show what we're trying to do
+            console.log('Order status button clicked');
+            console.log('URL:', url);
+            console.log('Transaction ID:', transactionId);
+            
+            // For now, let's test with a simple alert to make sure the click is working
+            alert('Order status clicked for transaction: ' + transactionId + '\nURL: ' + url);
+            
+            // Uncomment this when we confirm the click is working
+            /*
+            if (!url) {
+                console.error('No URL found for order status button');
+                toastr.error('Error: No URL found');
+                return false;
+            }
+            
+            // Disable button to prevent double clicks
+            $(this).prop('disabled', true);
+            var button = $(this);
             
             $.ajax({
                 url: url,
                 method: 'GET',
+                beforeSend: function() {
+                    console.log('Loading order status modal...'); // Debug log
+                },
                 success: function(result) {
+                    console.log('Modal loaded successfully'); // Debug log
                     $('.view_modal').html(result).modal('show');
                 },
-                error: function(xhr) {
-                    toastr.error('Error loading order status modal');
+                error: function(xhr, status, error) {
+                    console.error('Error loading order status modal:', xhr.responseText); // Debug log
+                    toastr.error('Error loading order status modal. Check console for details.');
+                },
+                complete: function() {
+                    // Re-enable button
+                    button.prop('disabled', false);
                 }
             });
+            */
+            
+            return false;
         });
 
         // Handle quick order status form submission
