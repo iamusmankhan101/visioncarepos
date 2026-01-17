@@ -354,12 +354,12 @@
         
         // Voucher dropdown functionality
         // Load active vouchers when modal is opened
-        $('#posVoucherModal').on('show.bs.modal', function() {
+        $(document).on('show.bs.modal', '#posVoucherModal', function() {
             loadActiveVouchers();
         });
         
         // Handle voucher selection from dropdown
-        $('#voucher_select').on('change', function() {
+        $(document).on('change', '#voucher_select', function() {
             var selectedValue = $(this).val();
             if (selectedValue) {
                 try {
