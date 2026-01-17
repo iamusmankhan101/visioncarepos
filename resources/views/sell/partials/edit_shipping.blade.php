@@ -23,7 +23,7 @@
 
 			    <div class="col-md-4">
 			        <div class="form-group">
-			            {!! Form::label('shipping_status', __('lang_v1.shipping_status') . ':' ) !!}
+			            {!! Form::label('shipping_status', __('lang_v1.order_status') . ':' ) !!}
 			            {!! Form::select('shipping_status',$shipping_statuses, !empty($transaction->shipping_status) ? $transaction->shipping_status : null, ['class' => 'form-control','placeholder' => __('messages.please_select')]); !!}
 			        </div>
 			    </div>

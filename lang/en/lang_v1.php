@@ -854,6 +854,7 @@ return [
     'delivered' => 'Delivered',
     'shipping_address' => 'Shipping Address',
     'shipping_status' => 'Shipping Status',
+    'order_status' => 'Order Status',
     'delivered_to' => 'Delivered To',
     'delivery_person' => 'Delivery Person',
     'edit_shipping' => 'Edit Shipping',

@@ -558,7 +558,7 @@
 			<div class="clearfix"></div>
 			<div class="col-md-4">
 				<div class="form-group">
-		            {!! Form::label('shipping_status', __('lang_v1.shipping_status')) !!}
+		            {!! Form::label('shipping_status', __('lang_v1.order_status')) !!}
 		            {!! Form::select('shipping_status',$shipping_statuses, null, ['class' => 'form-control','placeholder' => __('messages.please_select')]); !!}
 		        </div>
 			</div>
