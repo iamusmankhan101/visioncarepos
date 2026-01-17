@@ -459,7 +459,7 @@ class SellController extends Controller
                     $status_text = isset($shipping_statuses[$current_status]) ? $shipping_statuses[$current_status] : 'Ordered';
                     
                     // Quick order status change link
-                    $status = '<a href="#" class="btn-modal quick-order-status-btn" data-href="'.route('sells.quick-order-status', $row->id).'" data-container=".view_modal" data-transaction-id="'.$row->id.'" data-current-status="'.$current_status.'"><span class="label '.$status_color.'">'.$status_text.'</span></a>';
+                    $status = '<a href="#" class="quick-order-status-link" data-href="'.url('sells/quick-order-status/'.$row->id).'" data-transaction-id="'.$row->id.'" data-current-status="'.$current_status.'"><span class="label '.$status_color.'">'.$status_text.'</span></a>';
 
                     return $status;
                 })
@@ -2206,7 +2206,7 @@ class SellController extends Controller
 
             // Log the activity with note if provided
             $activity_property = [
-                'update_note' => $request->input('shipping_note', ''),
+                'update_note' => $request->input('shipping_note', 'Order status changed via quick update'),
                 'old_status' => $old_status,
                 'new_status' => $input['shipping_status']
             ];

@@ -507,6 +507,24 @@
             });
         });
 
+        // Handle quick order status link clicks
+        $(document).on('click', '.quick-order-status-link', function(e) {
+            e.preventDefault();
+            
+            var url = $(this).data('href');
+            
+            $.ajax({
+                url: url,
+                method: 'GET',
+                success: function(result) {
+                    $('.view_modal').html(result).modal('show');
+                },
+                error: function(xhr) {
+                    toastr.error('Error loading order status modal');
+                }
+            });
+        });
+
         // Handle quick order status form submission
         $(document).on('submit', '#quick_order_status_form', function(e) {
             e.preventDefault();

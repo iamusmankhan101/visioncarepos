@@ -6,14 +6,13 @@
                 <span aria-hidden="true">&times;</span>
             </button>
             <h4 class="modal-title">
-                <i class="fa fa-truck"></i> @lang('lang_v1.change_order_status') - {{ $transaction->invoice_no }}
+                <i class="fa fa-truck"></i> @lang('lang_v1.change_order_status')
             </h4>
         </div>
         <div class="modal-body">
             <div class="form-group">
                 <label for="order_status">@lang('lang_v1.order_status'):</label>
                 <select name="shipping_status" id="order_status" class="form-control" required>
-                    <option value="">@lang('messages.please_select')</option>
                     @foreach($shipping_statuses as $key => $status)
                         <option value="{{ $key }}" {{ ($transaction->shipping_status == $key || (!$transaction->shipping_status && $key == 'ordered')) ? 'selected' : '' }}>
                             {{ $status }}
@@ -21,16 +20,12 @@
                     @endforeach
                 </select>
             </div>
-            <div class="form-group">
-                <label for="status_note">@lang('lang_v1.note') (@lang('lang_v1.optional')):</label>
-                <textarea name="shipping_note" id="status_note" class="form-control" rows="3" placeholder="@lang('lang_v1.add_note_about_status_change')"></textarea>
-            </div>
         </div>
         <div class="modal-footer">
-            <button type="submit" class="btn btn-primary">
+            <button type="submit" class="btn btn-primary btn-sm">
                 <i class="fa fa-save"></i> @lang('messages.update')
             </button>
-            <button type="button" class="btn btn-default" data-dismiss="modal">
+            <button type="button" class="btn btn-default btn-sm" data-dismiss="modal">
                 @lang('messages.cancel')
             </button>
         </div>
