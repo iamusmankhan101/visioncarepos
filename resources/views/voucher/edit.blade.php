@@ -113,6 +113,12 @@
           } else {
             toastr.error(result.msg);
           }
+          $('form#voucher_edit_form').find('button[type="submit"]').attr('disabled', false);
+        },
+        error: function(xhr, status, error) {
+          console.log('AJAX Error:', xhr.responseText);
+          toastr.error('Error: ' + error);
+          $('form#voucher_edit_form').find('button[type="submit"]').attr('disabled', false);
         }
       });
     });

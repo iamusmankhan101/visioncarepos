@@ -82,6 +82,18 @@ class VoucherController extends Controller
         }
 
         try {
+            // Validate the request
+            $request->validate([
+                'code' => 'required|string|max:255|unique:vouchers,code',
+                'name' => 'required|string|max:255',
+                'discount_type' => 'required|in:percentage,fixed',
+                'discount_value' => 'required|numeric|min:0',
+                'min_amount' => 'nullable|numeric|min:0',
+                'max_discount' => 'nullable|numeric|min:0',
+                'usage_limit' => 'nullable|integer|min:1',
+                'expires_at' => 'nullable|date_format:m/d/Y'
+            ]);
+
             $input = $request->only(['code', 'name', 'discount_type', 'discount_value', 'min_amount', 'max_discount', 'usage_limit', 'expires_at', 'is_active']);
             $input['business_id'] = $request->session()->get('user.business_id');
             $input['used_count'] = 0;
@@ -96,11 +108,15 @@ class VoucherController extends Controller
             $output = ['success' => true,
                 'msg' => __('lang_v1.voucher_added_success')
             ];
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $output = ['success' => false,
+                'msg' => 'Validation Error: ' . implode(', ', $e->validator->errors()->all())
+            ];
         } catch (\Exception $e) {
             \Log::emergency("File:" . $e->getFile() . "Line:" . $e->getLine() . "Message:" . $e->getMessage());
 
             $output = ['success' => false,
-                'msg' => __('messages.something_went_wrong')
+                'msg' => 'Error: ' . $e->getMessage()
             ];
         }
 
@@ -151,6 +167,18 @@ class VoucherController extends Controller
         }
 
         try {
+            // Validate the request
+            $request->validate([
+                'code' => 'required|string|max:255|unique:vouchers,code,' . $id,
+                'name' => 'required|string|max:255',
+                'discount_type' => 'required|in:percentage,fixed',
+                'discount_value' => 'required|numeric|min:0',
+                'min_amount' => 'nullable|numeric|min:0',
+                'max_discount' => 'nullable|numeric|min:0',
+                'usage_limit' => 'nullable|integer|min:1',
+                'expires_at' => 'nullable|date_format:m/d/Y'
+            ]);
+
             $input = $request->only(['code', 'name', 'discount_type', 'discount_value', 'min_amount', 'max_discount', 'usage_limit', 'expires_at', 'is_active']);
             $input['is_active'] = isset($input['is_active']) ? 1 : 0;
 
@@ -164,11 +192,15 @@ class VoucherController extends Controller
             $output = ['success' => true,
                 'msg' => __('lang_v1.voucher_updated_success')
             ];
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $output = ['success' => false,
+                'msg' => 'Validation Error: ' . implode(', ', $e->validator->errors()->all())
+            ];
         } catch (\Exception $e) {
             \Log::emergency("File:" . $e->getFile() . "Line:" . $e->getLine() . "Message:" . $e->getMessage());
 
             $output = ['success' => false,
-                'msg' => __('messages.something_went_wrong')
+                'msg' => 'Error: ' . $e->getMessage()
             ];
         }
 
