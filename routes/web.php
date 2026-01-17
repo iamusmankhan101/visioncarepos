@@ -145,6 +145,7 @@ Route::middleware(['setData', 'auth', 'SetSessionData', 'language', 'timezone', 
     Route::resource('payment-account', AccountController::class);
 
     Route::resource('tax-rates', VoucherController::class);
+    Route::get('vouchers/active', [VoucherController::class, 'getActiveVouchers'])->name('vouchers.active');
 
     Route::resource('units', UnitController::class);
 

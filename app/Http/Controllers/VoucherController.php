@@ -236,4 +236,44 @@ class VoucherController extends Controller
 
         return $output;
     }
+
+    /**
+     * Get active vouchers for dropdown
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function getActiveVouchers(Request $request)
+    {
+        if (!auth()->user()->can('tax_rate.view')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        try {
+            $business_id = $request->session()->get('user.business_id');
+            
+            $vouchers = Voucher::where('business_id', $business_id)
+                        ->where('is_active', 1)
+                        ->where(function($query) {
+                            $query->whereNull('expires_at')
+                                  ->orWhere('expires_at', '>', now());
+                        })
+                        ->where(function($query) {
+                            $query->whereNull('usage_limit')
+                                  ->orWhereRaw('used_count < usage_limit');
+                        })
+                        ->select('id', 'code', 'name', 'discount_type', 'discount_value', 'min_amount', 'max_discount')
+                        ->orderBy('name')
+                        ->get();
+
+            return response()->json([
+                'success' => true,
+                'vouchers' => $vouchers
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'msg' => 'Error fetching vouchers: ' . $e->getMessage()
+            ]);
+        }
+    }
 }
