@@ -142,17 +142,6 @@
 @section('javascript')
     <script type="text/javascript">
         $(document).ready(function() {
-            console.log('Sales page JavaScript loaded'); // Debug log
-            
-            // Test if jQuery is working
-            console.log('jQuery version:', $.fn.jquery);
-            
-            // Add a basic click handler that should work
-            $(document).on('click', '.debug-btn', function() {
-                alert('Debug button clicked! Class found.');
-                console.log('Debug button clicked');
-            });
-            
             //Date range as a button
             var startLast30 = moment().subtract(29, 'days');
             var endLast = moment();
@@ -361,14 +350,49 @@
                 "fnDrawCallback": function(oSettings) {
                     __currency_convert_recursively($('#sell_table'));
                     
-                    // Debug: Check if our buttons exist after DataTable draw
-                    console.log('DataTable drawn. Quick order status buttons found:', $('.quick-order-status-btn').length);
-                    console.log('Debug buttons found:', $('.debug-btn').length);
-                    
-                    // Re-attach click handlers after DataTable redraw
-                    $('.debug-btn').off('click').on('click', function() {
-                        alert('Button clicked after DataTable draw!');
-                        console.log('Button data:', $(this).data());
+                    // Re-attach click handlers for order status buttons after DataTable redraw
+                    $('.quick-order-status-btn').off('click').on('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        var url = $(this).data('href');
+                        var transactionId = $(this).data('transaction-id');
+                        
+                        console.log('Order status button clicked');
+                        console.log('URL:', url);
+                        console.log('Transaction ID:', transactionId);
+                        
+                        if (!url) {
+                            console.error('No URL found for order status button');
+                            toastr.error('Error: No URL found');
+                            return false;
+                        }
+                        
+                        // Disable button to prevent double clicks
+                        $(this).prop('disabled', true);
+                        var button = $(this);
+                        
+                        $.ajax({
+                            url: url,
+                            method: 'GET',
+                            beforeSend: function() {
+                                console.log('Loading order status modal...');
+                            },
+                            success: function(result) {
+                                console.log('Modal loaded successfully');
+                                $('.view_modal').html(result).modal('show');
+                            },
+                            error: function(xhr, status, error) {
+                                console.error('Error loading order status modal:', xhr.responseText);
+                                toastr.error('Error loading order status modal: ' + error);
+                            },
+                            complete: function() {
+                                // Re-enable button
+                                button.prop('disabled', false);
+                            }
+                        });
+                        
+                        return false;
                     });
                 },
                 "footerCallback": function(row, data, start, end, display) {
@@ -528,58 +552,6 @@
             });
         });
 
-        // Handle quick order status button clicks
-        $(document).on('click', '.quick-order-status-btn', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            var url = $(this).data('href');
-            var transactionId = $(this).data('transaction-id');
-            
-            // Debug: Show what we're trying to do
-            console.log('Order status button clicked');
-            console.log('URL:', url);
-            console.log('Transaction ID:', transactionId);
-            
-            // For now, let's test with a simple alert to make sure the click is working
-            alert('Order status clicked for transaction: ' + transactionId + '\nURL: ' + url);
-            
-            // Uncomment this when we confirm the click is working
-            /*
-            if (!url) {
-                console.error('No URL found for order status button');
-                toastr.error('Error: No URL found');
-                return false;
-            }
-            
-            // Disable button to prevent double clicks
-            $(this).prop('disabled', true);
-            var button = $(this);
-            
-            $.ajax({
-                url: url,
-                method: 'GET',
-                beforeSend: function() {
-                    console.log('Loading order status modal...'); // Debug log
-                },
-                success: function(result) {
-                    console.log('Modal loaded successfully'); // Debug log
-                    $('.view_modal').html(result).modal('show');
-                },
-                error: function(xhr, status, error) {
-                    console.error('Error loading order status modal:', xhr.responseText); // Debug log
-                    toastr.error('Error loading order status modal. Check console for details.');
-                },
-                complete: function() {
-                    // Re-enable button
-                    button.prop('disabled', false);
-                }
-            });
-            */
-            
-            return false;
-        });
-
         // Handle quick order status form submission
         $(document).on('submit', '#quick_order_status_form', function(e) {
             e.preventDefault();
@@ -609,6 +581,7 @@
                     }
                 },
                 error: function(xhr) {
+                    console.error('Form submission error:', xhr.responseText);
                     toastr.error('Error updating order status');
                 },
                 complete: function() {
