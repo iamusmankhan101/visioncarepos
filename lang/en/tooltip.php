@@ -49,7 +49,7 @@ return [
 
     'purchase_location' => 'Business location where the purchased product will be available for sale.',
 
-    'voucher_discount' => 'Apply voucher or gift card discount to the sale. <br><small class="text-muted">Enter voucher code to validate and apply discount.</small>',
+    'voucher_discount' => 'Apply voucher or gift card discount to the sale. Enter voucher code to validate and apply discount.',
 
     'sale_location' => 'Business location from where you want to sell',
 
