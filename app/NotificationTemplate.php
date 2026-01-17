@@ -74,18 +74,22 @@ class NotificationTemplate extends Model
 
                 ],
             ],
-            'new_booking' => [
-                'name' => __('lang_v1.new_booking'),
-                'extra_tags' => self::bookingNotificationTags(),
-            ],
-            'new_quotation' => [
-                'name' => __('lang_v1.new_quotation'),
+            'order_ready' => [
+                'name' => 'Ready',
                 'extra_tags' => [
                     ['{business_name}', '{business_logo}'],
-                    ['{invoice_number}', '{total_amount}', '{quote_url}'],
+                    ['{invoice_number}', '{total_amount}', '{order_status}'],
                     ['{location_name}', '{location_address}', '{location_email}', '{location_phone}', '{location_custom_field_1}', '{location_custom_field_2}', '{location_custom_field_3}', '{location_custom_field_4}'],
                     ['{contact_name}', '{contact_custom_field_1}', '{contact_custom_field_2}', '{contact_custom_field_3}', '{contact_custom_field_4}', '{contact_custom_field_5}', '{contact_custom_field_6}', '{contact_custom_field_7}', '{contact_custom_field_8}', '{contact_custom_field_9}', '{contact_custom_field_10}'],
-
+                ],
+            ],
+            'order_delivered' => [
+                'name' => 'Delivered',
+                'extra_tags' => [
+                    ['{business_name}', '{business_logo}'],
+                    ['{invoice_number}', '{total_amount}', '{order_status}'],
+                    ['{location_name}', '{location_address}', '{location_email}', '{location_phone}', '{location_custom_field_1}', '{location_custom_field_2}', '{location_custom_field_3}', '{location_custom_field_4}'],
+                    ['{contact_name}', '{contact_custom_field_1}', '{contact_custom_field_2}', '{contact_custom_field_3}', '{contact_custom_field_4}', '{contact_custom_field_5}', '{contact_custom_field_6}', '{contact_custom_field_7}', '{contact_custom_field_8}', '{contact_custom_field_9}', '{contact_custom_field_10}'],
                 ],
             ],
         ];
@@ -219,19 +223,34 @@ class NotificationTemplate extends Model
             ],
             [
                 'business_id' => $business_id,
-                'template_for' => 'new_booking',
+                'template_for' => 'order_ready',
                 'email_body' => '<p>Dear {contact_name},</p>
 
-                    <p>Your booking is confirmed</p>
+                    <p>Your order {invoice_number} is ready for pickup!</p>
 
-                    <p>Date: {start_time} to {end_time}</p>
+                    <p>Total amount: {total_amount}</p>
 
-                    <p>Table: {table}</p>
-
-                    <p>Location: {location}</p>
+                    <p>Please come to collect your order at your earliest convenience.</p>
 
                     <p>{business_logo}</p>',
-                'sms_body' => 'Dear {contact_name}, Your booking is confirmed. Date: {start_time} to {end_time}, Table: {table}, Location: {location}', 'subject' => 'Booking Confirmed - {business_name}',
+                'sms_body' => 'Dear {contact_name}, Your order {invoice_number} is ready for pickup! Please come to collect it. {business_name}',
+                'subject' => 'Order Ready - {business_name}',
+                'auto_send' => '0',
+            ],
+            [
+                'business_id' => $business_id,
+                'template_for' => 'order_delivered',
+                'email_body' => '<p>Dear {contact_name},</p>
+
+                    <p>Your order {invoice_number} has been delivered!</p>
+
+                    <p>Total amount: {total_amount}</p>
+
+                    <p>Thank you for choosing us.</p>
+
+                    <p>{business_logo}</p>',
+                'sms_body' => 'Dear {contact_name}, Your order {invoice_number} has been delivered! Thank you for choosing us. {business_name}',
+                'subject' => 'Order Delivered - {business_name}',
                 'auto_send' => '0',
             ],
             [

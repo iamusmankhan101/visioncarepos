@@ -19,6 +19,7 @@ use App\User;
 use App\Utils\BusinessUtil;
 use App\Utils\ContactUtil;
 use App\Utils\ModuleUtil;
+use App\Utils\NotificationUtil;
 use App\Utils\ProductUtil;
 use App\Utils\TransactionUtil;
 use App\Variation;
@@ -43,19 +44,22 @@ class SellController extends Controller
 
     protected $productUtil;
 
+    protected $notificationUtil;
+
     /**
      * Constructor
      *
      * @param  ProductUtils  $product
      * @return void
      */
-    public function __construct(ContactUtil $contactUtil, BusinessUtil $businessUtil, TransactionUtil $transactionUtil, ModuleUtil $moduleUtil, ProductUtil $productUtil)
+    public function __construct(ContactUtil $contactUtil, BusinessUtil $businessUtil, TransactionUtil $transactionUtil, ModuleUtil $moduleUtil, ProductUtil $productUtil, NotificationUtil $notificationUtil)
     {
         $this->contactUtil = $contactUtil;
         $this->businessUtil = $businessUtil;
         $this->transactionUtil = $transactionUtil;
         $this->moduleUtil = $moduleUtil;
         $this->productUtil = $productUtil;
+        $this->notificationUtil = $notificationUtil;
 
         $this->dummyPaymentLine = ['method' => '', 'amount' => 0, 'note' => '', 'card_transaction_number' => '', 'card_number' => '', 'card_type' => '', 'card_holder_name' => '', 'card_month' => '', 'card_year' => '', 'card_security' => '', 'cheque_number' => '', 'bank_account_number' => '',
             'is_return' => 0, 'transaction_no' => '', ];
@@ -2218,6 +2222,9 @@ class SellController extends Controller
             ];
             $this->transactionUtil->activityLog($transaction, 'order_status_changed', $transaction_before, $activity_property);
 
+            // Send notification based on new status
+            $this->sendOrderStatusNotification($transaction, $input['shipping_status']);
+
             $output = ['success' => 1,
                 'msg' => __('lang_v1.order_status_updated_successfully'),
             ];
@@ -2230,6 +2237,25 @@ class SellController extends Controller
         }
 
         return $output;
+    }
+
+    /**
+     * Send notification when order status changes
+     */
+    private function sendOrderStatusNotification($transaction, $new_status)
+    {
+        try {
+            // Only send notifications for Ready and Delivered status
+            if ($new_status == 'packed') {
+                // Send "Ready" notification
+                $this->notificationUtil->autoSendNotification($transaction->business_id, 'order_ready', $transaction, $transaction->contact);
+            } elseif ($new_status == 'delivered') {
+                // Send "Delivered" notification  
+                $this->notificationUtil->autoSendNotification($transaction->business_id, 'order_delivered', $transaction, $transaction->contact);
+            }
+        } catch (\Exception $e) {
+            \Log::error('Error sending order status notification: ' . $e->getMessage());
+        }
     }
 
     /**
