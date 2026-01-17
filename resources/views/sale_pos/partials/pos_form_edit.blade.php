@@ -148,17 +148,6 @@
       		<div class="col-md-3"></div>
     	</span>
     @endif
-	@if(in_array('kitchen' ,$enabled_modules))
-		<div class="col-md-3">
-			<div class="form-group">
-				<div class="checkbox">
-				<label>
-						{!! Form::checkbox('is_kitchen_order', 1, $transaction->is_kitchen_order, ['class' => 'input-icheck status', 'id' => 'is_kitchen_order']); !!} {{ __('lang_v1.kitchen_order') }}
-				</label>
-				</div>
-			</div>
-		</div>
-    @endif
     @if(in_array('subscription', $enabled_modules))
 		<div class="col-md-4 col-sm-6">
 			<label>

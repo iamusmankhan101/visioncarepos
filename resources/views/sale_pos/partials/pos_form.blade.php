@@ -181,18 +181,6 @@
     	</span>
     @endif
 
-	@if(in_array('kitchen' ,$enabled_modules))
-		<div class="col-md-3">
-			<div class="form-group">
-				<div class="checkbox">
-				<label>
-						{!! Form::checkbox('is_kitchen_order', 1, false, ['class' => 'input-icheck status', 'id' => 'is_kitchen_order']); !!} {{ __('lang_v1.kitchen_order') }}
-				</label>
-				@show_tooltip(__('lang_v1.kitchen_order_tooltip'))
-				</div>
-			</div>
-		</div>
-    @endif
     
 </div>
 <!-- include module fields -->

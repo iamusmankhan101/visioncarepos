@@ -237,31 +237,35 @@
     $(document).ready(function() {
         // Voucher functionality
         $('#validate_voucher').click(function() {
-            var voucher_code = $('#voucher_code_input').val();
-            if (!voucher_code) {
-                toastr.error('@lang("lang_v1.please_enter_voucher_code")');
+            var selectedVoucher = $('#voucher_select').val();
+            if (!selectedVoucher) {
+                toastr.error('Please select a voucher first');
                 return;
             }
             
-            // Simple validation - you can enhance this with server-side validation
-            if (voucher_code.length >= 3) {
-                $('#voucher_status').html('<i class="fa fa-check text-success"></i> @lang("lang_v1.voucher_valid")');
-                // Don't override the user's discount value - let them set it
-                toastr.success('@lang("lang_v1.voucher_validated")');
-            } else {
-                $('#voucher_status').html('<i class="fa fa-times text-danger"></i> @lang("lang_v1.invalid_voucher")');
-                toastr.error('@lang("lang_v1.invalid_voucher_code")');
-            }
+            // Since voucher is already validated when selected from dropdown,
+            // just show success message
+            toastr.success('Voucher is valid and ready to apply');
         });
         
         // Apply voucher
         $('#apply_voucher').click(function() {
-            var voucher_code = $('#voucher_code_input').val();
+            var selectedVoucher = $('#voucher_select').val();
             var discount_type = $('#voucher_discount_type').val();
             var discount_value = parseFloat($('#voucher_discount_value').val()) || 0;
             
-            if (!voucher_code || discount_value <= 0) {
-                toastr.error('@lang("lang_v1.please_validate_voucher_first")');
+            if (!selectedVoucher || discount_value <= 0) {
+                toastr.error('Please select a voucher first');
+                return;
+            }
+            
+            // Parse the selected voucher data to get the code
+            var voucher_code = '';
+            try {
+                var voucherData = JSON.parse(selectedVoucher);
+                voucher_code = voucherData.code;
+            } catch (e) {
+                toastr.error('Invalid voucher selection');
                 return;
             }
             
@@ -272,7 +276,8 @@
             console.log('Voucher Debug:', {
                 subtotal: subtotal,
                 discount_type: discount_type,
-                discount_value: discount_value
+                discount_value: discount_value,
+                voucher_code: voucher_code
             });
             
             if (discount_type === 'percentage') {
@@ -326,7 +331,8 @@
         
         // Reset modal when closed
         $('#posVoucherModal').on('hidden.bs.modal', function() {
-            $('#voucher_code_input').val('');
+            $('#voucher_select').val('');
+            $('#voucher_discount_type').val('percentage');
             $('#voucher_discount_value').val('0');
             $('#voucher_status').html('');
         });
@@ -336,10 +342,24 @@
             // If voucher is already applied, show option to clear it
             var current_voucher = $('#voucher_code').val();
             if (current_voucher) {
-                $('#voucher_code_input').val(current_voucher);
+                // Try to find and select the current voucher in dropdown
+                $('#voucher_select option').each(function() {
+                    if ($(this).val()) {
+                        try {
+                            var voucherData = JSON.parse($(this).val());
+                            if (voucherData.code === current_voucher) {
+                                $('#voucher_select').val($(this).val()).trigger('change');
+                                return false; // break the loop
+                            }
+                        } catch (e) {
+                            // ignore parsing errors
+                        }
+                    }
+                });
+                
                 var current_discount = __read_number($('#voucher_discount_amount'));
                 $('#voucher_discount_value').val(current_discount);
-                $('#voucher_status').html('<i class="fa fa-check text-success"></i> @lang("lang_v1.voucher_valid")');
+                $('#voucher_status').html('<i class="fa fa-check text-success"></i> Voucher is valid');
             }
         });
         
