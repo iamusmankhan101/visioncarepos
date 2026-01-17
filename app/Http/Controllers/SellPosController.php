@@ -810,7 +810,8 @@ class SellPosController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             \Log::emergency('File:' . $e->getFile() . 'Line:' . $e->getLine() . 'Message:' . $e->getMessage());
-            $msg = trans('messages.something_went_wrong');
+            \Log::emergency('Stack trace: ' . $e->getTraceAsString());
+            $msg = 'Error: ' . $e->getMessage() . ' (File: ' . $e->getFile() . ' Line: ' . $e->getLine() . ')';
 
             if (get_class($e) == \App\Exceptions\PurchaseSellMismatch::class) {
                 $msg = $e->getMessage();
