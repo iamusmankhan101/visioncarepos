@@ -3,6 +3,26 @@
 // Access via browser: yoursite.com/fix_vouchers_table.php
 
 echo "<h2>Voucher Table Emergency Fix</h2>";
+
+// STEP 0: Test database connection first
+echo "<h3>Step 0: Database Connection Test</h3>";
+$host = '127.0.0.1';
+$port = '3306';
+$database = 'u102957485_visioncare';
+$username = 'u102957485_dbuser';
+$password = 'Babarthegoat12@';
+
+echo "<p><strong>Testing connection to:</strong> $database as $username</p>";
+
+try {
+    $testPdo = new PDO("mysql:host=$host;port=$port;dbname=$database", $username, $password);
+    echo "<p style='color: green;'>✅ <strong>Database connection successful!</strong></p>";
+} catch (PDOException $e) {
+    echo "<p style='color: red;'>❌ <strong>Database connection failed:</strong> " . $e->getMessage() . "</p>";
+    echo "<p><strong>Please check your .env file database settings!</strong></p>";
+    exit;
+}
+
 echo "<p>Checking and fixing voucher table issues...</p>";
 
 try {
