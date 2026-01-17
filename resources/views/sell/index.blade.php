@@ -559,6 +559,9 @@
             var form = $(this);
             var submitBtn = form.find('button[type="submit"]');
             var originalText = submitBtn.html();
+            var selectedStatus = form.find('select[name="shipping_status"]').val();
+            
+            console.log('Submitting order status change to:', selectedStatus);
             
             // Show loading state
             submitBtn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Updating...');
@@ -569,9 +572,21 @@
                 data: form.serialize(),
                 dataType: 'json',
                 success: function(result) {
+                    console.log('Order status update response:', result);
+                    
                     if (result.success == 1) {
                         toastr.success(result.msg);
                         $('.view_modal').modal('hide');
+                        
+                        // Check if WhatsApp link is in response
+                        if (result.whatsapp_link) {
+                            console.log('WhatsApp link received:', result.whatsapp_link);
+                            // Open WhatsApp link
+                            window.open(result.whatsapp_link, '_blank');
+                        } else {
+                            console.log('No WhatsApp link in response');
+                        }
+                        
                         // Refresh the sales table
                         if (typeof sell_table !== 'undefined') {
                             sell_table.ajax.reload();
