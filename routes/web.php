@@ -113,6 +113,38 @@ Route::middleware(['setData'])->group(function () {
 //Routes for authenticated users only
 Route::middleware(['setData', 'auth', 'SetSessionData', 'language', 'timezone', 'AdminSidebarMenu', 'CheckUserLogin'])->group(function () {
     
+    // TEMPORARY FIX ROUTE - DELETE AFTER USE
+    Route::get('fix-whatsapp-enable', function () {
+        try {
+            // Direct SQL update to enable WhatsApp notifications
+            $updated = \DB::table('notification_templates')
+                ->whereIn('template_for', ['order_ready', 'order_delivered'])
+                ->update(['auto_send_wa_notif' => 1]);
+            
+            $output = "<h2>WhatsApp Fix Applied</h2>";
+            $output .= "<p style='color: green;'>✅ Updated $updated notification templates</p>";
+            
+            // Verify the fix
+            $templates = \DB::table('notification_templates')
+                ->whereIn('template_for', ['order_ready', 'order_delivered'])
+                ->get();
+            
+            foreach ($templates as $template) {
+                $status = $template->auto_send_wa_notif ? 'ENABLED' : 'DISABLED';
+                $color = $template->auto_send_wa_notif ? 'green' : 'red';
+                $output .= "<p style='color: $color;'>{$template->template_for}: WhatsApp $status</p>";
+            }
+            
+            $output .= "<hr><h3>✅ WhatsApp notifications are now enabled!</h3>";
+            $output .= "<p><strong>Try changing order status to 'Ready' now!</strong></p>";
+            
+            return $output;
+            
+        } catch (Exception $e) {
+            return "<h3 style='color: red;'>❌ ERROR</h3><p style='color: red;'>Error: " . $e->getMessage() . "</p>";
+        }
+    });
+    
     // TEMPORARY DEBUG ROUTE - DELETE AFTER USE
     Route::get('debug-whatsapp-temp', function () {
         try {
@@ -124,13 +156,31 @@ Route::middleware(['setData', 'auth', 'SetSessionData', 'language', 'timezone', 
             
             if ($templates->count() > 0) {
                 $output .= "<p style='color: green;'>✓ Found " . $templates->count() . " notification templates</p>";
+                
+                $needsUpdate = false;
                 foreach ($templates as $template) {
                     $output .= "<div style='border: 1px solid #ccc; padding: 10px; margin: 10px 0;'>";
                     $output .= "<h4>Template: {$template->template_for}</h4>";
                     $output .= "<p><strong>Auto send WhatsApp:</strong> " . ($template->auto_send_wa_notif ? 'YES' : 'NO') . "</p>";
+                    
+                    if (!$template->auto_send_wa_notif) {
+                        $needsUpdate = true;
+                        $output .= "<p style='color: red;'>⚠️ WhatsApp is DISABLED - fixing this...</p>";
+                    }
+                    
                     $output .= "<p><strong>WhatsApp text:</strong> " . substr($template->whatsapp_text ?? '', 0, 100) . "...</p>";
                     $output .= "</div>";
                 }
+                
+                if ($needsUpdate) {
+                    // Enable WhatsApp notifications for both templates
+                    \DB::table('notification_templates')
+                        ->whereIn('template_for', ['order_ready', 'order_delivered'])
+                        ->update(['auto_send_wa_notif' => 1]);
+                    
+                    $output .= "<p style='color: green;'>✅ <strong>FIXED!</strong> WhatsApp notifications are now ENABLED!</p>";
+                }
+                
             } else {
                 $output .= "<p style='color: red;'>✗ No notification templates found! Creating them...</p>";
                 
@@ -138,6 +188,52 @@ Route::middleware(['setData', 'auth', 'SetSessionData', 'language', 'timezone', 
                 
                 $templates_to_create = [
                     [
+                        'business_id' => $business_id,
+                        'template_for' => 'order_ready',
+                        'email_body' => 'Dear {contact_name}, Your order {invoice_number} is ready for pickup! Please come to collect it. {business_name}',
+                        'sms_body' => 'Dear {contact_name}, Your order {invoice_number} is ready for pickup! Please come to collect it. {business_name}',
+                        'subject' => 'Order Ready - {business_name}',
+                        'whatsapp_text' => 'Dear {contact_name}, Your order {invoice_number} is ready for pickup! Please come to collect it. {business_name}',
+                        'template_id' => null,
+                        'auto_send' => 0,
+                        'auto_send_sms' => 0,
+                        'auto_send_wa_notif' => 1,
+                        'created_at' => now(),
+                        'updated_at' => now()
+                    ],
+                    [
+                        'business_id' => $business_id,
+                        'template_for' => 'order_delivered',
+                        'email_body' => 'Dear {contact_name}, Your order {invoice_number} has been delivered! Thank you for choosing us. {business_name}',
+                        'sms_body' => 'Dear {contact_name}, Your order {invoice_number} has been delivered! Thank you for choosing us. {business_name}',
+                        'subject' => 'Order Delivered - {business_name}',
+                        'whatsapp_text' => 'Dear {contact_name}, Your order {invoice_number} has been delivered! Thank you for choosing us. {business_name}',
+                        'template_id' => null,
+                        'auto_send' => 0,
+                        'auto_send_sms' => 0,
+                        'auto_send_wa_notif' => 1,
+                        'created_at' => now(),
+                        'updated_at' => now()
+                    ]
+                ];
+                
+                foreach ($templates_to_create as $template) {
+                    \DB::table('notification_templates')->insert($template);
+                }
+                
+                $output .= "<p style='color: green;'>✓ Templates created!</p>";
+            }
+            
+            $output .= "<hr><h3>✅ WhatsApp notifications should now work!</h3>";
+            $output .= "<p><strong>Try changing order status to 'Ready' again!</strong></p>";
+            $output .= "<p style='color: red;'><strong>🔒 REMOVE THIS ROUTE AFTER TESTING!</strong></p>";
+            
+            return $output;
+            
+        } catch (Exception $e) {
+            return "<h3 style='color: red;'>❌ ERROR</h3><p style='color: red;'>Error: " . $e->getMessage() . "</p>";
+        }
+    });
                         'business_id' => $business_id,
                         'template_for' => 'order_ready',
                         'email_body' => 'Dear {contact_name}, Your order {invoice_number} is ready for pickup! Please come to collect it. {business_name}',
