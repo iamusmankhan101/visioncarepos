@@ -53,7 +53,7 @@ try {
         echo "<p style='color: red;'>✗ Vouchers table does NOT exist!</p>";
         echo "<h3>Step 3: Creating vouchers table...</h3>";
         
-        // Create table using raw SQL
+        // Create table using raw SQL (without foreign key constraint)
         $sql = "
         CREATE TABLE `vouchers` (
           `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
@@ -72,7 +72,7 @@ try {
           `updated_at` timestamp NULL DEFAULT NULL,
           PRIMARY KEY (`id`),
           UNIQUE KEY `vouchers_code_unique` (`code`),
-          KEY `vouchers_business_id_foreign` (`business_id`),
+          KEY `vouchers_business_id_index` (`business_id`),
           KEY `vouchers_business_id_is_active_index` (`business_id`,`is_active`),
           KEY `vouchers_code_business_id_index` (`code`,`business_id`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -81,12 +81,32 @@ try {
         DB::statement($sql);
         echo "<p style='color: green;'>✓ Vouchers table created successfully!</p>";
         
-        // Add foreign key constraint separately (in case it fails)
+        // Check what the business table looks like to understand the foreign key issue
+        echo "<h4>Checking business table structure...</h4>";
         try {
-            DB::statement("ALTER TABLE `vouchers` ADD CONSTRAINT `vouchers_business_id_foreign` FOREIGN KEY (`business_id`) REFERENCES `business` (`id`) ON DELETE CASCADE");
-            echo "<p style='color: green;'>✓ Foreign key constraint added!</p>";
+            $businessColumns = DB::select("DESCRIBE business");
+            $hasIdColumn = false;
+            foreach ($businessColumns as $column) {
+                if ($column->Field === 'id') {
+                    $hasIdColumn = true;
+                    echo "<p>Business table ID column: <strong>{$column->Field}</strong> - {$column->Type}</p>";
+                    break;
+                }
+            }
+            
+            if ($hasIdColumn) {
+                // Try to add foreign key constraint
+                try {
+                    DB::statement("ALTER TABLE `vouchers` ADD CONSTRAINT `vouchers_business_id_foreign` FOREIGN KEY (`business_id`) REFERENCES `business` (`id`) ON DELETE CASCADE");
+                    echo "<p style='color: green;'>✓ Foreign key constraint added successfully!</p>";
+                } catch (Exception $e) {
+                    echo "<p style='color: orange;'>⚠️ Foreign key constraint failed (table still works without it): " . $e->getMessage() . "</p>";
+                }
+            } else {
+                echo "<p style='color: orange;'>⚠️ Business table doesn't have standard 'id' column - skipping foreign key</p>";
+            }
         } catch (Exception $e) {
-            echo "<p style='color: orange;'>⚠️ Foreign key constraint failed (table still works): " . $e->getMessage() . "</p>";
+            echo "<p style='color: orange;'>⚠️ Could not check business table: " . $e->getMessage() . "</p>";
         }
         
         // Mark migration as completed
