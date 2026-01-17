@@ -62,6 +62,8 @@ return [
     'voucher_applied_successfully' => 'Voucher applied successfully',
     'fixed' => 'Fixed',
     'percentage' => 'Percentage',
+    'clear_voucher' => 'Clear Voucher',
+    'voucher_cleared' => 'Voucher cleared',
     'tooltip_enable_expiry' => 'Enable product expiry. <br/> <br/><b>Add item expiry</b>: To directly add item expiry only. <br/> <b>Add manufacturing date & expiry period</b>: To add manufacturing date & expiry period and calculate expiry date based on that.',
     'quantity' => 'Quantity',
     'on_product_expiry' => 'On Product Expiry',

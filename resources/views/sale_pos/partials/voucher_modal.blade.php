@@ -55,6 +55,9 @@
                 </div>
             </div>
             <div class="modal-footer">
+                <button type="button" class="btn btn-warning" id="clear_voucher">
+                    <i class="fa fa-times"></i> @lang('lang_v1.clear_voucher')
+                </button>
                 <button type="button" class="btn btn-default" data-dismiss="modal">
                     @lang('messages.close')
                 </button>

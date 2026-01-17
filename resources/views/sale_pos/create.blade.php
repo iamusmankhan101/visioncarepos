@@ -265,19 +265,32 @@
                 return;
             }
             
-            // Set the voucher values
-            $('#voucher_code').val(voucher_code);
-            $('#voucher_discount_amount').val(discount_value);
-            
-            // Calculate and display the discount
-            var subtotal = parseFloat($('.price_total').text().replace(/[^\d.-]/g, '')) || 0;
+            // Calculate the actual discount amount
+            var subtotal = get_subtotal(); // Use the same function as POS calculations
             var discount_amount = 0;
+            
+            console.log('Voucher Debug:', {
+                subtotal: subtotal,
+                discount_type: discount_type,
+                discount_value: discount_value
+            });
             
             if (discount_type === 'percentage') {
                 discount_amount = (subtotal * discount_value) / 100;
             } else {
                 discount_amount = discount_value;
             }
+            
+            console.log('Calculated discount_amount:', discount_amount);
+            
+            // Set the voucher values - store the actual discount amount, not the input value
+            $('#voucher_code').val(voucher_code);
+            $('#voucher_discount_amount').val(discount_amount);
+            
+            console.log('Stored values:', {
+                voucher_code: $('#voucher_code').val(),
+                voucher_discount_amount: $('#voucher_discount_amount').val()
+            });
             
             // Update the display
             $('#voucher_discount').text(__currency_trans_from_en(discount_amount, true));
@@ -291,12 +304,53 @@
             toastr.success('@lang("lang_v1.voucher_applied_successfully")');
         });
         
+        // Clear voucher
+        $('#clear_voucher').click(function() {
+            $('#voucher_code').val('');
+            $('#voucher_discount_amount').val('0');
+            $('#voucher_discount').text('0');
+            
+            // Reset modal fields
+            $('#voucher_code_input').val('');
+            $('#voucher_discount_value').val('0');
+            $('#voucher_status').html('');
+            
+            // Recalculate totals
+            pos_total_row();
+            
+            // Close modal
+            $('#posVoucherModal').modal('hide');
+            
+            toastr.info('@lang("lang_v1.voucher_cleared")');
+        });
+        
         // Reset modal when closed
         $('#posVoucherModal').on('hidden.bs.modal', function() {
             $('#voucher_code_input').val('');
             $('#voucher_discount_value').val('0');
             $('#voucher_status').html('');
         });
+        
+        // Add clear voucher functionality
+        $(document).on('click', '#pos-edit-voucher', function() {
+            // If voucher is already applied, show option to clear it
+            var current_voucher = $('#voucher_code').val();
+            if (current_voucher) {
+                $('#voucher_code_input').val(current_voucher);
+                var current_discount = __read_number($('#voucher_discount_amount'));
+                $('#voucher_discount_value').val(current_discount);
+                $('#voucher_status').html('<i class="fa fa-check text-success"></i> @lang("lang_v1.voucher_valid")');
+            }
+        });
+        
+        // Function to clear voucher
+        window.clearVoucher = function() {
+            $('#voucher_code').val('');
+            $('#voucher_discount_amount').val('0');
+            $('#voucher_discount').text('0');
+            pos_total_row();
+            toastr.info('Voucher cleared');
+        };
     });
     </script>
 @endsection
