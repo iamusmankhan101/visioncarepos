@@ -1249,6 +1249,12 @@ $(document).ready(function() {
             .focus()
             .select();
             // $('.select2-selection__rendered').css('padding-right', '150px');
+        
+        // Set default status to "ordered" for new transactions
+        if (!$('#shipping_status').val()) {
+            $('#shipping_status_modal').val('ordered');
+            $('#shipping_status_display').text('Ordered');
+        }
     });
 
     $(document).on('shown.bs.modal', '.row_edit_product_price_model', function() {

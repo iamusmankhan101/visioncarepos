@@ -71,7 +71,7 @@
 
 						<input type="hidden" name="shipping_address" id="shipping_address" value="@if(empty($edit)){{''}}@else{{$transaction->shipping_address}}@endif">
 
-						<input type="hidden" name="shipping_status" id="shipping_status" value="@if(empty($edit)){{'ordered'}}@else{{$transaction->shipping_status}}@endif">
+						<input type="hidden" name="shipping_status" id="shipping_status" value="@if(empty($edit)){{''}}@else{{$transaction->shipping_status}}@endif">
 
 						<input type="hidden" name="delivered_to" id="delivered_to" value="@if(empty($edit)){{''}}@else{{$transaction->delivered_to}}@endif">
 
