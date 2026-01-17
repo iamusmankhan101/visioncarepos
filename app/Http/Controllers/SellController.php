@@ -457,7 +457,9 @@ class SellController extends Controller
                     $current_status = !empty($row->shipping_status) ? $row->shipping_status : 'ordered';
                     $status_color = ! empty($this->shipping_status_colors[$current_status]) ? $this->shipping_status_colors[$current_status] : 'bg-gray';
                     $status_text = isset($shipping_statuses[$current_status]) ? $shipping_statuses[$current_status] : 'Ordered';
-                    $status = '<a href="#" class="btn-modal" data-href="'.action([\App\Http\Controllers\SellController::class, 'editShipping'], [$row->id]).'" data-container=".view_modal"><span class="label '.$status_color.'">'.$status_text.'</span></a>';
+                    
+                    // Quick order status change link
+                    $status = '<a href="#" class="btn-modal quick-order-status-btn" data-href="'.route('sells.quick-order-status', $row->id).'" data-container=".view_modal" data-transaction-id="'.$row->id.'" data-current-status="'.$current_status.'"><span class="label '.$status_color.'">'.$status_text.'</span></a>';
 
                     return $status;
                 })
@@ -2174,6 +2176,77 @@ class SellController extends Controller
         }
 
         return $output;
+    }
+
+    /**
+     * Update order status quickly.
+     *
+     * @param  Request  $request, int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function updateOrderStatus(Request $request, $id)
+    {
+        $is_admin = $this->businessUtil->is_admin(auth()->user());
+
+        if (! $is_admin && ! auth()->user()->hasAnyPermission(['access_shipping', 'access_own_shipping', 'access_commission_agent_shipping'])) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        try {
+            $input = $request->only(['shipping_status']);
+            $business_id = $request->session()->get('user.business_id');
+
+            $transaction = Transaction::where('business_id', $business_id)
+                                ->findOrFail($id);
+
+            $transaction_before = $transaction->replicate();
+            $old_status = $transaction->shipping_status;
+            
+            $transaction->update($input);
+
+            // Log the activity with note if provided
+            $activity_property = [
+                'update_note' => $request->input('shipping_note', ''),
+                'old_status' => $old_status,
+                'new_status' => $input['shipping_status']
+            ];
+            $this->transactionUtil->activityLog($transaction, 'order_status_changed', $transaction_before, $activity_property);
+
+            $output = ['success' => 1,
+                'msg' => __('lang_v1.order_status_updated_successfully'),
+            ];
+        } catch (\Exception $e) {
+            \Log::emergency('File:'.$e->getFile().'Line:'.$e->getLine().'Message:'.$e->getMessage());
+
+            $output = ['success' => 0,
+                'msg' => trans('messages.something_went_wrong'),
+            ];
+        }
+
+        return $output;
+    }
+
+    /**
+     * Show quick order status change modal.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function quickOrderStatus($id)
+    {
+        $is_admin = $this->businessUtil->is_admin(auth()->user());
+
+        if (! $is_admin && ! auth()->user()->hasAnyPermission(['access_shipping', 'access_own_shipping', 'access_commission_agent_shipping'])) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $business_id = request()->session()->get('user.business_id');
+        $transaction = Transaction::where('business_id', $business_id)->findOrFail($id);
+        
+        $shipping_statuses = $this->transactionUtil->shipping_statuses();
+
+        return view('sell.partials.quick_order_status_modal')
+               ->with(compact('transaction', 'shipping_statuses'));
     }
 
     /**

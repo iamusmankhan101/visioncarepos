@@ -482,6 +482,8 @@ Route::middleware(['setData', 'auth', 'SetSessionData', 'language', 'timezone', 
     Route::resource('types-of-service', TypesOfServiceController::class);
     Route::get('sells/edit-shipping/{id}', [SellController::class, 'editShipping']);
     Route::put('sells/update-shipping/{id}', [SellController::class, 'updateShipping']);
+    Route::get('sells/quick-order-status/{id}', [SellController::class, 'quickOrderStatus'])->name('sells.quick-order-status');
+    Route::put('sells/update-order-status/{id}', [SellController::class, 'updateOrderStatus']);
     Route::get('shipments', [SellController::class, 'shipments']);
 
     Route::post('upload-module', [Install\ModulesController::class, 'uploadModule']);

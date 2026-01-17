@@ -130,6 +130,9 @@
     <div class="modal fade edit_payment_modal" tabindex="-1" role="dialog" aria-labelledby="gridSystemModalLabel">
     </div>
 
+    <div class="modal fade view_modal" tabindex="-1" role="dialog" aria-labelledby="gridSystemModalLabel">
+    </div>
+
     <!-- This will be printed -->
     <section class="invoice print_section" id="receipt_section">
         </section> 
@@ -501,6 +504,44 @@
                 setTimeout(function() {
                     $('#bulk_print_invoices').prop('disabled', false).html('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-printer"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M17 17h2a2 2 0 0 0 2 -2v-4a2 2 0 0 0 -2 -2h-14a2 2 0 0 0 -2 2v4a2 2 0 0 0 2 2h2"/><path d="M17 9v-4a2 2 0 0 0 -2 -2h-6a2 2 0 0 0 -2 2v4"/><path d="M7 13m0 2a2 2 0 0 1 2 -2h6a2 2 0 0 1 2 2v4a2 2 0 0 1 -2 2h-6a2 2 0 0 1 -2 -2z"/></svg> @lang("lang_v1.print_selected") (<span id="selected_count">0</span>)');
                 }, totalCount * 2000 + 1000);
+            });
+        });
+
+        // Handle quick order status form submission
+        $(document).on('submit', '#quick_order_status_form', function(e) {
+            e.preventDefault();
+            
+            var form = $(this);
+            var submitBtn = form.find('button[type="submit"]');
+            var originalText = submitBtn.html();
+            
+            // Show loading state
+            submitBtn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Updating...');
+            
+            $.ajax({
+                url: form.attr('action'),
+                method: form.attr('method'),
+                data: form.serialize(),
+                dataType: 'json',
+                success: function(result) {
+                    if (result.success == 1) {
+                        toastr.success(result.msg);
+                        $('.view_modal').modal('hide');
+                        // Refresh the sales table
+                        if (typeof sell_table !== 'undefined') {
+                            sell_table.ajax.reload();
+                        }
+                    } else {
+                        toastr.error(result.msg);
+                    }
+                },
+                error: function(xhr) {
+                    toastr.error('Error updating order status');
+                },
+                complete: function() {
+                    // Reset button state
+                    submitBtn.prop('disabled', false).html(originalText);
+                }
             });
         });
     </script>
