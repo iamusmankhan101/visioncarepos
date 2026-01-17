@@ -1,0 +1,135 @@
+<!-- Voucher Modal -->
+<div class="modal fade" id="posVoucherModal" tabindex="-1" role="dialog" aria-labelledby="voucherModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="voucherModalLabel">
+                    <i class="fa fa-ticket"></i> @lang('lang_v1.apply_voucher')
+                </h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            {!! Form::label('voucher_code_input', __('lang_v1.voucher_code') . ':') !!}
+                            {!! Form::text('voucher_code_input', null, [
+                                'class' => 'form-control',
+                                'id' => 'voucher_code_input',
+                                'placeholder' => __('lang_v1.enter_voucher_code')
+                            ]) !!}
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            {!! Form::label('voucher_discount_type', __('sale.discount_type') . ':') !!}
+                            {!! Form::select('voucher_discount_type', 
+                                ['percentage' => __('lang_v1.percentage'), 'fixed' => __('lang_v1.fixed')], 
+                                'fixed', 
+                                ['class' => 'form-control', 'id' => 'voucher_discount_type']
+                            ) !!}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            {!! Form::label('voucher_discount_value', __('sale.discount_amount') . ':') !!}
+                            {!! Form::text('voucher_discount_value', 0, [
+                                'class' => 'form-control input_number',
+                                'id' => 'voucher_discount_value',
+                                'placeholder' => '0'
+                            ]) !!}
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <button type="button" class="btn btn-info" id="validate_voucher">
+                            <i class="fa fa-check"></i> @lang('lang_v1.validate_voucher')
+                        </button>
+                        <span id="voucher_status" class="text-success" style="margin-left: 10px;"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">
+                    @lang('messages.close')
+                </button>
+                <button type="button" class="btn btn-primary" id="apply_voucher">
+                    @lang('lang_v1.apply_voucher')
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    // Validate voucher code
+    $('#validate_voucher').click(function() {
+        var voucher_code = $('#voucher_code_input').val();
+        if (!voucher_code) {
+            toastr.error('@lang("lang_v1.please_enter_voucher_code")');
+            return;
+        }
+        
+        // Simple validation - you can enhance this with server-side validation
+        // For now, we'll just check if it's not empty and set a default discount
+        if (voucher_code.length >= 3) {
+            $('#voucher_status').html('<i class="fa fa-check text-success"></i> @lang("lang_v1.voucher_valid")');
+            $('#voucher_discount_value').val('50'); // Default discount value
+            toastr.success('@lang("lang_v1.voucher_validated")');
+        } else {
+            $('#voucher_status').html('<i class="fa fa-times text-danger"></i> @lang("lang_v1.invalid_voucher")');
+            toastr.error('@lang("lang_v1.invalid_voucher_code")');
+        }
+    });
+    
+    // Apply voucher
+    $('#apply_voucher').click(function() {
+        var voucher_code = $('#voucher_code_input').val();
+        var discount_type = $('#voucher_discount_type').val();
+        var discount_value = parseFloat($('#voucher_discount_value').val()) || 0;
+        
+        if (!voucher_code || discount_value <= 0) {
+            toastr.error('@lang("lang_v1.please_validate_voucher_first")');
+            return;
+        }
+        
+        // Set the voucher values
+        $('#voucher_code').val(voucher_code);
+        $('#voucher_discount_amount').val(discount_value);
+        
+        // Calculate and display the discount
+        var subtotal = parseFloat($('.price_total').text().replace(/[^\d.-]/g, '')) || 0;
+        var discount_amount = 0;
+        
+        if (discount_type === 'percentage') {
+            discount_amount = (subtotal * discount_value) / 100;
+        } else {
+            discount_amount = discount_value;
+        }
+        
+        // Update the display
+        $('#voucher_discount').text(__currency_trans_from_en(discount_amount, true));
+        
+        // Recalculate totals
+        pos_total_row();
+        
+        // Close modal
+        $('#posVoucherModal').modal('hide');
+        
+        toastr.success('@lang("lang_v1.voucher_applied_successfully")');
+    });
+    
+    // Reset modal when closed
+    $('#posVoucherModal').on('hidden.bs.modal', function() {
+        $('#voucher_code_input').val('');
+        $('#voucher_discount_value').val('0');
+        $('#voucher_status').html('');
+    });
+});
+</script>

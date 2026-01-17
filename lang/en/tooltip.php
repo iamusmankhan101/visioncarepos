@@ -49,6 +49,8 @@ return [
 
     'purchase_location' => 'Business location where the purchased product will be available for sale.',
 
+    'voucher_discount' => 'Apply voucher or gift card discount to the sale. <br><small class="text-muted">Enter voucher code to validate and apply discount.</small>',
+
     'sale_location' => 'Business location from where you want to sell',
 
     'sale_discount' => "Set 'Default Sale Discount' for all sales in Business Settings. Click on the edit icon below to add/update discount.",

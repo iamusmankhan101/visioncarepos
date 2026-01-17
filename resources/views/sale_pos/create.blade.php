@@ -96,6 +96,8 @@
 
     @include('sale_pos.partials.weighing_scale_modal')
 
+    @include('sale_pos.partials.voucher_modal')
+
     <!-- Related Customers Modal -->
     <div class="modal fade" id="related_customers_modal" tabindex="-1" role="dialog" aria-labelledby="relatedCustomersModalLabel">
         <div class="modal-dialog modal-lg" role="document">

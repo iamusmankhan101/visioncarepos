@@ -2350,6 +2350,10 @@ function calculate_billing_details(price_total) {
         }
     }
 
+    // Add voucher discount
+    var voucher_discount = __read_number($('#voucher_discount_amount'));
+    discount = parseFloat(discount) + parseFloat(voucher_discount);
+
     var order_tax = pos_order_tax(price_total, discount);
 
     //Add shipping charges.

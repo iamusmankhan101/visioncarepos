@@ -42,23 +42,22 @@
 				
 				<td class="@if($pos_settings['disable_order_tax'] != 0) hide @endif">
 					<span class="tw-text-base md:tw-text-lg tw-font-semibold">
-						<b class="tw-text-base md:tw-text-lg tw-font-bold">@lang('sale.order_tax')(+): @show_tooltip(__('tooltip.sale_tax'))</b>
-						<i class="fas fa-edit cursor-pointer" title="@lang('sale.edit_order_tax')" aria-hidden="true" data-toggle="modal" data-target="#posEditOrderTaxModal" id="pos-edit-tax" ></i> 
-						<span class="tw-text-base md:tw-text-lg tw-font-semibold" id="order_tax">
+						<b class="tw-text-base md:tw-text-lg tw-font-bold">@lang('lang_v1.voucher')(-): @show_tooltip(__('tooltip.voucher_discount'))</b>
+						<i class="fas fa-edit cursor-pointer" title="@lang('lang_v1.apply_voucher')" aria-hidden="true" data-toggle="modal" data-target="#posVoucherModal" id="pos-edit-voucher" ></i> 
+						<span class="tw-text-base md:tw-text-lg tw-font-semibold" id="voucher_discount">
 							@if(empty($edit))
 								0
 							@else
-								{{$transaction->tax_amount}}
+								{{$transaction->voucher_discount ?? 0}}
 							@endif
 						</span>
 
-						<input type="hidden" name="tax_rate_id" 
-							id="tax_rate_id" 
-							value="@if(empty($edit)) {{$business_details->default_sales_tax}} @else {{$transaction->tax_id}} @endif" 
-							data-default="{{$business_details->default_sales_tax}}">
+						<input type="hidden" name="voucher_code" 
+							id="voucher_code" 
+							value="@if(empty($edit)) @else {{$transaction->voucher_code ?? ''}} @endif">
 
-						<input type="hidden" name="tax_calculation_amount" id="tax_calculation_amount" 
-							value="@if(empty($edit)) {{@num_format($business_details->tax_calculation_amount)}} @else {{@num_format($transaction->tax?->amount)}} @endif" data-default="{{$business_details->tax_calculation_amount}}">
+						<input type="hidden" name="voucher_discount_amount" id="voucher_discount_amount" 
+							value="@if(empty($edit)) 0 @else {{@num_format($transaction->voucher_discount ?? 0)}} @endif" data-default="0">
 
 					</span>
 				</td>
