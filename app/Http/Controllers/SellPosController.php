@@ -399,7 +399,9 @@ class SellPosController extends Controller
                 $discount = ['discount_type' => $input['discount_type'],
                     'discount_amount' => $input['discount_amount'],
                 ];
-                $invoice_total = $this->productUtil->calculateInvoiceTotal($input['products'], $input['tax_rate_id'], $discount);
+                // Since we replaced tax rates with vouchers, tax_rate_id might not be present
+                $tax_rate_id = isset($input['tax_rate_id']) ? $input['tax_rate_id'] : null;
+                $invoice_total = $this->productUtil->calculateInvoiceTotal($input['products'], $tax_rate_id, $discount);
 
                 DB::beginTransaction();
 
