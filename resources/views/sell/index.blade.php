@@ -475,6 +475,8 @@
                     return;
                 }
 
+                console.log('Bulk print - Selected IDs:', selectedIds);
+
                 // Show loading
                 $(this).prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> @lang("lang_v1.printing")...');
 
@@ -488,7 +490,12 @@
                     },
                     dataType: 'json',
                     success: function(result) {
-                        if (result.success == 1 && result.receipt.html_content != '') {
+                        console.log('Bulk print response:', result);
+                        
+                        if (result.success == 1 && result.receipt && result.receipt.html_content && result.receipt.html_content.trim() !== '') {
+                            console.log('HTML content length:', result.receipt.html_content.length);
+                            console.log('First 200 chars:', result.receipt.html_content.substring(0, 200));
+                            
                             // Create new window for printing all invoices together
                             var printWindow = window.open('', '_blank', 'width=800,height=600');
                             
@@ -506,14 +513,17 @@
                             
                             toastr.success(result.msg);
                         } else {
-                            toastr.error(result.msg || 'Error printing invoices');
+                            console.error('Invalid response or empty HTML content:', result);
+                            toastr.error(result.msg || 'Error: No content to print');
                         }
                         
                         // Reset button
                         $('#bulk_print_invoices').prop('disabled', false).html('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-printer"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M17 17h2a2 2 0 0 0 2 -2v-4a2 2 0 0 0 -2 -2h-14a2 2 0 0 0 -2 2v4a2 2 0 0 0 2 2h2"/><path d="M17 9v-4a2 2 0 0 0 -2 -2h-6a2 2 0 0 0 -2 2v4"/><path d="M7 13m0 2a2 2 0 0 1 2 -2h6a2 2 0 0 1 2 2v4a2 2 0 0 1 -2 -2h-6a2 2 0 0 1 -2 -2z"/></svg> @lang("lang_v1.print_selected") (<span id="selected_count">0</span>)');
                     },
-                    error: function() {
-                        toastr.error('Error printing invoices');
+                    error: function(xhr, status, error) {
+                        console.error('AJAX error:', xhr, status, error);
+                        console.error('Response text:', xhr.responseText);
+                        toastr.error('Error printing invoices: ' + error);
                         // Reset button
                         $('#bulk_print_invoices').prop('disabled', false).html('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-printer"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M17 17h2a2 2 0 0 0 2 -2v-4a2 2 0 0 0 -2 -2h-14a2 2 0 0 0 -2 2v4a2 2 0 0 0 2 2h2"/><path d="M17 9v-4a2 2 0 0 0 -2 -2h-6a2 2 0 0 0 -2 2v4"/><path d="M7 13m0 2a2 2 0 0 1 2 -2h6a2 2 0 0 1 2 2v4a2 2 0 0 1 -2 -2h-6a2 2 0 0 1 -2 -2z"/></svg> @lang("lang_v1.print_selected") (<span id="selected_count">0</span>)');
                     }
