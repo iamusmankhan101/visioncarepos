@@ -1484,7 +1484,16 @@ class TransactionUtil extends Util
         } else {
             $discount = $transaction->discount_amount;
         }
-        $output['discount'] = ($discount != 0) ? $this->num_f($discount, $show_currency, $business_details) : 0;
+        
+        // If no transaction-level discount but there's a difference between subtotal and total, calculate it
+        if ($discount == 0) {
+            $calculated_discount = $transaction->total_before_tax - $transaction->final_total + $transaction->tax_amount;
+            if ($calculated_discount > 0) {
+                $discount = $calculated_discount;
+            }
+        }
+        
+        $output['discount'] = ($discount > 0) ? $this->num_f($discount, $show_currency, $business_details) : 0;
 
         $output['discount_amount_unformatted'] = $discount;
 

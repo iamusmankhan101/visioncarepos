@@ -743,10 +743,10 @@ window.addEventListener('afterprint', function() {
 					@endif
 
 					<!-- Discount -->
-					@if( !empty($receipt_details->discount) )
+					@if( isset($receipt_details->discount) )
 						<tr>
 							<th>
-								{!! $receipt_details->discount_label !!}
+								{!! $receipt_details->discount_label ?? 'Discount' !!}
 							</th>
 
 							<td class="text-right">
