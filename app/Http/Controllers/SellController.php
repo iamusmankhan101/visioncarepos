@@ -1173,36 +1173,14 @@ class SellController extends Controller
         
         foreach ($transactions as $index => $transaction) {
             try {
-                // Create a mock request for the printInvoice method
-                $request = new Request();
-                $request->headers->set('X-Requested-With', 'XMLHttpRequest');
-                
-                // Create SellPosController instance
-                $sellPosController = new \App\Http\Controllers\SellPosController();
-                
-                // Call the printInvoice method
-                $response = $sellPosController->printInvoice($request, $transaction->id);
-                
-                if ($response instanceof \Illuminate\Http\JsonResponse) {
-                    $responseData = $response->getData(true);
-                    
-                    if (isset($responseData['success']) && $responseData['success'] == 1 && 
-                        isset($responseData['receipt']['html_content']) && 
-                        !empty($responseData['receipt']['html_content'])) {
-                        
-                        // Add page break between receipts (except for the first one)
-                        if ($index > 0) {
-                            $all_receipts_html .= '<div style="page-break-before: always;"></div>';
-                        }
-                        $all_receipts_html .= $responseData['receipt']['html_content'];
-                    } else {
-                        \Log::warning('printInvoice returned no content for transaction ' . $transaction->id);
-                        continue;
-                    }
-                } else {
-                    \Log::warning('printInvoice returned unexpected response for transaction ' . $transaction->id);
-                    continue;
+                // Add page break between receipts (except for the first one)
+                if ($index > 0) {
+                    $all_receipts_html .= '<div style="page-break-before: always;"></div>';
                 }
+                
+                // Generate receipt HTML directly using the transaction data
+                $receipt_html = $this->generateDirectReceiptHTML($transaction, $business_id);
+                $all_receipts_html .= $receipt_html;
                 
             } catch (\Exception $e) {
                 \Log::error('Error generating receipt for transaction ' . $transaction->id . ': ' . $e->getMessage());
