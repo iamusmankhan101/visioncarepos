@@ -1171,6 +1171,9 @@ class SellController extends Controller
         $business = Business::find($business_id);
         $all_receipts_html = '';
         
+        // Create an instance of SellPosController to use its receiptContent method
+        $sellPosController = new \App\Http\Controllers\SellPosController();
+        
         foreach ($transactions as $index => $transaction) {
             // Get full transaction details for each sale
             $sell = Transaction::with([
@@ -1190,41 +1193,99 @@ class SellController extends Controller
                 continue;
             }
 
-            // Add page break between receipts (except for the first one)
-            if ($index > 0) {
-                $all_receipts_html .= '<div style="page-break-before: always;"></div>';
+            // Extract selected customers from transaction additional_notes
+            $selected_customers = [];
+            if (!empty($sell->additional_notes)) {
+                // Check for MULTI_INVOICE_CUSTOMERS format
+                if (strpos($sell->additional_notes, 'MULTI_INVOICE_CUSTOMERS:') !== false) {
+                    preg_match('/MULTI_INVOICE_CUSTOMERS:([0-9,]+)/', $sell->additional_notes, $matches);
+                    if (!empty($matches[1])) {
+                        $customer_ids = explode(',', $matches[1]);
+                        // Add the main customer ID to the list at the beginning
+                        array_unshift($customer_ids, $sell->contact_id);
+                        $selected_customers = array_unique(array_map('intval', $customer_ids));
+                    }
+                }
+                // Check for SELECTED_CUSTOMERS format (legacy)
+                elseif (strpos($sell->additional_notes, 'SELECTED_CUSTOMERS:') !== false) {
+                    preg_match('/SELECTED_CUSTOMERS:([0-9,]+)/', $sell->additional_notes, $matches);
+                    if (!empty($matches[1])) {
+                        $customer_ids = explode(',', $matches[1]);
+                        $selected_customers = array_unique(array_map('intval', $customer_ids));
+                    }
+                }
             }
-            
-            // Generate simple receipt directly
-            $all_receipts_html .= $this->generateSimpleReceipt($sell, $business);
+
+            try {
+                // Use SellPosController's receiptContent method for full invoice with prescription table
+                $receipt_details = $sellPosController->receiptContent(
+                    $business_id, 
+                    $sell->location_id, 
+                    $sell->id, 
+                    'browser',      // printer_type
+                    false,          // is_package_slip
+                    false,          // from_pos_screen
+                    null,           // invoice_layout_id
+                    $selected_customers, // selected_customers
+                    false           // is_delivery_note
+                );
+                
+                if ($receipt_details && isset($receipt_details['html_content']) && !empty($receipt_details['html_content'])) {
+                    // Add page break between receipts (except for the first one)
+                    if ($index > 0) {
+                        $all_receipts_html .= '<div style="page-break-before: always;"></div>';
+                    }
+                    $all_receipts_html .= $receipt_details['html_content'];
+                } else {
+                    \Log::warning('receiptContent returned empty for transaction ' . $sell->id);
+                    // Skip this transaction if no content
+                    continue;
+                }
+                
+            } catch (\Exception $e) {
+                \Log::error('Error generating receipt for transaction ' . $sell->id . ': ' . $e->getMessage());
+                // Skip this transaction on error
+                continue;
+            }
         }
 
-        // Wrap all receipts in a simple HTML document
+        // Wrap all receipts in a complete HTML document with full CSS support
+        $app_url = config('app.url');
         $final_html = '<!DOCTYPE html>
         <html>
         <head>
             <meta charset="utf-8">
             <title>Bulk Print Receipts</title>
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <base href="' . $app_url . '/">
+            
+            <!-- Include all necessary CSS files -->
+            <link rel="stylesheet" href="' . asset('css/bootstrap.min.css') . '">
+            <link rel="stylesheet" href="' . asset('css/AdminLTE.min.css') . '">
+            <link rel="stylesheet" href="' . asset('css/print.css') . '">
+            <link rel="stylesheet" href="' . asset('css/receipt.css') . '">
+            <link rel="stylesheet" href="' . asset('css/app.css') . '">
+            
             <style>
                 body { 
-                    font-family: Arial, sans-serif;
+                    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
                     font-size: 12px;
                     line-height: 1.4;
+                    color: #000000 !important;
                     margin: 0;
-                    padding: 20px;
+                    padding: 10px;
                 }
                 
                 @media print {
-                    body { margin: 0; padding: 10px; }
+                    body { margin: 0; padding: 5px; }
                     .no-print { display: none !important; }
                     @page { 
                         margin: 0.5in; 
                         size: A4;
                     }
-                }
-                
-                .page-break {
-                    page-break-before: always;
+                    .page-break {
+                        page-break-before: always;
+                    }
                 }
                 
                 @media screen {
@@ -1232,6 +1293,126 @@ class SellController extends Controller
                         border-top: 2px dashed #ccc;
                         margin: 20px 0;
                         padding-top: 20px;
+                    }
+                }
+                
+                /* Ensure all Bootstrap classes work */
+                .container, .container-fluid { width: 100%; }
+                .row { margin: 0; }
+                .col-xs-1, .col-xs-2, .col-xs-3, .col-xs-4, .col-xs-5, .col-xs-6,
+                .col-xs-7, .col-xs-8, .col-xs-9, .col-xs-10, .col-xs-11, .col-xs-12 {
+                    float: left;
+                    padding-left: 5px;
+                    padding-right: 5px;
+                }
+                .col-xs-12 { width: 100%; }
+                .col-xs-6 { width: 50%; }
+                .col-xs-4 { width: 33.33333333%; }
+                .col-xs-8 { width: 66.66666667%; }
+                .col-xs-3 { width: 25%; }
+                .col-xs-9 { width: 75%; }
+                
+                .text-center { text-align: center !important; }
+                .text-right { text-align: right !important; }
+                .text-left { text-align: left !important; }
+                
+                .clearfix:after {
+                    content: "";
+                    display: table;
+                    clear: both;
+                }
+                
+                /* Table styles */
+                .table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-bottom: 15px;
+                }
+                
+                .table th, .table td {
+                    border: 1px solid #ddd;
+                    padding: 6px;
+                    text-align: left;
+                    vertical-align: top;
+                }
+                
+                .table th {
+                    background-color: #f5f5f5;
+                    font-weight: bold;
+                }
+                
+                .table-bordered th, .table-bordered td {
+                    border: 1px solid #ddd;
+                }
+                
+                /* Image handling */
+                img {
+                    max-width: 100%;
+                    height: auto;
+                }
+                
+                .center-block {
+                    display: block;
+                    margin-left: auto;
+                    margin-right: auto;
+                }
+                
+                /* Typography */
+                h1, h2, h3, h4, h5, h6 {
+                    margin-top: 10px;
+                    margin-bottom: 10px;
+                    font-weight: bold;
+                }
+                
+                p { margin: 0 0 5px; }
+                small { font-size: 85%; }
+                
+                /* Prescription table specific styles */
+                .prescription-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin: 15px 0;
+                }
+                
+                .prescription-table th,
+                .prescription-table td {
+                    border: 1px solid #000;
+                    padding: 8px;
+                    text-align: left;
+                }
+                
+                .prescription-table th {
+                    background-color: #f0f0f0;
+                    font-weight: bold;
+                }
+                
+                /* Invoice specific styles */
+                .invoice-header {
+                    margin-bottom: 20px;
+                }
+                
+                .invoice-details {
+                    margin: 15px 0;
+                }
+                
+                .total-section {
+                    margin-top: 20px;
+                    border-top: 2px solid #000;
+                    padding-top: 10px;
+                }
+                
+                .grand-total {
+                    font-size: 16px;
+                    font-weight: bold;
+                    border-top: 2px solid #000;
+                    padding-top: 10px;
+                    margin-top: 10px;
+                }
+                
+                /* Hide URL elements during print */
+                @media print {
+                    [href], .url-display {
+                        display: none !important;
                     }
                 }
             </style>
