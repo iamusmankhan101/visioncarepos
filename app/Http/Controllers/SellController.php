@@ -18,7 +18,6 @@ use App\TypesOfService;
 use App\User;
 use App\Utils\BusinessUtil;
 use App\Utils\ContactUtil;
-use Illuminate\Http\Request;
 use App\Utils\ModuleUtil;
 use App\Utils\NotificationUtil;
 use App\Utils\ProductUtil;
@@ -27,6 +26,7 @@ use App\Variation;
 use App\Warranty;
 use DB;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Spatie\Activitylog\Models\Activity;
 use Yajra\DataTables\Facades\DataTables;
@@ -927,25 +927,13 @@ class SellController extends Controller
         }
 
         try {
-            \Log::info('Bulk print selected - Start', [
-                'selected_ids' => $selected_ids,
-                'business_id' => $business_id,
-                'user_id' => auth()->id()
-            ]);
-
-            // Get selected transactions with necessary relationships
+            // Get selected transactions
             $transactions = Transaction::where('business_id', $business_id)
                                     ->whereIn('id', $selected_ids)
                                     ->where('type', 'sell')
-                                    ->with(['contact', 'sell_lines.product', 'sell_lines.variations.product_variation', 'payment_lines'])
                                     ->orderBy('transaction_date', 'desc')
                                     ->orderBy('id', 'desc')
                                     ->get();
-
-            \Log::info('Bulk print selected - Transactions found', [
-                'count' => $transactions->count(),
-                'transaction_ids' => $transactions->pluck('id')->toArray()
-            ]);
 
             if ($transactions->isEmpty()) {
                 return response()->json([
@@ -981,7 +969,6 @@ class SellController extends Controller
 
         } catch (\Exception $e) {
             \Log::error('Bulk print selected invoices error: ' . $e->getMessage());
-            \Log::error('Stack trace: ' . $e->getTraceAsString());
             return response()->json([
                 'success' => 0,
                 'msg' => __('messages.something_went_wrong') . ': ' . $e->getMessage()
@@ -1181,79 +1168,63 @@ class SellController extends Controller
      */
     private function generateIndividualReceipts($transactions, $business_id)
     {
-        \Log::info('generateIndividualReceipts - Start', [
-            'transaction_count' => count($transactions),
-            'business_id' => $business_id
-        ]);
-
+        $business = Business::find($business_id);
         $all_receipts_html = '';
         
         foreach ($transactions as $index => $transaction) {
-            try {
-                \Log::info('Processing transaction', [
-                    'index' => $index,
-                    'transaction_id' => $transaction->id,
-                    'invoice_no' => $transaction->invoice_no
-                ]);
+            // Get full transaction details for each sale
+            $sell = Transaction::with([
+                'contact',
+                'sell_lines',
+                'sell_lines.product',
+                'sell_lines.variations',
+                'sell_lines.variations.product_variation',
+                'location',
+                'business',
+                'tax',
+                'sell_lines.modifiers',
+                'table'
+            ])->find($transaction->id);
 
-                // Add page break between receipts (except for the first one)
-                if ($index > 0) {
-                    $all_receipts_html .= '<div style="page-break-before: always;"></div>';
-                }
-                
-                // Generate simple receipt HTML for this transaction
-                $business = Business::find($business_id);
-                $receipt_html = $this->generateSimpleReceipt($transaction, $business);
-                $all_receipts_html .= $receipt_html;
-                
-                \Log::info('Generated receipt for transaction', [
-                    'transaction_id' => $transaction->id,
-                    'receipt_length' => strlen($receipt_html)
-                ]);
-                
-            } catch (\Exception $e) {
-                \Log::error('Error generating receipt for transaction ' . $transaction->id . ': ' . $e->getMessage());
+            if (!$sell) {
                 continue;
             }
+
+            // Add page break between receipts (except for the first one)
+            if ($index > 0) {
+                $all_receipts_html .= '<div style="page-break-before: always;"></div>';
+            }
+            
+            // Generate simple receipt directly
+            $all_receipts_html .= $this->generateSimpleReceipt($sell, $business);
         }
 
-        // Wrap all receipts in a complete HTML document with full CSS support
-        $app_url = config('app.url');
+        // Wrap all receipts in a simple HTML document
         $final_html = '<!DOCTYPE html>
         <html>
         <head>
             <meta charset="utf-8">
             <title>Bulk Print Receipts</title>
-            <meta name="viewport" content="width=device-width, initial-scale=1">
-            <base href="' . $app_url . '/">
-            
-            <!-- Include all necessary CSS files -->
-            <link rel="stylesheet" href="' . asset('css/bootstrap.min.css') . '">
-            <link rel="stylesheet" href="' . asset('css/AdminLTE.min.css') . '">
-            <link rel="stylesheet" href="' . asset('css/print.css') . '">
-            <link rel="stylesheet" href="' . asset('css/receipt.css') . '">
-            <link rel="stylesheet" href="' . asset('css/app.css') . '">
-            
             <style>
                 body { 
-                    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+                    font-family: Arial, sans-serif;
                     font-size: 12px;
                     line-height: 1.4;
-                    color: #000000 !important;
                     margin: 0;
-                    padding: 10px;
+                    padding: 20px;
                 }
                 
                 @media print {
-                    body { margin: 0; padding: 5px; }
+                    body { margin: 0; padding: 10px; }
                     .no-print { display: none !important; }
                     @page { 
                         margin: 0.5in; 
                         size: A4;
                     }
-                    .page-break {
-                        page-break-before: always;
-                    }
+                }
+                
+                .page-break {
+                    page-break-before: always;
                 }
                 
                 @media screen {
@@ -1261,126 +1232,6 @@ class SellController extends Controller
                         border-top: 2px dashed #ccc;
                         margin: 20px 0;
                         padding-top: 20px;
-                    }
-                }
-                
-                /* Ensure all Bootstrap classes work */
-                .container, .container-fluid { width: 100%; }
-                .row { margin: 0; }
-                .col-xs-1, .col-xs-2, .col-xs-3, .col-xs-4, .col-xs-5, .col-xs-6,
-                .col-xs-7, .col-xs-8, .col-xs-9, .col-xs-10, .col-xs-11, .col-xs-12 {
-                    float: left;
-                    padding-left: 5px;
-                    padding-right: 5px;
-                }
-                .col-xs-12 { width: 100%; }
-                .col-xs-6 { width: 50%; }
-                .col-xs-4 { width: 33.33333333%; }
-                .col-xs-8 { width: 66.66666667%; }
-                .col-xs-3 { width: 25%; }
-                .col-xs-9 { width: 75%; }
-                
-                .text-center { text-align: center !important; }
-                .text-right { text-align: right !important; }
-                .text-left { text-align: left !important; }
-                
-                .clearfix:after {
-                    content: "";
-                    display: table;
-                    clear: both;
-                }
-                
-                /* Table styles */
-                .table {
-                    width: 100%;
-                    border-collapse: collapse;
-                    margin-bottom: 15px;
-                }
-                
-                .table th, .table td {
-                    border: 1px solid #ddd;
-                    padding: 6px;
-                    text-align: left;
-                    vertical-align: top;
-                }
-                
-                .table th {
-                    background-color: #f5f5f5;
-                    font-weight: bold;
-                }
-                
-                .table-bordered th, .table-bordered td {
-                    border: 1px solid #ddd;
-                }
-                
-                /* Image handling */
-                img {
-                    max-width: 100%;
-                    height: auto;
-                }
-                
-                .center-block {
-                    display: block;
-                    margin-left: auto;
-                    margin-right: auto;
-                }
-                
-                /* Typography */
-                h1, h2, h3, h4, h5, h6 {
-                    margin-top: 10px;
-                    margin-bottom: 10px;
-                    font-weight: bold;
-                }
-                
-                p { margin: 0 0 5px; }
-                small { font-size: 85%; }
-                
-                /* Prescription table specific styles */
-                .prescription-table {
-                    width: 100%;
-                    border-collapse: collapse;
-                    margin: 15px 0;
-                }
-                
-                .prescription-table th,
-                .prescription-table td {
-                    border: 1px solid #000;
-                    padding: 8px;
-                    text-align: left;
-                }
-                
-                .prescription-table th {
-                    background-color: #f0f0f0;
-                    font-weight: bold;
-                }
-                
-                /* Invoice specific styles */
-                .invoice-header {
-                    margin-bottom: 20px;
-                }
-                
-                .invoice-details {
-                    margin: 15px 0;
-                }
-                
-                .total-section {
-                    margin-top: 20px;
-                    border-top: 2px solid #000;
-                    padding-top: 10px;
-                }
-                
-                .grand-total {
-                    font-size: 16px;
-                    font-weight: bold;
-                    border-top: 2px solid #000;
-                    padding-top: 10px;
-                    margin-top: 10px;
-                }
-                
-                /* Hide URL elements during print */
-                @media print {
-                    [href], .url-display {
-                        display: none !important;
                     }
                 }
             </style>
@@ -1394,153 +1245,65 @@ class SellController extends Controller
     }
 
     /**
-     * Generate a full invoice receipt with prescription tables
+     * Generate a simple receipt as fallback when receiptContent fails
      */
     private function generateSimpleReceipt($transaction, $business)
     {
-        // Load the contact with prescription data
-        $contact = null;
-        if ($transaction->contact_id) {
-            $contact = Contact::find($transaction->contact_id);
-        }
-        
-        $html = '<div class="receipt-container" style="margin-bottom: 30px; padding: 20px; font-family: Arial, sans-serif; color: #000000 !important;">';
+        $html = '<div class="receipt-container" style="margin-bottom: 30px; padding: 20px; border: 1px solid #ddd; font-family: Arial, sans-serif;">';
         
         // Business header
         $html .= '<div style="text-align: center; margin-bottom: 20px;">';
         if (!empty($business->logo)) {
             $logo_path = public_path('storage/business_logos/' . $business->logo);
             if (file_exists($logo_path)) {
-                $html .= '<img src="' . asset('storage/business_logos/' . $business->logo) . '" style="max-height: 120px; width: auto; margin-bottom: 10px; display: block; margin-left: auto; margin-right: auto;">';
+                $html .= '<img src="' . asset('storage/business_logos/' . $business->logo) . '" style="max-height: 80px; margin-bottom: 10px; display: block; margin-left: auto; margin-right: auto;">';
             }
         }
-        $html .= '<h2 style="margin: 10px 0; font-size: 24px; text-align: center;">' . ($business->name ?? 'Business Name') . '</h2>';
+        $html .= '<h2 style="margin: 10px 0; font-size: 24px;">' . ($business->name ?? 'Business Name') . '</h2>';
         if (!empty($business->address)) {
-            $html .= '<p style="margin: 5px 0; font-size: 14px; text-align: center;">' . $business->address . '</p>';
+            $html .= '<p style="margin: 5px 0; font-size: 14px;">' . $business->address . '</p>';
         }
         if (!empty($business->mobile)) {
-            $html .= '<p style="margin: 5px 0; font-size: 14px; text-align: center;">Phone: ' . $business->mobile . '</p>';
+            $html .= '<p style="margin: 5px 0; font-size: 14px;">Phone: ' . $business->mobile . '</p>';
         }
         if (!empty($business->email)) {
-            $html .= '<p style="margin: 5px 0; font-size: 14px; text-align: center;">Email: ' . $business->email . '</p>';
+            $html .= '<p style="margin: 5px 0; font-size: 14px;">Email: ' . $business->email . '</p>';
         }
         $html .= '</div>';
         
-        // Invoice details in one line
-        $html .= '<div style="margin-bottom: 10px;">';
-        $html .= '<p style="width: 100%; margin-bottom: 10px;">';
-        $html .= '<span style="display: inline-block; margin-right: 20px;"><strong>Invoice: ' . ($transaction->invoice_no ?? 'N/A') . '</strong></span>';
+        $html .= '<hr style="border: 1px solid #000; margin: 20px 0;">';
         
-        if ($contact) {
-            $html .= '<span style="display: inline-block; margin-right: 20px;"><strong>Customer:</strong> ' . $contact->name;
-            if (!empty($contact->mobile)) {
-                $html .= ' &nbsp;&nbsp;&nbsp;Mobile: ' . $contact->mobile;
+        // Invoice details
+        $html .= '<div style="overflow: hidden; margin-bottom: 20px;">';
+        $html .= '<div style="float: left; width: 50%;">';
+        $html .= '<p><strong>Invoice No:</strong> ' . ($transaction->invoice_no ?? 'N/A') . '</p>';
+        $html .= '<p><strong>Date:</strong> ' . date('d/m/Y H:i', strtotime($transaction->transaction_date ?? now())) . '</p>';
+        $html .= '<p><strong>Payment Status:</strong> ' . ucfirst($transaction->payment_status ?? 'pending') . '</p>';
+        $html .= '</div>';
+        $html .= '<div style="float: right; width: 50%; text-align: right;">';
+        if ($transaction->contact) {
+            $html .= '<p><strong>Customer:</strong> ' . $transaction->contact->name . '</p>';
+            if (!empty($transaction->contact->mobile)) {
+                $html .= '<p><strong>Mobile:</strong> ' . $transaction->contact->mobile . '</p>';
             }
-            $html .= '</span>';
+            if (!empty($transaction->contact->email)) {
+                $html .= '<p><strong>Email:</strong> ' . $transaction->contact->email . '</p>';
+            }
         } else {
-            $html .= '<span style="display: inline-block; margin-right: 20px;"><strong>Customer:</strong> Walk-in Customer</span>';
+            $html .= '<p><strong>Customer:</strong> Walk-in Customer</p>';
         }
-        
-        $html .= '<span style="display: inline-block; float: right;"><strong>Date:</strong> ' . date('d/m/Y H:i', strtotime($transaction->transaction_date ?? now())) . '</span>';
-        $html .= '</p>';
         $html .= '</div>';
-        
-        // Prescription Form - Side by Side Layout (only if contact exists)
-        if ($contact) {
-            $html .= '<div style="margin-top: 10px;">';
-            $html .= '<h4 style="margin-bottom: 10px; color: #48b2ee;"><i class="fa fa-eye"></i> Prescription - ' . $contact->name;
-            if ($contact->contact_id) {
-                $html .= ' (ID: ' . $contact->contact_id . ')';
-            }
-            $html .= '</h4>';
-            
-            $html .= '<table width="100%" style="border-collapse: collapse;">';
-            $html .= '<tr>';
-            
-            // RIGHT EYE TABLE
-            $html .= '<td style="width: 48%; vertical-align: top; padding-right: 10px;">';
-            $html .= '<strong>RIGHT</strong>';
-            $html .= '<table style="margin-top: 5px; margin-bottom: 0; border: 1px solid #000; border-collapse: collapse; width: 100%;">';
-            $html .= '<thead>';
-            $html .= '<tr style="background-color: #f0f0f0;">';
-            $html .= '<th style="width: 25%; border: 1px solid #000; padding: 5px;"></th>';
-            $html .= '<th style="width: 25%; text-align: center; border: 1px solid #000; padding: 5px;">Sph.</th>';
-            $html .= '<th style="width: 25%; text-align: center; border: 1px solid #000; padding: 5px;">Cyl.</th>';
-            $html .= '<th style="width: 25%; text-align: center; border: 1px solid #000; padding: 5px;">Axis.</th>';
-            $html .= '</tr>';
-            $html .= '</thead>';
-            $html .= '<tbody>';
-            $html .= '<tr>';
-            $html .= '<td style="font-weight: 600; border: 1px solid #000; padding: 5px;">Distance</td>';
-            $html .= '<td style="text-align: center; border: 1px solid #000; padding: 5px;">' . ($contact->custom_field1 ?? '') . '</td>';
-            $html .= '<td style="text-align: center; border: 1px solid #000; padding: 5px;">' . ($contact->custom_field2 ?? '') . '</td>';
-            $html .= '<td style="text-align: center; border: 1px solid #000; padding: 5px;">' . ($contact->custom_field3 ?? '') . '</td>';
-            $html .= '</tr>';
-            $html .= '<tr>';
-            $html .= '<td style="font-weight: 600; border: 1px solid #000; padding: 5px;">Near</td>';
-            $html .= '<td style="text-align: center; border: 1px solid #000; padding: 5px;">' . ($contact->custom_field4 ?? '') . '</td>';
-            $html .= '<td style="text-align: center; border: 1px solid #000; padding: 5px;">' . ($contact->custom_field5 ?? '') . '</td>';
-            $html .= '<td style="text-align: center; border: 1px solid #000; padding: 5px;">' . ($contact->custom_field6 ?? '') . '</td>';
-            $html .= '</tr>';
-            $html .= '</tbody>';
-            $html .= '</table>';
-            $html .= '</td>';
-            
-            // LEFT EYE TABLE
-            $html .= '<td style="width: 48%; vertical-align: top; padding-left: 10px;">';
-            $html .= '<strong>LEFT</strong>';
-            $html .= '<table style="margin-top: 5px; margin-bottom: 0; border: 1px solid #000; border-collapse: collapse; width: 100%;">';
-            $html .= '<thead>';
-            $html .= '<tr style="background-color: #f0f0f0;">';
-            $html .= '<th style="width: 25%; border: 1px solid #000; padding: 5px;"></th>';
-            $html .= '<th style="width: 25%; text-align: center; border: 1px solid #000; padding: 5px;">Sph.</th>';
-            $html .= '<th style="width: 25%; text-align: center; border: 1px solid #000; padding: 5px;">Cyl.</th>';
-            $html .= '<th style="width: 25%; text-align: center; border: 1px solid #000; padding: 5px;">Axis.</th>';
-            $html .= '</tr>';
-            $html .= '</thead>';
-            $html .= '<tbody>';
-            $html .= '<tr>';
-            $html .= '<td style="font-weight: 600; border: 1px solid #000; padding: 5px;">Distance</td>';
-            $html .= '<td style="text-align: center; border: 1px solid #000; padding: 5px;">' . ($contact->custom_field7 ?? '') . '</td>';
-            $html .= '<td style="text-align: center; border: 1px solid #000; padding: 5px;">' . ($contact->custom_field8 ?? '') . '</td>';
-            $html .= '<td style="text-align: center; border: 1px solid #000; padding: 5px;">' . ($contact->custom_field9 ?? '') . '</td>';
-            $html .= '</tr>';
-            $html .= '<tr>';
-            $html .= '<td style="font-weight: 600; border: 1px solid #000; padding: 5px;">Near</td>';
-            $html .= '<td style="text-align: center; border: 1px solid #000; padding: 5px;">' . ($contact->custom_field10 ?? '') . '</td>';
-            
-            // Get shipping custom fields if available
-            $shipping_field_1 = '';
-            $shipping_field_2 = '';
-            if ($contact && !empty($contact->shipping_custom_field_details)) {
-                $shipping_details = is_string($contact->shipping_custom_field_details) 
-                    ? json_decode($contact->shipping_custom_field_details, true) 
-                    : $contact->shipping_custom_field_details;
-                $shipping_field_1 = $shipping_details['shipping_custom_field_1'] ?? '';
-                $shipping_field_2 = $shipping_details['shipping_custom_field_2'] ?? '';
-            }
-            
-            $html .= '<td style="text-align: center; border: 1px solid #000; padding: 5px;">' . $shipping_field_1 . '</td>';
-            $html .= '<td style="text-align: center; border: 1px solid #000; padding: 5px;">' . $shipping_field_2 . '</td>';
-            $html .= '</tr>';
-            $html .= '</tbody>';
-            $html .= '</table>';
-            $html .= '</td>';
-            
-            $html .= '</tr>';
-            $html .= '</table>';
-            $html .= '</div>';
-        }
+        $html .= '<div style="clear: both;"></div>';
+        $html .= '</div>';
         
         // Items table
-        $html .= '<div style="margin-top: 20px;">';
         $html .= '<table style="width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 12px;">';
         $html .= '<thead>';
         $html .= '<tr style="background-color: #f5f5f5;">';
-        $html .= '<th style="border: 1px solid #ddd; padding: 8px; text-align: left; width: 45%;">Product</th>';
-        $html .= '<th style="border: 1px solid #ddd; padding: 8px; text-align: center; width: 15%;">Qty</th>';
-        $html .= '<th style="border: 1px solid #ddd; padding: 8px; text-align: right; width: 15%;">Unit Price</th>';
-        $html .= '<th style="border: 1px solid #ddd; padding: 8px; text-align: right; width: 15%;">Subtotal</th>';
+        $html .= '<th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Item</th>';
+        $html .= '<th style="border: 1px solid #ddd; padding: 8px; text-align: center; width: 60px;">Qty</th>';
+        $html .= '<th style="border: 1px solid #ddd; padding: 8px; text-align: right; width: 80px;">Price</th>';
+        $html .= '<th style="border: 1px solid #ddd; padding: 8px; text-align: right; width: 80px;">Total</th>';
         $html .= '</tr>';
         $html .= '</thead>';
         $html .= '<tbody>';
@@ -1560,10 +1323,10 @@ class SellController extends Controller
                 $subtotal += $line_total;
                 
                 $html .= '<tr>';
-                $html .= '<td style="border: 1px solid #ddd; padding: 8px;">' . htmlspecialchars($product_name) . '</td>';
+                $html .= '<td style="border: 1px solid #ddd; padding: 8px;">' . $product_name . '</td>';
                 $html .= '<td style="border: 1px solid #ddd; padding: 8px; text-align: center;">' . number_format($line->quantity, 2) . '</td>';
-                $html .= '<td style="border: 1px solid #ddd; padding: 8px; text-align: right;">$' . number_format($line->unit_price, 2) . '</td>';
-                $html .= '<td style="border: 1px solid #ddd; padding: 8px; text-align: right;">$' . number_format($line_total, 2) . '</td>';
+                $html .= '<td style="border: 1px solid #ddd; padding: 8px; text-align: right;">' . number_format($line->unit_price, 2) . '</td>';
+                $html .= '<td style="border: 1px solid #ddd; padding: 8px; text-align: right;">' . number_format($line_total, 2) . '</td>';
                 $html .= '</tr>';
             }
         } else {
@@ -1574,82 +1337,26 @@ class SellController extends Controller
         
         $html .= '</tbody>';
         $html .= '</table>';
-        $html .= '</div>';
         
-        // Totals section
-        $html .= '<div style="margin-top: 20px;">';
-        $html .= '<hr style="border-top: 1px solid #000;">';
-        $html .= '<div style="overflow: hidden;">';
-        
-        // Left side - Payment info
-        $html .= '<div style="float: left; width: 50%;">';
-        $html .= '<table style="width: 100%;">';
-        if ($transaction->payment_lines && count($transaction->payment_lines) > 0) {
-            foreach ($transaction->payment_lines as $payment) {
-                $html .= '<tr>';
-                $html .= '<td>' . ucfirst($payment->method ?? 'Cash') . '</td>';
-                $html .= '<td style="text-align: right;">$' . number_format($payment->amount ?? 0, 2) . '</td>';
-                $html .= '<td style="text-align: right;">' . date('d/m/Y', strtotime($payment->paid_on ?? $transaction->transaction_date)) . '</td>';
-                $html .= '</tr>';
-            }
-        }
-        if ($transaction->total_paid > 0) {
-            $html .= '<tr>';
-            $html .= '<th>Total Paid</th>';
-            $html .= '<td style="text-align: right;">$' . number_format($transaction->total_paid, 2) . '</td>';
-            $html .= '</tr>';
-        }
-        if (($transaction->final_total - $transaction->total_paid) > 0) {
-            $html .= '<tr>';
-            $html .= '<th>Total Due</th>';
-            $html .= '<td style="text-align: right;">$' . number_format($transaction->final_total - $transaction->total_paid, 2) . '</td>';
-            $html .= '</tr>';
-        }
-        $html .= '</table>';
-        $html .= '</div>';
-        
-        // Right side - Totals
-        $html .= '<div style="float: right; width: 50%;">';
-        $html .= '<table style="width: 100%;">';
-        $html .= '<tr>';
-        $html .= '<th style="width: 70%; text-align: right;">Subtotal:</th>';
-        $html .= '<td style="text-align: right;">$' . number_format($transaction->total_before_tax ?? $subtotal, 2) . '</td>';
-        $html .= '</tr>';
-        
+        // Totals
+        $html .= '<div style="text-align: right; margin-top: 20px; font-size: 14px;">';
+        $html .= '<p style="margin: 5px 0;"><strong>Subtotal: ' . number_format($transaction->total_before_tax ?? $subtotal, 2) . '</strong></p>';
         if (($transaction->tax_amount ?? 0) > 0) {
-            $html .= '<tr>';
-            $html .= '<th style="text-align: right;">Tax:</th>';
-            $html .= '<td style="text-align: right;">$' . number_format($transaction->tax_amount, 2) . '</td>';
-            $html .= '</tr>';
+            $html .= '<p style="margin: 5px 0;"><strong>Tax: ' . number_format($transaction->tax_amount, 2) . '</strong></p>';
         }
-        
         if (($transaction->discount_amount ?? 0) > 0) {
-            $html .= '<tr>';
-            $html .= '<th style="text-align: right;">Discount:</th>';
-            $html .= '<td style="text-align: right;">-$' . number_format($transaction->discount_amount, 2) . '</td>';
-            $html .= '</tr>';
+            $html .= '<p style="margin: 5px 0;"><strong>Discount: -' . number_format($transaction->discount_amount, 2) . '</strong></p>';
         }
-        
-        $html .= '<tr style="border-top: 2px solid #000;">';
-        $html .= '<th style="font-size: 16px; text-align: right; padding-top: 10px;">TOTAL:</th>';
-        $html .= '<td style="font-size: 16px; text-align: right; font-weight: bold; padding-top: 10px;">$' . number_format($transaction->final_total ?? $subtotal, 2) . '</td>';
-        $html .= '</tr>';
-        $html .= '</table>';
+        $html .= '<hr style="border: 1px solid #000; margin: 10px 0;">';
+        $html .= '<p style="font-size: 18px; margin: 10px 0;"><strong>TOTAL: ' . number_format($transaction->final_total ?? $subtotal, 2) . '</strong></p>';
         $html .= '</div>';
         
-        $html .= '<div style="clear: both;"></div>';
-        $html .= '</div>';
-        
-        // Footer with terms and conditions
-        $html .= '<div style="page-break-inside: avoid; margin-top: 15px;">';
-        $html .= '<hr style="border-top: 1px solid #000;">';
-        $html .= '<div style="padding: 8px; font-size: 9px; text-align: center; background-color: #f0f0f0; border: 1px solid #000;">';
-        $html .= '<strong style="font-size: 10px;">TERMS & CONDITIONS</strong><br>';
-        $html .= '<strong>• No Order will process without 50% Advance payment.</strong><br>';
-        $html .= '<strong>• Orders with 100% Payment will be prioritized.</strong><br>';
-        $html .= '<strong>• No refunds, but we can give you a voucher or exchange it within 3 days.</strong>';
-        $html .= '</div>';
-        $html .= '<hr style="border-top: 1px solid #000;">';
+        // Footer
+        $html .= '<div style="text-align: center; margin-top: 30px; font-size: 12px; color: #666;">';
+        $html .= '<p>Thank you for your business!</p>';
+        if (!empty($business->website)) {
+            $html .= '<p>Visit us: ' . $business->website . '</p>';
+        }
         $html .= '</div>';
         
         $html .= '</div>';
