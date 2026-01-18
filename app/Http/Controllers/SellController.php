@@ -873,26 +873,95 @@ class SellController extends Controller
                 ]);
             }
 
-            // Limit to prevent server overload (max 20 invoices at once for individual receipts)
-            if ($transactions->count() > 20) {
+            // Limit to prevent server overload (max 50 invoices at once)
+            if ($transactions->count() > 50) {
                 return response()->json([
                     'success' => 0,
-                    'msg' => 'Too many invoices selected. Please limit to 20 invoices at once for individual receipt printing.'
+                    'msg' => 'Too many invoices selected. Please limit to 50 invoices at once.'
                 ]);
             }
 
-            // Generate individual receipts for each transaction
-            $individual_receipts = $this->generateIndividualReceipts($transactions, $business_id);
+            // Generate combined receipt for all transactions
+            $combined_receipt = $this->generateIndividualReceipts($transactions, $business_id);
 
             return response()->json([
                 'success' => 1,
-                'receipt' => $individual_receipts,
+                'receipt' => $combined_receipt,
                 'count' => count($transactions),
-                'msg' => count($transactions) . ' individual receipts ready to print'
+                'msg' => count($transactions) . ' invoices combined for bulk printing'
             ]);
 
         } catch (\Exception $e) {
             \Log::error('Bulk print invoices error: ' . $e->getMessage());
+            return response()->json([
+                'success' => 0,
+                'msg' => __('messages.something_went_wrong') . ': ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Bulk print selected invoices
+     */
+    public function bulkPrintSelected()
+    {
+        if (!auth()->user()->can('sell.view') && !auth()->user()->can('direct_sell.view')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        if (!auth()->user()->can('print_invoice')) {
+            return response()->json([
+                'success' => 0,
+                'msg' => __('lang_v1.no_permission_to_print')
+            ]);
+        }
+
+        $business_id = request()->session()->get('user.business_id');
+        $selected_ids = request()->get('selected_ids', []);
+
+        if (empty($selected_ids)) {
+            return response()->json([
+                'success' => 0,
+                'msg' => 'No invoices selected'
+            ]);
+        }
+
+        try {
+            // Get selected transactions
+            $transactions = Transaction::where('business_id', $business_id)
+                                    ->whereIn('id', $selected_ids)
+                                    ->where('type', 'sell')
+                                    ->orderBy('transaction_date', 'desc')
+                                    ->orderBy('id', 'desc')
+                                    ->get();
+
+            if ($transactions->isEmpty()) {
+                return response()->json([
+                    'success' => 0,
+                    'msg' => 'No valid invoices found'
+                ]);
+            }
+
+            // Limit to prevent server overload
+            if ($transactions->count() > 50) {
+                return response()->json([
+                    'success' => 0,
+                    'msg' => 'Too many invoices selected. Please limit to 50 invoices at once.'
+                ]);
+            }
+
+            // Generate combined receipt for selected transactions
+            $combined_receipt = $this->generateIndividualReceipts($transactions, $business_id);
+
+            return response()->json([
+                'success' => 1,
+                'receipt' => $combined_receipt,
+                'count' => count($transactions),
+                'msg' => count($transactions) . ' invoices ready for bulk printing'
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Bulk print selected invoices error: ' . $e->getMessage());
             return response()->json([
                 'success' => 0,
                 'msg' => __('messages.something_went_wrong') . ': ' . $e->getMessage()

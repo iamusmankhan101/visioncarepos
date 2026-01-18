@@ -113,38 +113,6 @@ Route::middleware(['setData'])->group(function () {
 //Routes for authenticated users only
 Route::middleware(['setData', 'auth', 'SetSessionData', 'language', 'timezone', 'AdminSidebarMenu', 'CheckUserLogin'])->group(function () {
     
-    // TEMPORARY FIX ROUTE - DELETE AFTER USE
-    Route::get('fix-whatsapp-enable', function () {
-        try {
-            // Direct SQL update to enable WhatsApp notifications
-            $updated = \DB::table('notification_templates')
-                ->whereIn('template_for', ['order_ready', 'order_delivered'])
-                ->update(['auto_send_wa_notif' => 1]);
-            
-            $output = "<h2>WhatsApp Fix Applied</h2>";
-            $output .= "<p style='color: green;'>✅ Updated $updated notification templates</p>";
-            
-            // Verify the fix
-            $templates = \DB::table('notification_templates')
-                ->whereIn('template_for', ['order_ready', 'order_delivered'])
-                ->get();
-            
-            foreach ($templates as $template) {
-                $status = $template->auto_send_wa_notif ? 'ENABLED' : 'DISABLED';
-                $color = $template->auto_send_wa_notif ? 'green' : 'red';
-                $output .= "<p style='color: $color;'>{$template->template_for}: WhatsApp $status</p>";
-            }
-            
-            $output .= "<hr><h3>✅ WhatsApp notifications are now enabled!</h3>";
-            $output .= "<p><strong>Try changing order status to 'Ready' now!</strong></p>";
-            
-            return $output;
-            
-        } catch (Exception $e) {
-            return "<h3 style='color: red;'>❌ ERROR</h3><p style='color: red;'>Error: " . $e->getMessage() . "</p>";
-        }
-    });
-    
     Route::get('pos/payment/{id}', [SellPosController::class, 'edit'])->name('edit-pos-payment');
     Route::get('service-staff-availability', [SellPosController::class, 'showServiceStaffAvailibility']);
     Route::get('pause-resume-service-staff-timer/{user_id}', [SellPosController::class, 'pauseResumeServiceStaffTimer']);
@@ -253,6 +221,7 @@ Route::middleware(['setData', 'auth', 'SetSessionData', 'language', 'timezone', 
     Route::get('/sells/draft-dt', [SellController::class, 'getDraftDatables']);
     Route::get('/sells/sales-report', [SellController::class, 'salesReport']);
     Route::get('/sells/bulk-print-invoices', [SellController::class, 'bulkPrintInvoices']);
+    Route::post('/sells/bulk-print-selected', [SellController::class, 'bulkPrintSelected']);
     Route::resource('sells', SellController::class)->except(['show']);
     Route::get('/sells/copy-quotation/{id}', [SellPosController::class, 'copyQuotation']);
 

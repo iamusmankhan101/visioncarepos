@@ -478,77 +478,46 @@
                 // Show loading
                 $(this).prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> @lang("lang_v1.printing")...');
 
-                var printedCount = 0;
-                var totalCount = selectedIds.length;
-
-                // Function to print individual invoice in new window
-                function printInvoice(transactionId, index) {
-                    setTimeout(function() {
-                        $.ajax({
-                            method: 'GET',
-                            url: '/sells/' + transactionId + '/print',
-                            dataType: 'json',
-                            success: function(result) {
-                                if (result.success == 1 && result.receipt.html_content != '') {
-                                    // Create new window for printing
-                                    var printWindow = window.open('', '_blank', 'width=800,height=600');
-                                    
-                                    // Get all CSS from current page
-                                    var cssLinks = '';
-                                    $('link[rel="stylesheet"]').each(function() {
-                                        cssLinks += '<link rel="stylesheet" href="' + $(this).attr('href') + '">';
-                                    });
-                                    
-                                    var cssStyles = '';
-                                    $('style').each(function() {
-                                        cssStyles += '<style>' + $(this).html() + '</style>';
-                                    });
-                                    
-                                    // Write complete HTML with all CSS
-                                    printWindow.document.write('<!DOCTYPE html><html><head>');
-                                    printWindow.document.write('<title>Invoice</title>');
-                                    printWindow.document.write('<meta charset="utf-8">');
-                                    printWindow.document.write(cssLinks);
-                                    printWindow.document.write(cssStyles);
-                                    printWindow.document.write('</head><body>');
-                                    printWindow.document.write('<section class="invoice print_section" id="receipt_section">');
-                                    printWindow.document.write(result.receipt.html_content);
-                                    printWindow.document.write('</section>');
-                                    printWindow.document.write('</body></html>');
-                                    printWindow.document.close();
-                                    
-                                    // Wait for content to load then print
-                                    setTimeout(function() {
-                                        printWindow.print();
-                                        setTimeout(function() {
-                                            printWindow.close();
-                                        }, 1000);
-                                    }, 500);
-                                    
-                                    printedCount++;
-                                    if (printedCount === totalCount) {
-                                        toastr.success('@lang("lang_v1.invoices_printed_successfully")');
-                                    }
-                                } else {
-                                    toastr.error('Error printing invoice ' + transactionId);
-                                }
-                            },
-                            error: function() {
-                                toastr.error('Error printing invoice ' + transactionId);
-                            }
-                        });
-                    }, index * 2000); // 2 second delay between each request
-                }
-
-                // Print each invoice
-                selectedIds.forEach(function(id, index) {
-                    printInvoice(id, index);
+                // Use bulk print endpoint for combined printing
+                $.ajax({
+                    method: 'POST',
+                    url: '/sells/bulk-print-selected',
+                    data: {
+                        '_token': '{{ csrf_token() }}',
+                        'selected_ids': selectedIds
+                    },
+                    dataType: 'json',
+                    success: function(result) {
+                        if (result.success == 1 && result.receipt.html_content != '') {
+                            // Create new window for printing all invoices together
+                            var printWindow = window.open('', '_blank', 'width=800,height=600');
+                            
+                            // Write the combined HTML content
+                            printWindow.document.write(result.receipt.html_content);
+                            printWindow.document.close();
+                            
+                            // Wait for content to load then print
+                            setTimeout(function() {
+                                printWindow.print();
+                                setTimeout(function() {
+                                    printWindow.close();
+                                }, 1000);
+                            }, 500);
+                            
+                            toastr.success(result.msg);
+                        } else {
+                            toastr.error(result.msg || 'Error printing invoices');
+                        }
+                        
+                        // Reset button
+                        $('#bulk_print_invoices').prop('disabled', false).html('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-printer"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M17 17h2a2 2 0 0 0 2 -2v-4a2 2 0 0 0 -2 -2h-14a2 2 0 0 0 -2 2v4a2 2 0 0 0 2 2h2"/><path d="M17 9v-4a2 2 0 0 0 -2 -2h-6a2 2 0 0 0 -2 2v4"/><path d="M7 13m0 2a2 2 0 0 1 2 -2h6a2 2 0 0 1 2 2v4a2 2 0 0 1 -2 -2h-6a2 2 0 0 1 -2 -2z"/></svg> @lang("lang_v1.print_selected") (<span id="selected_count">0</span>)');
+                    },
+                    error: function() {
+                        toastr.error('Error printing invoices');
+                        // Reset button
+                        $('#bulk_print_invoices').prop('disabled', false).html('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-printer"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M17 17h2a2 2 0 0 0 2 -2v-4a2 2 0 0 0 -2 -2h-14a2 2 0 0 0 -2 2v4a2 2 0 0 0 2 2h2"/><path d="M17 9v-4a2 2 0 0 0 -2 -2h-6a2 2 0 0 0 -2 2v4"/><path d="M7 13m0 2a2 2 0 0 1 2 -2h6a2 2 0 0 1 2 2v4a2 2 0 0 1 -2 -2h-6a2 2 0 0 1 -2 -2z"/></svg> @lang("lang_v1.print_selected") (<span id="selected_count">0</span>)');
+                    }
                 });
-
-                // Reset button after all requests are sent
-                setTimeout(function() {
-                    $('#bulk_print_invoices').prop('disabled', false).html('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-printer"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M17 17h2a2 2 0 0 0 2 -2v-4a2 2 0 0 0 -2 -2h-14a2 2 0 0 0 -2 2v4a2 2 0 0 0 2 2h2"/><path d="M17 9v-4a2 2 0 0 0 -2 -2h-6a2 2 0 0 0 -2 2v4"/><path d="M7 13m0 2a2 2 0 0 1 2 -2h6a2 2 0 0 1 2 2v4a2 2 0 0 1 -2 2h-6a2 2 0 0 1 -2 -2z"/></svg> @lang("lang_v1.print_selected") (<span id="selected_count">0</span>)');
-                }, totalCount * 2000 + 1000);
             });
         });
 
