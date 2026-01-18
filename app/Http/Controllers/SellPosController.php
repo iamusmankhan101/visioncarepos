@@ -516,12 +516,20 @@ class SellPosController extends Controller
                 \Log::info('Checking voucher data in request', [
                     'voucher_code' => $input['voucher_code'] ?? 'not_set',
                     'voucher_discount_amount' => $input['voucher_discount_amount'] ?? 'not_set',
+                    'voucher_code_empty' => empty($input['voucher_code']),
+                    'voucher_discount_amount_empty' => empty($input['voucher_discount_amount']),
+                    'voucher_discount_amount_greater_than_zero' => isset($input['voucher_discount_amount']) ? ($input['voucher_discount_amount'] > 0) : false,
                     'all_input_keys' => array_keys($input)
                 ]);
                 
-                if (!empty($input['voucher_code']) && !empty($input['voucher_discount_amount']) && $input['voucher_discount_amount'] > 0) {
+                // Check voucher conditions with more detailed logging
+                $voucher_code_valid = !empty($input['voucher_code']);
+                $voucher_amount_valid = !empty($input['voucher_discount_amount']) && $input['voucher_discount_amount'] > 0;
+                
+                if ($voucher_code_valid && $voucher_amount_valid) {
                     \Log::info('Voucher conditions met, looking for voucher', [
                         'voucher_code' => $input['voucher_code'],
+                        'voucher_discount_amount' => $input['voucher_discount_amount'],
                         'business_id' => $business_id
                     ]);
                     
@@ -539,11 +547,18 @@ class SellPosController extends Controller
                         // Increment the used count
                         $voucher->increment('used_count');
                         
+                        // Store voucher information in transaction additional_notes
+                        $voucher_note = "Voucher: {$input['voucher_code']}, Discount: {$input['voucher_discount_amount']}";
+                        $existing_notes = $transaction->additional_notes ?? '';
+                        $updated_notes = $existing_notes ? $existing_notes . ' | ' . $voucher_note : $voucher_note;
+                        $transaction->update(['additional_notes' => $updated_notes]);
+                        
                         \Log::info('Voucher usage tracked', [
                             'voucher_code' => $input['voucher_code'],
                             'transaction_id' => $transaction->id,
                             'new_used_count' => $voucher->fresh()->used_count,
-                            'usage_limit' => $voucher->usage_limit
+                            'usage_limit' => $voucher->usage_limit,
+                            'voucher_note_added' => $voucher_note
                         ]);
                     } else {
                         \Log::warning('Voucher not found', [
