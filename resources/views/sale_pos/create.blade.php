@@ -297,6 +297,14 @@
                 voucher_discount_amount: $('#voucher_discount_amount').val()
             });
             
+            // Debug: Check if the form will submit these values
+            console.log('Form will submit these voucher values:', {
+                voucher_code_field_exists: $('#voucher_code').length > 0,
+                voucher_discount_amount_field_exists: $('#voucher_discount_amount').length > 0,
+                voucher_code_value: $('#voucher_code').val(),
+                voucher_discount_amount_value: $('#voucher_discount_amount').val()
+            });
+            
             // Update the display
             $('#voucher_discount').text(__currency_trans_from_en(discount_amount, true));
             

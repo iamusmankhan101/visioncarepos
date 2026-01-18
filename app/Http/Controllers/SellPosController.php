@@ -513,22 +513,51 @@ class SellPosController extends Controller
                 $transaction = $this->transactionUtil->createSellTransaction($business_id, $input, $invoice_total, $user_id);
 
                 // Track voucher usage if voucher was applied
+                \Log::info('Checking voucher data in request', [
+                    'voucher_code' => $input['voucher_code'] ?? 'not_set',
+                    'voucher_discount_amount' => $input['voucher_discount_amount'] ?? 'not_set',
+                    'all_input_keys' => array_keys($input)
+                ]);
+                
                 if (!empty($input['voucher_code']) && !empty($input['voucher_discount_amount']) && $input['voucher_discount_amount'] > 0) {
+                    \Log::info('Voucher conditions met, looking for voucher', [
+                        'voucher_code' => $input['voucher_code'],
+                        'business_id' => $business_id
+                    ]);
+                    
                     $voucher = Voucher::where('business_id', $business_id)
                                     ->where('code', $input['voucher_code'])
                                     ->first();
                     
                     if ($voucher) {
+                        \Log::info('Voucher found, incrementing usage', [
+                            'voucher_id' => $voucher->id,
+                            'current_used_count' => $voucher->used_count,
+                            'usage_limit' => $voucher->usage_limit
+                        ]);
+                        
                         // Increment the used count
                         $voucher->increment('used_count');
                         
                         \Log::info('Voucher usage tracked', [
                             'voucher_code' => $input['voucher_code'],
                             'transaction_id' => $transaction->id,
-                            'used_count' => $voucher->used_count,
+                            'new_used_count' => $voucher->fresh()->used_count,
                             'usage_limit' => $voucher->usage_limit
                         ]);
+                    } else {
+                        \Log::warning('Voucher not found', [
+                            'voucher_code' => $input['voucher_code'],
+                            'business_id' => $business_id
+                        ]);
                     }
+                } else {
+                    \Log::info('Voucher conditions not met', [
+                        'voucher_code_empty' => empty($input['voucher_code']),
+                        'voucher_discount_amount_empty' => empty($input['voucher_discount_amount']),
+                        'voucher_discount_amount_value' => $input['voucher_discount_amount'] ?? 'not_set',
+                        'voucher_discount_amount_greater_than_zero' => isset($input['voucher_discount_amount']) ? ($input['voucher_discount_amount'] > 0) : 'not_set'
+                    ]);
                 }
 
                 // Store multiple customer IDs if provided (for separate invoice printing)
