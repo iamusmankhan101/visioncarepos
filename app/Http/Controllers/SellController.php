@@ -905,17 +905,16 @@ class SellController extends Controller
      */
     public function bulkPrintSelected()
     {
-        // Temporarily disable permission checks for testing
-        // if (!auth()->user()->can('sell.view') && !auth()->user()->can('direct_sell.view')) {
-        //     abort(403, 'Unauthorized action.');
-        // }
+        if (!auth()->user()->can('sell.view') && !auth()->user()->can('direct_sell.view')) {
+            abort(403, 'Unauthorized action.');
+        }
 
-        // if (!auth()->user()->can('print_invoice')) {
-        //     return response()->json([
-        //         'success' => 0,
-        //         'msg' => __('lang_v1.no_permission_to_print')
-        //     ]);
-        // }
+        if (!auth()->user()->can('print_invoice')) {
+            return response()->json([
+                'success' => 0,
+                'msg' => __('lang_v1.no_permission_to_print')
+            ]);
+        }
 
         $business_id = request()->session()->get('user.business_id');
         $selected_ids = request()->get('selected_ids', []);
@@ -938,7 +937,7 @@ class SellController extends Controller
             $transactions = Transaction::where('business_id', $business_id)
                                     ->whereIn('id', $selected_ids)
                                     ->where('type', 'sell')
-                                    ->with(['contact', 'sell_lines.product', 'sell_lines.variations.product_variation'])
+                                    ->with(['contact', 'sell_lines.product', 'sell_lines.variations.product_variation', 'payment_lines'])
                                     ->orderBy('transaction_date', 'desc')
                                     ->orderBy('id', 'desc')
                                     ->get();
@@ -1395,65 +1394,153 @@ class SellController extends Controller
     }
 
     /**
-     * Generate a simple receipt as fallback when receiptContent fails
+     * Generate a full invoice receipt with prescription tables
      */
     private function generateSimpleReceipt($transaction, $business)
     {
-        $html = '<div class="receipt-container" style="margin-bottom: 30px; padding: 20px; border: 1px solid #ddd; font-family: Arial, sans-serif;">';
+        // Load the contact with prescription data
+        $contact = null;
+        if ($transaction->contact_id) {
+            $contact = Contact::find($transaction->contact_id);
+        }
+        
+        $html = '<div class="receipt-container" style="margin-bottom: 30px; padding: 20px; font-family: Arial, sans-serif; color: #000000 !important;">';
         
         // Business header
         $html .= '<div style="text-align: center; margin-bottom: 20px;">';
         if (!empty($business->logo)) {
             $logo_path = public_path('storage/business_logos/' . $business->logo);
             if (file_exists($logo_path)) {
-                $html .= '<img src="' . asset('storage/business_logos/' . $business->logo) . '" style="max-height: 80px; margin-bottom: 10px; display: block; margin-left: auto; margin-right: auto;">';
+                $html .= '<img src="' . asset('storage/business_logos/' . $business->logo) . '" style="max-height: 120px; width: auto; margin-bottom: 10px; display: block; margin-left: auto; margin-right: auto;">';
             }
         }
-        $html .= '<h2 style="margin: 10px 0; font-size: 24px;">' . ($business->name ?? 'Business Name') . '</h2>';
+        $html .= '<h2 style="margin: 10px 0; font-size: 24px; text-align: center;">' . ($business->name ?? 'Business Name') . '</h2>';
         if (!empty($business->address)) {
-            $html .= '<p style="margin: 5px 0; font-size: 14px;">' . $business->address . '</p>';
+            $html .= '<p style="margin: 5px 0; font-size: 14px; text-align: center;">' . $business->address . '</p>';
         }
         if (!empty($business->mobile)) {
-            $html .= '<p style="margin: 5px 0; font-size: 14px;">Phone: ' . $business->mobile . '</p>';
+            $html .= '<p style="margin: 5px 0; font-size: 14px; text-align: center;">Phone: ' . $business->mobile . '</p>';
         }
         if (!empty($business->email)) {
-            $html .= '<p style="margin: 5px 0; font-size: 14px;">Email: ' . $business->email . '</p>';
+            $html .= '<p style="margin: 5px 0; font-size: 14px; text-align: center;">Email: ' . $business->email . '</p>';
         }
         $html .= '</div>';
         
-        $html .= '<hr style="border: 1px solid #000; margin: 20px 0;">';
+        // Invoice details in one line
+        $html .= '<div style="margin-bottom: 10px;">';
+        $html .= '<p style="width: 100%; margin-bottom: 10px;">';
+        $html .= '<span style="display: inline-block; margin-right: 20px;"><strong>Invoice: ' . ($transaction->invoice_no ?? 'N/A') . '</strong></span>';
         
-        // Invoice details
-        $html .= '<div style="overflow: hidden; margin-bottom: 20px;">';
-        $html .= '<div style="float: left; width: 50%;">';
-        $html .= '<p><strong>Invoice No:</strong> ' . ($transaction->invoice_no ?? 'N/A') . '</p>';
-        $html .= '<p><strong>Date:</strong> ' . date('d/m/Y H:i', strtotime($transaction->transaction_date ?? now())) . '</p>';
-        $html .= '<p><strong>Payment Status:</strong> ' . ucfirst($transaction->payment_status ?? 'pending') . '</p>';
-        $html .= '</div>';
-        $html .= '<div style="float: right; width: 50%; text-align: right;">';
-        if ($transaction->contact) {
-            $html .= '<p><strong>Customer:</strong> ' . $transaction->contact->name . '</p>';
-            if (!empty($transaction->contact->mobile)) {
-                $html .= '<p><strong>Mobile:</strong> ' . $transaction->contact->mobile . '</p>';
+        if ($contact) {
+            $html .= '<span style="display: inline-block; margin-right: 20px;"><strong>Customer:</strong> ' . $contact->name;
+            if (!empty($contact->mobile)) {
+                $html .= ' &nbsp;&nbsp;&nbsp;Mobile: ' . $contact->mobile;
             }
-            if (!empty($transaction->contact->email)) {
-                $html .= '<p><strong>Email:</strong> ' . $transaction->contact->email . '</p>';
-            }
+            $html .= '</span>';
         } else {
-            $html .= '<p><strong>Customer:</strong> Walk-in Customer</p>';
+            $html .= '<span style="display: inline-block; margin-right: 20px;"><strong>Customer:</strong> Walk-in Customer</span>';
         }
+        
+        $html .= '<span style="display: inline-block; float: right;"><strong>Date:</strong> ' . date('d/m/Y H:i', strtotime($transaction->transaction_date ?? now())) . '</span>';
+        $html .= '</p>';
         $html .= '</div>';
-        $html .= '<div style="clear: both;"></div>';
-        $html .= '</div>';
+        
+        // Prescription Form - Side by Side Layout (only if contact exists)
+        if ($contact) {
+            $html .= '<div style="margin-top: 10px;">';
+            $html .= '<h4 style="margin-bottom: 10px; color: #48b2ee;"><i class="fa fa-eye"></i> Prescription - ' . $contact->name;
+            if ($contact->contact_id) {
+                $html .= ' (ID: ' . $contact->contact_id . ')';
+            }
+            $html .= '</h4>';
+            
+            $html .= '<table width="100%" style="border-collapse: collapse;">';
+            $html .= '<tr>';
+            
+            // RIGHT EYE TABLE
+            $html .= '<td style="width: 48%; vertical-align: top; padding-right: 10px;">';
+            $html .= '<strong>RIGHT</strong>';
+            $html .= '<table style="margin-top: 5px; margin-bottom: 0; border: 1px solid #000; border-collapse: collapse; width: 100%;">';
+            $html .= '<thead>';
+            $html .= '<tr style="background-color: #f0f0f0;">';
+            $html .= '<th style="width: 25%; border: 1px solid #000; padding: 5px;"></th>';
+            $html .= '<th style="width: 25%; text-align: center; border: 1px solid #000; padding: 5px;">Sph.</th>';
+            $html .= '<th style="width: 25%; text-align: center; border: 1px solid #000; padding: 5px;">Cyl.</th>';
+            $html .= '<th style="width: 25%; text-align: center; border: 1px solid #000; padding: 5px;">Axis.</th>';
+            $html .= '</tr>';
+            $html .= '</thead>';
+            $html .= '<tbody>';
+            $html .= '<tr>';
+            $html .= '<td style="font-weight: 600; border: 1px solid #000; padding: 5px;">Distance</td>';
+            $html .= '<td style="text-align: center; border: 1px solid #000; padding: 5px;">' . ($contact->custom_field1 ?? '') . '</td>';
+            $html .= '<td style="text-align: center; border: 1px solid #000; padding: 5px;">' . ($contact->custom_field2 ?? '') . '</td>';
+            $html .= '<td style="text-align: center; border: 1px solid #000; padding: 5px;">' . ($contact->custom_field3 ?? '') . '</td>';
+            $html .= '</tr>';
+            $html .= '<tr>';
+            $html .= '<td style="font-weight: 600; border: 1px solid #000; padding: 5px;">Near</td>';
+            $html .= '<td style="text-align: center; border: 1px solid #000; padding: 5px;">' . ($contact->custom_field4 ?? '') . '</td>';
+            $html .= '<td style="text-align: center; border: 1px solid #000; padding: 5px;">' . ($contact->custom_field5 ?? '') . '</td>';
+            $html .= '<td style="text-align: center; border: 1px solid #000; padding: 5px;">' . ($contact->custom_field6 ?? '') . '</td>';
+            $html .= '</tr>';
+            $html .= '</tbody>';
+            $html .= '</table>';
+            $html .= '</td>';
+            
+            // LEFT EYE TABLE
+            $html .= '<td style="width: 48%; vertical-align: top; padding-left: 10px;">';
+            $html .= '<strong>LEFT</strong>';
+            $html .= '<table style="margin-top: 5px; margin-bottom: 0; border: 1px solid #000; border-collapse: collapse; width: 100%;">';
+            $html .= '<thead>';
+            $html .= '<tr style="background-color: #f0f0f0;">';
+            $html .= '<th style="width: 25%; border: 1px solid #000; padding: 5px;"></th>';
+            $html .= '<th style="width: 25%; text-align: center; border: 1px solid #000; padding: 5px;">Sph.</th>';
+            $html .= '<th style="width: 25%; text-align: center; border: 1px solid #000; padding: 5px;">Cyl.</th>';
+            $html .= '<th style="width: 25%; text-align: center; border: 1px solid #000; padding: 5px;">Axis.</th>';
+            $html .= '</tr>';
+            $html .= '</thead>';
+            $html .= '<tbody>';
+            $html .= '<tr>';
+            $html .= '<td style="font-weight: 600; border: 1px solid #000; padding: 5px;">Distance</td>';
+            $html .= '<td style="text-align: center; border: 1px solid #000; padding: 5px;">' . ($contact->custom_field7 ?? '') . '</td>';
+            $html .= '<td style="text-align: center; border: 1px solid #000; padding: 5px;">' . ($contact->custom_field8 ?? '') . '</td>';
+            $html .= '<td style="text-align: center; border: 1px solid #000; padding: 5px;">' . ($contact->custom_field9 ?? '') . '</td>';
+            $html .= '</tr>';
+            $html .= '<tr>';
+            $html .= '<td style="font-weight: 600; border: 1px solid #000; padding: 5px;">Near</td>';
+            $html .= '<td style="text-align: center; border: 1px solid #000; padding: 5px;">' . ($contact->custom_field10 ?? '') . '</td>';
+            
+            // Get shipping custom fields if available
+            $shipping_field_1 = '';
+            $shipping_field_2 = '';
+            if ($contact && !empty($contact->shipping_custom_field_details)) {
+                $shipping_details = is_string($contact->shipping_custom_field_details) 
+                    ? json_decode($contact->shipping_custom_field_details, true) 
+                    : $contact->shipping_custom_field_details;
+                $shipping_field_1 = $shipping_details['shipping_custom_field_1'] ?? '';
+                $shipping_field_2 = $shipping_details['shipping_custom_field_2'] ?? '';
+            }
+            
+            $html .= '<td style="text-align: center; border: 1px solid #000; padding: 5px;">' . $shipping_field_1 . '</td>';
+            $html .= '<td style="text-align: center; border: 1px solid #000; padding: 5px;">' . $shipping_field_2 . '</td>';
+            $html .= '</tr>';
+            $html .= '</tbody>';
+            $html .= '</table>';
+            $html .= '</td>';
+            
+            $html .= '</tr>';
+            $html .= '</table>';
+            $html .= '</div>';
+        }
         
         // Items table
+        $html .= '<div style="margin-top: 20px;">';
         $html .= '<table style="width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 12px;">';
         $html .= '<thead>';
         $html .= '<tr style="background-color: #f5f5f5;">';
-        $html .= '<th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Item</th>';
-        $html .= '<th style="border: 1px solid #ddd; padding: 8px; text-align: center; width: 60px;">Qty</th>';
-        $html .= '<th style="border: 1px solid #ddd; padding: 8px; text-align: right; width: 80px;">Price</th>';
-        $html .= '<th style="border: 1px solid #ddd; padding: 8px; text-align: right; width: 80px;">Total</th>';
+        $html .= '<th style="border: 1px solid #ddd; padding: 8px; text-align: left; width: 45%;">Product</th>';
+        $html .= '<th style="border: 1px solid #ddd; padding: 8px; text-align: center; width: 15%;">Qty</th>';
+        $html .= '<th style="border: 1px solid #ddd; padding: 8px; text-align: right; width: 15%;">Unit Price</th>';
+        $html .= '<th style="border: 1px solid #ddd; padding: 8px; text-align: right; width: 15%;">Subtotal</th>';
         $html .= '</tr>';
         $html .= '</thead>';
         $html .= '<tbody>';
@@ -1473,10 +1560,10 @@ class SellController extends Controller
                 $subtotal += $line_total;
                 
                 $html .= '<tr>';
-                $html .= '<td style="border: 1px solid #ddd; padding: 8px;">' . $product_name . '</td>';
+                $html .= '<td style="border: 1px solid #ddd; padding: 8px;">' . htmlspecialchars($product_name) . '</td>';
                 $html .= '<td style="border: 1px solid #ddd; padding: 8px; text-align: center;">' . number_format($line->quantity, 2) . '</td>';
-                $html .= '<td style="border: 1px solid #ddd; padding: 8px; text-align: right;">' . number_format($line->unit_price, 2) . '</td>';
-                $html .= '<td style="border: 1px solid #ddd; padding: 8px; text-align: right;">' . number_format($line_total, 2) . '</td>';
+                $html .= '<td style="border: 1px solid #ddd; padding: 8px; text-align: right;">$' . number_format($line->unit_price, 2) . '</td>';
+                $html .= '<td style="border: 1px solid #ddd; padding: 8px; text-align: right;">$' . number_format($line_total, 2) . '</td>';
                 $html .= '</tr>';
             }
         } else {
@@ -1487,26 +1574,82 @@ class SellController extends Controller
         
         $html .= '</tbody>';
         $html .= '</table>';
-        
-        // Totals
-        $html .= '<div style="text-align: right; margin-top: 20px; font-size: 14px;">';
-        $html .= '<p style="margin: 5px 0;"><strong>Subtotal: ' . number_format($transaction->total_before_tax ?? $subtotal, 2) . '</strong></p>';
-        if (($transaction->tax_amount ?? 0) > 0) {
-            $html .= '<p style="margin: 5px 0;"><strong>Tax: ' . number_format($transaction->tax_amount, 2) . '</strong></p>';
-        }
-        if (($transaction->discount_amount ?? 0) > 0) {
-            $html .= '<p style="margin: 5px 0;"><strong>Discount: -' . number_format($transaction->discount_amount, 2) . '</strong></p>';
-        }
-        $html .= '<hr style="border: 1px solid #000; margin: 10px 0;">';
-        $html .= '<p style="font-size: 18px; margin: 10px 0;"><strong>TOTAL: ' . number_format($transaction->final_total ?? $subtotal, 2) . '</strong></p>';
         $html .= '</div>';
         
-        // Footer
-        $html .= '<div style="text-align: center; margin-top: 30px; font-size: 12px; color: #666;">';
-        $html .= '<p>Thank you for your business!</p>';
-        if (!empty($business->website)) {
-            $html .= '<p>Visit us: ' . $business->website . '</p>';
+        // Totals section
+        $html .= '<div style="margin-top: 20px;">';
+        $html .= '<hr style="border-top: 1px solid #000;">';
+        $html .= '<div style="overflow: hidden;">';
+        
+        // Left side - Payment info
+        $html .= '<div style="float: left; width: 50%;">';
+        $html .= '<table style="width: 100%;">';
+        if ($transaction->payment_lines && count($transaction->payment_lines) > 0) {
+            foreach ($transaction->payment_lines as $payment) {
+                $html .= '<tr>';
+                $html .= '<td>' . ucfirst($payment->method ?? 'Cash') . '</td>';
+                $html .= '<td style="text-align: right;">$' . number_format($payment->amount ?? 0, 2) . '</td>';
+                $html .= '<td style="text-align: right;">' . date('d/m/Y', strtotime($payment->paid_on ?? $transaction->transaction_date)) . '</td>';
+                $html .= '</tr>';
+            }
         }
+        if ($transaction->total_paid > 0) {
+            $html .= '<tr>';
+            $html .= '<th>Total Paid</th>';
+            $html .= '<td style="text-align: right;">$' . number_format($transaction->total_paid, 2) . '</td>';
+            $html .= '</tr>';
+        }
+        if (($transaction->final_total - $transaction->total_paid) > 0) {
+            $html .= '<tr>';
+            $html .= '<th>Total Due</th>';
+            $html .= '<td style="text-align: right;">$' . number_format($transaction->final_total - $transaction->total_paid, 2) . '</td>';
+            $html .= '</tr>';
+        }
+        $html .= '</table>';
+        $html .= '</div>';
+        
+        // Right side - Totals
+        $html .= '<div style="float: right; width: 50%;">';
+        $html .= '<table style="width: 100%;">';
+        $html .= '<tr>';
+        $html .= '<th style="width: 70%; text-align: right;">Subtotal:</th>';
+        $html .= '<td style="text-align: right;">$' . number_format($transaction->total_before_tax ?? $subtotal, 2) . '</td>';
+        $html .= '</tr>';
+        
+        if (($transaction->tax_amount ?? 0) > 0) {
+            $html .= '<tr>';
+            $html .= '<th style="text-align: right;">Tax:</th>';
+            $html .= '<td style="text-align: right;">$' . number_format($transaction->tax_amount, 2) . '</td>';
+            $html .= '</tr>';
+        }
+        
+        if (($transaction->discount_amount ?? 0) > 0) {
+            $html .= '<tr>';
+            $html .= '<th style="text-align: right;">Discount:</th>';
+            $html .= '<td style="text-align: right;">-$' . number_format($transaction->discount_amount, 2) . '</td>';
+            $html .= '</tr>';
+        }
+        
+        $html .= '<tr style="border-top: 2px solid #000;">';
+        $html .= '<th style="font-size: 16px; text-align: right; padding-top: 10px;">TOTAL:</th>';
+        $html .= '<td style="font-size: 16px; text-align: right; font-weight: bold; padding-top: 10px;">$' . number_format($transaction->final_total ?? $subtotal, 2) . '</td>';
+        $html .= '</tr>';
+        $html .= '</table>';
+        $html .= '</div>';
+        
+        $html .= '<div style="clear: both;"></div>';
+        $html .= '</div>';
+        
+        // Footer with terms and conditions
+        $html .= '<div style="page-break-inside: avoid; margin-top: 15px;">';
+        $html .= '<hr style="border-top: 1px solid #000;">';
+        $html .= '<div style="padding: 8px; font-size: 9px; text-align: center; background-color: #f0f0f0; border: 1px solid #000;">';
+        $html .= '<strong style="font-size: 10px;">TERMS & CONDITIONS</strong><br>';
+        $html .= '<strong>• No Order will process without 50% Advance payment.</strong><br>';
+        $html .= '<strong>• Orders with 100% Payment will be prioritized.</strong><br>';
+        $html .= '<strong>• No refunds, but we can give you a voucher or exchange it within 3 days.</strong>';
+        $html .= '</div>';
+        $html .= '<hr style="border-top: 1px solid #000;">';
         $html .= '</div>';
         
         $html .= '</div>';
