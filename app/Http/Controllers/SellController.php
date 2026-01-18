@@ -18,6 +18,7 @@ use App\TypesOfService;
 use App\User;
 use App\Utils\BusinessUtil;
 use App\Utils\ContactUtil;
+use Illuminate\Http\Request;
 use App\Utils\ModuleUtil;
 use App\Utils\NotificationUtil;
 use App\Utils\ProductUtil;
@@ -969,6 +970,7 @@ class SellController extends Controller
 
         } catch (\Exception $e) {
             \Log::error('Bulk print selected invoices error: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
             return response()->json([
                 'success' => 0,
                 'msg' => __('messages.something_went_wrong') . ': ' . $e->getMessage()
@@ -1168,83 +1170,43 @@ class SellController extends Controller
      */
     private function generateIndividualReceipts($transactions, $business_id)
     {
-        $business = Business::find($business_id);
         $all_receipts_html = '';
         
-        // Create an instance of SellPosController to use its receiptContent method
-        $sellPosController = new \App\Http\Controllers\SellPosController();
-        
         foreach ($transactions as $index => $transaction) {
-            // Get full transaction details for each sale
-            $sell = Transaction::with([
-                'contact',
-                'sell_lines',
-                'sell_lines.product',
-                'sell_lines.variations',
-                'sell_lines.variations.product_variation',
-                'location',
-                'business',
-                'tax',
-                'sell_lines.modifiers',
-                'table'
-            ])->find($transaction->id);
-
-            if (!$sell) {
-                continue;
-            }
-
-            // Extract selected customers from transaction additional_notes
-            $selected_customers = [];
-            if (!empty($sell->additional_notes)) {
-                // Check for MULTI_INVOICE_CUSTOMERS format
-                if (strpos($sell->additional_notes, 'MULTI_INVOICE_CUSTOMERS:') !== false) {
-                    preg_match('/MULTI_INVOICE_CUSTOMERS:([0-9,]+)/', $sell->additional_notes, $matches);
-                    if (!empty($matches[1])) {
-                        $customer_ids = explode(',', $matches[1]);
-                        // Add the main customer ID to the list at the beginning
-                        array_unshift($customer_ids, $sell->contact_id);
-                        $selected_customers = array_unique(array_map('intval', $customer_ids));
-                    }
-                }
-                // Check for SELECTED_CUSTOMERS format (legacy)
-                elseif (strpos($sell->additional_notes, 'SELECTED_CUSTOMERS:') !== false) {
-                    preg_match('/SELECTED_CUSTOMERS:([0-9,]+)/', $sell->additional_notes, $matches);
-                    if (!empty($matches[1])) {
-                        $customer_ids = explode(',', $matches[1]);
-                        $selected_customers = array_unique(array_map('intval', $customer_ids));
-                    }
-                }
-            }
-
             try {
-                // Use SellPosController's receiptContent method for full invoice with prescription table
-                $receipt_details = $sellPosController->receiptContent(
-                    $business_id, 
-                    $sell->location_id, 
-                    $sell->id, 
-                    'browser',      // printer_type
-                    false,          // is_package_slip
-                    false,          // from_pos_screen
-                    null,           // invoice_layout_id
-                    $selected_customers, // selected_customers
-                    false           // is_delivery_note
-                );
+                // Create a mock request for the printInvoice method
+                $request = new \Illuminate\Http\Request();
+                $request->merge(['ajax' => true]);
                 
-                if ($receipt_details && isset($receipt_details['html_content']) && !empty($receipt_details['html_content'])) {
-                    // Add page break between receipts (except for the first one)
-                    if ($index > 0) {
-                        $all_receipts_html .= '<div style="page-break-before: always;"></div>';
+                // Create SellPosController instance
+                $sellPosController = new \App\Http\Controllers\SellPosController();
+                
+                // Call the printInvoice method
+                $response = $sellPosController->printInvoice($request, $transaction->id);
+                
+                if ($response instanceof \Illuminate\Http\JsonResponse) {
+                    $responseData = $response->getData(true);
+                    
+                    if (isset($responseData['success']) && $responseData['success'] == 1 && 
+                        isset($responseData['receipt']['html_content']) && 
+                        !empty($responseData['receipt']['html_content'])) {
+                        
+                        // Add page break between receipts (except for the first one)
+                        if ($index > 0) {
+                            $all_receipts_html .= '<div style="page-break-before: always;"></div>';
+                        }
+                        $all_receipts_html .= $responseData['receipt']['html_content'];
+                    } else {
+                        \Log::warning('printInvoice returned no content for transaction ' . $transaction->id);
+                        continue;
                     }
-                    $all_receipts_html .= $receipt_details['html_content'];
                 } else {
-                    \Log::warning('receiptContent returned empty for transaction ' . $sell->id);
-                    // Skip this transaction if no content
+                    \Log::warning('printInvoice returned unexpected response for transaction ' . $transaction->id);
                     continue;
                 }
                 
             } catch (\Exception $e) {
-                \Log::error('Error generating receipt for transaction ' . $sell->id . ': ' . $e->getMessage());
-                // Skip this transaction on error
+                \Log::error('Error generating receipt for transaction ' . $transaction->id . ': ' . $e->getMessage());
                 continue;
             }
         }
