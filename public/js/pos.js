@@ -1060,6 +1060,36 @@ $(document).ready(function() {
                 form_data_preview: $(form).serialize().substring(0, 500) + '...'
             });
             
+            // CRITICAL FIX: Ensure voucher fields are not empty before submission
+            var voucherCode = $('#voucher_code').val();
+            var voucherAmount = $('#voucher_discount_amount').val();
+            
+            console.log('Pre-submission voucher check:', {
+                voucherCode: voucherCode,
+                voucherAmount: voucherAmount,
+                voucherCodeEmpty: !voucherCode || voucherCode === '',
+                voucherAmountZero: !voucherAmount || voucherAmount === '0'
+            });
+            
+            // If voucher fields are empty but voucher discount is showing, restore them
+            var displayedVoucherDiscount = $('#voucher_discount').text();
+            if (displayedVoucherDiscount && displayedVoucherDiscount !== '0' && (!voucherCode || voucherAmount === '0')) {
+                console.log('WARNING: Voucher fields are empty but discount is displayed. Attempting to restore...');
+                
+                // Try to get voucher info from display or localStorage
+                var storedVoucherCode = localStorage.getItem('applied_voucher_code');
+                var storedVoucherAmount = localStorage.getItem('applied_voucher_amount');
+                
+                if (storedVoucherCode && storedVoucherAmount) {
+                    $('#voucher_code').val(storedVoucherCode);
+                    $('#voucher_discount_amount').val(storedVoucherAmount);
+                    console.log('Restored voucher fields from localStorage:', {
+                        code: storedVoucherCode,
+                        amount: storedVoucherAmount
+                    });
+                }
+            }
+            
             // var total_payble = __read_number($('input#final_total_input'));
             // var total_paying = __read_number($('input#total_paying_input'));
             var cnf = true;

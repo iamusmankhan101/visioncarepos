@@ -192,6 +192,9 @@
                     if ($('#voucher_code').length > 0) {
                         $('#voucher_code').val(voucherData.code);
                         console.log('✅ Set voucher_code to:', $('#voucher_code').val());
+                        
+                        // Store in localStorage for form submission recovery
+                        localStorage.setItem('applied_voucher_code', voucherData.code);
                     } else {
                         console.error('❌ voucher_code field not found');
                     }
@@ -199,6 +202,9 @@
                     if ($('#voucher_discount_amount').length > 0) {
                         $('#voucher_discount_amount').val(discount_amount);
                         console.log('✅ Set voucher_discount_amount to:', $('#voucher_discount_amount').val());
+                        
+                        // Store in localStorage for form submission recovery
+                        localStorage.setItem('applied_voucher_amount', discount_amount);
                     } else {
                         console.error('❌ voucher_discount_amount field not found');
                     }
@@ -242,12 +248,19 @@
             });
             
             // Clear voucher
-            $('#clear_voucher').click(function() {
+            $('#clear_voucher').off('click').on('click', function() {
+                console.log('Clear voucher button clicked!');
+                
                 $('#voucher_code').val('');
                 $('#voucher_discount_amount').val('0');
                 $('#voucher_discount').text('0');
                 $('#voucher_select').val('');
                 hideVoucherDetails();
+                
+                // Clear localStorage
+                localStorage.removeItem('applied_voucher_code');
+                localStorage.removeItem('applied_voucher_amount');
+                console.log('✅ Cleared voucher localStorage');
                 
                 if (typeof pos_total_row === 'function') {
                     pos_total_row();

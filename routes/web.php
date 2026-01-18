@@ -147,24 +147,6 @@ Route::middleware(['setData', 'auth', 'SetSessionData', 'language', 'timezone', 
 
     Route::resource('tax-rates', VoucherController::class);
     Route::get('vouchers/active', [VoucherController::class, 'getActiveVouchers'])->name('vouchers.active');
-    
-    // Debug route to check form submission data
-    Route::post('/debug-form-data', function(\Illuminate\Http\Request $request) {
-        \Log::info('=== FORM SUBMISSION DEBUG ===', [
-            'all_data' => $request->all(),
-            'voucher_code' => $request->input('voucher_code'),
-            'voucher_discount_amount' => $request->input('voucher_discount_amount'),
-            'has_voucher_code' => $request->has('voucher_code'),
-            'has_voucher_discount_amount' => $request->has('voucher_discount_amount'),
-        ]);
-        
-        return response()->json([
-            'success' => true,
-            'voucher_code' => $request->input('voucher_code'),
-            'voucher_discount_amount' => $request->input('voucher_discount_amount'),
-            'message' => 'Form data logged'
-        ]);
-    });
 
     Route::resource('units', UnitController::class);
 
