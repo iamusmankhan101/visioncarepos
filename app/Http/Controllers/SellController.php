@@ -952,6 +952,13 @@ class SellController extends Controller
 
             // Generate combined receipt for selected transactions
             $combined_receipt = $this->generateIndividualReceipts($transactions, $business_id);
+            
+            \Log::info('Bulk print result', [
+                'transaction_count' => count($transactions),
+                'has_html_content' => isset($combined_receipt['html_content']),
+                'html_content_length' => isset($combined_receipt['html_content']) ? strlen($combined_receipt['html_content']) : 0,
+                'first_100_chars' => isset($combined_receipt['html_content']) ? substr($combined_receipt['html_content'], 0, 100) : 'no content'
+            ]);
 
             return response()->json([
                 'success' => 1,
@@ -1218,14 +1225,30 @@ class SellController extends Controller
             }
 
             // Generate individual receipt using the existing receipt template
-            $receipt_details = $this->receiptContent($business_id, $sell->location_id, $sell->id, 'browser', false, false, null, $selected_customers);
+            $receipt_details = $this->receiptContent($business_id, $sell->location_id, $sell->id, 'browser', false, false, null, $selected_customers, false);
             
-            if ($receipt_details && isset($receipt_details['html_content'])) {
-                // Add page break between receipts (except for the last one)
+            \Log::info('Receipt details for transaction ' . $sell->id, [
+                'has_receipt_details' => !empty($receipt_details),
+                'has_html_content' => isset($receipt_details['html_content']),
+                'html_content_length' => isset($receipt_details['html_content']) ? strlen($receipt_details['html_content']) : 0,
+                'is_enabled' => isset($receipt_details['is_enabled']) ? $receipt_details['is_enabled'] : 'not_set'
+            ]);
+            
+            if ($receipt_details && isset($receipt_details['html_content']) && !empty($receipt_details['html_content'])) {
+                // Add page break between receipts (except for the first one)
                 if ($index > 0) {
                     $all_receipts_html .= '<div style="page-break-before: always;"></div>';
                 }
                 $all_receipts_html .= $receipt_details['html_content'];
+            } else {
+                // If receiptContent fails, generate a simple receipt manually
+                \Log::warning('receiptContent failed for transaction ' . $sell->id . ', generating simple receipt');
+                
+                if ($index > 0) {
+                    $all_receipts_html .= '<div style="page-break-before: always;"></div>';
+                }
+                
+                $all_receipts_html .= $this->generateSimpleReceipt($sell, $business);
             }
         }
 
@@ -1419,6 +1442,88 @@ class SellController extends Controller
             'html_content' => $final_html,
             'print_type' => 'browser'
         ];
+    }
+
+    /**
+     * Generate a simple receipt as fallback when receiptContent fails
+     */
+    private function generateSimpleReceipt($transaction, $business)
+    {
+        $html = '<div class="receipt-container" style="margin-bottom: 30px; padding: 20px; border: 1px solid #ddd;">';
+        
+        // Business header
+        $html .= '<div class="text-center" style="margin-bottom: 20px;">';
+        if (!empty($business->logo)) {
+            $html .= '<img src="' . asset('storage/business_logos/' . $business->logo) . '" style="max-height: 80px; margin-bottom: 10px;" class="center-block">';
+        }
+        $html .= '<h3>' . $business->name . '</h3>';
+        if (!empty($business->address)) {
+            $html .= '<p><small>' . $business->address . '</small></p>';
+        }
+        if (!empty($business->mobile)) {
+            $html .= '<p><small>Phone: ' . $business->mobile . '</small></p>';
+        }
+        $html .= '</div>';
+        
+        // Invoice details
+        $html .= '<div class="row">';
+        $html .= '<div class="col-xs-6">';
+        $html .= '<strong>Invoice No:</strong> ' . $transaction->invoice_no . '<br>';
+        $html .= '<strong>Date:</strong> ' . date('d/m/Y', strtotime($transaction->transaction_date)) . '<br>';
+        $html .= '</div>';
+        $html .= '<div class="col-xs-6 text-right">';
+        if ($transaction->contact) {
+            $html .= '<strong>Customer:</strong> ' . $transaction->contact->name . '<br>';
+            if (!empty($transaction->contact->mobile)) {
+                $html .= '<strong>Mobile:</strong> ' . $transaction->contact->mobile . '<br>';
+            }
+        }
+        $html .= '</div>';
+        $html .= '</div>';
+        
+        // Items table
+        $html .= '<table class="table" style="width: 100%; border-collapse: collapse; margin: 20px 0;">';
+        $html .= '<thead>';
+        $html .= '<tr style="background-color: #f5f5f5;">';
+        $html .= '<th style="border: 1px solid #ddd; padding: 8px;">Item</th>';
+        $html .= '<th style="border: 1px solid #ddd; padding: 8px; text-align: center;">Qty</th>';
+        $html .= '<th style="border: 1px solid #ddd; padding: 8px; text-align: right;">Price</th>';
+        $html .= '<th style="border: 1px solid #ddd; padding: 8px; text-align: right;">Total</th>';
+        $html .= '</tr>';
+        $html .= '</thead>';
+        $html .= '<tbody>';
+        
+        if ($transaction->sell_lines) {
+            foreach ($transaction->sell_lines as $line) {
+                $product_name = $line->product ? $line->product->name : 'Product';
+                if ($line->variations && $line->variations->product_variation) {
+                    $product_name .= ' (' . $line->variations->product_variation->name . ')';
+                }
+                
+                $html .= '<tr>';
+                $html .= '<td style="border: 1px solid #ddd; padding: 8px;">' . $product_name . '</td>';
+                $html .= '<td style="border: 1px solid #ddd; padding: 8px; text-align: center;">' . $line->quantity . '</td>';
+                $html .= '<td style="border: 1px solid #ddd; padding: 8px; text-align: right;">' . number_format($line->unit_price, 2) . '</td>';
+                $html .= '<td style="border: 1px solid #ddd; padding: 8px; text-align: right;">' . number_format($line->unit_price * $line->quantity, 2) . '</td>';
+                $html .= '</tr>';
+            }
+        }
+        
+        $html .= '</tbody>';
+        $html .= '</table>';
+        
+        // Totals
+        $html .= '<div class="text-right" style="margin-top: 20px;">';
+        $html .= '<p><strong>Subtotal: ' . number_format($transaction->total_before_tax, 2) . '</strong></p>';
+        if ($transaction->tax_amount > 0) {
+            $html .= '<p><strong>Tax: ' . number_format($transaction->tax_amount, 2) . '</strong></p>';
+        }
+        $html .= '<p style="font-size: 18px; border-top: 2px solid #000; padding-top: 10px;"><strong>Total: ' . number_format($transaction->final_total, 2) . '</strong></p>';
+        $html .= '</div>';
+        
+        $html .= '</div>';
+        
+        return $html;
     }
 
     /**
