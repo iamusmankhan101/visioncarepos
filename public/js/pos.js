@@ -1051,6 +1051,15 @@ $(document).ready(function() {
 
     pos_form_validator = pos_form_obj.validate({
         submitHandler: function(form) {
+            // Debug: Check if voucher fields are in the form before submission
+            console.log('Form submission debug:', {
+                voucher_code_field: $('#voucher_code').length,
+                voucher_code_value: $('#voucher_code').val(),
+                voucher_discount_amount_field: $('#voucher_discount_amount').length,
+                voucher_discount_amount_value: $('#voucher_discount_amount').val(),
+                form_data_preview: $(form).serialize().substring(0, 500) + '...'
+            });
+            
             // var total_payble = __read_number($('input#final_total_input'));
             // var total_paying = __read_number($('input#total_paying_input'));
             var cnf = true;

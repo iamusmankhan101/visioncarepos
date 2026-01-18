@@ -1488,6 +1488,11 @@ class TransactionUtil extends Util
 
         $output['discount_amount_unformatted'] = $discount;
 
+        //Voucher discount
+        $voucher_info = $this->getVoucherDiscount($transaction_id, $business_details);
+        $output['voucher_discount'] = $voucher_info['amount'];
+        $output['voucher_code'] = $voucher_info['code'];
+
         //reward points
         if ($business_details->enable_rp == 1 && ! empty($transaction->rp_redeemed)) {
             $output['reward_point_label'] = $business_details->rp_name;
@@ -6608,5 +6613,28 @@ class TransactionUtil extends Util
         }
 
         return $discount_amount;
+    }
+
+    /**
+     * Get voucher discount information for receipt
+     */
+    public function getVoucherDiscount($transaction_id, $business_details)
+    {
+        $transaction = Transaction::find($transaction_id);
+        
+        $voucher_info = [
+            'amount' => 0,
+            'code' => ''
+        ];
+        
+        if ($transaction && !empty($transaction->additional_notes)) {
+            // Look for voucher pattern in notes: "Voucher: CODE123, Discount: 50.00"
+            if (preg_match('/Voucher:\s*([^,]+),\s*Discount:\s*([\d\.]+)/i', $transaction->additional_notes, $matches)) {
+                $voucher_info['code'] = trim($matches[1]);
+                $voucher_info['amount'] = $this->num_f($matches[2], true, $business_details);
+            }
+        }
+        
+        return $voucher_info;
     }
 }

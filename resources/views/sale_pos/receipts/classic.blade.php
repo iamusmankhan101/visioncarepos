@@ -767,6 +767,18 @@ window.addEventListener('afterprint', function() {
 						</tr>
 					@endif
 
+					@if( !empty($receipt_details->voucher_discount) && $receipt_details->voucher_discount > 0 )
+						<tr>
+							<th>
+								Voucher Discount @if(!empty($receipt_details->voucher_code))({{$receipt_details->voucher_code}})@endif
+							</th>
+
+							<td class="text-right">
+								(-) {{$receipt_details->voucher_discount}}
+							</td>
+						</tr>
+					@endif
+
 					@if( !empty($receipt_details->additional_expenses) )
 						@foreach($receipt_details->additional_expenses as $key => $val)
 							<tr>

@@ -222,6 +222,32 @@ Route::middleware(['setData', 'auth', 'SetSessionData', 'language', 'timezone', 
     Route::get('/sells/sales-report', [SellController::class, 'salesReport']);
     Route::get('/sells/bulk-print-invoices', [SellController::class, 'bulkPrintInvoices']);
     Route::post('/sells/bulk-print-selected', [SellController::class, 'bulkPrintSelected']);
+    
+    // Temporary voucher test route
+    Route::get('/test-voucher-usage/{code}', function($code) {
+        try {
+            $voucher = \App\Voucher::where('code', $code)->first();
+            if (!$voucher) {
+                return response()->json(['error' => 'Voucher not found']);
+            }
+            
+            $before = $voucher->used_count;
+            $voucher->increment('used_count');
+            $after = $voucher->fresh()->used_count;
+            
+            return response()->json([
+                'success' => true,
+                'voucher_code' => $code,
+                'usage_limit' => $voucher->usage_limit,
+                'used_count_before' => $before,
+                'used_count_after' => $after,
+                'is_valid' => $voucher->fresh()->isValid(100),
+                'message' => "Voucher usage incremented from {$before} to {$after}"
+            ]);
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()]);
+        }
+    });
     Route::resource('sells', SellController::class)->except(['show']);
     Route::get('/sells/copy-quotation/{id}', [SellPosController::class, 'copyQuotation']);
 

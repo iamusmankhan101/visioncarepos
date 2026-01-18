@@ -259,7 +259,7 @@ class VoucherController extends Controller
                         })
                         ->where(function($query) {
                             $query->whereNull('usage_limit')
-                                  ->orWhereRaw('used_count < usage_limit');
+                                  ->orWhereRaw('COALESCE(used_count, 0) < COALESCE(usage_limit, 999999)');
                         })
                         ->select('id', 'code', 'name', 'discount_type', 'discount_value', 'min_amount', 'max_discount')
                         ->orderBy('name')

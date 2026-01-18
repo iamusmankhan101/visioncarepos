@@ -337,6 +337,31 @@
             toastr.info('@lang("lang_v1.voucher_cleared")');
         });
         
+        // Debug: Check if voucher fields exist on page load
+        console.log('Voucher fields check on page load:', {
+            voucher_code_field_exists: $('#voucher_code').length > 0,
+            voucher_discount_amount_field_exists: $('#voucher_discount_amount').length > 0,
+            voucher_code_field_html: $('#voucher_code').length > 0 ? $('#voucher_code')[0].outerHTML : 'NOT FOUND',
+            voucher_discount_amount_field_html: $('#voucher_discount_amount').length > 0 ? $('#voucher_discount_amount')[0].outerHTML : 'NOT FOUND'
+        });
+        
+        // Add a test button to manually test voucher fields (temporary)
+        if ($('#voucher_code').length > 0) {
+            $('body').append('<div style="position: fixed; top: 10px; right: 10px; z-index: 9999; background: red; color: white; padding: 10px;"><button onclick="testVoucherFields()" style="background: white; color: black; border: none; padding: 5px;">Test Voucher Fields</button></div>');
+            
+            window.testVoucherFields = function() {
+                $('#voucher_code').val('TEST123');
+                $('#voucher_discount_amount').val('15.50');
+                
+                console.log('Test voucher values set:', {
+                    voucher_code: $('#voucher_code').val(),
+                    voucher_discount_amount: $('#voucher_discount_amount').val()
+                });
+                
+                alert('Voucher test values set! Check console and try submitting a sale.');
+            };
+        }
+        
         // Reset modal when closed
         $('#posVoucherModal').on('hidden.bs.modal', function() {
             $('#voucher_select').val('');
