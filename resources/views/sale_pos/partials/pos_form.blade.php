@@ -208,6 +208,10 @@
 	<div class="col-sm-12 pos_product_div">
 		<input type="hidden" name="sell_price_tax" id="sell_price_tax" value="{{$business_details->sell_price_tax}}">
 
+		<!-- Voucher fields -->
+		<input type="hidden" name="voucher_code" id="voucher_code" value="">
+		<input type="hidden" name="voucher_discount_amount" id="voucher_discount_amount" value="0">
+
 		<!-- Keeps count of product rows -->
 		<input type="hidden" id="product_row_count" 
 			value="0">

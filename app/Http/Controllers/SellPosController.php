@@ -53,6 +53,7 @@ use App\Utils\NotificationUtil;
 use App\Utils\ProductUtil;
 use App\Utils\TransactionUtil;
 use App\Variation;
+use App\Voucher;
 use App\Warranty;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -510,6 +511,25 @@ class SellPosController extends Controller
                 $input['document'] = $this->transactionUtil->uploadFile($request, 'sell_document', 'documents');
 
                 $transaction = $this->transactionUtil->createSellTransaction($business_id, $input, $invoice_total, $user_id);
+
+                // Track voucher usage if voucher was applied
+                if (!empty($input['voucher_code']) && !empty($input['voucher_discount_amount']) && $input['voucher_discount_amount'] > 0) {
+                    $voucher = Voucher::where('business_id', $business_id)
+                                    ->where('code', $input['voucher_code'])
+                                    ->first();
+                    
+                    if ($voucher) {
+                        // Increment the used count
+                        $voucher->increment('used_count');
+                        
+                        \Log::info('Voucher usage tracked', [
+                            'voucher_code' => $input['voucher_code'],
+                            'transaction_id' => $transaction->id,
+                            'used_count' => $voucher->used_count,
+                            'usage_limit' => $voucher->usage_limit
+                        ]);
+                    }
+                }
 
                 // Store multiple customer IDs if provided (for separate invoice printing)
                 if (!empty($input['multiple_customer_ids'])) {
