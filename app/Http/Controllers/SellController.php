@@ -27,7 +27,6 @@ use App\Variation;
 use App\Warranty;
 use DB;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Spatie\Activitylog\Models\Activity;
 use Yajra\DataTables\Facades\DataTables;
@@ -1175,8 +1174,8 @@ class SellController extends Controller
         foreach ($transactions as $index => $transaction) {
             try {
                 // Create a mock request for the printInvoice method
-                $request = new \Illuminate\Http\Request();
-                $request->merge(['ajax' => true]);
+                $request = new Request();
+                $request->headers->set('X-Requested-With', 'XMLHttpRequest');
                 
                 // Create SellPosController instance
                 $sellPosController = new \App\Http\Controllers\SellPosController();
