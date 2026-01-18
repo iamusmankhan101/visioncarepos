@@ -1477,8 +1477,7 @@ class TransactionUtil extends Util
         $discount_amount = $this->num_f($transaction->discount_amount, $show_currency, $business_details);
         $output['line_discount_label'] = $invoice_layout->discount_label;
         $output['discount_label'] = $invoice_layout->discount_label;
-        $output['discount_label'] .= ($transaction->discount_type == 'percentage') ? ' <small>('.$this->num_f($transaction->discount_amount, false, $business_details).'%)</small> :' : '';
-
+        
         if ($transaction->discount_type == 'percentage') {
             $discount = ($transaction->discount_amount / 100) * $transaction->total_before_tax;
         } else {
@@ -1490,7 +1489,14 @@ class TransactionUtil extends Util
             $calculated_discount = $transaction->total_before_tax - $transaction->final_total + $transaction->tax_amount;
             if ($calculated_discount > 0) {
                 $discount = $calculated_discount;
+                // Calculate the percentage for display
+                $calculated_percentage = ($transaction->total_before_tax > 0) ? 
+                    round(($calculated_discount / $transaction->total_before_tax) * 100, 2) : 0;
+                $output['discount_label'] .= ' <small>('.$this->num_f($calculated_percentage, false, $business_details).'%)</small> :';
             }
+        } else {
+            // Use the original percentage from transaction
+            $output['discount_label'] .= ($transaction->discount_type == 'percentage') ? ' <small>('.$this->num_f($transaction->discount_amount, false, $business_details).'%)</small> :' : '';
         }
         
         $output['discount'] = ($discount > 0) ? $this->num_f($discount, $show_currency, $business_details) : 0;
