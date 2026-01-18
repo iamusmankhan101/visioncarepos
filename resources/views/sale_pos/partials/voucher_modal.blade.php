@@ -182,9 +182,26 @@
                     });
                     
                     // Set form values
-                    $('#voucher_code').val(voucherData.code);
-                    $('#voucher_discount_amount').val(discount_amount);
-                    $('#voucher_discount').text(discount_amount);
+                    if ($('#voucher_code').length > 0) {
+                        $('#voucher_code').val(voucherData.code);
+                        console.log('✅ Set voucher_code to:', $('#voucher_code').val());
+                    } else {
+                        console.error('❌ voucher_code field not found');
+                    }
+                    
+                    if ($('#voucher_discount_amount').length > 0) {
+                        $('#voucher_discount_amount').val(discount_amount);
+                        console.log('✅ Set voucher_discount_amount to:', $('#voucher_discount_amount').val());
+                    } else {
+                        console.error('❌ voucher_discount_amount field not found');
+                    }
+                    
+                    if ($('#voucher_discount').length > 0) {
+                        $('#voucher_discount').text(discount_amount);
+                        console.log('✅ Updated voucher_discount display to:', discount_amount);
+                    } else {
+                        console.error('❌ voucher_discount display element not found');
+                    }
                     
                     // Update totals if function exists
                     if (typeof pos_total_row === 'function') {
