@@ -1229,13 +1229,30 @@ class SellController extends Controller
             }
         }
 
-        // Wrap all receipts in a single HTML document
+        // Wrap all receipts in a single HTML document with proper CSS
+        $app_url = config('app.url');
         $final_html = '<!DOCTYPE html>
         <html>
         <head>
             <meta charset="utf-8">
             <title>Bulk Print Receipts</title>
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <base href="' . $app_url . '/">
+            
+            <!-- Include Bootstrap CSS -->
+            <link rel="stylesheet" href="' . asset('css/bootstrap.min.css') . '">
+            <link rel="stylesheet" href="' . asset('css/AdminLTE.min.css') . '">
+            <link rel="stylesheet" href="' . asset('css/print.css') . '">
+            <link rel="stylesheet" href="' . asset('css/receipt.css') . '">
+            
             <style>
+                body { 
+                    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+                    font-size: 12px;
+                    line-height: 1.4;
+                    color: #000000 !important;
+                }
+                
                 @media print {
                     body { margin: 0; }
                     .no-print { display: none !important; }
@@ -1243,9 +1260,156 @@ class SellController extends Controller
                         margin: 0.5in; 
                         size: A4;
                     }
+                    .page-break {
+                        page-break-before: always;
+                    }
                 }
+                
                 @media screen {
                     body { margin: 10px; }
+                    .page-break {
+                        border-top: 2px dashed #ccc;
+                        margin: 20px 0;
+                        padding-top: 20px;
+                    }
+                }
+                
+                /* Ensure images load properly */
+                img {
+                    max-width: 100%;
+                    height: auto;
+                }
+                
+                .center-block {
+                    display: block;
+                    margin-left: auto;
+                    margin-right: auto;
+                }
+                
+                /* Receipt specific styles */
+                .receipt-header {
+                    text-align: center;
+                    margin-bottom: 20px;
+                }
+                
+                .business-logo {
+                    max-width: 150px;
+                    max-height: 120px;
+                    margin-bottom: 10px;
+                }
+                
+                .business-info {
+                    font-weight: bold;
+                    margin-bottom: 5px;
+                }
+                
+                .invoice-title {
+                    font-size: 18px;
+                    font-weight: bold;
+                    text-align: center;
+                    margin: 15px 0;
+                    text-decoration: underline;
+                }
+                
+                .customer-info, .invoice-details {
+                    margin-bottom: 15px;
+                }
+                
+                .table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-bottom: 15px;
+                }
+                
+                .table th, .table td {
+                    border: 1px solid #ddd;
+                    padding: 8px;
+                    text-align: left;
+                }
+                
+                .table th {
+                    background-color: #f5f5f5;
+                    font-weight: bold;
+                }
+                
+                .text-right {
+                    text-align: right !important;
+                }
+                
+                .text-center {
+                    text-align: center !important;
+                }
+                
+                .text-left {
+                    text-align: left !important;
+                }
+                
+                .total-section {
+                    margin-top: 20px;
+                    border-top: 2px solid #000;
+                    padding-top: 10px;
+                }
+                
+                .grand-total {
+                    font-size: 16px;
+                    font-weight: bold;
+                    border-top: 1px solid #000;
+                    padding-top: 5px;
+                    margin-top: 5px;
+                }
+                
+                /* Bootstrap grid system */
+                .row {
+                    margin-left: -15px;
+                    margin-right: -15px;
+                }
+                
+                .col-xs-12 {
+                    width: 100%;
+                    float: left;
+                    padding-left: 15px;
+                    padding-right: 15px;
+                }
+                
+                .col-xs-6 {
+                    width: 50%;
+                    float: left;
+                    padding-left: 15px;
+                    padding-right: 15px;
+                }
+                
+                .col-xs-4 {
+                    width: 33.33333333%;
+                    float: left;
+                    padding-left: 15px;
+                    padding-right: 15px;
+                }
+                
+                .col-xs-8 {
+                    width: 66.66666667%;
+                    float: left;
+                    padding-left: 15px;
+                    padding-right: 15px;
+                }
+                
+                .clearfix:after {
+                    content: "";
+                    display: table;
+                    clear: both;
+                }
+                
+                /* Ensure proper spacing */
+                h1, h2, h3, h4, h5, h6 {
+                    margin-top: 10px;
+                    margin-bottom: 10px;
+                }
+                
+                p {
+                    margin: 0 0 10px;
+                }
+                
+                small {
+                    font-size: 85%;
                 }
             </style>
         </head>
