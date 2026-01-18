@@ -188,27 +188,41 @@
                         subtotal: subtotal
                     });
                     
-                    // Set form values
-                    if ($('#voucher_code').length > 0) {
-                        $('#voucher_code').val(voucherData.code);
-                        console.log('✅ Set voucher_code to:', $('#voucher_code').val());
-                        
-                        // Store in localStorage for form submission recovery
-                        localStorage.setItem('applied_voucher_code', voucherData.code);
-                    } else {
-                        console.error('❌ voucher_code field not found');
+                    // CRITICAL FIX: Ensure form fields exist and are properly set
+                    var voucherCodeField = $('#voucher_code');
+                    var voucherAmountField = $('#voucher_discount_amount');
+                    
+                    if (voucherCodeField.length === 0) {
+                        console.error('❌ voucher_code field not found in DOM');
+                        // Try to create the field if it doesn't exist
+                        $('form#add_pos_sell_form, form#edit_pos_sell_form').append('<input type="hidden" name="voucher_code" id="voucher_code" value="">');
+                        voucherCodeField = $('#voucher_code');
+                        console.log('✅ Created voucher_code field');
                     }
                     
-                    if ($('#voucher_discount_amount').length > 0) {
-                        $('#voucher_discount_amount').val(discount_amount);
-                        console.log('✅ Set voucher_discount_amount to:', $('#voucher_discount_amount').val());
-                        
-                        // Store in localStorage for form submission recovery
-                        localStorage.setItem('applied_voucher_amount', discount_amount);
-                    } else {
-                        console.error('❌ voucher_discount_amount field not found');
+                    if (voucherAmountField.length === 0) {
+                        console.error('❌ voucher_discount_amount field not found in DOM');
+                        // Try to create the field if it doesn't exist
+                        $('form#add_pos_sell_form, form#edit_pos_sell_form').append('<input type="hidden" name="voucher_discount_amount" id="voucher_discount_amount" value="0">');
+                        voucherAmountField = $('#voucher_discount_amount');
+                        console.log('✅ Created voucher_discount_amount field');
                     }
                     
+                    // Set the values
+                    voucherCodeField.val(voucherData.code);
+                    voucherAmountField.val(discount_amount);
+                    
+                    console.log('✅ Set form fields:', {
+                        voucher_code: voucherCodeField.val(),
+                        voucher_discount_amount: voucherAmountField.val()
+                    });
+                    
+                    // Store in localStorage for form submission recovery
+                    localStorage.setItem('applied_voucher_code', voucherData.code);
+                    localStorage.setItem('applied_voucher_amount', discount_amount);
+                    console.log('✅ Stored in localStorage');
+                    
+                    // Update display
                     if ($('#voucher_discount').length > 0) {
                         $('#voucher_discount').text(discount_amount);
                         console.log('✅ Updated voucher_discount display to:', discount_amount);
@@ -232,13 +246,29 @@
                         alert('Voucher applied successfully');
                     }
                     
-                    // Verify
+                    // Verify fields are set correctly
                     setTimeout(function() {
-                        console.log('Verification:', {
-                            code: $('#voucher_code').val(),
-                            amount: $('#voucher_discount_amount').val(),
-                            in_form: $('#add_pos_sell_form').serialize().includes('voucher_code=' + voucherData.code)
-                        });
+                        var verification = {
+                            code_field_exists: $('#voucher_code').length > 0,
+                            amount_field_exists: $('#voucher_discount_amount').length > 0,
+                            code_value: $('#voucher_code').val(),
+                            amount_value: $('#voucher_discount_amount').val(),
+                            in_form_serialize: false
+                        };
+                        
+                        // Check if values are in form serialization
+                        var formData = $('form#add_pos_sell_form, form#edit_pos_sell_form').serialize();
+                        verification.in_form_serialize = formData.includes('voucher_code=' + voucherData.code) && 
+                                                       formData.includes('voucher_discount_amount=' + discount_amount);
+                        
+                        console.log('Verification after apply:', verification);
+                        
+                        if (!verification.in_form_serialize) {
+                            console.error('❌ CRITICAL: Voucher data not found in form serialization!');
+                            console.log('Form data preview:', formData.substring(0, 200) + '...');
+                        } else {
+                            console.log('✅ SUCCESS: Voucher data confirmed in form serialization');
+                        }
                     }, 100);
                     
                 } catch (e) {

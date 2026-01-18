@@ -898,6 +898,27 @@ $(document).ready(function() {
             var data = pos_form_obj.serialize();
             data = data + '&status=final';
             
+            // CRITICAL: Ensure voucher data is included in express checkout
+            var voucherCode = $('#voucher_code').val();
+            var voucherAmount = $('#voucher_discount_amount').val();
+            
+            console.log('Express checkout voucher check:', {
+                voucherCode: voucherCode,
+                voucherAmount: voucherAmount
+            });
+            
+            // Force add voucher data if missing but voucher is applied
+            if (voucherCode && voucherAmount && voucherAmount !== '0') {
+                if (!data.includes('voucher_code=' + encodeURIComponent(voucherCode))) {
+                    data += '&voucher_code=' + encodeURIComponent(voucherCode);
+                    console.log('✅ Express: Force added voucher_code to form data');
+                }
+                if (!data.includes('voucher_discount_amount=' + encodeURIComponent(voucherAmount))) {
+                    data += '&voucher_discount_amount=' + encodeURIComponent(voucherAmount);
+                    console.log('✅ Express: Force added voucher_discount_amount to form data');
+                }
+            }
+            
             var url = pos_form_obj.attr('action');
             $.ajax({
                 method: 'POST',
@@ -1090,6 +1111,17 @@ $(document).ready(function() {
                 }
             }
             
+            // ADDITIONAL FIX: Ensure voucher fields are properly set before form submission
+            var finalVoucherCode = $('#voucher_code').val();
+            var finalVoucherAmount = $('#voucher_discount_amount').val();
+            
+            // Log final voucher state
+            console.log('Final voucher state before submission:', {
+                finalVoucherCode: finalVoucherCode,
+                finalVoucherAmount: finalVoucherAmount,
+                voucherDisplayText: $('#voucher_discount').text()
+            });
+            
             // var total_payble = __read_number($('input#final_total_input'));
             // var total_paying = __read_number($('input#total_paying_input'));
             var cnf = true;
@@ -1146,6 +1178,36 @@ $(document).ready(function() {
 
                 var data = $(form).serialize();
                 data = data + '&status=final';
+                
+                // CRITICAL: Ensure voucher data is included in submission
+                var voucherCode = $('#voucher_code').val();
+                var voucherAmount = $('#voucher_discount_amount').val();
+                
+                console.log('Final voucher check before submission:', {
+                    voucherCode: voucherCode,
+                    voucherAmount: voucherAmount,
+                    voucherCodeInData: data.includes('voucher_code=' + voucherCode),
+                    voucherAmountInData: data.includes('voucher_discount_amount=' + voucherAmount)
+                });
+                
+                // Force add voucher data if missing but voucher is applied
+                if (voucherCode && voucherAmount && voucherAmount !== '0') {
+                    if (!data.includes('voucher_code=' + encodeURIComponent(voucherCode))) {
+                        data += '&voucher_code=' + encodeURIComponent(voucherCode);
+                        console.log('✅ Force added voucher_code to form data');
+                    }
+                    if (!data.includes('voucher_discount_amount=' + encodeURIComponent(voucherAmount))) {
+                        data += '&voucher_discount_amount=' + encodeURIComponent(voucherAmount);
+                        console.log('✅ Force added voucher_discount_amount to form data');
+                    }
+                }
+                
+                // Final verification log
+                console.log('Voucher data verification:', {
+                    voucherCodeInFinalData: data.includes('voucher_code='),
+                    voucherAmountInFinalData: data.includes('voucher_discount_amount='),
+                    formDataLength: data.length
+                });
                 
                 console.log('Form data being sent (first 500 chars):', data.substring(0, 500));
                 console.log('Contains multiple_customer_ids:', data.includes('multiple_customer_ids'));
