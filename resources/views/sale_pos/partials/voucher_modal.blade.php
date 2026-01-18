@@ -146,15 +146,22 @@
             }
             
             // Apply voucher
-            $('#apply_voucher').click(function() {
+            $('#apply_voucher').off('click').on('click', function() {
+                console.log('Apply voucher button clicked!');
+                
                 var selectedValue = $('#voucher_select').val();
+                console.log('Selected voucher value:', selectedValue);
+                
                 if (!selectedValue) {
+                    console.log('No voucher selected');
                     alert('Please select a voucher');
                     return;
                 }
                 
                 try {
                     var voucherData = JSON.parse(selectedValue);
+                    console.log('Parsed voucher data:', voucherData);
+                    
                     var subtotal = 100; // Default
                     
                     try {
@@ -165,7 +172,7 @@
                             subtotal = parseFloat(subtotalText.replace(/[^0-9.-]+/g, '')) || 100;
                         }
                     } catch (e) {
-                        console.log('Using default subtotal');
+                        console.log('Using default subtotal:', e);
                     }
                     
                     var discount_amount = 0;
@@ -206,6 +213,9 @@
                     // Update totals if function exists
                     if (typeof pos_total_row === 'function') {
                         pos_total_row();
+                        console.log('✅ Called pos_total_row()');
+                    } else {
+                        console.log('⚠️ pos_total_row function not available');
                     }
                     
                     $('#posVoucherModal').modal('hide');
@@ -227,7 +237,7 @@
                     
                 } catch (e) {
                     console.error('Error applying voucher:', e);
-                    alert('Error applying voucher');
+                    alert('Error applying voucher: ' + e.message);
                 }
             });
             
