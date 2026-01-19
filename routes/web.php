@@ -839,14 +839,17 @@ Route::middleware(['setData', 'auth', 'SetSessionData', 'language', 'timezone'])
 Route::get('/check-store-debug', function() {
     $debugFile = storage_path('logs/debug_store_called.log');
     $voucherDebugFile = storage_path('logs/voucher_debug.log');
+    $voucherInputDebugFile = storage_path('logs/voucher_input_debug.log');
     $logFile = storage_path('logs/laravel.log');
     
     $response = [
         'debug_file_exists' => file_exists($debugFile),
         'voucher_debug_file_exists' => file_exists($voucherDebugFile),
+        'voucher_input_debug_file_exists' => file_exists($voucherInputDebugFile),
         'log_file_exists' => file_exists($logFile),
         'debug_file_content' => file_exists($debugFile) ? file_get_contents($debugFile) : 'File does not exist',
         'voucher_debug_content' => file_exists($voucherDebugFile) ? file_get_contents($voucherDebugFile) : 'File does not exist',
+        'voucher_input_debug_content' => file_exists($voucherInputDebugFile) ? file_get_contents($voucherInputDebugFile) : 'File does not exist',
         'log_file_size' => file_exists($logFile) ? filesize($logFile) : 0,
         'timestamp' => now()->toDateTimeString()
     ];
@@ -858,6 +861,15 @@ Route::get('/check-store-debug', function() {
             return json_decode($line, true);
         }, array_filter($voucherLines));
         $response['recent_voucher_entries'] = array_slice($response['voucher_debug_entries'], -5);
+    }
+    
+    // Parse voucher input debug entries
+    if (file_exists($voucherInputDebugFile)) {
+        $voucherInputLines = explode("\n", trim(file_get_contents($voucherInputDebugFile)));
+        $response['voucher_input_debug_entries'] = array_map(function($line) {
+            return json_decode($line, true);
+        }, array_filter($voucherInputLines));
+        $response['recent_voucher_input_entries'] = array_slice($response['voucher_input_debug_entries'], -5);
     }
     
     if (file_exists($logFile) && filesize($logFile) > 0) {

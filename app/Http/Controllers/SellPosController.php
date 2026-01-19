@@ -329,7 +329,9 @@ class SellPosController extends Controller
             'voucher_code_value' => $request->input('voucher_code', 'NOT_PRESENT'),
             'voucher_discount_amount_value' => $request->input('voucher_discount_amount', 'NOT_PRESENT'),
             'request_method' => $request->method(),
-            'all_keys_count' => count($request->all())
+            'all_keys_count' => count($request->all()),
+            'input_array_voucher_code' => null, // Will be set below
+            'input_array_voucher_discount_amount' => null // Will be set below
         ];
         file_put_contents(storage_path('logs/voucher_debug.log'), json_encode($voucherDebugData) . "\n", FILE_APPEND);
         
@@ -390,6 +392,18 @@ class SellPosController extends Controller
 
         try {
             $input = $request->except('_token');
+            
+            // CRITICAL DEBUG: Check voucher data in $input array
+            $voucherInputDebug = [
+                'timestamp' => date('Y-m-d H:i:s'),
+                'input_has_voucher_code' => array_key_exists('voucher_code', $input),
+                'input_has_voucher_discount_amount' => array_key_exists('voucher_discount_amount', $input),
+                'input_voucher_code_value' => $input['voucher_code'] ?? 'NOT_IN_INPUT',
+                'input_voucher_discount_amount_value' => $input['voucher_discount_amount'] ?? 'NOT_IN_INPUT',
+                'input_keys_count' => count($input),
+                'input_first_10_keys' => array_slice(array_keys($input), 0, 10)
+            ];
+            file_put_contents(storage_path('logs/voucher_input_debug.log'), json_encode($voucherInputDebug) . "\n", FILE_APPEND);
 
             $input['is_quotation'] = 0;
             //status is send as quotation from Add sales screen.
