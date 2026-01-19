@@ -435,6 +435,37 @@ Route::middleware(['setData', 'auth', 'SetSessionData', 'language', 'timezone', 
             ]);
         }
     });
+
+    // Check Laravel logs
+    Route::get('/check-logs', function() {
+        try {
+            $logFile = storage_path('logs/laravel.log');
+            if (!file_exists($logFile)) {
+                return response()->json(['error' => 'Log file not found']);
+            }
+            
+            // Get last 50 lines of the log file
+            $lines = file($logFile);
+            $lastLines = array_slice($lines, -50);
+            
+            // Filter for voucher-related logs
+            $voucherLogs = array_filter($lastLines, function($line) {
+                return stripos($line, 'voucher') !== false || 
+                       stripos($line, 'Checking voucher data') !== false ||
+                       stripos($line, 'Voucher conditions') !== false;
+            });
+            
+            return response()->json([
+                'voucher_logs' => array_values($voucherLogs),
+                'total_log_lines' => count($lines),
+                'last_50_lines' => $lastLines
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'error' => $e->getMessage()
+            ]);
+        }
+    });
     Route::resource('sells', SellController::class)->except(['show']);
     Route::get('/sells/copy-quotation/{id}', [SellPosController::class, 'copyQuotation']);
 
