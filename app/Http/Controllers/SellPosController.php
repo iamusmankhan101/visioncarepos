@@ -321,6 +321,21 @@ class SellPosController extends Controller
         // Debug: Add this at the very beginning to ensure it runs
         file_put_contents(storage_path('logs/debug_store_called.log'), 'Store method called at ' . date('Y-m-d H:i:s') . "\n", FILE_APPEND);
         
+        // CRITICAL DEBUG: Log ALL incoming request data
+        $allRequestData = $request->all();
+        \Log::info('=== POS STORE REQUEST DEBUG ===', [
+            'timestamp' => now()->toDateTimeString(),
+            'method' => $request->method(),
+            'url' => $request->fullUrl(),
+            'all_keys' => array_keys($allRequestData),
+            'voucher_code_present' => array_key_exists('voucher_code', $allRequestData),
+            'voucher_discount_amount_present' => array_key_exists('voucher_discount_amount', $allRequestData),
+            'voucher_code_value' => $allRequestData['voucher_code'] ?? 'NOT_PRESENT',
+            'voucher_discount_amount_value' => $allRequestData['voucher_discount_amount'] ?? 'NOT_PRESENT',
+            'request_size' => strlen(json_encode($allRequestData)),
+            'first_20_keys' => array_slice(array_keys($allRequestData), 0, 20)
+        ]);
+        
         if (!auth()->user()->can('sell.create') && !auth()->user()->can('direct_sell.access') && !auth()->user()->can('so.create')) {
             abort(403, 'Unauthorized action.');
         }
