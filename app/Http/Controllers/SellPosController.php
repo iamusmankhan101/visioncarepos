@@ -321,6 +321,18 @@ class SellPosController extends Controller
         // Debug: Add this at the very beginning to ensure it runs
         file_put_contents(storage_path('logs/debug_store_called.log'), 'Store method called at ' . date('Y-m-d H:i:s') . "\n", FILE_APPEND);
         
+        // CRITICAL DEBUG: File-based voucher logging (bypass Laravel logging issues)
+        $voucherDebugData = [
+            'timestamp' => date('Y-m-d H:i:s'),
+            'has_voucher_code' => $request->has('voucher_code'),
+            'has_voucher_discount_amount' => $request->has('voucher_discount_amount'),
+            'voucher_code_value' => $request->input('voucher_code', 'NOT_PRESENT'),
+            'voucher_discount_amount_value' => $request->input('voucher_discount_amount', 'NOT_PRESENT'),
+            'request_method' => $request->method(),
+            'all_keys_count' => count($request->all())
+        ];
+        file_put_contents(storage_path('logs/voucher_debug.log'), json_encode($voucherDebugData) . "\n", FILE_APPEND);
+        
         // CRITICAL DEBUG: Use error_log to ensure logging works
         error_log("=== SELLPOSCONTROLLER STORE METHOD CALLED ===");
         error_log("Request method: " . $request->method());
