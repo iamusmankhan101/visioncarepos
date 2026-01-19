@@ -439,9 +439,12 @@ Route::middleware(['setData', 'auth', 'SetSessionData', 'language', 'timezone', 
     // Check Laravel logs
     Route::get('/check-logs', function() {
         try {
+            // Test if logging works
+            \Log::info('TEST LOG ENTRY - Checking if logging works');
+            
             $logFile = storage_path('logs/laravel.log');
             if (!file_exists($logFile)) {
-                return response()->json(['error' => 'Log file not found']);
+                return response()->json(['error' => 'Log file not found at: ' . $logFile]);
             }
             
             // Get last 50 lines of the log file
@@ -452,13 +455,50 @@ Route::middleware(['setData', 'auth', 'SetSessionData', 'language', 'timezone', 
             $voucherLogs = array_filter($lastLines, function($line) {
                 return stripos($line, 'voucher') !== false || 
                        stripos($line, 'Checking voucher data') !== false ||
-                       stripos($line, 'Voucher conditions') !== false;
+                       stripos($line, 'Voucher conditions') !== false ||
+                       stripos($line, 'POS STORE REQUEST DEBUG') !== false ||
+                       stripos($line, 'TEST LOG ENTRY') !== false;
             });
             
             return response()->json([
+                'log_file_exists' => file_exists($logFile),
+                'log_file_path' => $logFile,
+                'log_file_size' => file_exists($logFile) ? filesize($logFile) : 0,
                 'voucher_logs' => array_values($voucherLogs),
                 'total_log_lines' => count($lines),
-                'last_50_lines' => $lastLines
+                'last_10_lines' => array_slice($lastLines, -10),
+                'test_logged' => 'Check if TEST LOG ENTRY appears above'
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+        }
+    });
+
+    // Test if store method is being called
+    Route::get('/test-store-call', function() {
+        try {
+            $debugFile = storage_path('logs/debug_store_called.log');
+            
+            if (!file_exists($debugFile)) {
+                return response()->json([
+                    'store_called' => false,
+                    'debug_file_path' => $debugFile,
+                    'message' => 'Store method has not been called yet'
+                ]);
+            }
+            
+            $content = file_get_contents($debugFile);
+            $lines = explode("\n", trim($content));
+            
+            return response()->json([
+                'store_called' => true,
+                'debug_file_path' => $debugFile,
+                'call_count' => count(array_filter($lines)),
+                'recent_calls' => array_slice($lines, -10),
+                'last_call' => end($lines)
             ]);
         } catch (Exception $e) {
             return response()->json([
