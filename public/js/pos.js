@@ -891,6 +891,7 @@ $(document).ready(function() {
             // Add selected customers to form before submission
             console.log('About to submit express checkout via AJAX...');
             console.log('=== EXPRESS CHECKOUT DEBUG START ===');
+            console.log('🚨 CRITICAL DEBUG: Express checkout code is executing!');
             addSelectedCustomersToForm();
             
             // Use AJAX for express checkout to enable WhatsApp functionality
