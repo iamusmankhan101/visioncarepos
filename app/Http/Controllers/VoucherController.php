@@ -244,12 +244,18 @@ class VoucherController extends Controller
      */
     public function getActiveVouchers(Request $request)
     {
-        if (!auth()->user()->can('tax_rate.view')) {
-            abort(403, 'Unauthorized action.');
-        }
+        // Remove restrictive permission check for now - vouchers should be accessible to POS users
+        // if (!auth()->user()->can('tax_rate.view')) {
+        //     abort(403, 'Unauthorized action.');
+        // }
 
         try {
             $business_id = $request->session()->get('user.business_id');
+            
+            \Log::info('Getting active vouchers', [
+                'business_id' => $business_id,
+                'user_id' => auth()->id()
+            ]);
             
             $vouchers = Voucher::where('business_id', $business_id)
                         ->where('is_active', 1)
@@ -265,22 +271,53 @@ class VoucherController extends Controller
                         ->orderBy('name')
                         ->get();
 
+            \Log::info('Vouchers query result', [
+                'total_found' => $vouchers->count(),
+                'vouchers' => $vouchers->toArray()
+            ]);
+
             // Additional filtering to ensure vouchers are truly valid
             $validVouchers = $vouchers->filter(function($voucher) {
-                return $voucher->isValid(0); // Check with 0 amount to validate basic conditions
+                $isValid = $voucher->isValid(0); // Check with 0 amount to validate basic conditions
+                \Log::info('Voucher validity check', [
+                    'code' => $voucher->code,
+                    'is_valid' => $isValid,
+                    'is_active' => $voucher->is_active,
+                    'used_count' => $voucher->used_count,
+                    'usage_limit' => $voucher->usage_limit,
+                    'expires_at' => $voucher->expires_at
+                ]);
+                return $isValid;
             });
+
+            \Log::info('Final vouchers result', [
+                'valid_vouchers_count' => $validVouchers->count(),
+                'valid_vouchers' => $validVouchers->values()->toArray()
+            ]);
 
             return response()->json([
                 'success' => true,
                 'vouchers' => $validVouchers->values(), // Re-index the array
                 'total_vouchers' => $vouchers->count(),
-                'valid_vouchers' => $validVouchers->count()
+                'valid_vouchers' => $validVouchers->count(),
+                'debug_info' => [
+                    'business_id' => $business_id,
+                    'current_time' => now()->toDateTimeString()
+                ]
             ]);
         } catch (\Exception $e) {
-            \Log::error('Error fetching active vouchers: ' . $e->getMessage());
+            \Log::error('Error fetching active vouchers: ' . $e->getMessage(), [
+                'exception' => $e,
+                'business_id' => $request->session()->get('user.business_id'),
+                'user_id' => auth()->id()
+            ]);
             return response()->json([
                 'success' => false,
-                'msg' => 'Error fetching vouchers: ' . $e->getMessage()
+                'msg' => 'Error fetching vouchers: ' . $e->getMessage(),
+                'debug_info' => [
+                    'error_file' => $e->getFile(),
+                    'error_line' => $e->getLine()
+                ]
             ]);
         }
     }

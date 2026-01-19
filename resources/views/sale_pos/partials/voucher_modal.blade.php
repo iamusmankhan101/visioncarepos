@@ -101,24 +101,52 @@
                             var select = $('#voucher_select');
                             select.empty().append('<option value="">Please Select</option>');
                             
-                            $.each(response.vouchers, function(index, voucher) {
-                                var voucherJson = JSON.stringify(voucher);
-                                var displayText = voucher.name + ' (' + voucher.code + ')';
-                                if (voucher.discount_type === 'percentage') {
-                                    displayText += ' - ' + voucher.discount_value + '%';
-                                } else {
-                                    displayText += ' - ' + voucher.discount_value;
-                                }
-                                select.append('<option value="' + voucherJson + '">' + displayText + '</option>');
-                            });
-                            
-                            console.log('Loaded ' + response.vouchers.length + ' vouchers');
+                            if (response.vouchers && response.vouchers.length > 0) {
+                                $.each(response.vouchers, function(index, voucher) {
+                                    var voucherJson = JSON.stringify(voucher);
+                                    var displayText = voucher.name + ' (' + voucher.code + ')';
+                                    if (voucher.discount_type === 'percentage') {
+                                        displayText += ' - ' + voucher.discount_value + '%';
+                                    } else {
+                                        displayText += ' - ' + voucher.discount_value;
+                                    }
+                                    select.append('<option value="' + voucherJson + '">' + displayText + '</option>');
+                                });
+                                
+                                console.log('✅ Loaded ' + response.vouchers.length + ' vouchers successfully');
+                            } else {
+                                select.append('<option value="" disabled>No active vouchers available</option>');
+                                console.log('⚠️ No vouchers returned from API');
+                                console.log('Debug info:', response.debug_info);
+                                console.log('Total vouchers in DB:', response.total_vouchers);
+                                console.log('Valid vouchers:', response.valid_vouchers);
+                            }
                         } else {
-                            console.error('API error:', response.msg);
+                            console.error('❌ API error:', response.msg);
+                            $('#voucher_select').empty().append('<option value="" disabled>Error loading vouchers</option>');
+                            
+                            // Show debug info if available
+                            if (response.debug_info) {
+                                console.log('Debug info:', response.debug_info);
+                            }
                         }
                     },
                     error: function(xhr, status, error) {
-                        console.error('API failed:', error);
+                        console.error('❌ API failed:', {
+                            status: xhr.status,
+                            statusText: xhr.statusText,
+                            error: error,
+                            responseText: xhr.responseText
+                        });
+                        
+                        $('#voucher_select').empty().append('<option value="" disabled>Failed to load vouchers</option>');
+                        
+                        // Show specific error messages
+                        if (xhr.status === 403) {
+                            console.error('Permission denied - check user permissions');
+                        } else if (xhr.status === 500) {
+                            console.error('Server error - check Laravel logs');
+                        }
                     }
                 });
             }
