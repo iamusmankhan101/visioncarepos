@@ -248,6 +248,62 @@ Route::middleware(['setData', 'auth', 'SetSessionData', 'language', 'timezone', 
             return response()->json(['error' => $e->getMessage()]);
         }
     });
+
+    // Quick voucher fix route
+    Route::get('/fix-vouchers-now', function() {
+        try {
+            // Fix 1: Activate all vouchers
+            $activated = \App\Voucher::where('is_active', '!=', 1)->update(['is_active' => 1]);
+            
+            // Fix 2: Remove expired dates
+            $expiryFixed = \App\Voucher::where('expires_at', '<', now())->update(['expires_at' => null]);
+            
+            // Fix 3: Reset usage counts for testing
+            $usageReset = \App\Voucher::whereNotNull('usage_limit')
+                                    ->whereRaw('used_count >= usage_limit')
+                                    ->update(['used_count' => 0]);
+            
+            // Fix 4: Fix business_id
+            $businessIdFixed = \App\Voucher::where(function($query) {
+                $query->whereNull('business_id')->orWhere('business_id', 0);
+            })->update(['business_id' => 1]);
+            
+            // Get current status
+            $vouchers = \App\Voucher::all();
+            $validCount = $vouchers->filter(function($voucher) {
+                return $voucher->isValid(100);
+            })->count();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Vouchers fixed successfully!',
+                'fixes_applied' => [
+                    'activated' => $activated,
+                    'expiry_fixed' => $expiryFixed,
+                    'usage_reset' => $usageReset,
+                    'business_id_fixed' => $businessIdFixed
+                ],
+                'total_vouchers' => $vouchers->count(),
+                'valid_vouchers' => $validCount,
+                'vouchers' => $vouchers->map(function($voucher) {
+                    return [
+                        'code' => $voucher->code,
+                        'name' => $voucher->name,
+                        'is_active' => $voucher->is_active,
+                        'used_count' => $voucher->used_count,
+                        'usage_limit' => $voucher->usage_limit,
+                        'expires_at' => $voucher->expires_at,
+                        'is_valid' => $voucher->isValid(100)
+                    ];
+                })
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ]);
+        }
+    });
     Route::resource('sells', SellController::class)->except(['show']);
     Route::get('/sells/copy-quotation/{id}', [SellPosController::class, 'copyQuotation']);
 
