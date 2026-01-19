@@ -906,6 +906,8 @@ Route::get('/test-manual-voucher-increment', function() {
 });
 
 Route::get('/check-store-debug', function() {
+Route::get('/check-store-debug', function() {
+    $debugFile = storage_path('logs/debug_store_called.log');
     $voucherDebugFile = storage_path('logs/voucher_debug.log');
     $voucherInputDebugFile = storage_path('logs/voucher_input_debug.log');
     $logFile = storage_path('logs/laravel.log');
