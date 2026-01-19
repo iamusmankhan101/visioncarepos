@@ -397,6 +397,44 @@ Route::middleware(['setData', 'auth', 'SetSessionData', 'language', 'timezone', 
             ]);
         }
     });
+
+    // Check voucher usage tracking
+    Route::get('/check-voucher-usage', function() {
+        try {
+            $vouchers = \App\Voucher::all();
+            
+            // Check recent transactions with voucher data
+            $recentTransactions = \Illuminate\Support\Facades\DB::table('transactions')
+                ->where('additional_notes', 'like', '%Voucher:%')
+                ->orderBy('created_at', 'desc')
+                ->limit(10)
+                ->get(['id', 'contact_id', 'final_total', 'additional_notes', 'created_at']);
+            
+            return response()->json([
+                'vouchers' => $vouchers->map(function($voucher) {
+                    return [
+                        'id' => $voucher->id,
+                        'code' => $voucher->code,
+                        'name' => $voucher->name,
+                        'used_count' => $voucher->used_count,
+                        'usage_limit' => $voucher->usage_limit,
+                        'is_valid' => $voucher->isValid(100),
+                        'remaining' => $voucher->usage_limit ? ($voucher->usage_limit - $voucher->used_count) : 'unlimited'
+                    ];
+                }),
+                'recent_transactions_with_vouchers' => $recentTransactions,
+                'debug_info' => [
+                    'total_vouchers' => $vouchers->count(),
+                    'transactions_with_vouchers' => $recentTransactions->count(),
+                    'current_time' => now()->toDateTimeString()
+                ]
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'error' => $e->getMessage()
+            ]);
+        }
+    });
     Route::resource('sells', SellController::class)->except(['show']);
     Route::get('/sells/copy-quotation/{id}', [SellPosController::class, 'copyQuotation']);
 
