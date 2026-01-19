@@ -835,8 +835,8 @@ Route::middleware(['setData', 'auth', 'SetSessionData', 'language', 'timezone'])
     Route::get('/show-notification/{id}', [HomeController::class, 'showNotification']);
     Route::post('/sell/check-invoice-number', [SellController::class, 'checkInvoiceNumber']);
 });
-Rout
-e::get('/check-store-debug', function() {
+
+Route::get('/check-store-debug', function() {
     $debugFile = storage_path('logs/debug_store_called.log');
     $logFile = storage_path('logs/laravel.log');
     
