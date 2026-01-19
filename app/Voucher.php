@@ -55,7 +55,7 @@ class Voucher extends Model
             return false;
         }
 
-        // Check usage limit
+        // Check usage limit - CRITICAL FIX
         if ($this->usage_limit && $this->used_count >= $this->usage_limit) {
             return false;
         }
@@ -66,6 +66,39 @@ class Voucher extends Model
         }
 
         return true;
+    }
+
+    /**
+     * Check if voucher can be used (alias for isValid for clarity)
+     */
+    public function canBeUsed($order_amount = 0)
+    {
+        return $this->isValid($order_amount);
+    }
+
+    /**
+     * Get remaining usage count
+     */
+    public function getRemainingUsage()
+    {
+        if (!$this->usage_limit) {
+            return null; // Unlimited
+        }
+        
+        return max(0, $this->usage_limit - $this->used_count);
+    }
+
+    /**
+     * Check if voucher is close to usage limit
+     */
+    public function isCloseToLimit($threshold = 2)
+    {
+        if (!$this->usage_limit) {
+            return false; // Unlimited usage
+        }
+        
+        $remaining = $this->getRemainingUsage();
+        return $remaining <= $threshold && $remaining > 0;
     }
 
     /**

@@ -135,6 +135,22 @@
                     infoText += '<strong>Max Discount:</strong> ' + voucher.max_discount + '<br>';
                 }
                 
+                // Add usage information
+                if (voucher.usage_limit) {
+                    var usedCount = voucher.used_count || 0;
+                    var remaining = voucher.usage_limit - usedCount;
+                    infoText += '<strong>Usage:</strong> ' + usedCount + ' / ' + voucher.usage_limit + ' used<br>';
+                    infoText += '<strong>Remaining:</strong> ' + remaining + '<br>';
+                    
+                    if (remaining <= 0) {
+                        infoText += '<span style="color: red;"><strong>⚠️ This voucher has reached its usage limit!</strong></span><br>';
+                    } else if (remaining <= 2) {
+                        infoText += '<span style="color: orange;"><strong>⚠️ Only ' + remaining + ' uses remaining!</strong></span><br>';
+                    }
+                } else {
+                    infoText += '<strong>Usage:</strong> Unlimited<br>';
+                }
+                
                 $('#voucher_info_text').html(infoText);
                 $('#voucher_details').show();
                 $('#voucher_info').show();
@@ -161,6 +177,31 @@
                 try {
                     var voucherData = JSON.parse(selectedValue);
                     console.log('Parsed voucher data:', voucherData);
+                    
+                    // CRITICAL: Check if voucher has reached usage limit
+                    if (voucherData.usage_limit) {
+                        var usedCount = voucherData.used_count || 0;
+                        var remaining = voucherData.usage_limit - usedCount;
+                        
+                        if (remaining <= 0) {
+                            console.error('Voucher has reached usage limit:', {
+                                code: voucherData.code,
+                                used_count: usedCount,
+                                usage_limit: voucherData.usage_limit,
+                                remaining: remaining
+                            });
+                            
+                            alert('This voucher has reached its usage limit and cannot be used anymore.');
+                            return;
+                        }
+                        
+                        if (remaining <= 2) {
+                            var confirmMessage = 'This voucher only has ' + remaining + ' use(s) remaining. Do you want to continue?';
+                            if (!confirm(confirmMessage)) {
+                                return;
+                            }
+                        }
+                    }
                     
                     var subtotal = 100; // Default
                     

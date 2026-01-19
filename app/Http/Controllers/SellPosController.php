@@ -538,13 +538,41 @@ class SellPosController extends Controller
                                     ->first();
                     
                     if ($voucher) {
-                        \Log::info('Voucher found, incrementing usage', [
+                        \Log::info('Voucher found, checking validity and usage limit', [
                             'voucher_id' => $voucher->id,
                             'current_used_count' => $voucher->used_count,
-                            'usage_limit' => $voucher->usage_limit
+                            'usage_limit' => $voucher->usage_limit,
+                            'is_active' => $voucher->is_active,
+                            'expires_at' => $voucher->expires_at
                         ]);
                         
-                        // Increment the used count
+                        // CRITICAL: Check if voucher is still valid before incrementing
+                        if (!$voucher->isValid($invoice_total['final_total'])) {
+                            \Log::warning('Voucher is no longer valid', [
+                                'voucher_code' => $input['voucher_code'],
+                                'used_count' => $voucher->used_count,
+                                'usage_limit' => $voucher->usage_limit,
+                                'is_active' => $voucher->is_active,
+                                'expires_at' => $voucher->expires_at
+                            ]);
+                            
+                            // Don't process the transaction if voucher is invalid
+                            DB::rollback();
+                            
+                            $output = ['success' => 0,
+                                'msg' => 'Voucher "' . $input['voucher_code'] . '" is no longer valid. It may have expired or reached its usage limit.',
+                            ];
+                            
+                            if (!$is_direct_sale) {
+                                return $output;
+                            } else {
+                                return redirect()
+                                    ->action([\App\Http\Controllers\SellController::class, 'index'])
+                                    ->with('status', $output);
+                            }
+                        }
+                        
+                        // Increment the used count only if voucher is valid
                         $voucher->increment('used_count');
                         
                         // Store voucher information in transaction additional_notes
@@ -553,7 +581,7 @@ class SellPosController extends Controller
                         $updated_notes = $existing_notes ? $existing_notes . ' | ' . $voucher_note : $voucher_note;
                         $transaction->update(['additional_notes' => $updated_notes]);
                         
-                        \Log::info('Voucher usage tracked', [
+                        \Log::info('Voucher usage tracked successfully', [
                             'voucher_code' => $input['voucher_code'],
                             'transaction_id' => $transaction->id,
                             'new_used_count' => $voucher->fresh()->used_count,

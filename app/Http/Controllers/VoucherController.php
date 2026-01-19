@@ -259,17 +259,25 @@ class VoucherController extends Controller
                         })
                         ->where(function($query) {
                             $query->whereNull('usage_limit')
-                                  ->orWhereRaw('COALESCE(used_count, 0) < COALESCE(usage_limit, 999999)');
+                                  ->orWhereRaw('used_count < usage_limit');
                         })
-                        ->select('id', 'code', 'name', 'discount_type', 'discount_value', 'min_amount', 'max_discount')
+                        ->select('id', 'code', 'name', 'discount_type', 'discount_value', 'min_amount', 'max_discount', 'usage_limit', 'used_count')
                         ->orderBy('name')
                         ->get();
 
+            // Additional filtering to ensure vouchers are truly valid
+            $validVouchers = $vouchers->filter(function($voucher) {
+                return $voucher->isValid(0); // Check with 0 amount to validate basic conditions
+            });
+
             return response()->json([
                 'success' => true,
-                'vouchers' => $vouchers
+                'vouchers' => $validVouchers->values(), // Re-index the array
+                'total_vouchers' => $vouchers->count(),
+                'valid_vouchers' => $validVouchers->count()
             ]);
         } catch (\Exception $e) {
+            \Log::error('Error fetching active vouchers: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'msg' => 'Error fetching vouchers: ' . $e->getMessage()
