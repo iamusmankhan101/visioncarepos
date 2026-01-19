@@ -892,12 +892,23 @@ $(document).ready(function() {
             console.log('About to submit express checkout via AJAX...');
             console.log('=== EXPRESS CHECKOUT DEBUG START ===');
             console.log('🚨 CRITICAL DEBUG: Express checkout code is executing!');
-            addSelectedCustomersToForm();
             
+            try {
+                console.log('🔍 About to call addSelectedCustomersToForm()...');
+                addSelectedCustomersToForm();
+                console.log('✅ addSelectedCustomersToForm() completed successfully');
+            } catch (error) {
+                console.error('❌ ERROR in addSelectedCustomersToForm():', error);
+            }
+            
+            console.log('🔍 About to call disable_pos_form_actions()...');
             // Use AJAX for express checkout to enable WhatsApp functionality
             disable_pos_form_actions();
+            console.log('✅ disable_pos_form_actions() completed');
             
+            console.log('🔍 About to serialize form...');
             var data = pos_form_obj.serialize();
+            console.log('✅ Form serialized, data length:', data.length);
             console.log('Express: Initial form data length:', data.length);
             data = data + '&status=final';
             console.log('Express: After adding status=final, data length:', data.length);
