@@ -567,157 +567,185 @@ class SellPosController extends Controller
 
                 $transaction = $this->transactionUtil->createSellTransaction($business_id, $input, $invoice_total, $user_id);
 
-                // Track voucher usage if voucher was applied
-                \Log::info('Checking voucher data in request', [
-                    'voucher_code' => $input['voucher_code'] ?? 'not_set',
-                    'voucher_discount_amount' => $input['voucher_discount_amount'] ?? 'not_set',
-                    'voucher_code_empty' => empty($input['voucher_code']),
-                    'voucher_discount_amount_empty' => empty($input['voucher_discount_amount']),
-                    'voucher_discount_amount_greater_than_zero' => isset($input['voucher_discount_amount']) ? ($input['voucher_discount_amount'] > 0) : false,
-                    'all_input_keys' => array_keys($input),
-                    'invoice_discount' => $invoice_total['discount'] ?? 0
-                ]);
+                // COMPREHENSIVE VOUCHER TRACKING SYSTEM
+                // This system uses multiple detection methods to ensure voucher usage is tracked
                 
-                // ENHANCED VOUCHER DETECTION: Multiple methods to detect voucher usage
-                $voucherApplied = false;
-                $appliedVoucherCode = null;
-                $appliedVoucherAmount = 0;
-                $detectionMethod = 'none';
-                
-                // Method 1: Check request data (original approach)
-                $voucher_code_valid = !empty($input['voucher_code']);
-                $voucher_amount_valid = !empty($input['voucher_discount_amount']) && $input['voucher_discount_amount'] > 0;
-                
-                if ($voucher_code_valid && $voucher_amount_valid) {
-                    $voucherApplied = true;
-                    $appliedVoucherCode = $input['voucher_code'];
-                    $appliedVoucherAmount = $input['voucher_discount_amount'];
-                    $detectionMethod = 'request_data';
-                    \Log::info('Voucher detected via request data', [
-                        'code' => $appliedVoucherCode,
-                        'amount' => $appliedVoucherAmount
-                    ]);
-                }
-                
-                // Method 2: Check if there's a discount applied and try to find matching voucher
-                if (!$voucherApplied && isset($invoice_total['discount']) && $invoice_total['discount'] > 0) {
-                    \Log::info('No voucher in request but discount found, checking for voucher patterns', [
-                        'discount_amount' => $invoice_total['discount'],
-                        'final_total' => $invoice_total['final_total']
-                    ]);
+                $voucherTracked = false;
+                $voucherDebugInfo = [
+                    'timestamp' => date('Y-m-d H:i:s'),
+                    'method_used' => 'none',
+                    'voucher_found' => false,
+                    'voucher_code' => null,
+                    'discount_amount' => 0,
+                    'subtotal' => 0,
+                    'detection_attempts' => [],
+                    'invoice_total' => $invoice_total ?? 'not_set',
+                    'transaction_discount' => $transaction->discount_amount ?? 'not_set'
+                ];
+
+                // Log that we're starting voucher detection
+                error_log('VOUCHER DETECTION: Starting voucher tracking process');
+                error_log('VOUCHER DETECTION: Invoice total = ' . json_encode($invoice_total ?? 'not_set'));
+                error_log('VOUCHER DETECTION: Transaction discount = ' . ($transaction->discount_amount ?? 'not_set'));
+
+                // Method 1: Direct request data (if frontend transmission works)
+                if (!empty($input['voucher_code']) && !empty($input['voucher_discount_amount']) && $input['voucher_discount_amount'] > 0) {
+                    $voucherDebugInfo['detection_attempts'][] = 'direct_request_data';
+                    error_log('VOUCHER DETECTION: Method 1 - Direct request data found');
                     
-                    // Try to find active vouchers that could match this discount
-                    $possibleVouchers = \App\Voucher::where('business_id', $business_id)
+                    $voucher = \App\Voucher::where('code', $input['voucher_code'])
+                        ->where('business_id', $business_id)
                         ->where('is_active', 1)
-                        ->where(function($query) {
-                            $query->whereNull('expires_at')
-                                  ->orWhere('expires_at', '>', now());
-                        })
-                        ->where(function($query) {
-                            $query->whereNull('usage_limit')
-                                  ->orWhereRaw('used_count < usage_limit');
-                        })
-                        ->get();
-                    
-                    foreach ($possibleVouchers as $voucher) {
-                        $calculatedDiscount = 0;
-                        $subtotal = $invoice_total['total_before_tax'] ?? $invoice_total['subtotal'] ?? 0;
-                        
-                        if ($voucher->discount_type === 'percentage') {
-                            $calculatedDiscount = ($subtotal * $voucher->discount_value) / 100;
-                        } else {
-                            $calculatedDiscount = $voucher->discount_value;
-                        }
-                        
-                        // Check if this voucher's discount matches the applied discount (with small tolerance)
-                        if (abs($calculatedDiscount - $invoice_total['discount']) < 0.01) {
-                            $voucherApplied = true;
-                            $appliedVoucherCode = $voucher->code;
-                            $appliedVoucherAmount = $invoice_total['discount'];
-                            $detectionMethod = 'discount_matching';
-                            \Log::info('Found matching voucher by discount calculation', [
-                                'voucher_id' => $voucher->id,
-                                'code' => $appliedVoucherCode,
-                                'calculated_discount' => $calculatedDiscount,
-                                'actual_discount' => $invoice_total['discount'],
-                                'subtotal' => $subtotal
-                            ]);
-                            break;
-                        }
-                    }
-                }
-                
-                if ($voucherApplied && $appliedVoucherCode) {
-                    \Log::info('Processing voucher usage tracking', [
-                        'detection_method' => $detectionMethod,
-                        'voucher_code' => $appliedVoucherCode,
-                        'voucher_amount' => $appliedVoucherAmount
-                    ]);
-                    
-                    $voucher = \App\Voucher::where('business_id', $business_id)
-                        ->where('code', $appliedVoucherCode)
                         ->first();
-                    $voucher = Voucher::where('business_id', $business_id)
-                                    ->where('code', $input['voucher_code'])
-                                    ->first();
-                    
-                    if ($voucher) {
-                        \Log::info('Voucher found, checking validity and usage limit', [
-                            'voucher_id' => $voucher->id,
-                            'current_used_count' => $voucher->used_count,
-                            'usage_limit' => $voucher->usage_limit,
-                            'is_active' => $voucher->is_active,
-                            'expires_at' => $voucher->expires_at
-                        ]);
-                        
-                        // CRITICAL: Check if voucher is still valid before incrementing
-                        if (!$voucher->isValid($invoice_total['final_total'])) {
-                            \Log::warning('Voucher is no longer valid', [
-                                'voucher_code' => $input['voucher_code'],
-                                'used_count' => $voucher->used_count,
-                                'usage_limit' => $voucher->usage_limit,
-                                'is_active' => $voucher->is_active,
-                                'expires_at' => $voucher->expires_at
-                            ]);
-                            
-                            // Don't process the transaction if voucher is invalid
-                            DB::rollback();
-                            
-                            $output = ['success' => 0,
-                                'msg' => 'Voucher "' . $input['voucher_code'] . '" is no longer valid. It may have expired or reached its usage limit.',
-                            ];
-                            
-                            if (!$is_direct_sale) {
-                                return $output;
-                            } else {
-                                return redirect()
-                                    ->action([\App\Http\Controllers\SellController::class, 'index'])
-                                    ->with('status', $output);
-                            }
-                        }
-                        
-                        // Increment the used count only if voucher is valid
+
+                    if ($voucher && $voucher->isValid($invoice_total['final_total'])) {
                         $voucher->increment('used_count');
+                        $voucherTracked = true;
+                        $voucherDebugInfo['method_used'] = 'direct_request';
+                        $voucherDebugInfo['voucher_found'] = true;
+                        $voucherDebugInfo['voucher_code'] = $voucher->code;
+                        $voucherDebugInfo['discount_amount'] = $input['voucher_discount_amount'];
                         
-                        // Store voucher information in transaction additional_notes
-                        $voucher_note = "Voucher: {$input['voucher_code']}, Discount: {$input['voucher_discount_amount']}";
+                        error_log('VOUCHER DETECTION: SUCCESS - Method 1 worked, voucher ' . $voucher->code . ' incremented');
+                        
+                        // Store voucher information in transaction
+                        $voucher_note = "Voucher: {$voucher->code}, Discount: {$input['voucher_discount_amount']}";
                         $existing_notes = $transaction->additional_notes ?? '';
                         $updated_notes = $existing_notes ? $existing_notes . ' | ' . $voucher_note : $voucher_note;
                         $transaction->update(['additional_notes' => $updated_notes]);
-                        
-                        \Log::info('Voucher usage tracked successfully', [
-                            'voucher_code' => $input['voucher_code'],
-                            'transaction_id' => $transaction->id,
-                            'new_used_count' => $voucher->fresh()->used_count,
-                            'usage_limit' => $voucher->usage_limit,
-                            'voucher_note_added' => $voucher_note
-                        ]);
-                    } else {
-                        \Log::warning('Voucher not found', [
-                            'voucher_code' => $input['voucher_code'],
-                            'business_id' => $business_id
-                        ]);
                     }
+                } else {
+                    error_log('VOUCHER DETECTION: Method 1 - No direct request data found');
+                }
+
+                // Method 2: Discount matching (most reliable fallback)
+                if (!$voucherTracked && isset($invoice_total['discount']) && $invoice_total['discount'] > 0) {
+                    $voucherDebugInfo['detection_attempts'][] = 'discount_matching';
+                    $discountAmount = floatval($invoice_total['discount']);
+                    $subtotal = floatval($invoice_total['total_before_tax'] ?? $invoice_total['subtotal'] ?? 0);
+                    
+                    error_log('VOUCHER DETECTION: Method 2 - Discount matching, discount=' . $discountAmount . ', subtotal=' . $subtotal);
+                    
+                    $voucherDebugInfo['discount_amount'] = $discountAmount;
+                    $voucherDebugInfo['subtotal'] = $subtotal;
+
+                    if ($subtotal > 0) {
+                        // Find vouchers that could produce this discount amount
+                        $possibleVouchers = \App\Voucher::where('business_id', $business_id)
+                            ->where('is_active', 1)
+                            ->where(function($query) {
+                                $query->whereNull('expires_at')
+                                      ->orWhere('expires_at', '>', now());
+                            })
+                            ->where(function($query) {
+                                $query->whereNull('usage_limit')
+                                      ->orWhereRaw('used_count < usage_limit');
+                            })
+                            ->get();
+
+                        error_log('VOUCHER DETECTION: Found ' . $possibleVouchers->count() . ' possible vouchers');
+
+                        foreach ($possibleVouchers as $voucher) {
+                            $expectedDiscount = 0;
+                            if ($voucher->discount_type === 'percentage') {
+                                $expectedDiscount = ($subtotal * $voucher->discount_value) / 100;
+                            } else {
+                                $expectedDiscount = $voucher->discount_value;
+                            }
+                            
+                            error_log('VOUCHER DETECTION: Testing voucher ' . $voucher->code . ', expected discount=' . $expectedDiscount);
+                            
+                            // Match with tolerance for floating point precision
+                            if (abs($expectedDiscount - $discountAmount) < 0.01) {
+                                error_log('VOUCHER DETECTION: MATCH FOUND! Voucher ' . $voucher->code . ' matches discount');
+                                
+                                if ($voucher->isValid($invoice_total['final_total'])) {
+                                    $voucher->increment('used_count');
+                                    $voucherTracked = true;
+                                    $voucherDebugInfo['method_used'] = 'discount_matching';
+                                    $voucherDebugInfo['voucher_found'] = true;
+                                    $voucherDebugInfo['voucher_code'] = $voucher->code;
+                                    
+                                    error_log('VOUCHER DETECTION: SUCCESS - Method 2 worked, voucher ' . $voucher->code . ' incremented');
+                                    
+                                    // Store voucher information in transaction
+                                    $voucher_note = "Voucher: {$voucher->code}, Discount: {$discountAmount} (auto-detected)";
+                                    $existing_notes = $transaction->additional_notes ?? '';
+                                    $updated_notes = $existing_notes ? $existing_notes . ' | ' . $voucher_note : $voucher_note;
+                                    $transaction->update(['additional_notes' => $updated_notes]);
+                                    break;
+                                } else {
+                                    error_log('VOUCHER DETECTION: Voucher ' . $voucher->code . ' matched but is not valid');
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    error_log('VOUCHER DETECTION: Method 2 - No discount found in invoice_total');
+                }
+
+                // Method 3: Transaction discount detection (alternative approach)
+                if (!$voucherTracked && isset($transaction->discount_amount) && $transaction->discount_amount > 0) {
+                    $voucherDebugInfo['detection_attempts'][] = 'transaction_discount';
+                    $discountAmount = floatval($transaction->discount_amount);
+                    $subtotal = floatval($transaction->total_before_tax ?? 0);
+                    
+                    error_log('VOUCHER DETECTION: Method 3 - Transaction discount, discount=' . $discountAmount . ', subtotal=' . $subtotal);
+                    
+                    if ($subtotal > 0) {
+                        $possibleVouchers = \App\Voucher::where('business_id', $business_id)
+                            ->where('is_active', 1)
+                            ->where(function($query) {
+                                $query->whereNull('expires_at')
+                                      ->orWhere('expires_at', '>', now());
+                            })
+                            ->where(function($query) {
+                                $query->whereNull('usage_limit')
+                                      ->orWhereRaw('used_count < usage_limit');
+                            })
+                            ->get();
+
+                        foreach ($possibleVouchers as $voucher) {
+                            $expectedDiscount = 0;
+                            if ($voucher->discount_type === 'percentage') {
+                                $expectedDiscount = ($subtotal * $voucher->discount_value) / 100;
+                            } else {
+                                $expectedDiscount = $voucher->discount_value;
+                            }
+                            
+                            if (abs($expectedDiscount - $discountAmount) < 0.01) {
+                                if ($voucher->isValid($transaction->final_total)) {
+                                    $voucher->increment('used_count');
+                                    $voucherTracked = true;
+                                    $voucherDebugInfo['method_used'] = 'transaction_discount';
+                                    $voucherDebugInfo['voucher_found'] = true;
+                                    $voucherDebugInfo['voucher_code'] = $voucher->code;
+                                    
+                                    error_log('VOUCHER DETECTION: SUCCESS - Method 3 worked, voucher ' . $voucher->code . ' incremented');
+                                    
+                                    // Store voucher information in transaction
+                                    $voucher_note = "Voucher: {$voucher->code}, Discount: {$discountAmount} (transaction-detected)";
+                                    $existing_notes = $transaction->additional_notes ?? '';
+                                    $updated_notes = $existing_notes ? $existing_notes . ' | ' . $voucher_note : $voucher_note;
+                                    $transaction->update(['additional_notes' => $updated_notes]);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    error_log('VOUCHER DETECTION: Method 3 - No transaction discount found');
+                }
+
+                // Final logging
+                if ($voucherTracked) {
+                    error_log('VOUCHER DETECTION: FINAL SUCCESS - Voucher tracking completed using method: ' . $voucherDebugInfo['method_used']);
+                } else {
+                    error_log('VOUCHER DETECTION: FINAL FAILURE - No voucher tracking method succeeded');
+                }
+
+                // Log the voucher tracking result for debugging
+                file_put_contents(storage_path('logs/voucher_tracking.log'), json_encode($voucherDebugInfo) . "\n", FILE_APPEND);
                 } else {
                     \Log::info('Voucher conditions not met', [
                         'voucher_code_empty' => empty($input['voucher_code']),
