@@ -304,6 +304,99 @@ Route::middleware(['setData', 'auth', 'SetSessionData', 'language', 'timezone', 
             ]);
         }
     });
+
+    // Debug voucher API route
+    Route::get('/debug-vouchers', function() {
+        try {
+            $business_id = session('user.business_id', 1);
+            
+            // Get all vouchers
+            $allVouchers = \App\Voucher::all();
+            
+            // Get vouchers for this business
+            $businessVouchers = \App\Voucher::where('business_id', $business_id)->get();
+            
+            // Step by step filtering like the API does
+            $step1 = \App\Voucher::where('business_id', $business_id)->get();
+            $step2 = \App\Voucher::where('business_id', $business_id)->where('is_active', 1)->get();
+            $step3 = \App\Voucher::where('business_id', $business_id)
+                        ->where('is_active', 1)
+                        ->where(function($query) {
+                            $query->whereNull('expires_at')
+                                  ->orWhere('expires_at', '>', now());
+                        })->get();
+            $step4 = \App\Voucher::where('business_id', $business_id)
+                        ->where('is_active', 1)
+                        ->where(function($query) {
+                            $query->whereNull('expires_at')
+                                  ->orWhere('expires_at', '>', now());
+                        })
+                        ->where(function($query) {
+                            $query->whereNull('usage_limit')
+                                  ->orWhereRaw('used_count < usage_limit');
+                        })->get();
+            
+            // Test the final filter
+            $finalVouchers = $step4->filter(function($voucher) {
+                return $voucher->is_active && 
+                       (!$voucher->expires_at || $voucher->expires_at->isFuture()) &&
+                       (!$voucher->usage_limit || $voucher->used_count < $voucher->usage_limit);
+            });
+            
+            return response()->json([
+                'debug_info' => [
+                    'session_business_id' => $business_id,
+                    'current_time' => now()->toDateTimeString(),
+                    'all_vouchers_count' => $allVouchers->count(),
+                    'business_vouchers_count' => $businessVouchers->count(),
+                ],
+                'filtering_steps' => [
+                    'step1_business_id' => $step1->count(),
+                    'step2_active' => $step2->count(),
+                    'step3_not_expired' => $step3->count(),
+                    'step4_usage_limit' => $step4->count(),
+                    'final_valid' => $finalVouchers->count()
+                ],
+                'all_vouchers' => $allVouchers->map(function($voucher) {
+                    return [
+                        'id' => $voucher->id,
+                        'business_id' => $voucher->business_id,
+                        'code' => $voucher->code,
+                        'name' => $voucher->name,
+                        'is_active' => $voucher->is_active,
+                        'expires_at' => $voucher->expires_at,
+                        'used_count' => $voucher->used_count,
+                        'usage_limit' => $voucher->usage_limit,
+                        'min_amount' => $voucher->min_amount,
+                        'is_valid_100' => $voucher->isValid(100),
+                        'is_valid_0' => $voucher->isValid(0),
+                        'basic_checks' => [
+                            'is_active' => $voucher->is_active,
+                            'not_expired' => !$voucher->expires_at || $voucher->expires_at->isFuture(),
+                            'usage_ok' => !$voucher->usage_limit || $voucher->used_count < $voucher->usage_limit,
+                            'min_amount_ok_for_100' => !$voucher->min_amount || 100 >= $voucher->min_amount,
+                            'min_amount_ok_for_0' => !$voucher->min_amount || 0 >= $voucher->min_amount,
+                        ]
+                    ];
+                }),
+                'step4_vouchers' => $step4->map(function($voucher) {
+                    return [
+                        'code' => $voucher->code,
+                        'is_active' => $voucher->is_active,
+                        'expires_at' => $voucher->expires_at,
+                        'used_count' => $voucher->used_count,
+                        'usage_limit' => $voucher->usage_limit,
+                        'min_amount' => $voucher->min_amount
+                    ];
+                })
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+        }
+    });
     Route::resource('sells', SellController::class)->except(['show']);
     Route::get('/sells/copy-quotation/{id}', [SellPosController::class, 'copyQuotation']);
 
