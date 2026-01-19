@@ -845,14 +845,18 @@ $(document).ready(function() {
 
     // Function to process express checkout
     function processExpressCheckout($button, pay_method) {
+        console.log('🚨 processExpressCheckout CALLED with pay_method:', pay_method);
+        
         //If pay method is credit sale submit form
         if (pay_method == 'credit_sale') {
+            console.log('🚨 Credit sale path - submitting form directly');
             $('#is_credit_sale').val(1);
             // Add selected customers to form before submission
             addSelectedCustomersToForm();
             pos_form_obj.submit();
             return true;
         } else {
+            console.log('🚨 Non-credit sale path - continuing with AJAX');
             if ($('#is_credit_sale').length) {
                 $('#is_credit_sale').val(0);
             }
