@@ -1048,11 +1048,12 @@ class SellPosController extends Controller
                 if (!empty($whatsapp_links) && count($whatsapp_links) > 0) {
                     $output['whatsapp_links'] = $whatsapp_links;
                 }
-            } else {
-                $output = ['success' => 0,
-                    'msg' => trans('messages.something_went_wrong'),
-                ];
             }
+        } else {
+            $output = ['success' => 0,
+                'msg' => trans('messages.something_went_wrong'),
+            ];
+        }
         } catch (\Exception $e) {
             DB::rollBack();
             \Log::emergency('File:' . $e->getFile() . 'Line:' . $e->getLine() . 'Message:' . $e->getMessage());

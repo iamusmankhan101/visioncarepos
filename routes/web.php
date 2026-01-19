@@ -958,6 +958,133 @@ Route::get('/check-store-debug', function() {
     return response()->json($response);
 });
 
+// Reset voucher and test the system
+Route::get('/reset-and-test-voucher', function () {
+    try {
+        // Reset voucher for testing
+        $voucher = \App\Voucher::where('code', '2')->first();
+        if (!$voucher) {
+            return response()->json(['error' => 'Voucher not found']);
+        }
+        
+        $voucher->update(['used_count' => 0]);
+        
+        $result = [
+            'step1_reset' => [
+                'success' => true,
+                'voucher_code' => $voucher->code,
+                'used_count_reset_to' => $voucher->used_count,
+                'usage_limit' => $voucher->usage_limit,
+                'is_valid' => $voucher->isValid(100)
+            ]
+        ];
+        
+        // Test discount matching logic
+        $testData = [
+            'subtotal' => 10.00,
+            'discount' => 1.00, // 10% discount on 10.00
+            'business_id' => 1
+        ];
+        
+        $discountAmount = floatval($testData['discount']);
+        $subtotal = floatval($testData['subtotal']);
+        
+        // Find matching vouchers
+        $possibleVouchers = \App\Voucher::where('business_id', $testData['business_id'])
+            ->where('is_active', 1)
+            ->where(function($query) {
+                $query->whereNull('expires_at')
+                      ->orWhere('expires_at', '>', now());
+            })
+            ->where(function($query) {
+                $query->whereNull('usage_limit')
+                      ->orWhereRaw('used_count < usage_limit');
+            })
+            ->get();
+            
+        $result['step2_find_vouchers'] = [
+            'test_data' => $testData,
+            'possible_vouchers_count' => $possibleVouchers->count(),
+            'vouchers' => $possibleVouchers->map(function($v) use ($subtotal, $discountAmount) {
+                $expectedDiscount = 0;
+                if ($v->discount_type === 'percentage') {
+                    $expectedDiscount = ($subtotal * $v->discount_value) / 100;
+                } else {
+                    $expectedDiscount = $v->discount_value;
+                }
+                
+                return [
+                    'code' => $v->code,
+                    'discount_type' => $v->discount_type,
+                    'discount_value' => $v->discount_value,
+                    'expected_discount' => $expectedDiscount,
+                    'matches' => abs($expectedDiscount - $discountAmount) < 0.01
+                ];
+            })
+        ];
+        
+        // Test increment
+        $matchingVoucher = null;
+        foreach ($possibleVouchers as $v) {
+            $expectedDiscount = 0;
+            if ($v->discount_type === 'percentage') {
+                $expectedDiscount = ($subtotal * $v->discount_value) / 100;
+            } else {
+                $expectedDiscount = $v->discount_value;
+            }
+            
+            if (abs($expectedDiscount - $discountAmount) < 0.01) {
+                $matchingVoucher = $v;
+                break;
+            }
+        }
+        
+        if ($matchingVoucher) {
+            $beforeCount = $matchingVoucher->used_count;
+            $matchingVoucher->increment('used_count');
+            $afterCount = $matchingVoucher->fresh()->used_count;
+            
+            $result['step3_increment_test'] = [
+                'voucher_found' => true,
+                'voucher_code' => $matchingVoucher->code,
+                'before_count' => $beforeCount,
+                'after_count' => $afterCount,
+                'increment_worked' => $afterCount > $beforeCount,
+                'is_valid_after' => $matchingVoucher->fresh()->isValid(100),
+                'reached_limit' => $matchingVoucher->usage_limit && $afterCount >= $matchingVoucher->usage_limit
+            ];
+        } else {
+            $result['step3_increment_test'] = [
+                'voucher_found' => false,
+                'error' => 'No matching voucher found for discount amount'
+            ];
+        }
+        
+        // Test active vouchers API
+        $activeVouchers = \App\Voucher::where('business_id', $testData['business_id'])
+            ->where('is_active', 1)
+            ->where(function($query) {
+                $query->whereNull('expires_at')
+                      ->orWhere('expires_at', '>', now());
+            })
+            ->where(function($query) {
+                $query->whereNull('usage_limit')
+                      ->orWhereRaw('used_count < usage_limit');
+            })
+            ->get();
+            
+        $result['step4_active_vouchers_check'] = [
+            'active_vouchers_count' => $activeVouchers->count(),
+            'voucher_still_active' => $matchingVoucher ? $activeVouchers->contains('id', $matchingVoucher->id) : false
+        ];
+        
+        return response()->json($result);
+        
+    } catch (\Exception $e) {
+        return response()->json(['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+    }
+});
+
 // Check voucher tracking logs
 Route::get('/check-voucher-tracking', function () {
     try {
