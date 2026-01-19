@@ -276,18 +276,23 @@ class VoucherController extends Controller
                 'vouchers' => $vouchers->toArray()
             ]);
 
-            // Additional filtering to ensure vouchers are truly valid
+            // Additional filtering to ensure vouchers are truly valid (but ignore min_amount for dropdown)
             $validVouchers = $vouchers->filter(function($voucher) {
-                $isValid = $voucher->isValid(0); // Check with 0 amount to validate basic conditions
+                // Check basic validity without minimum amount restriction for dropdown
+                $isBasicallyValid = $voucher->is_active && 
+                                   (!$voucher->expires_at || $voucher->expires_at->isFuture()) &&
+                                   (!$voucher->usage_limit || $voucher->used_count < $voucher->usage_limit);
+                
                 \Log::info('Voucher validity check', [
                     'code' => $voucher->code,
-                    'is_valid' => $isValid,
+                    'is_basically_valid' => $isBasicallyValid,
                     'is_active' => $voucher->is_active,
                     'used_count' => $voucher->used_count,
                     'usage_limit' => $voucher->usage_limit,
-                    'expires_at' => $voucher->expires_at
+                    'expires_at' => $voucher->expires_at,
+                    'min_amount' => $voucher->min_amount
                 ]);
-                return $isValid;
+                return $isBasicallyValid;
             });
 
             \Log::info('Final vouchers result', [
