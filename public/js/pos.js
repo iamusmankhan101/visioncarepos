@@ -1121,6 +1121,34 @@ $(document).ready(function() {
                 finalVoucherAmount: finalVoucherAmount,
                 voucherDisplayText: $('#voucher_discount').text()
             });
+
+            // CRITICAL DEBUG: Log the actual form data being sent
+            var formDataPreview = $(form).serialize();
+            console.log('=== FORM DATA BEING SENT ===');
+            console.log('Full form data length:', formDataPreview.length);
+            console.log('Contains voucher_code:', formDataPreview.includes('voucher_code='));
+            console.log('Contains voucher_discount_amount:', formDataPreview.includes('voucher_discount_amount='));
+            
+            // Extract voucher data from form serialization
+            var voucherCodeMatch = formDataPreview.match(/voucher_code=([^&]*)/);
+            var voucherAmountMatch = formDataPreview.match(/voucher_discount_amount=([^&]*)/);
+            
+            console.log('Voucher code in form data:', voucherCodeMatch ? decodeURIComponent(voucherCodeMatch[1]) : 'NOT FOUND');
+            console.log('Voucher amount in form data:', voucherAmountMatch ? decodeURIComponent(voucherAmountMatch[1]) : 'NOT FOUND');
+            
+            // If voucher data is missing from form but should be there, add it manually
+            if (finalVoucherCode && finalVoucherAmount && finalVoucherAmount !== '0') {
+                if (!voucherCodeMatch) {
+                    console.error('❌ CRITICAL: voucher_code missing from form data, adding manually');
+                    formDataPreview += '&voucher_code=' + encodeURIComponent(finalVoucherCode);
+                }
+                if (!voucherAmountMatch || decodeURIComponent(voucherAmountMatch[1]) === '0') {
+                    console.error('❌ CRITICAL: voucher_discount_amount missing or zero, adding manually');
+                    formDataPreview += '&voucher_discount_amount=' + encodeURIComponent(finalVoucherAmount);
+                }
+            }
+            
+            console.log('=== END FORM DATA DEBUG ===');
             
             // var total_payble = __read_number($('input#final_total_input'));
             // var total_paying = __read_number($('input#total_paying_input'));
@@ -1214,6 +1242,24 @@ $(document).ready(function() {
                 if (data.includes('multiple_customer_ids')) {
                     var match = data.match(/multiple_customer_ids=([^&]*)/);
                     console.log('multiple_customer_ids value:', match ? decodeURIComponent(match[1]) : 'not found');
+                }
+                
+                // ADDITIONAL DEBUG: Log voucher data specifically
+                var voucherDataMatch = data.match(/voucher_code=([^&]*).*?voucher_discount_amount=([^&]*)/);
+                if (voucherDataMatch) {
+                    console.log('✅ VOUCHER DATA CONFIRMED IN SUBMISSION:', {
+                        code: decodeURIComponent(voucherDataMatch[1]),
+                        amount: decodeURIComponent(voucherDataMatch[2])
+                    });
+                } else {
+                    console.log('❌ NO VOUCHER DATA FOUND IN SUBMISSION');
+                    // Try to find them separately
+                    var codeMatch = data.match(/voucher_code=([^&]*)/);
+                    var amountMatch = data.match(/voucher_discount_amount=([^&]*)/);
+                    console.log('Separate search results:', {
+                        code_found: codeMatch ? decodeURIComponent(codeMatch[1]) : 'NOT FOUND',
+                        amount_found: amountMatch ? decodeURIComponent(amountMatch[1]) : 'NOT FOUND'
+                    });
                 }
                 
                 var url = $(form).attr('action');
