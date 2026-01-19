@@ -835,3 +835,32 @@ Route::middleware(['setData', 'auth', 'SetSessionData', 'language', 'timezone'])
     Route::get('/show-notification/{id}', [HomeController::class, 'showNotification']);
     Route::post('/sell/check-invoice-number', [SellController::class, 'checkInvoiceNumber']);
 });
+Rout
+e::get('/check-store-debug', function() {
+    $debugFile = storage_path('logs/debug_store_called.log');
+    $logFile = storage_path('logs/laravel.log');
+    
+    $response = [
+        'debug_file_exists' => file_exists($debugFile),
+        'log_file_exists' => file_exists($logFile),
+        'debug_file_content' => file_exists($debugFile) ? file_get_contents($debugFile) : 'File does not exist',
+        'log_file_size' => file_exists($logFile) ? filesize($logFile) : 0,
+        'timestamp' => now()->toDateTimeString()
+    ];
+    
+    if (file_exists($logFile) && filesize($logFile) > 0) {
+        $logContent = file_get_contents($logFile);
+        $lines = explode("\n", $logContent);
+        $response['recent_log_lines'] = array_slice($lines, -20);
+        
+        // Look for voucher-related logs
+        $voucherLogs = array_filter($lines, function($line) {
+            return stripos($line, 'voucher') !== false || 
+                   stripos($line, 'POS STORE REQUEST') !== false ||
+                   stripos($line, 'SELLPOSCONTROLLER') !== false;
+        });
+        $response['voucher_logs'] = array_values($voucherLogs);
+    }
+    
+    return response()->json($response);
+});

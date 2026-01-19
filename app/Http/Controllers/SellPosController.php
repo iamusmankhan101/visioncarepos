@@ -321,6 +321,20 @@ class SellPosController extends Controller
         // Debug: Add this at the very beginning to ensure it runs
         file_put_contents(storage_path('logs/debug_store_called.log'), 'Store method called at ' . date('Y-m-d H:i:s') . "\n", FILE_APPEND);
         
+        // CRITICAL DEBUG: Use error_log to ensure logging works
+        error_log("=== SELLPOSCONTROLLER STORE METHOD CALLED ===");
+        error_log("Request method: " . $request->method());
+        error_log("Request URL: " . $request->url());
+        error_log("Has voucher_code: " . ($request->has('voucher_code') ? 'YES' : 'NO'));
+        error_log("Has voucher_discount_amount: " . ($request->has('voucher_discount_amount') ? 'YES' : 'NO'));
+        
+        if ($request->has('voucher_code')) {
+            error_log("Voucher code value: " . $request->input('voucher_code'));
+        }
+        if ($request->has('voucher_discount_amount')) {
+            error_log("Voucher discount amount: " . $request->input('voucher_discount_amount'));
+        }
+        
         // CRITICAL DEBUG: Log ALL incoming request data
         $allRequestData = $request->all();
         \Log::info('=== POS STORE REQUEST DEBUG ===', [
