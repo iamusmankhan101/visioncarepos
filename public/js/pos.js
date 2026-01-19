@@ -890,13 +890,16 @@ $(document).ready(function() {
         } else {
             // Add selected customers to form before submission
             console.log('About to submit express checkout via AJAX...');
+            console.log('=== EXPRESS CHECKOUT DEBUG START ===');
             addSelectedCustomersToForm();
             
             // Use AJAX for express checkout to enable WhatsApp functionality
             disable_pos_form_actions();
             
             var data = pos_form_obj.serialize();
+            console.log('Express: Initial form data length:', data.length);
             data = data + '&status=final';
+            console.log('Express: After adding status=final, data length:', data.length);
             
             // CRITICAL: Ensure voucher data is included in express checkout
             var voucherCode = $('#voucher_code').val();
@@ -912,6 +915,9 @@ $(document).ready(function() {
             // Force add voucher data if missing but voucher is applied
             if (voucherCode && voucherAmount && voucherAmount !== '0') {
                 console.log('Express: Voucher data found, checking if in form data...');
+                console.log('Express: Current data includes voucher_code?', data.includes('voucher_code='));
+                console.log('Express: Current data includes voucher_discount_amount?', data.includes('voucher_discount_amount='));
+                
                 if (!data.includes('voucher_code=' + encodeURIComponent(voucherCode))) {
                     data += '&voucher_code=' + encodeURIComponent(voucherCode);
                     console.log('✅ Express: Force added voucher_code to form data');
@@ -930,10 +936,20 @@ $(document).ready(function() {
                     });
                 } else {
                     console.log('❌ EXPRESS: VOUCHER DATA STILL MISSING FROM FORM');
+                    // Try separate search
+                    var codeMatch = data.match(/voucher_code=([^&]*)/);
+                    var amountMatch = data.match(/voucher_discount_amount=([^&]*)/);
+                    console.log('Express separate search:', {
+                        code_found: codeMatch ? decodeURIComponent(codeMatch[1]) : 'NOT FOUND',
+                        amount_found: amountMatch ? decodeURIComponent(amountMatch[1]) : 'NOT FOUND'
+                    });
                 }
             } else {
                 console.log('Express: No voucher data to add (code empty or amount zero)');
             }
+            
+            console.log('Express: Final data being sent (first 300 chars):', data.substring(0, 300));
+            console.log('=== EXPRESS CHECKOUT DEBUG END ===');
             
             var url = pos_form_obj.attr('action');
             $.ajax({
