@@ -963,6 +963,29 @@ $(document).ready(function() {
             console.log('Express: Final data being sent (first 300 chars):', data.substring(0, 300));
             console.log('=== EXPRESS CHECKOUT DEBUG END ===');
             
+            // CRITICAL FIX: Force voucher data into AJAX submission
+            var finalVoucherCode = $('#voucher_code').val() || localStorage.getItem('applied_voucher_code');
+            var finalVoucherAmount = $('#voucher_discount_amount').val() || localStorage.getItem('applied_voucher_amount');
+            
+            if (finalVoucherCode && finalVoucherAmount && finalVoucherAmount !== '0') {
+                console.log('🔧 FORCING voucher data into AJAX submission:', {
+                    code: finalVoucherCode,
+                    amount: finalVoucherAmount
+                });
+                
+                // Remove any existing voucher data from the string
+                data = data.replace(/&?voucher_code=[^&]*/g, '');
+                data = data.replace(/&?voucher_discount_amount=[^&]*/g, '');
+                
+                // Add the correct voucher data
+                data += '&voucher_code=' + encodeURIComponent(finalVoucherCode);
+                data += '&voucher_discount_amount=' + encodeURIComponent(finalVoucherAmount);
+                
+                console.log('✅ FINAL: Voucher data forced into submission');
+            } else {
+                console.log('❌ FINAL: No voucher data to force (missing or zero)');
+            }
+            
             var url = pos_form_obj.attr('action');
             $.ajax({
                 method: 'POST',
