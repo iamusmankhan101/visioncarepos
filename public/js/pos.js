@@ -1004,7 +1004,10 @@ $(document).ready(function() {
                 console.log('❌ FINAL: No voucher data to force (missing or zero)');
             }
             
+            console.log('🚨 ABOUT TO MAKE AJAX CALL - This should appear in console');
             var url = pos_form_obj.attr('action');
+            console.log('🚨 AJAX URL:', url);
+            console.log('🚨 AJAX DATA LENGTH:', data.length);
             $.ajax({
                 method: 'POST',
                 url: url,
