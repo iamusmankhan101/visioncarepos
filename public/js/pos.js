@@ -904,11 +904,14 @@ $(document).ready(function() {
             
             console.log('Express checkout voucher check:', {
                 voucherCode: voucherCode,
-                voucherAmount: voucherAmount
+                voucherAmount: voucherAmount,
+                voucherCodeEmpty: !voucherCode || voucherCode === '',
+                voucherAmountZero: !voucherAmount || voucherAmount === '0'
             });
             
             // Force add voucher data if missing but voucher is applied
             if (voucherCode && voucherAmount && voucherAmount !== '0') {
+                console.log('Express: Voucher data found, checking if in form data...');
                 if (!data.includes('voucher_code=' + encodeURIComponent(voucherCode))) {
                     data += '&voucher_code=' + encodeURIComponent(voucherCode);
                     console.log('✅ Express: Force added voucher_code to form data');
@@ -917,6 +920,19 @@ $(document).ready(function() {
                     data += '&voucher_discount_amount=' + encodeURIComponent(voucherAmount);
                     console.log('✅ Express: Force added voucher_discount_amount to form data');
                 }
+                
+                // Verify voucher data is in final submission
+                var finalVoucherCheck = data.match(/voucher_code=([^&]*).*?voucher_discount_amount=([^&]*)/);
+                if (finalVoucherCheck) {
+                    console.log('✅ EXPRESS VOUCHER DATA CONFIRMED:', {
+                        code: decodeURIComponent(finalVoucherCheck[1]),
+                        amount: decodeURIComponent(finalVoucherCheck[2])
+                    });
+                } else {
+                    console.log('❌ EXPRESS: VOUCHER DATA STILL MISSING FROM FORM');
+                }
+            } else {
+                console.log('Express: No voucher data to add (code empty or amount zero)');
             }
             
             var url = pos_form_obj.attr('action');
