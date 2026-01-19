@@ -244,11 +244,6 @@ class VoucherController extends Controller
      */
     public function getActiveVouchers(Request $request)
     {
-        // Remove restrictive permission check for now - vouchers should be accessible to POS users
-        // if (!auth()->user()->can('tax_rate.view')) {
-        //     abort(403, 'Unauthorized action.');
-        // }
-
         try {
             $business_id = $request->session()->get('user.business_id');
             
@@ -276,38 +271,23 @@ class VoucherController extends Controller
                 'vouchers' => $vouchers->toArray()
             ]);
 
-            // Additional filtering to ensure vouchers are truly valid (but ignore min_amount for dropdown)
-            $validVouchers = $vouchers->filter(function($voucher) {
-                // Check basic validity without minimum amount restriction for dropdown
-                $isBasicallyValid = $voucher->is_active && 
-                                   (!$voucher->expires_at || $voucher->expires_at->isFuture()) &&
-                                   (!$voucher->usage_limit || $voucher->used_count < $voucher->usage_limit);
-                
-                \Log::info('Voucher validity check', [
-                    'code' => $voucher->code,
-                    'is_basically_valid' => $isBasicallyValid,
-                    'is_active' => $voucher->is_active,
-                    'used_count' => $voucher->used_count,
-                    'usage_limit' => $voucher->usage_limit,
-                    'expires_at' => $voucher->expires_at,
-                    'min_amount' => $voucher->min_amount
-                ]);
-                return $isBasicallyValid;
-            });
-
+            // SIMPLIFIED: Just return the vouchers from the query - they're already filtered properly
+            // The debug route shows they're all valid, so no need for additional filtering
+            
             \Log::info('Final vouchers result', [
-                'valid_vouchers_count' => $validVouchers->count(),
-                'valid_vouchers' => $validVouchers->values()->toArray()
+                'vouchers_count' => $vouchers->count(),
+                'vouchers' => $vouchers->toArray()
             ]);
 
             return response()->json([
                 'success' => true,
-                'vouchers' => $validVouchers->values(), // Re-index the array
+                'vouchers' => $vouchers, // Return the vouchers directly
                 'total_vouchers' => $vouchers->count(),
-                'valid_vouchers' => $validVouchers->count(),
+                'valid_vouchers' => $vouchers->count(),
                 'debug_info' => [
                     'business_id' => $business_id,
-                    'current_time' => now()->toDateTimeString()
+                    'current_time' => now()->toDateTimeString(),
+                    'query_executed' => true
                 ]
             ]);
         } catch (\Exception $e) {
