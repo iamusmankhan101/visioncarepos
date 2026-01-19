@@ -836,7 +836,74 @@ Route::middleware(['setData', 'auth', 'SetSessionData', 'language', 'timezone'])
     Route::post('/sell/check-invoice-number', [SellController::class, 'checkInvoiceNumber']);
 });
 
-Route::get('/check-store-debug', function() {
+Route::get('/test-manual-voucher-increment', function() {
+    try {
+        // Find the voucher with usage limit 1
+        $voucher = \App\Voucher::where('code', '2')->first();
+        
+        if (!$voucher) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Voucher with code "2" not found!'
+            ]);
+        }
+        
+        $beforeIncrement = [
+            'code' => $voucher->code,
+            'used_count' => $voucher->used_count,
+            'usage_limit' => $voucher->usage_limit,
+            'remaining' => $voucher->usage_limit ? ($voucher->usage_limit - $voucher->used_count) : 'unlimited'
+        ];
+        
+        // Manually increment the usage
+        $voucher->increment('used_count');
+        
+        // Refresh the voucher to get updated data
+        $voucher->refresh();
+        
+        $afterIncrement = [
+            'code' => $voucher->code,
+            'used_count' => $voucher->used_count,
+            'usage_limit' => $voucher->usage_limit,
+            'remaining' => $voucher->usage_limit ? ($voucher->usage_limit - $voucher->used_count) : 'unlimited'
+        ];
+        
+        // Check if voucher is still valid
+        $isValid = $voucher->isValid(100); // Test with 100 as amount
+        
+        // Test the vouchers API to see if this voucher still appears
+        $activeVouchers = \App\Voucher::where('business_id', $voucher->business_id)
+            ->where('is_active', 1)
+            ->where(function($query) {
+                $query->whereNull('expires_at')
+                      ->orWhere('expires_at', '>', now());
+            })
+            ->where(function($query) {
+                $query->whereNull('usage_limit')
+                      ->orWhereRaw('used_count < usage_limit');
+            })
+            ->get();
+        
+        return response()->json([
+            'success' => true,
+            'before_increment' => $beforeIncrement,
+            'after_increment' => $afterIncrement,
+            'is_valid' => $isValid,
+            'active_vouchers_count' => $activeVouchers->count(),
+            'voucher_in_active_list' => $activeVouchers->where('code', '2')->count() > 0,
+            'reached_limit' => $voucher->used_count >= $voucher->usage_limit,
+            'message' => $voucher->used_count >= $voucher->usage_limit ? 
+                'SUCCESS: Voucher has reached its usage limit!' : 
+                'Voucher still has remaining uses'
+        ]);
+        
+    } catch (Exception $e) {
+        return response()->json([
+            'success' => false,
+            'error' => $e->getMessage()
+        ]);
+    }
+});
     $debugFile = storage_path('logs/debug_store_called.log');
     $voucherDebugFile = storage_path('logs/voucher_debug.log');
     $voucherInputDebugFile = storage_path('logs/voucher_input_debug.log');
