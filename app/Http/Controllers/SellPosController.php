@@ -574,20 +574,89 @@ class SellPosController extends Controller
                     'voucher_code_empty' => empty($input['voucher_code']),
                     'voucher_discount_amount_empty' => empty($input['voucher_discount_amount']),
                     'voucher_discount_amount_greater_than_zero' => isset($input['voucher_discount_amount']) ? ($input['voucher_discount_amount'] > 0) : false,
-                    'all_input_keys' => array_keys($input)
+                    'all_input_keys' => array_keys($input),
+                    'invoice_discount' => $invoice_total['discount'] ?? 0
                 ]);
                 
-                // Check voucher conditions with more detailed logging
+                // ENHANCED VOUCHER DETECTION: Multiple methods to detect voucher usage
+                $voucherApplied = false;
+                $appliedVoucherCode = null;
+                $appliedVoucherAmount = 0;
+                $detectionMethod = 'none';
+                
+                // Method 1: Check request data (original approach)
                 $voucher_code_valid = !empty($input['voucher_code']);
                 $voucher_amount_valid = !empty($input['voucher_discount_amount']) && $input['voucher_discount_amount'] > 0;
                 
                 if ($voucher_code_valid && $voucher_amount_valid) {
-                    \Log::info('Voucher conditions met, looking for voucher', [
-                        'voucher_code' => $input['voucher_code'],
-                        'voucher_discount_amount' => $input['voucher_discount_amount'],
-                        'business_id' => $business_id
+                    $voucherApplied = true;
+                    $appliedVoucherCode = $input['voucher_code'];
+                    $appliedVoucherAmount = $input['voucher_discount_amount'];
+                    $detectionMethod = 'request_data';
+                    \Log::info('Voucher detected via request data', [
+                        'code' => $appliedVoucherCode,
+                        'amount' => $appliedVoucherAmount
+                    ]);
+                }
+                
+                // Method 2: Check if there's a discount applied and try to find matching voucher
+                if (!$voucherApplied && isset($invoice_total['discount']) && $invoice_total['discount'] > 0) {
+                    \Log::info('No voucher in request but discount found, checking for voucher patterns', [
+                        'discount_amount' => $invoice_total['discount'],
+                        'final_total' => $invoice_total['final_total']
                     ]);
                     
+                    // Try to find active vouchers that could match this discount
+                    $possibleVouchers = \App\Voucher::where('business_id', $business_id)
+                        ->where('is_active', 1)
+                        ->where(function($query) {
+                            $query->whereNull('expires_at')
+                                  ->orWhere('expires_at', '>', now());
+                        })
+                        ->where(function($query) {
+                            $query->whereNull('usage_limit')
+                                  ->orWhereRaw('used_count < usage_limit');
+                        })
+                        ->get();
+                    
+                    foreach ($possibleVouchers as $voucher) {
+                        $calculatedDiscount = 0;
+                        $subtotal = $invoice_total['total_before_tax'] ?? $invoice_total['subtotal'] ?? 0;
+                        
+                        if ($voucher->discount_type === 'percentage') {
+                            $calculatedDiscount = ($subtotal * $voucher->discount_value) / 100;
+                        } else {
+                            $calculatedDiscount = $voucher->discount_value;
+                        }
+                        
+                        // Check if this voucher's discount matches the applied discount (with small tolerance)
+                        if (abs($calculatedDiscount - $invoice_total['discount']) < 0.01) {
+                            $voucherApplied = true;
+                            $appliedVoucherCode = $voucher->code;
+                            $appliedVoucherAmount = $invoice_total['discount'];
+                            $detectionMethod = 'discount_matching';
+                            \Log::info('Found matching voucher by discount calculation', [
+                                'voucher_id' => $voucher->id,
+                                'code' => $appliedVoucherCode,
+                                'calculated_discount' => $calculatedDiscount,
+                                'actual_discount' => $invoice_total['discount'],
+                                'subtotal' => $subtotal
+                            ]);
+                            break;
+                        }
+                    }
+                }
+                
+                if ($voucherApplied && $appliedVoucherCode) {
+                    \Log::info('Processing voucher usage tracking', [
+                        'detection_method' => $detectionMethod,
+                        'voucher_code' => $appliedVoucherCode,
+                        'voucher_amount' => $appliedVoucherAmount
+                    ]);
+                    
+                    $voucher = \App\Voucher::where('business_id', $business_id)
+                        ->where('code', $appliedVoucherCode)
+                        ->first();
                     $voucher = Voucher::where('business_id', $business_id)
                                     ->where('code', $input['voucher_code'])
                                     ->first();
