@@ -66,17 +66,9 @@
                     <div class="tw-absolute tw-top-5 md:tw-top-8 tw-right-5 md:tw-right-10 tw-flex tw-items-center tw-gap-4"
                         style="text-align: left">
                         @if (!($request->segment(1) == 'business' && $request->segment(2) == 'register'))
-                            <!-- Register Url -->
+                            <!-- Register Url - REMOVED -->
                             @if (config('constants.allow_registration'))
-                            {{-- <span
-                                class="tw-text-white tw-font-medium tw-text-sm md:tw-text-base">{{ __('business.not_yet_registered') }}
-                            </span> --}}
-
-                            <div class="tw-rounded-full tw-h-10 md:tw-h-12 tw-w-24 tw-flex tw-items-center tw-justify-center" style="background-color: #48b2ee;">
-                             <a href="{{ route('business.getRegister')}}@if(!empty(request()->lang)){{'?lang='.request()->lang}}@endif"
-                                    class="tw-text-white tw-font-medium tw-text-sm md:tw-text-base hover:tw-text-white">
-                                    {{ __('business.register') }}</a>
-                            </div>
+                                <!-- Register button removed -->
 
                                 <!-- pricing url -->
                                 @if (Route::has('pricing') && config('app.env') != 'demo' && $request->segment(1) != 'pricing' && class_exists('\Modules\Superadmin\Http\Controllers\PricingController'))
