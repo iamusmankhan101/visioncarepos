@@ -200,17 +200,7 @@
                     </form>
 
                     <div class="tw-flex tw-items-center tw-flex-col">
-                        <!-- Register Url -->
-
-                        @if (!($request->segment(1) == 'business' && $request->segment(2) == 'register'))
-                            <!-- Register Url -->
-                            @if (config('constants.allow_registration'))
-                                <a href="{{ route('business.getRegister') }}@if (!empty(request()->lang)) {{ '?lang=' . request()->lang }} @endif"
-                                    class="tw-text-sm tw-font-medium tw-text-gray-500 hover:tw-text-gray-500 tw-mt-2">{{ __('business.not_yet_registered') }}
-                                    <span
-                                        class="tw-text-sm tw-font-medium hover:tw-underline" style="color: #48b2ee;">{{ __('business.register_now') }}</span></a>
-                            @endif
-                        @endif
+                        <!-- Register Url - REMOVED -->
                     </div>
                 </div>
             </div>
