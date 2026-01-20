@@ -570,6 +570,11 @@ class SellPosController extends Controller
                 // COMPREHENSIVE VOUCHER TRACKING SYSTEM
                 // This system uses multiple detection methods to ensure voucher usage is tracked
                 
+                // CRITICAL DEBUG: Log all input data to see what we're receiving
+                error_log('VOUCHER DEBUG: All input data = ' . json_encode($input));
+                error_log('VOUCHER DEBUG: voucher_code = ' . ($input['voucher_code'] ?? 'NOT_SET'));
+                error_log('VOUCHER DEBUG: voucher_discount_amount = ' . ($input['voucher_discount_amount'] ?? 'NOT_SET'));
+                
                 $voucherTracked = false;
                 $voucherDebugInfo = [
                     'timestamp' => date('Y-m-d H:i:s'),
@@ -580,7 +585,9 @@ class SellPosController extends Controller
                     'subtotal' => 0,
                     'detection_attempts' => [],
                     'invoice_total' => $invoice_total ?? 'not_set',
-                    'transaction_discount' => $transaction->discount_amount ?? 'not_set'
+                    'transaction_discount' => $transaction->discount_amount ?? 'not_set',
+                    'input_voucher_code' => $input['voucher_code'] ?? 'not_set',
+                    'input_voucher_amount' => $input['voucher_discount_amount'] ?? 'not_set'
                 ];
 
                 // Log that we're starting voucher detection

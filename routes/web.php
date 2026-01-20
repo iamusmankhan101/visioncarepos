@@ -1184,6 +1184,87 @@ Route::get('/simple-voucher-test', function () {
     }
 });
 
+// Debug route to test voucher data reception
+Route::post('/debug-voucher-data', function (Illuminate\Http\Request $request) {
+    $input = $request->all();
+    
+    $debug = [
+        'timestamp' => date('Y-m-d H:i:s'),
+        'all_input' => $input,
+        'voucher_code' => $input['voucher_code'] ?? 'NOT_FOUND',
+        'voucher_discount_amount' => $input['voucher_discount_amount'] ?? 'NOT_FOUND',
+        'has_voucher_code' => !empty($input['voucher_code']),
+        'has_voucher_amount' => !empty($input['voucher_discount_amount']),
+        'voucher_amount_greater_than_zero' => isset($input['voucher_discount_amount']) && $input['voucher_discount_amount'] > 0,
+        'method_1_conditions_met' => !empty($input['voucher_code']) && !empty($input['voucher_discount_amount']) && $input['voucher_discount_amount'] > 0
+    ];
+    
+    // Log to file for debugging
+    file_put_contents(storage_path('logs/voucher_debug.log'), json_encode($debug) . "\n", FILE_APPEND);
+    
+    return response()->json($debug);
+});
+
+// Final voucher tracking test
+Route::get('/test-voucher-tracking-final', function () {
+    try {
+        // Reset test voucher
+        $voucher = \App\Voucher::where('code', '2')->first();
+        if ($voucher) {
+            $voucher->update(['used_count' => 0]);
+        }
+        
+        // Simulate a POS sale with voucher
+        $input = [
+            'voucher_code' => '2',
+            'voucher_discount_amount' => '11.2'
+        ];
+        
+        $invoice_total = [
+            'discount' => 11.2,
+            'total_before_tax' => 100.0,
+            'final_total' => 88.8
+        ];
+        
+        $business_id = 1;
+        $voucherTracked = false;
+        
+        // Test Method 1: Direct request data
+        if (!empty($input['voucher_code']) && !empty($input['voucher_discount_amount']) && $input['voucher_discount_amount'] > 0) {
+            $voucher = \App\Voucher::where('business_id', $business_id)
+                ->where('code', $input['voucher_code'])
+                ->where('is_active', 1)
+                ->first();
+            
+            if ($voucher && $voucher->isValid($invoice_total['final_total'])) {
+                $beforeCount = $voucher->used_count;
+                $voucher->increment('used_count');
+                $afterCount = $voucher->fresh()->used_count;
+                $voucherTracked = true;
+                
+                return response()->json([
+                    'success' => true,
+                    'method' => 'direct_request',
+                    'voucher_code' => $voucher->code,
+                    'before_count' => $beforeCount,
+                    'after_count' => $afterCount,
+                    'message' => 'Voucher tracking works perfectly!'
+                ]);
+            }
+        }
+        
+        return response()->json([
+            'success' => false,
+            'message' => 'Voucher tracking failed',
+            'input' => $input,
+            'invoice_total' => $invoice_total
+        ]);
+        
+    } catch (\Exception $e) {
+        return response()->json(['error' => $e->getMessage()]);
+    }
+});
+
 // Test voucher usage tracking with discount matching
 Route::get('/test-voucher-usage-tracking', function () {
     try {
