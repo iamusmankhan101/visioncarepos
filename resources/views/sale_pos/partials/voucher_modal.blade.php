@@ -12,8 +12,16 @@
                 <div class="row">
                     <div class="col-md-12">
                         <div class="form-group">
+                            <label for="voucher_search">Search Vouchers:</label>
+                            <input type="text" class="form-control" id="voucher_search" placeholder="Search by voucher name or code...">
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
                             <label for="voucher_select">Select Voucher:</label>
-                            <select class="form-control" id="voucher_select" name="voucher_select">
+                            <select class="form-control" id="voucher_select" name="voucher_select" size="6" style="height: auto;">
                                 <option value="">Please Select</option>
                             </select>
                         </div>
@@ -71,6 +79,12 @@
             $('#posVoucherModal').on('show.bs.modal', function() {
                 console.log('Modal opening, loading vouchers...');
                 loadActiveVouchers();
+            });
+            
+            // Handle voucher search
+            $('#voucher_search').on('input', function() {
+                var searchTerm = $(this).val().toLowerCase();
+                filterVouchers(searchTerm);
             });
             
             // Handle voucher selection
@@ -187,6 +201,37 @@
             function hideVoucherDetails() {
                 $('#voucher_details').hide();
                 $('#voucher_info').hide();
+            }
+            
+            function filterVouchers(searchTerm) {
+                var select = $('#voucher_select');
+                var options = select.find('option');
+                
+                options.each(function() {
+                    var option = $(this);
+                    var text = option.text().toLowerCase();
+                    var value = option.val();
+                    
+                    // Always show the "Please Select" option
+                    if (value === '' && text.includes('please select')) {
+                        option.show();
+                        return;
+                    }
+                    
+                    // Show/hide based on search term
+                    if (searchTerm === '' || text.includes(searchTerm)) {
+                        option.show();
+                    } else {
+                        option.hide();
+                    }
+                });
+                
+                // If current selection is hidden, clear it
+                var selectedOption = select.find('option:selected');
+                if (selectedOption.length > 0 && selectedOption.is(':hidden')) {
+                    select.val('');
+                    hideVoucherDetails();
+                }
             }
             
             // Apply voucher
