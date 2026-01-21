@@ -742,7 +742,7 @@ window.addEventListener('afterprint', function() {
 						</tr>
 					@endif
 
-					<!-- Discount or Voucher - Show only one based on what was applied -->
+					<!-- Show both discount and voucher when applicable -->
 					@if( !empty($receipt_details->voucher_discount) && $receipt_details->voucher_discount > 0 )
 						@php
 							// Get voucher details for display
@@ -758,22 +758,35 @@ window.addEventListener('afterprint', function() {
 						<tr>
 							<th>
 								@if($voucher)
-									{{ $voucher->name }} ({{ $voucher->discount_value }}{{ $voucher->discount_type === 'percentage' ? '%' : '' }})
+									Voucher: ({{ $voucher->name }} {{ $voucher->discount_value }}{{ $voucher->discount_type === 'percentage' ? '%' : '' }})
 								@else
-									Voucher Discount @if(!empty($receipt_details->voucher_code))({{$receipt_details->voucher_code}})@endif
+									Voucher: @if(!empty($receipt_details->voucher_code))({{$receipt_details->voucher_code}})@endif
 								@endif
 							</th>
 							<td class="text-right">
 								(-) {{$receipt_details->voucher_discount}}
 							</td>
 						</tr>
-					@elseif( isset($receipt_details->discount) && $receipt_details->discount > 0 )
+					@endif
+
+					@if( isset($receipt_details->discount) && $receipt_details->discount > 0 )
 						<tr>
 							<th>
 								{!! $receipt_details->discount_label ?? 'Discount' !!}
 							</th>
 							<td class="text-right">
 								(-) {{$receipt_details->discount}}
+							</td>
+						</tr>
+					@endif
+
+					@if( !empty($receipt_details->total_line_discount) )
+						<tr>
+							<th>
+								{!! $receipt_details->line_discount_label !!}
+							</th>
+							<td class="text-right">
+								(-) {{$receipt_details->total_line_discount}}
 							</td>
 						</tr>
 					@endif
