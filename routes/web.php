@@ -169,6 +169,7 @@ Route::middleware(['setData', 'auth', 'SetSessionData', 'language', 'timezone', 
     Route::get('/contacts/customers', [ContactController::class, 'getCustomers']);
     Route::get('/contacts/{id}/related-customers', [ContactController::class, 'getRelatedCustomers']);
     Route::get('/contacts/{id}/data', [ContactController::class, 'getContactData']);
+    Route::post('/contacts/bulk-delete', [ContactController::class, 'bulkDelete']);
     Route::resource('contacts', ContactController::class);
 
 
@@ -222,6 +223,7 @@ Route::middleware(['setData', 'auth', 'SetSessionData', 'language', 'timezone', 
     Route::get('/sells/sales-report', [SellController::class, 'salesReport']);
     Route::get('/sells/bulk-print-invoices', [SellController::class, 'bulkPrintInvoices']);
     Route::post('/sells/bulk-print-selected', [SellController::class, 'bulkPrintSelected']);
+    Route::post('/sells/bulk-delete', [SellController::class, 'bulkDelete']);
     
     // Temporary voucher test route
     Route::get('/test-voucher-usage/{code}', function($code) {

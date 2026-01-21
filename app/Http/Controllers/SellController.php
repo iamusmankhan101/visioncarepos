@@ -970,6 +970,99 @@ class SellController extends Controller
     }
 
     /**
+     * Bulk delete selected sales
+     */
+    public function bulkDelete()
+    {
+        if (!auth()->user()->can('sell.delete') && !auth()->user()->can('direct_sell.delete')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        try {
+            $business_id = request()->session()->get('user.business_id');
+            $selected_ids = request()->input('selected_ids', []);
+            
+            if (empty($selected_ids)) {
+                return response()->json([
+                    'success' => 0,
+                    'msg' => 'No sales selected for deletion'
+                ]);
+            }
+
+            $deleted_count = 0;
+            $errors = [];
+
+            DB::beginTransaction();
+
+            foreach ($selected_ids as $transaction_id) {
+                try {
+                    $transaction = Transaction::where('business_id', $business_id)
+                                             ->where('id', $transaction_id)
+                                             ->whereIn('type', ['sell', 'pos'])
+                                             ->first();
+
+                    if (!$transaction) {
+                        $errors[] = "Transaction ID {$transaction_id} not found";
+                        continue;
+                    }
+
+                    // Delete related records first
+                    // Delete transaction sell lines
+                    DB::table('transaction_sell_lines')
+                      ->where('transaction_id', $transaction_id)
+                      ->delete();
+
+                    // Delete transaction payments
+                    DB::table('transaction_payments')
+                      ->where('transaction_id', $transaction_id)
+                      ->delete();
+
+                    // Delete voucher usage records
+                    DB::table('voucher_usage')
+                      ->where('transaction_id', $transaction_id)
+                      ->delete();
+
+                    // Delete activities
+                    DB::table('activities')
+                      ->where('subject_type', 'App\\Transaction')
+                      ->where('subject_id', $transaction_id)
+                      ->delete();
+
+                    // Finally delete the transaction
+                    $transaction->delete();
+                    $deleted_count++;
+
+                } catch (\Exception $e) {
+                    $errors[] = "Error deleting transaction ID {$transaction_id}: " . $e->getMessage();
+                    \Log::error("Bulk delete error for transaction {$transaction_id}: " . $e->getMessage());
+                }
+            }
+
+            DB::commit();
+
+            $message = "{$deleted_count} sales deleted successfully";
+            if (!empty($errors)) {
+                $message .= ". Errors: " . implode(', ', $errors);
+            }
+
+            return response()->json([
+                'success' => 1,
+                'msg' => $message,
+                'deleted_count' => $deleted_count,
+                'errors' => $errors
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            \Log::error('Bulk delete sales error: ' . $e->getMessage());
+            return response()->json([
+                'success' => 0,
+                'msg' => __('messages.something_went_wrong') . ': ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
      * Generate consolidated invoice for multiple transactions
      */
     private function generateConsolidatedInvoice($transactions, $start_date, $end_date, $business_id)

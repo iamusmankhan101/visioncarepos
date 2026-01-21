@@ -122,6 +122,16 @@
                     auth()->user()->can('customer.view_own'))
                 @slot('tool')
                     <div class="box-tools">
+                        <button type="button" class="tw-dw-btn tw-bg-gradient-to-r tw-from-red-600 tw-to-red-500 tw-font-bold tw-text-white tw-border-none tw-rounded-full tw-mr-2" id="bulk_delete_customers" style="display: none;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-trash">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                <path d="M4 7l16 0"/>
+                                <path d="M10 11l0 6"/>
+                                <path d="M14 11l0 6"/>
+                                <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"/>
+                                <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"/>
+                            </svg> @lang('messages.delete') @lang('lang_v1.selected') (<span id="selected_customers_count">0</span>)
+                        </button>
                         <a class="tw-dw-btn tw-bg-gradient-to-r tw-from-indigo-600 tw-to-blue-500 tw-font-bold tw-text-white tw-border-none tw-rounded-full btn-modal"
                                 data-href="{{ action([\App\Http\Controllers\ContactController::class, 'create'], ['type' => $type]) }}"
                                 data-container=".contact_modal">
@@ -144,6 +154,7 @@
                     <table class="table table-bordered table-striped" id="contact_table">
                         <thead>
                             <tr>
+                                <th><input type="checkbox" id="select_all_customers" /></th>
                                 <th class="tw-w-full">@lang('messages.action')</th>
                                 <th>@lang('lang_v1.contact_id')</th>
                                 @if ($type == 'supplier')
@@ -240,6 +251,102 @@
     <!-- /.content -->
 @stop
 @section('javascript')
+    <script type="text/javascript">
+        $(document).ready(function() {
+            // Bulk delete functionality for customers
+            $('#select_all_customers').on('change', function() {
+                var isChecked = $(this).is(':checked');
+                $('.customer_checkbox').prop('checked', isChecked);
+                updateBulkDeleteCustomersButton();
+            });
+
+            $(document).on('change', '.customer_checkbox', function() {
+                updateBulkDeleteCustomersButton();
+                
+                // Update select all checkbox
+                var totalCheckboxes = $('.customer_checkbox').length;
+                var checkedCheckboxes = $('.customer_checkbox:checked').length;
+                $('#select_all_customers').prop('checked', totalCheckboxes === checkedCheckboxes);
+            });
+
+            function updateBulkDeleteCustomersButton() {
+                var selectedCount = $('.customer_checkbox:checked').length;
+                $('#selected_customers_count').text(selectedCount);
+                
+                if (selectedCount > 0) {
+                    $('#bulk_delete_customers').show();
+                } else {
+                    $('#bulk_delete_customers').hide();
+                }
+            }
+
+            $('#bulk_delete_customers').on('click', function() {
+                var selectedIds = [];
+                $('.customer_checkbox:checked').each(function() {
+                    selectedIds.push($(this).val());
+                });
+
+                if (selectedIds.length === 0) {
+                    toastr.error('@lang("messages.please_select")');
+                    return;
+                }
+
+                // Confirmation dialog
+                var confirmMessage = 'Are you sure you want to delete ' + selectedIds.length + ' selected customers? This action cannot be undone!';
+                if (!confirm(confirmMessage)) {
+                    return;
+                }
+
+                console.log('Bulk delete customers - Selected IDs:', selectedIds);
+
+                // Show loading
+                $(this).prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Deleting...');
+
+                $.ajax({
+                    method: 'POST',
+                    url: '/contacts/bulk-delete',
+                    data: {
+                        '_token': '{{ csrf_token() }}',
+                        'selected_ids': selectedIds
+                    },
+                    dataType: 'json',
+                    success: function(result) {
+                        console.log('Bulk delete customers response:', result);
+                        
+                        if (result.success == 1) {
+                            toastr.success(result.msg || (selectedIds.length + ' customers deleted successfully'));
+                            
+                            // Refresh the table
+                            if (typeof contact_table !== 'undefined') {
+                                contact_table.ajax.reload();
+                            } else {
+                                location.reload();
+                            }
+                            
+                            // Reset checkboxes and buttons
+                            $('#select_all_customers').prop('checked', false);
+                            updateBulkDeleteCustomersButton();
+                            
+                        } else {
+                            toastr.error(result.msg || 'Error deleting customers');
+                        }
+                        
+                        // Reset button
+                        $('#bulk_delete_customers').prop('disabled', false).html('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-trash"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 7l16 0"/><path d="M10 11l0 6"/><path d="M14 11l0 6"/><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"/><path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"/></svg> @lang("messages.delete") @lang("lang_v1.selected") (<span id="selected_customers_count">0</span>)');
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Bulk delete customers error:', xhr, status, error);
+                        console.error('Response text:', xhr.responseText);
+                        toastr.error('Error deleting customers: ' + error);
+                        
+                        // Reset button
+                        $('#bulk_delete_customers').prop('disabled', false).html('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-trash"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 7l16 0"/><path d="M10 11l0 6"/><path d="M14 11l0 6"/><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"/><path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"/></svg> @lang("messages.delete") @lang("lang_v1.selected") (<span id="selected_customers_count">0</span>)');
+                    }
+                });
+            });
+        });
+    </script>
+
     @if (!empty($api_key))
         <script>
             // This example adds a search box to a map, using the Google Place Autocomplete

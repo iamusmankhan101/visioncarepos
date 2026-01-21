@@ -1352,6 +1352,100 @@ class ContactController extends Controller
     }
 
     /**
+     * Bulk delete selected contacts
+     */
+    public function bulkDelete()
+    {
+        if (!auth()->user()->can('customer.delete') && !auth()->user()->can('supplier.delete')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        try {
+            $business_id = request()->session()->get('user.business_id');
+            $selected_ids = request()->input('selected_ids', []);
+            
+            if (empty($selected_ids)) {
+                return response()->json([
+                    'success' => 0,
+                    'msg' => 'No contacts selected for deletion'
+                ]);
+            }
+
+            $deleted_count = 0;
+            $errors = [];
+
+            DB::beginTransaction();
+
+            foreach ($selected_ids as $contact_id) {
+                try {
+                    $contact = Contact::where('business_id', $business_id)
+                                     ->where('id', $contact_id)
+                                     ->whereIn('type', ['customer', 'supplier'])
+                                     ->first();
+
+                    if (!$contact) {
+                        $errors[] = "Contact ID {$contact_id} not found";
+                        continue;
+                    }
+
+                    // Check if contact has transactions
+                    $has_transactions = DB::table('transactions')
+                                         ->where('contact_id', $contact_id)
+                                         ->exists();
+
+                    if ($has_transactions) {
+                        $errors[] = "Contact '{$contact->name}' has transactions and cannot be deleted";
+                        continue;
+                    }
+
+                    // Delete related records first
+                    // Delete contact relationships
+                    DB::table('contact_relationships')
+                      ->where('primary_contact_id', $contact_id)
+                      ->orWhere('related_contact_id', $contact_id)
+                      ->delete();
+
+                    // Delete activities
+                    DB::table('activities')
+                      ->where('subject_type', 'App\\Contact')
+                      ->where('subject_id', $contact_id)
+                      ->delete();
+
+                    // Finally delete the contact
+                    $contact->delete();
+                    $deleted_count++;
+
+                } catch (\Exception $e) {
+                    $errors[] = "Error deleting contact ID {$contact_id}: " . $e->getMessage();
+                    \Log::error("Bulk delete error for contact {$contact_id}: " . $e->getMessage());
+                }
+            }
+
+            DB::commit();
+
+            $message = "{$deleted_count} contacts deleted successfully";
+            if (!empty($errors)) {
+                $message .= ". Errors: " . implode(', ', $errors);
+            }
+
+            return response()->json([
+                'success' => 1,
+                'msg' => $message,
+                'deleted_count' => $deleted_count,
+                'errors' => $errors
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            \Log::error('Bulk delete contacts error: ' . $e->getMessage());
+            return response()->json([
+                'success' => 0,
+                'msg' => __('messages.something_went_wrong') . ': ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
      * Retrieves list of customers, if filter is passed then filter it accordingly.
      *
      * @param  string  $q
