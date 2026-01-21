@@ -351,20 +351,27 @@
                     __currency_convert_recursively($('#sell_table'));
                     
                     // Re-attach click handlers for order status buttons after DataTable redraw
-                    $('.quick-order-status-btn').off('click').on('click', function(e) {
+                    console.log('DataTable redrawn, attaching order status handlers...');
+                    
+                    // Use event delegation to handle dynamically added buttons
+                    $('#sell_table').off('click', '.quick-order-status-btn').on('click', '.quick-order-status-btn', function(e) {
                         e.preventDefault();
                         e.stopPropagation();
                         
                         var url = $(this).data('href');
                         var transactionId = $(this).data('transaction-id');
                         
-                        console.log('Order status button clicked');
+                        console.log('🎯 Order status button clicked');
                         console.log('URL:', url);
                         console.log('Transaction ID:', transactionId);
                         
                         if (!url) {
-                            console.error('No URL found for order status button');
-                            toastr.error('Error: No URL found');
+                            console.error('❌ No URL found for order status button');
+                            if (typeof toastr !== 'undefined') {
+                                toastr.error('Error: No URL found');
+                            } else {
+                                alert('Error: No URL found');
+                            }
                             return false;
                         }
                         
@@ -372,28 +379,64 @@
                         $(this).prop('disabled', true);
                         var button = $(this);
                         
+                        console.log('📡 Making AJAX request to:', url);
+                        
                         $.ajax({
                             url: url,
                             method: 'GET',
                             beforeSend: function() {
-                                console.log('Loading order status modal...');
+                                console.log('📡 Loading order status modal...');
                             },
                             success: function(result) {
-                                console.log('Modal loaded successfully');
-                                $('.view_modal').html(result).modal('show');
+                                console.log('✅ Modal loaded successfully');
+                                console.log('Response length:', result ? result.length : 0);
+                                
+                                if (result && result.trim().length > 0) {
+                                    $('.view_modal').html(result).modal('show');
+                                    console.log('✅ Modal should be visible now');
+                                } else {
+                                    console.error('❌ Empty response from server');
+                                    if (typeof toastr !== 'undefined') {
+                                        toastr.error('Error: Empty response from server');
+                                    }
+                                }
                             },
                             error: function(xhr, status, error) {
-                                console.error('Error loading order status modal:', xhr.responseText);
-                                toastr.error('Error loading order status modal: ' + error);
+                                console.error('❌ Error loading order status modal:', {
+                                    status: xhr.status,
+                                    statusText: xhr.statusText,
+                                    error: error,
+                                    responseText: xhr.responseText
+                                });
+                                
+                                var errorMsg = 'Error loading order status modal';
+                                if (xhr.status === 404) {
+                                    errorMsg = 'Order status modal not found (404)';
+                                } else if (xhr.status === 500) {
+                                    errorMsg = 'Server error loading modal (500)';
+                                } else if (xhr.status === 403) {
+                                    errorMsg = 'Permission denied (403)';
+                                }
+                                
+                                if (typeof toastr !== 'undefined') {
+                                    toastr.error(errorMsg);
+                                } else {
+                                    alert(errorMsg);
+                                }
                             },
                             complete: function() {
                                 // Re-enable button
                                 button.prop('disabled', false);
+                                console.log('🏁 AJAX request completed');
                             }
                         });
                         
                         return false;
                     });
+                    
+                    // Debug: Count order status buttons
+                    var buttonCount = $('#sell_table .quick-order-status-btn').length;
+                    console.log('📊 Found', buttonCount, 'order status buttons after redraw');
                 },
                 "footerCallback": function(row, data, start, end, display) {
                     var footer_sale_total = 0;
