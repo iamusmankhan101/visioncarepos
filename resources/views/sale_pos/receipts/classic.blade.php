@@ -742,7 +742,7 @@ window.addEventListener('afterprint', function() {
 						</tr>
 					@endif
 
-					<!-- Show both discount and voucher when applicable -->
+					<!-- Show voucher discount -->
 					@if( !empty($receipt_details->voucher_discount) && $receipt_details->voucher_discount > 0 )
 						@php
 							// Get voucher details for display
@@ -769,7 +769,8 @@ window.addEventListener('afterprint', function() {
 						</tr>
 					@endif
 
-					@if( isset($receipt_details->discount) && $receipt_details->discount > 0 )
+					<!-- Show regular discount only if no voucher is applied -->
+					@if( isset($receipt_details->discount) && $receipt_details->discount > 0 && (empty($receipt_details->voucher_discount) || $receipt_details->voucher_discount == 0) )
 						<tr>
 							<th>
 								{!! $receipt_details->discount_label ?? 'Discount' !!}
