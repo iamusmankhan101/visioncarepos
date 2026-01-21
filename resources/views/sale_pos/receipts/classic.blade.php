@@ -742,39 +742,38 @@ window.addEventListener('afterprint', function() {
 						</tr>
 					@endif
 
-					<!-- Discount -->
-					@if( isset($receipt_details->discount) && $receipt_details->discount > 0 )
+					<!-- Discount or Voucher - Show only one based on what was applied -->
+					@if( !empty($receipt_details->voucher_discount) && $receipt_details->voucher_discount > 0 )
+						@php
+							// Get voucher details for display
+							$voucher = null;
+							if (!empty($receipt_details->voucher_code)) {
+								try {
+									$voucher = \App\Voucher::where('code', $receipt_details->voucher_code)->first();
+								} catch (\Exception $e) {
+									// Handle error silently
+								}
+							}
+						@endphp
+						<tr>
+							<th>
+								@if($voucher)
+									{{ $voucher->name }} ({{ $voucher->discount_value }}{{ $voucher->discount_type === 'percentage' ? '%' : '' }})
+								@else
+									Voucher Discount @if(!empty($receipt_details->voucher_code))({{$receipt_details->voucher_code}})@endif
+								@endif
+							</th>
+							<td class="text-right">
+								(-) {{$receipt_details->voucher_discount}}
+							</td>
+						</tr>
+					@elseif( isset($receipt_details->discount) && $receipt_details->discount > 0 )
 						<tr>
 							<th>
 								{!! $receipt_details->discount_label ?? 'Discount' !!}
 							</th>
-
 							<td class="text-right">
 								(-) {{$receipt_details->discount}}
-							</td>
-						</tr>
-					@endif
-
-					@if( !empty($receipt_details->total_line_discount) )
-						<tr>
-							<th>
-								{!! $receipt_details->line_discount_label !!}
-							</th>
-
-							<td class="text-right">
-								(-) {{$receipt_details->total_line_discount}}
-							</td>
-						</tr>
-					@endif
-
-					@if( !empty($receipt_details->voucher_discount) && $receipt_details->voucher_discount > 0 )
-						<tr>
-							<th>
-								Voucher Discount @if(!empty($receipt_details->voucher_code))({{$receipt_details->voucher_code}})@endif
-							</th>
-
-							<td class="text-right">
-								(-) {{$receipt_details->voucher_discount}}
 							</td>
 						</tr>
 					@endif
@@ -867,7 +866,17 @@ window.addEventListener('afterprint', function() {
 
 	@if(!empty($receipt_details->additional_notes))
 	    <div class="col-xs-12">
-	    	<p>{!! nl2br($receipt_details->additional_notes) !!}</p>
+	    	@php
+	    		// Filter out voucher debug information from additional notes
+	    		$filtered_notes = $receipt_details->additional_notes;
+	    		$filtered_notes = preg_replace('/\s*\|\s*Voucher:\s*[^,]+,\s*Discount:\s*[\d\.]+/', '', $filtered_notes);
+	    		$filtered_notes = preg_replace('/^Voucher:\s*[^,]+,\s*Discount:\s*[\d\.]+\s*\|\s*/', '', $filtered_notes);
+	    		$filtered_notes = preg_replace('/^Voucher:\s*[^,]+,\s*Discount:\s*[\d\.]+$/', '', $filtered_notes);
+	    		$filtered_notes = trim($filtered_notes);
+	    	@endphp
+	    	@if(!empty($filtered_notes))
+	    		<p>{!! nl2br($filtered_notes) !!}</p>
+	    	@endif
 	    </div>
     @endif
     
