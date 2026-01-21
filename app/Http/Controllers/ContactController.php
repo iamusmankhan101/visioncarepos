@@ -362,6 +362,12 @@ class ContactController extends Controller
         }
 
         $contacts = Datatables::of($query)
+            ->addColumn(
+                'checkbox',
+                function ($row) {
+                    return '<input type="checkbox" class="customer_checkbox" value="' . $row->id . '">';
+                }
+            )
             ->addColumn('address', '{{implode(", ", array_filter([$address_line_1, $address_line_2, $city, $state, $country, $zip_code]))}}')
         //    + $sell_return_paid add this in due because after paymnet for sell return not calculated 
             ->addColumn(
@@ -525,7 +531,7 @@ class ContactController extends Controller
             $contacts->removeColumn('total_rp');
         }
 
-        return $contacts->rawColumns(['action', 'opening_balance', 'credit_limit', 'pay_term', 'due', 'return_due', 'name', 'balance'])
+        return $contacts->rawColumns(['checkbox', 'action', 'opening_balance', 'credit_limit', 'pay_term', 'due', 'return_due', 'name', 'balance'])
                         ->make(true);
     }
 
