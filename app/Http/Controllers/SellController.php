@@ -25,6 +25,7 @@ use App\Utils\TransactionUtil;
 use App\Variation;
 use App\Warranty;
 use DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
@@ -1006,31 +1007,58 @@ class SellController extends Controller
                         continue;
                     }
 
-                    // Delete related records first
-                    // Delete transaction sell lines
-                    DB::table('transaction_sell_lines')
-                      ->where('transaction_id', $transaction_id)
-                      ->delete();
+                    // Delete related records first (in proper order to avoid foreign key constraints)
+                    try {
+                        // 1. Get voucher usage info before deletion (for resetting counts)
+                        $voucher_usage = [];
+                        if (Schema::hasTable('voucher_usage')) {
+                            $voucher_usage = DB::table('voucher_usage')
+                                              ->where('transaction_id', $transaction_id)
+                                              ->get(['voucher_code', 'id']);
+                        }
 
-                    // Delete transaction payments
-                    DB::table('transaction_payments')
-                      ->where('transaction_id', $transaction_id)
-                      ->delete();
+                        // 2. Delete voucher usage records first
+                        if (!empty($voucher_usage)) {
+                            DB::table('voucher_usage')
+                              ->where('transaction_id', $transaction_id)
+                              ->delete();
+                        }
 
-                    // Delete voucher usage records
-                    DB::table('voucher_usage')
-                      ->where('transaction_id', $transaction_id)
-                      ->delete();
+                        // 3. Delete transaction sell lines
+                        DB::table('transaction_sell_lines')
+                          ->where('transaction_id', $transaction_id)
+                          ->delete();
 
-                    // Delete activities
-                    DB::table('activities')
-                      ->where('subject_type', 'App\\Transaction')
-                      ->where('subject_id', $transaction_id)
-                      ->delete();
+                        // 4. Delete transaction payments
+                        DB::table('transaction_payments')
+                          ->where('transaction_id', $transaction_id)
+                          ->delete();
 
-                    // Finally delete the transaction
-                    $transaction->delete();
-                    $deleted_count++;
+                        // 5. Delete activities
+                        DB::table('activities')
+                          ->where('subject_type', 'App\\Transaction')
+                          ->where('subject_id', $transaction_id)
+                          ->delete();
+
+                        // 6. Reset voucher usage counts
+                        foreach ($voucher_usage as $usage) {
+                            if (!empty($usage->voucher_code)) {
+                                DB::table('vouchers')
+                                  ->where('code', $usage->voucher_code)
+                                  ->where('used_count', '>', 0)
+                                  ->decrement('used_count');
+                            }
+                        }
+
+                        // 7. Finally delete the transaction
+                        $transaction->delete();
+                        $deleted_count++;
+
+                    } catch (\Exception $delete_error) {
+                        $errors[] = "Error deleting transaction ID {$transaction_id}: " . $delete_error->getMessage();
+                        \Log::error("Bulk delete error for transaction {$transaction_id}: " . $delete_error->getMessage());
+                        continue;
+                    }
 
                 } catch (\Exception $e) {
                     $errors[] = "Error deleting transaction ID {$transaction_id}: " . $e->getMessage();
