@@ -769,16 +769,33 @@ window.addEventListener('afterprint', function() {
 						</tr>
 					@endif
 
-					<!-- Show regular discount only if no voucher is applied -->
-					@if( isset($receipt_details->discount) && $receipt_details->discount > 0 && (empty($receipt_details->voucher_discount) || $receipt_details->voucher_discount == 0) )
-						<tr>
-							<th>
-								{!! $receipt_details->discount_label ?? 'Discount' !!}
-							</th>
-							<td class="text-right">
-								(-) {{$receipt_details->discount}}
-							</td>
-						</tr>
+					<!-- Show regular discount - check if it's different from voucher discount -->
+					@if( isset($receipt_details->discount) && $receipt_details->discount > 0 )
+						@php
+							$showRegularDiscount = true;
+							// If voucher is applied, only show regular discount if it's different from voucher discount
+							if (!empty($receipt_details->voucher_discount) && $receipt_details->voucher_discount > 0) {
+								// Convert both to numbers for comparison (remove currency formatting)
+								$voucherAmount = (float) preg_replace('/[^\d\.]/', '', $receipt_details->voucher_discount);
+								$discountAmount = (float) preg_replace('/[^\d\.]/', '', $receipt_details->discount);
+								
+								// If amounts are the same (within small tolerance), don't show regular discount
+								if (abs($voucherAmount - $discountAmount) < 0.01) {
+									$showRegularDiscount = false;
+								}
+							}
+						@endphp
+						
+						@if($showRegularDiscount)
+							<tr>
+								<th>
+									{!! $receipt_details->discount_label ?? 'Discount' !!}
+								</th>
+								<td class="text-right">
+									(-) {{$receipt_details->discount}}
+								</td>
+							</tr>
+						@endif
 					@endif
 
 					@if( !empty($receipt_details->total_line_discount) )
