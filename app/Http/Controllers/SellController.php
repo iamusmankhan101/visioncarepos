@@ -2762,8 +2762,10 @@ class SellController extends Controller
         // Pending shipments only
         $only_pending_shipments = request()->only_pending_shipments == 'true' ? true : false;
         if ($only_pending_shipments) {
-            $query->where('transactions.shipping_status', '!=', 'delivered')
-                  ->whereNotNull('transactions.shipping_status');
+            $query->where(function($q) {
+                $q->whereNull('transactions.shipping_status')
+                  ->orWhere('transactions.shipping_status', '!=', 'delivered');
+            });
         }
 
         // Shipping status filter
