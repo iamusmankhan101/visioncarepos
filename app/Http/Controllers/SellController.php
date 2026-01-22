@@ -2607,10 +2607,18 @@ class SellController extends Controller
         // Shipment filters
         $only_shipments = request()->only_shipments == 'true' ? true : false;
         if ($only_shipments) {
-            $query->whereNotNull('transactions.shipping_status');
+            // Include orders with NULL shipping_status (default to 'ordered') or specific statuses
+            $query->where(function($q) {
+                $q->whereNull('transactions.shipping_status')
+                  ->orWhere('transactions.shipping_status', 'ordered')
+                  ->orWhere('transactions.shipping_status', 'packed');
+            });
 
             if (auth()->user()->hasAnyPermission(['access_pending_shipments_only'])) {
-                $query->where('transactions.shipping_status', '!=', 'delivered');
+                $query->where(function($q) {
+                    $q->whereNull('transactions.shipping_status')
+                      ->orWhere('transactions.shipping_status', '!=', 'delivered');
+                });
             }
         }
 
