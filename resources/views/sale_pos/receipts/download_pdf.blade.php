@@ -111,9 +111,15 @@ window.addEventListener('afterprint', function() {
 				<span style="display: inline-block; margin-right: 20px;">
 					<b>{{ $receipt_details->customer_label }}</b> 
 					@php
-						// Extract customer name without mobile
-						$customer_info = strip_tags($receipt_details->customer_info);
-						$customer_name = preg_replace('/\s*Mobile:.*/', '', $customer_info);
+						// Extract customer name without mobile - handle HTML format
+						$customer_info = $receipt_details->customer_info;
+						$customer_name = $customer_info;
+						
+						// Remove mobile part from customer info
+						$customer_name = preg_replace('/<br\s*\/?>\s*<b>Mobile<\/b>:.*$/i', '', $customer_name);
+						$customer_name = preg_replace('/\s*Mobile:.*$/i', '', strip_tags($customer_name));
+						$customer_name = strip_tags($customer_name);
+						$customer_name = trim($customer_name);
 					@endphp
 					<span style="margin-left: 10px;">{{ $customer_name }}</span>
 				</span>
@@ -127,10 +133,21 @@ window.addEventListener('afterprint', function() {
 		<!-- Mobile number in second row -->
 		@if(!empty($receipt_details->customer_info))
 			@php
-				// Extract mobile number
-				$customer_info = strip_tags($receipt_details->customer_info);
-				preg_match('/Mobile:\s*(.+)/', $customer_info, $mobile_matches);
-				$mobile_number = isset($mobile_matches[1]) ? trim($mobile_matches[1]) : '';
+				// Extract mobile number - handle both HTML and plain text formats
+				$customer_info = $receipt_details->customer_info;
+				$mobile_number = '';
+				
+				// Try to extract mobile number from various formats
+				if (preg_match('/<b>Mobile<\/b>:\s*([^<,\n\r]+)/i', $customer_info, $matches)) {
+					$mobile_number = trim($matches[1]);
+				} elseif (preg_match('/Mobile:\s*([^,\n\r]+)/i', strip_tags($customer_info), $matches)) {
+					$mobile_number = trim($matches[1]);
+				} elseif (preg_match('/Mobile\s+([^,\n\r]+)/i', strip_tags($customer_info), $matches)) {
+					$mobile_number = trim($matches[1]);
+				}
+				
+				// Clean up any trailing commas or extra text
+				$mobile_number = preg_replace('/[,\s]*$/', '', $mobile_number);
 			@endphp
 			@if(!empty($mobile_number))
 				<p style="width: 100% !important; margin-bottom: 10px; margin-top: 0;">
