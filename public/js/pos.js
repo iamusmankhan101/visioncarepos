@@ -4102,6 +4102,9 @@ function showRelatedCustomersModal(customers, callback) {
     
     var html = '';
     customers.forEach(function(customer, index) {
+        // Calculate is_primary based on whether this customer's ID matches the phone_group_primary_id
+        customer.is_primary = (customer.id == customer.phone_group_primary_id);
+        
         var isCurrentBadge = customer.is_current ? '<span class="label label-primary" style="margin-left: 10px;">Currently Selected</span>' : '';
         var isPrimaryBadge = customer.is_primary ? '<span class="label label-success" style="margin-left: 10px;">Primary</span>' : '<span class="label label-warning" style="margin-left: 10px;">Secondary</span>';
         var isChecked = customer.is_current ? 'checked="checked"' : '';
