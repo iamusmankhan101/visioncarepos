@@ -970,6 +970,7 @@ $(document).on('click', '#save-related-customer', function(e) {
         type: 'customer', // Set contact type
         contact_type_radio: 'individual', // Set individual type
         relationship_type: relationshipType,
+        related_first_name: customerName, // Fixed: use related_first_name to match validation
         first_name: customerName,
         mobile: customerMobile || '', // Use entered mobile or empty
         email: customerEmail || '', // Use entered email or empty

@@ -2455,6 +2455,11 @@ class ContactController extends Controller
     {
         if (request()->ajax()) {
             try {
+                \Log::info('Store related customer request', [
+                    'contact_id' => $contact_id,
+                    'request_data' => $request->all()
+                ]);
+                
                 $business_id = $request->session()->get('user.business_id');
                 
                 // Get the primary contact to get mobile number
@@ -2470,9 +2475,21 @@ class ContactController extends Controller
                 }
                 
                 // Validate required fields
-                $request->validate([
+                $validator = \Validator::make($request->all(), [
                     'related_first_name' => 'required|string|max:255',
                 ]);
+                
+                if ($validator->fails()) {
+                    \Log::error('Validation failed for related customer', [
+                        'errors' => $validator->errors()->toArray(),
+                        'request_data' => $request->all()
+                    ]);
+                    
+                    return response()->json([
+                        'success' => false,
+                        'msg' => 'Validation failed: ' . $validator->errors()->first()
+                    ]);
+                }
                 
                 // Prepare input for new related customer
                 $input = [
