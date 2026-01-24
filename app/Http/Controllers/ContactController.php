@@ -2515,7 +2515,7 @@ class ContactController extends Controller
                 }
                 
                 // Create the related customer
-                $contact = $this->contactUtil->createContact($input);
+                $contact = $this->contactUtil->createNewContact($input);
                 
                 if ($contact['success']) {
                     $this->contactUtil->activityLog($contact['data'], 'added');
