@@ -957,7 +957,7 @@ window.addEventListener('afterprint', function() {
 <div class="row" style="color: #000000 !important;">
 	<!-- Footer Debug: '{{ $receipt_details->footer_text ?? 'NULL' }}' ({{ empty($receipt_details->footer_text) ? 'empty' : 'not empty' }}) -->
 	@if(!empty($receipt_details->footer_text))
-	<div class="@if($receipt_details->show_barcode || $receipt_details->show_qr_code) col-xs-8 @else col-xs-12 @endif">
+	<div class="@if($receipt_details->show_barcode || $receipt_details->show_qr_code) col-xs-8 @else col-xs-12 @endif" style="font-size: 12px;">
 		{!! $receipt_details->footer_text !!}
 	</div>
 	@endif
@@ -965,8 +965,8 @@ window.addEventListener('afterprint', function() {
 	{{-- Custom Footer Text - ALWAYS VISIBLE --}}
 	<div class="col-xs-12" style="page-break-inside: avoid; margin-top: 15px;">
 		<hr style="border-top: 1px solid #000;">
-		<div style="padding: 8px; font-size: 9px; text-align: center; background-color: #f0f0f0; border: 1px solid #000;">
-			<strong style="font-size: 10px;">TERMS & CONDITIONS</strong><br>
+		<div style="padding: 8px; font-size: 12px; text-align: center; background-color: #f0f0f0; border: 1px solid #000;">
+			<strong style="font-size: 14px;">TERMS & CONDITIONS</strong><br>
 			<strong>• No Order will process without 50% Advance payment.</strong><br>
 			<strong>• Orders with 100% Payment will be prioritized.</strong><br>
 			<strong>• No refunds, but we can give you a voucher or exchange it within 3 days.</strong>
