@@ -1595,20 +1595,25 @@ class ContactController extends Controller
                 }
             }
             
-            // Fix primary customer logic for phone number 03058562523
-            $phoneGroupContacts = $contacts->filter(function($contact) {
-                return $contact->mobile == '03058562523';
-            });
+            // Fix primary customer logic for ALL phone numbers with multiple customers
+            // Group contacts by mobile number
+            $phoneGroups = $contacts->groupBy('mobile');
             
-            if ($phoneGroupContacts->count() > 1) {
+            foreach ($phoneGroups as $mobile => $phoneGroupContacts) {
+                // Skip if mobile is empty or only one customer
+                if (empty($mobile) || $phoneGroupContacts->count() <= 1) {
+                    continue;
+                }
+                
                 // Find the actual lowest ID in this phone group
                 $actualPrimaryId = $phoneGroupContacts->min('id');
                 
                 // Set all contacts in this phone group to have the correct primary ID
                 foreach ($contacts as $contact) {
-                    if ($contact->mobile == '03058562523') {
+                    if ($contact->mobile == $mobile) {
                         $contact->phone_group_primary_id = $actualPrimaryId;
                         \Log::info('Updated primary ID for customer:', [
+                            'mobile' => $mobile,
                             'id' => $contact->id, 
                             'name' => $contact->text, 
                             'primary_id' => $actualPrimaryId,
