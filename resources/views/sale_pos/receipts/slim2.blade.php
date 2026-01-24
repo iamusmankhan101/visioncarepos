@@ -672,9 +672,24 @@
             @endif
 
             @if(!empty($receipt_details->additional_notes))
-	            <p class="centered" >
-	            	{!! nl2br($receipt_details->additional_notes) !!}
-	            </p>
+	            @php
+	            	// Filter out debug information from additional notes
+	            	$filtered_notes = $receipt_details->additional_notes;
+	            	$filtered_notes = preg_replace('/\s*\|\s*Voucher:\s*[^,]+,\s*Discount:\s*[\d\.]+/', '', $filtered_notes);
+	            	$filtered_notes = preg_replace('/^Voucher:\s*[^,]+,\s*Discount:\s*[\d\.]+\s*\|\s*/', '', $filtered_notes);
+	            	$filtered_notes = preg_replace('/^Voucher:\s*[^,]+,\s*Discount:\s*[\d\.]+$/', '', $filtered_notes);
+	            	
+	            	// Filter out MULTI_INVOICE_CUSTOMERS debug information
+	            	$filtered_notes = preg_replace('/MULTI_INVOICE_CUSTOMERS:[0-9,]+\s*/', '', $filtered_notes);
+	            	$filtered_notes = preg_replace('/Multiple Customers:\s*[^,\n]+(?:,\s*[^,\n]+)*/', '', $filtered_notes);
+	            	
+	            	$filtered_notes = trim($filtered_notes);
+	            @endphp
+	            @if(!empty($filtered_notes))
+		            <p class="centered" >
+		            	{!! nl2br($filtered_notes) !!}
+		            </p>
+	            @endif
             @endif
 
             {{-- Barcode --}}

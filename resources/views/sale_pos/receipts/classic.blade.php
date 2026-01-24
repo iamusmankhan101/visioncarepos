@@ -945,6 +945,11 @@ window.addEventListener('afterprint', function() {
 	    		$filtered_notes = preg_replace('/\s*\|\s*Voucher:\s*[^,]+,\s*Discount:\s*[\d\.]+/', '', $filtered_notes);
 	    		$filtered_notes = preg_replace('/^Voucher:\s*[^,]+,\s*Discount:\s*[\d\.]+\s*\|\s*/', '', $filtered_notes);
 	    		$filtered_notes = preg_replace('/^Voucher:\s*[^,]+,\s*Discount:\s*[\d\.]+$/', '', $filtered_notes);
+	    		
+	    		// Filter out MULTI_INVOICE_CUSTOMERS debug information
+	    		$filtered_notes = preg_replace('/MULTI_INVOICE_CUSTOMERS:[0-9,]+\s*/', '', $filtered_notes);
+	    		$filtered_notes = preg_replace('/Multiple Customers:\s*[^,\n]+(?:,\s*[^,\n]+)*/', '', $filtered_notes);
+	    		
 	    		$filtered_notes = trim($filtered_notes);
 	    	@endphp
 	    	@if(!empty($filtered_notes))
