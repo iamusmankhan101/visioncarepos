@@ -98,18 +98,20 @@ window.addEventListener('afterprint', function() {
 			</div>
 		@endif
 	<div class="col-xs-12">
-		<!-- Invoice number, Customer, Date in first row -->
-		<p style="width: 100% !important; margin-bottom: 5px;">
-			<span style="display: inline-block; margin-right: 20px;">
-				@if(!empty($receipt_details->invoice_no_prefix))
-					<b>{!! $receipt_details->invoice_no_prefix !!}</b>
-				@endif
-				<b>{{$receipt_details->invoice_no}}</b>
-			</span>
-			
-			@if(!empty($receipt_details->customer_info))
-				<span style="display: inline-block; margin-right: 20px;">
-					<b>{{ $receipt_details->customer_label }}</b> 
+		<!-- Invoice, Customer, and Mobile in one column -->
+		<div style="width: 100% !important; margin-bottom: 10px;">
+			<!-- Left column: Invoice, Customer, Mobile stacked vertically -->
+			<div style="display: inline-block; vertical-align: top; width: 60%;">
+				<!-- Invoice Number -->
+				<div style="margin-bottom: 3px;">
+					@if(!empty($receipt_details->invoice_no_prefix))
+						<b>{!! $receipt_details->invoice_no_prefix !!}</b>
+					@endif
+					<b>{{$receipt_details->invoice_no}}</b>
+				</div>
+				
+				<!-- Customer Name -->
+				@if(!empty($receipt_details->customer_info))
 					@php
 						// Extract customer name without mobile - handle HTML format
 						$customer_info = $receipt_details->customer_info;
@@ -121,42 +123,43 @@ window.addEventListener('afterprint', function() {
 						$customer_name = strip_tags($customer_name);
 						$customer_name = trim($customer_name);
 					@endphp
-					<span style="margin-left: 10px;">{{ $customer_name }}</span>
-				</span>
-			@endif
+					<div style="margin-bottom: 3px;">
+						<b>{{ $receipt_details->customer_label }}</b> {{ $customer_name }}
+					</div>
+				@endif
+				
+				<!-- Mobile Number -->
+				@if(!empty($receipt_details->customer_info))
+					@php
+						// Extract mobile number - handle both HTML and plain text formats
+						$customer_info = $receipt_details->customer_info;
+						$mobile_number = '';
+						
+						// Try to extract mobile number from various formats
+						if (preg_match('/<b>Mobile<\/b>:\s*([^<,\n\r]+)/i', $customer_info, $matches)) {
+							$mobile_number = trim($matches[1]);
+						} elseif (preg_match('/Mobile:\s*([^,\n\r]+)/i', strip_tags($customer_info), $matches)) {
+							$mobile_number = trim($matches[1]);
+						} elseif (preg_match('/Mobile\s+([^,\n\r]+)/i', strip_tags($customer_info), $matches)) {
+							$mobile_number = trim($matches[1]);
+						}
+						
+						// Clean up any trailing commas or extra text
+						$mobile_number = preg_replace('/[,\s]*$/', '', $mobile_number);
+					@endphp
+					@if(!empty($mobile_number))
+						<div style="margin-bottom: 3px;">
+							<b>Mobile:</b> {{ $mobile_number }}
+						</div>
+					@endif
+				@endif
+			</div>
 			
-			<span style="display: inline-block; float: right;">
+			<!-- Right column: Date -->
+			<div style="display: inline-block; vertical-align: top; width: 35%; text-align: right;">
 				<b>{{$receipt_details->date_label}}</b> {{$receipt_details->invoice_date}}
-			</span>
-		</p>
-
-		<!-- Mobile number in second row -->
-		@if(!empty($receipt_details->customer_info))
-			@php
-				// Extract mobile number - handle both HTML and plain text formats
-				$customer_info = $receipt_details->customer_info;
-				$mobile_number = '';
-				
-				// Try to extract mobile number from various formats
-				if (preg_match('/<b>Mobile<\/b>:\s*([^<,\n\r]+)/i', $customer_info, $matches)) {
-					$mobile_number = trim($matches[1]);
-				} elseif (preg_match('/Mobile:\s*([^,\n\r]+)/i', strip_tags($customer_info), $matches)) {
-					$mobile_number = trim($matches[1]);
-				} elseif (preg_match('/Mobile\s+([^,\n\r]+)/i', strip_tags($customer_info), $matches)) {
-					$mobile_number = trim($matches[1]);
-				}
-				
-				// Clean up any trailing commas or extra text
-				$mobile_number = preg_replace('/[,\s]*$/', '', $mobile_number);
-			@endphp
-			@if(!empty($mobile_number))
-				<p style="width: 100% !important; margin-bottom: 10px; margin-top: 0;">
-					<span style="display: inline-block;">
-						<b>Mobile:</b> {{ $mobile_number }}
-					</span>
-				</p>
-			@endif
-		@endif
+			</div>
+		</div>
 
 		@if(!empty($receipt_details->types_of_service))
 			<p style="width: 100% !important">
