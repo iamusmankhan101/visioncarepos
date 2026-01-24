@@ -98,8 +98,8 @@ window.addEventListener('afterprint', function() {
 			</div>
 		@endif
 	<div class="col-xs-12">
-		<!-- Invoice number, Customer, Mobile, Date in one row -->
-		<p style="width: 100% !important; margin-bottom: 10px;">
+		<!-- Invoice number, Customer, Date in first row -->
+		<p style="width: 100% !important; margin-bottom: 5px;">
 			<span style="display: inline-block; margin-right: 20px;">
 				@if(!empty($receipt_details->invoice_no_prefix))
 					<b>{!! $receipt_details->invoice_no_prefix !!}</b>
@@ -110,7 +110,12 @@ window.addEventListener('afterprint', function() {
 			@if(!empty($receipt_details->customer_info))
 				<span style="display: inline-block; margin-right: 20px;">
 					<b>{{ $receipt_details->customer_label }}</b> 
-					<span style="margin-left: 10px;">{!! str_replace('Mobile:', '&nbsp;&nbsp;&nbsp;Mobile:', strip_tags($receipt_details->customer_info)) !!}</span>
+					@php
+						// Extract customer name without mobile
+						$customer_info = strip_tags($receipt_details->customer_info);
+						$customer_name = preg_replace('/\s*Mobile:.*/', '', $customer_info);
+					@endphp
+					<span style="margin-left: 10px;">{{ $customer_name }}</span>
 				</span>
 			@endif
 			
@@ -118,6 +123,23 @@ window.addEventListener('afterprint', function() {
 				<b>{{$receipt_details->date_label}}</b> {{$receipt_details->invoice_date}}
 			</span>
 		</p>
+
+		<!-- Mobile number in second row -->
+		@if(!empty($receipt_details->customer_info))
+			@php
+				// Extract mobile number
+				$customer_info = strip_tags($receipt_details->customer_info);
+				preg_match('/Mobile:\s*(.+)/', $customer_info, $mobile_matches);
+				$mobile_number = isset($mobile_matches[1]) ? trim($mobile_matches[1]) : '';
+			@endphp
+			@if(!empty($mobile_number))
+				<p style="width: 100% !important; margin-bottom: 10px; margin-top: 0;">
+					<span style="display: inline-block;">
+						<b>Mobile:</b> {{ $mobile_number }}
+					</span>
+				</p>
+			@endif
+		@endif
 
 		@if(!empty($receipt_details->types_of_service))
 			<p style="width: 100% !important">
