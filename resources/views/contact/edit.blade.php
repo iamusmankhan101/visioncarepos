@@ -721,6 +721,9 @@
 </div><!-- /.modal-dialog -->
 
 <script type="text/javascript">
+// Get the primary contact ID from the hidden field
+var primaryContactId = $('#customer_group_id_link').val() || {{ $contact->id }};
+
 // Prevent form validation errors from hidden required fields
 $(document).ready(function() {
     // Initially remove required from hidden fields
@@ -991,7 +994,7 @@ $(document).on('click', '#save-related-customer', function(e) {
     
     // Save via AJAX
     $.ajax({
-        url: '/contacts',
+        url: '/contacts/' + primaryContactId + '/store-related-customer',
         method: 'POST',
         data: formData,
         dataType: 'json',
@@ -1050,10 +1053,11 @@ $(document).on('click', '.delete-related-customer', function(e) {
         
         // Make AJAX request to delete customer
         $.ajax({
-            url: '/contacts/' + customerId,
+            url: '/contacts/' + primaryContactId + '/delete-related-customer',
             type: 'DELETE',
             data: {
-                _token: $('meta[name="csrf-token"]').attr('content')
+                _token: $('meta[name="csrf-token"]').attr('content'),
+                related_contact_id: customerId
             },
             success: function(response) {
                 if (response.success) {

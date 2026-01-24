@@ -2443,5 +2443,151 @@ class ContactController extends Controller
             ]);
         }
     }
+
+    /**
+     * Store a new related customer
+     *
+     * @param Request $request
+     * @param int $contact_id
+     * @return \Illuminate\Http\Response
+     */
+    public function storeRelatedCustomer(Request $request, $contact_id)
+    {
+        if (request()->ajax()) {
+            try {
+                $business_id = $request->session()->get('user.business_id');
+                
+                // Get the primary contact to get mobile number
+                $primary_contact = Contact::where('business_id', $business_id)
+                                         ->where('id', $contact_id)
+                                         ->first();
+                
+                if (!$primary_contact) {
+                    return response()->json([
+                        'success' => false,
+                        'msg' => 'Primary contact not found'
+                    ]);
+                }
+                
+                // Validate required fields
+                $request->validate([
+                    'related_first_name' => 'required|string|max:255',
+                ]);
+                
+                // Prepare input for new related customer
+                $input = [
+                    'type' => 'customer',
+                    'name' => trim($request->input('related_first_name')),
+                    'first_name' => trim($request->input('related_first_name')),
+                    'mobile' => $primary_contact->mobile, // Use primary customer's mobile
+                    'business_id' => $business_id,
+                    'created_by' => $request->session()->get('user.id'),
+                    'contact_type' => 'individual'
+                ];
+                
+                // Add prescription fields if provided
+                $prescription_fields = [
+                    'custom_field1', 'custom_field2', 'custom_field3', 'custom_field4', 'custom_field5',
+                    'custom_field6', 'custom_field7', 'custom_field8', 'custom_field9', 'custom_field10'
+                ];
+                
+                foreach ($prescription_fields as $field) {
+                    if ($request->has($field)) {
+                        $input[$field] = $request->input($field);
+                    }
+                }
+                
+                // Create the related customer
+                $contact = $this->contactUtil->createContact($input);
+                
+                if ($contact['success']) {
+                    $this->contactUtil->activityLog($contact['data'], 'added');
+                    
+                    return response()->json([
+                        'success' => true,
+                        'msg' => 'Related customer added successfully',
+                        'data' => [
+                            'id' => $contact['data']->id,
+                            'name' => $contact['data']->name,
+                            'contact_id' => $contact['data']->contact_id
+                        ]
+                    ]);
+                } else {
+                    return response()->json([
+                        'success' => false,
+                        'msg' => $contact['msg'] ?? 'Error creating related customer'
+                    ]);
+                }
+                
+            } catch (\Exception $e) {
+                \Log::error('Error storing related customer: ' . $e->getMessage());
+                return response()->json([
+                    'success' => false,
+                    'msg' => 'Error: ' . $e->getMessage()
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Delete a related customer
+     *
+     * @param Request $request
+     * @param int $contact_id
+     * @return \Illuminate\Http\Response
+     */
+    public function deleteRelatedCustomer(Request $request, $contact_id)
+    {
+        if (request()->ajax()) {
+            try {
+                $business_id = $request->session()->get('user.business_id');
+                $related_contact_id = $request->input('related_contact_id');
+                
+                if (!$related_contact_id) {
+                    return response()->json([
+                        'success' => false,
+                        'msg' => 'Related contact ID is required'
+                    ]);
+                }
+                
+                // Find the related contact
+                $related_contact = Contact::where('business_id', $business_id)
+                                         ->where('id', $related_contact_id)
+                                         ->first();
+                
+                if (!$related_contact) {
+                    return response()->json([
+                        'success' => false,
+                        'msg' => 'Related contact not found'
+                    ]);
+                }
+                
+                // Check if this contact has any transactions
+                $has_transactions = \App\Transaction::where('contact_id', $related_contact_id)->exists();
+                
+                if ($has_transactions) {
+                    return response()->json([
+                        'success' => false,
+                        'msg' => 'Cannot delete customer with existing transactions'
+                    ]);
+                }
+                
+                // Delete the contact
+                $related_contact->delete();
+                
+                return response()->json([
+                    'success' => true,
+                    'msg' => 'Related customer deleted successfully'
+                ]);
+                
+            } catch (\Exception $e) {
+                \Log::error('Error deleting related customer: ' . $e->getMessage());
+                return response()->json([
+                    'success' => false,
+                    'msg' => 'Error: ' . $e->getMessage()
+                ]);
+            }
+        }
+    }
 }
 

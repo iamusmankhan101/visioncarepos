@@ -168,6 +168,8 @@ Route::middleware(['setData', 'auth', 'SetSessionData', 'language', 'timezone', 
     
     Route::get('/contacts/customers', [ContactController::class, 'getCustomers']);
     Route::get('/contacts/{id}/related-customers', [ContactController::class, 'getRelatedCustomers']);
+    Route::post('/contacts/{id}/store-related-customer', [ContactController::class, 'storeRelatedCustomer']);
+    Route::delete('/contacts/{id}/delete-related-customer', [ContactController::class, 'deleteRelatedCustomer']);
     Route::get('/contacts/{id}/data', [ContactController::class, 'getContactData']);
     Route::post('/contacts/bulk-delete', [ContactController::class, 'bulkDelete']);
     Route::resource('contacts', ContactController::class);
