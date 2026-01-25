@@ -911,8 +911,31 @@ $(document).ready(function() {
             console.log('✅ disable_pos_form_actions() completed');
             
             console.log('🔍 About to serialize form...');
+            
+            // SHIPPING STATUS FIX: Ensure shipping_status is included in form data
+            var shippingStatusValue = $('#shipping_status').val();
+            console.log('Current shipping_status value:', shippingStatusValue);
+            
+            // Remove any existing hidden shipping_status fields to avoid duplicates
+            $('input[name="shipping_status"]').remove();
+            
+            // Add shipping_status as a hidden field to ensure it's included
+            if (shippingStatusValue) {
+                pos_form_obj.append('<input type="hidden" name="shipping_status" value="' + shippingStatusValue + '">');
+                console.log('Added hidden shipping_status field with value:', shippingStatusValue);
+            }
+            
             var data = pos_form_obj.serialize();
             console.log('✅ Form serialized, data length:', data.length);
+            console.log('Form data contains shipping_status:', data.includes('shipping_status='));
+            
+            // Double-check shipping_status is in the data
+            var shippingStatusMatch = data.match(/shipping_status=([^&]*)/);
+            if (shippingStatusMatch) {
+                console.log('Shipping status in form data:', decodeURIComponent(shippingStatusMatch[1]));
+            } else {
+                console.error('❌ CRITICAL: shipping_status missing from form data!');
+            }
             console.log('Express: Initial form data length:', data.length);
             data = data + '&status=final';
             console.log('Express: After adding status=final, data length:', data.length);
@@ -1296,8 +1319,30 @@ $(document).ready(function() {
                 addSelectedCustomersToForm();
                 console.log('Called addSelectedCustomersToForm');
 
+                // SHIPPING STATUS FIX: Ensure shipping_status is included in form data
+                var shippingStatusValue = $('#shipping_status').val();
+                console.log('Current shipping_status value in submitHandler:', shippingStatusValue);
+                
+                // Remove any existing hidden shipping_status fields to avoid duplicates
+                $('input[name="shipping_status"]').remove();
+                
+                // Add shipping_status as a hidden field to ensure it's included
+                if (shippingStatusValue) {
+                    $(form).append('<input type="hidden" name="shipping_status" value="' + shippingStatusValue + '">');
+                    console.log('Added hidden shipping_status field in submitHandler with value:', shippingStatusValue);
+                }
+
                 var data = $(form).serialize();
                 data = data + '&status=final';
+                
+                // SHIPPING STATUS DEBUG: Verify it's in the final data
+                console.log('Final form data contains shipping_status:', data.includes('shipping_status='));
+                var shippingStatusMatch = data.match(/shipping_status=([^&]*)/);
+                if (shippingStatusMatch) {
+                    console.log('Final shipping_status in form data:', decodeURIComponent(shippingStatusMatch[1]));
+                } else {
+                    console.error('❌ CRITICAL: shipping_status STILL missing from final form data!');
+                }
                 
                 // CRITICAL: Ensure voucher data is included in submission
                 var voucherCode = $('#voucher_code').val();

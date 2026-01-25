@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Shipping Status Form Field</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h2>Test Shipping Status Form Field</h2>
+    
+    <p>Add this JavaScript to your browser console when testing POS:</p>
+    
+    <pre>
+// Test 1: Check if the field exists and has the correct value
+console.log('=== SHIPPING STATUS FIELD TEST ===');
+console.log('Field exists:', $('#shipping_status').length > 0);
+console.log('Current value:', $('#shipping_status').val());
+console.log('All options:', $('#shipping_status option').map(function() { return $(this).val() + ': ' + $(this).text(); }).get());
+
+// Test 2: Change the value and verify
+$('#shipping_status').val('packed');
+console.log('After setting to packed:', $('#shipping_status').val());
+
+$('#shipping_status').val('delivered');
+console.log('After setting to delivered:', $('#shipping_status').val());
+
+// Test 3: Check form serialization
+console.log('Form serialized data:', $('#add_pos_sell_form').serialize());
+
+// Test 4: Check if field is included in form data
+var formData = $('#add_pos_sell_form').serializeArray();
+var shippingStatusField = formData.find(function(field) { return field.name === 'shipping_status'; });
+console.log('Shipping status in form data:', shippingStatusField);
+
+// Test 5: Monitor form submission
+$('#add_pos_sell_form').on('submit', function() {
+    console.log('=== FORM SUBMISSION ===');
+    console.log('Shipping status value on submit:', $('#shipping_status').val());
+    console.log('Form data on submit:', $(this).serialize());
+});
+    </pre>
+    
+    <h3>Expected Results:</h3>
+    <ul>
+        <li>Field should exist (length > 0)</li>
+        <li>Default value should be 'ordered'</li>
+        <li>Should be able to change to 'packed' or 'delivered'</li>
+        <li>Should appear in serialized form data</li>
+        <li>Should be included in form submission</li>
+    </ul>
+    
+    <h3>If the field is missing from form data:</h3>
+    <p>The issue is in the JavaScript form handling. Check for:</p>
+    <ul>
+        <li>Form validation that might be excluding the field</li>
+        <li>JavaScript that modifies form data before submission</li>
+        <li>AJAX submission that doesn't include all fields</li>
+    </ul>
+    
+    <h3>Alternative Test - Force the value:</h3>
+    <pre>
+// Force add the shipping_status field to the form before submission
+$('#add_pos_sell_form').on('submit', function() {
+    // Remove any existing shipping_status hidden fields
+    $('input[name="shipping_status"]').remove();
+    
+    // Add the current dropdown value as a hidden field
+    var currentStatus = $('#shipping_status').val();
+    $(this).append('<input type="hidden" name="shipping_status" value="' + currentStatus + '">');
+    
+    console.log('Forced shipping_status value:', currentStatus);
+});
+    </pre>
+</body>
+</html>
