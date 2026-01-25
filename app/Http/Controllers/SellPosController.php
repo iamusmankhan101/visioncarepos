@@ -604,6 +604,28 @@ class SellPosController extends Controller
                     'input_shipping_status' => $input['shipping_status']
                 ]);
 
+                // AGGRESSIVE FIX: Force update shipping_status directly in database if it's wrong
+                if ($transaction->shipping_status !== $input['shipping_status']) {
+                    \Log::warning('Shipping status mismatch detected, forcing database update', [
+                        'expected' => $input['shipping_status'],
+                        'actual' => $transaction->shipping_status,
+                        'transaction_id' => $transaction->id
+                    ]);
+                    
+                    // Direct database update
+                    DB::table('transactions')
+                        ->where('id', $transaction->id)
+                        ->update(['shipping_status' => $input['shipping_status']]);
+                    
+                    // Refresh the model
+                    $transaction->refresh();
+                    
+                    \Log::info('Forced shipping_status update completed', [
+                        'transaction_id' => $transaction->id,
+                        'new_shipping_status' => $transaction->shipping_status
+                    ]);
+                }
+
                 // Track voucher usage if voucher was applied
                 \Log::info('Checking voucher data in request', [
                     'voucher_code' => $input['voucher_code'] ?? 'not_set',
