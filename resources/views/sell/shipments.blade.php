@@ -195,7 +195,7 @@ $(document).ready( function(){
             { data: 'mobile', name: 'contacts.mobile'},
             { data: 'business_location', name: 'bl.name'},
             { data: 'delivery_person', name: 'delivery_person'},
-            { data: 'shipping_status', name: 'shipping_status'},
+            { data: 'shipping_status', name: 'shipping_status', orderable: true, searchable: true},
             @if(!empty($custom_labels['shipping']['custom_field_1']))
                 { data: 'shipping_custom_field_1', name: 'shipping_custom_field_1'},
             @endif
