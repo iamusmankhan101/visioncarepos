@@ -399,7 +399,8 @@ class SellPosController extends Controller
                 'shipping_status_value' => $request->input('shipping_status'),
                 'shipping_status_in_input' => isset($input['shipping_status']),
                 'shipping_status_input_value' => $input['shipping_status'] ?? 'NOT_SET',
-                'all_request_keys' => array_keys($request->all())
+                'all_request_keys' => array_keys($request->all()),
+                'request_all' => $request->all()
             ]);
             
             // CRITICAL DEBUG: Check voucher data in $input array
@@ -575,14 +576,33 @@ class SellPosController extends Controller
                 $input['document'] = $this->transactionUtil->uploadFile($request, 'sell_document', 'documents');
 
                 // SHIPPING STATUS FIX: Ensure shipping_status is set correctly
-                if (empty($input['shipping_status'])) {
+                \Log::info('Before shipping_status fix', ['input_shipping_status' => $input['shipping_status'] ?? 'NOT_SET']);
+                
+                // Force the shipping_status to be set properly
+                if (!isset($input['shipping_status']) || empty($input['shipping_status'])) {
                     $input['shipping_status'] = 'ordered'; // Default to ordered if not set
-                    \Log::info('Set default shipping_status to ordered');
+                    \Log::info('Set default shipping_status to ordered (was missing or empty)');
                 } else {
                     \Log::info('Using provided shipping_status', ['status' => $input['shipping_status']]);
                 }
+                
+                // Double-check the value is valid
+                $validStatuses = ['ordered', 'packed', 'delivered'];
+                if (!in_array($input['shipping_status'], $validStatuses)) {
+                    \Log::warning('Invalid shipping_status provided, defaulting to ordered', ['invalid_status' => $input['shipping_status']]);
+                    $input['shipping_status'] = 'ordered';
+                }
+                
+                \Log::info('Final shipping_status value before transaction creation', ['status' => $input['shipping_status']]);
 
                 $transaction = $this->transactionUtil->createSellTransaction($business_id, $input, $invoice_total, $user_id);
+
+                // DEBUG: Verify the transaction was created with correct shipping_status
+                \Log::info('Transaction created - verifying shipping_status', [
+                    'transaction_id' => $transaction->id,
+                    'saved_shipping_status' => $transaction->shipping_status,
+                    'input_shipping_status' => $input['shipping_status']
+                ]);
 
                 // Track voucher usage if voucher was applied
                 \Log::info('Checking voucher data in request', [
