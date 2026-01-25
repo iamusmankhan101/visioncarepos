@@ -393,6 +393,15 @@ class SellPosController extends Controller
         try {
             $input = $request->except('_token');
             
+            // DEBUG: Log shipping status information
+            \Log::info('POS Form Shipping Status Debug', [
+                'shipping_status_in_request' => $request->has('shipping_status'),
+                'shipping_status_value' => $request->input('shipping_status'),
+                'shipping_status_in_input' => isset($input['shipping_status']),
+                'shipping_status_input_value' => $input['shipping_status'] ?? 'NOT_SET',
+                'all_request_keys' => array_keys($request->all())
+            ]);
+            
             // CRITICAL DEBUG: Check voucher data in $input array
             $voucherInputDebug = [
                 'timestamp' => date('Y-m-d H:i:s'),
@@ -564,6 +573,14 @@ class SellPosController extends Controller
 
                 //upload document
                 $input['document'] = $this->transactionUtil->uploadFile($request, 'sell_document', 'documents');
+
+                // SHIPPING STATUS FIX: Ensure shipping_status is set correctly
+                if (empty($input['shipping_status'])) {
+                    $input['shipping_status'] = 'ordered'; // Default to ordered if not set
+                    \Log::info('Set default shipping_status to ordered');
+                } else {
+                    \Log::info('Using provided shipping_status', ['status' => $input['shipping_status']]);
+                }
 
                 $transaction = $this->transactionUtil->createSellTransaction($business_id, $input, $invoice_total, $user_id);
 
