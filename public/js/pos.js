@@ -21,6 +21,22 @@ $(document).on('show.bs.modal', '.register_details_modal', function () {
     __currency_convert_recursively($(this));
 });
 
+// Handle add location button click
+$(document).on('click', '#pos-add-location', function(e) {
+    e.preventDefault();
+    var url = $(this).data('href');
+    if (url) {
+        $('.location_add_modal').load(url, function() {
+            $('.location_add_modal').modal('show');
+        });
+    }
+});
+
+// Handle location modal events
+$(document).on('show.bs.modal', '.location_add_modal', function () {
+    __currency_convert_recursively($(this));
+});
+
 // Handle close register button if present in modal
 $(document).on('click', '.close-register-btn', function(e) {
     e.preventDefault();
@@ -4830,3 +4846,40 @@ function checkCurrentState() {
 }
 
 window.checkCurrentState = checkCurrentState;
+//
+ Handle successful location creation
+$(document).on('submit', '#business_location_add_form', function(e) {
+    e.preventDefault();
+    
+    var form = $(this);
+    var url = form.attr('action');
+    var formData = form.serialize();
+    
+    $.ajax({
+        url: url,
+        type: 'POST',
+        data: formData,
+        success: function(response) {
+            if (response.success) {
+                $('.location_add_modal').modal('hide');
+                toastr.success(response.msg);
+                
+                // Refresh location dropdown if it exists
+                if ($('#location_id').length) {
+                    // Reload the page to refresh location options
+                    location.reload();
+                }
+            }
+        },
+        error: function(xhr) {
+            var errors = xhr.responseJSON.errors;
+            if (errors) {
+                var errorMsg = '';
+                $.each(errors, function(key, value) {
+                    errorMsg += value[0] + '<br>';
+                });
+                toastr.error(errorMsg);
+            }
+        }
+    });
+});

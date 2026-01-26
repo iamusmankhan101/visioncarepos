@@ -246,6 +246,7 @@ return [
     'login_to_your' => 'Login to your',
     'welcome_back' => 'Welcome Back',
     'register' => 'Register',
+    'add_location' => 'Add Location',
     'register_details' => 'Register Details',
     'username' => 'Username',
     'password' => 'Password',
