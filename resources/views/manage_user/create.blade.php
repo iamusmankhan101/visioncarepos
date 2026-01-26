@@ -203,8 +203,179 @@
   </div>
 {!! Form::close() !!}
   @stop
+
+@section('css')
+<style>
+/* Emergency checkbox visibility fix */
+input[type="checkbox"].input-icheck,
+input[type="radio"].input-icheck {
+  display: inline-block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: static !important;
+  width: 16px !important;
+  height: 16px !important;
+  margin-right: 8px !important;
+  z-index: 999 !important;
+}
+
+/* Ensure checkbox containers are visible */
+.checkbox,
+.radio {
+  display: block !important;
+  visibility: visible !important;
+}
+
+/* Make labels clickable */
+.checkbox label,
+.radio label {
+  cursor: pointer !important;
+  display: inline-block !important;
+}
+
+/* iCheck wrapper visibility */
+.icheckbox_square-blue,
+.iradio_square-blue {
+  display: inline-block !important;
+  margin-right: 5px !important;
+}
+
+/* Force visibility for location permissions */
+.col-md-9 .checkbox,
+.col-md-12 .checkbox {
+  display: block !important;
+  margin: 5px 0 !important;
+}
+</style>
+@endsection
+
 @section('javascript')
 <script type="text/javascript">
+  // Emergency checkbox visibility fix - MUST WORK!
+  function emergencyCheckboxFix() {
+    console.log('🚨 EMERGENCY CHECKBOX FIX STARTING...');
+    
+    // Add emergency CSS
+    var emergencyCSS = `
+      <style id="emergency-checkbox-fix">
+        /* Force all checkboxes to be visible */
+        input[type="checkbox"].input-icheck,
+        input[type="radio"].input-icheck {
+          display: inline-block !important;
+          visibility: visible !important;
+          opacity: 1 !important;
+          position: static !important;
+          width: 16px !important;
+          height: 16px !important;
+          margin-right: 8px !important;
+          z-index: 999 !important;
+        }
+        
+        /* Remove any hiding from iCheck */
+        .icheckbox_square-blue input,
+        .iradio_square-blue input {
+          display: inline-block !important;
+          visibility: visible !important;
+          opacity: 1 !important;
+          position: static !important;
+        }
+        
+        /* Ensure labels work */
+        .checkbox label,
+        .radio label {
+          cursor: pointer !important;
+          display: inline-block !important;
+        }
+        
+        /* Show iCheck wrappers if they exist */
+        .icheckbox_square-blue,
+        .iradio_square-blue {
+          display: inline-block !important;
+          margin-right: 5px !important;
+        }
+      </style>
+    `;
+    
+    if ($('#emergency-checkbox-fix').length === 0) {
+      $('head').append(emergencyCSS);
+      console.log('✅ Emergency CSS injected');
+    }
+    
+    // Force all checkboxes to be visible
+    var $allCheckboxes = $('input[type="checkbox"].input-icheck, input[type="radio"].input-icheck');
+    console.log('Found ' + $allCheckboxes.length + ' checkboxes to fix');
+    
+    $allCheckboxes.each(function(index) {
+      var $checkbox = $(this);
+      var name = $checkbox.attr('name') || $checkbox.attr('id') || 'checkbox-' + index;
+      
+      console.log('Processing: ' + name);
+      
+      // Remove any iCheck wrapper that might be problematic
+      var $parent = $checkbox.parent();
+      if ($parent.hasClass('icheckbox_square-blue') || $parent.hasClass('iradio_square-blue')) {
+        console.log('Unwrapping iCheck for: ' + name);
+        $checkbox.unwrap();
+      }
+      
+      // Force visibility styles
+      $checkbox.css({
+        'display': 'inline-block',
+        'visibility': 'visible',
+        'opacity': '1',
+        'position': 'static',
+        'width': '16px',
+        'height': '16px',
+        'margin-right': '8px',
+        'z-index': '999'
+      });
+      
+      // Ensure it's not hidden by parent elements
+      $checkbox.parents().each(function() {
+        $(this).css('overflow', 'visible');
+      });
+      
+      console.log('✅ Fixed visibility for: ' + name);
+    });
+    
+    // Try to initialize iCheck after making them visible
+    setTimeout(function() {
+      if (typeof $.fn.iCheck !== 'undefined') {
+        console.log('Attempting iCheck initialization...');
+        
+        $allCheckboxes.each(function() {
+          var $this = $(this);
+          var name = $this.attr('name') || $this.attr('id') || 'unnamed';
+          
+          if (!$this.parent().hasClass('icheckbox_square-blue') && 
+              !$this.parent().hasClass('iradio_square-blue')) {
+            try {
+              $this.iCheck({
+                checkboxClass: 'icheckbox_square-blue',
+                radioClass: 'iradio_square-blue'
+              });
+              console.log('✅ iCheck OK for: ' + name);
+            } catch (error) {
+              console.log('❌ iCheck failed for ' + name + ', keeping as regular checkbox');
+            }
+          }
+        });
+      } else {
+        console.log('❌ iCheck plugin not available - using regular checkboxes');
+      }
+    }, 200);
+  }
+  
+  // Run emergency fix immediately and repeatedly
+  emergencyCheckboxFix();
+  
+  $(document).ready(function() {
+    emergencyCheckboxFix();
+    setTimeout(emergencyCheckboxFix, 500);
+    setTimeout(emergencyCheckboxFix, 1000);
+    setTimeout(emergencyCheckboxFix, 2000);
+  });
+  
   // Robust checkbox fix that prevents disappearing
   function ensureCheckboxesVisible() {
     console.log('Ensuring checkboxes are visible...');
