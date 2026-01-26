@@ -131,6 +131,198 @@ Route::middleware(['setData', 'auth', 'SetSessionData', 'language', 'timezone', 
     Route::get('/home/purchase-payment-dues', [HomeController::class, 'getPurchasePaymentDues']);
     Route::get('/home/sales-payment-dues', [HomeController::class, 'getSalesPaymentDues']);
     Route::get('/home/sales-commission-agents', [HomeController::class, 'getSalesCommissionAgents']);
+    Route::get('/fix-404-errors-complete', function() {
+        $fixes = [];
+        $errors = [];
+        
+        // 1. Create img/icheck directory
+        $public_img = public_path('img');
+        $public_icheck = public_path('img/icheck');
+        
+        if (!is_dir($public_img)) {
+            if (mkdir($public_img, 0755, true)) {
+                $fixes[] = "Created img directory";
+            } else {
+                $errors[] = "Failed to create img directory";
+            }
+        }
+        
+        if (!is_dir($public_icheck)) {
+            if (mkdir($public_icheck, 0755, true)) {
+                $fixes[] = "Created img/icheck directory";
+            } else {
+                $errors[] = "Failed to create img/icheck directory";
+            }
+        }
+        
+        // 2. Copy iCheck files with detailed logging
+        $icheck_files = [
+            'blue.png' => 'blue.png',
+            'blue@2x.png' => 'blue@2x.png'
+        ];
+        
+        foreach ($icheck_files as $filename => $dest_name) {
+            $source = public_path('images/vendor/icheck/skins/square/' . $filename);
+            $dest = public_path('img/icheck/' . $dest_name);
+            
+            if (file_exists($source)) {
+                if (!file_exists($dest)) {
+                    if (copy($source, $dest)) {
+                        $fixes[] = "Copied $dest_name successfully";
+                        // Set proper permissions
+                        chmod($dest, 0644);
+                    } else {
+                        $errors[] = "Failed to copy $dest_name";
+                    }
+                } else {
+                    $fixes[] = "$dest_name already exists";
+                }
+            } else {
+                $errors[] = "Source file not found: $filename";
+            }
+        }
+        
+        // 3. Clear Laravel cache
+        try {
+            \Artisan::call('route:clear');
+            $fixes[] = "Cleared route cache";
+        } catch (Exception $e) {
+            $errors[] = "Route cache clear failed: " . $e->getMessage();
+        }
+        
+        try {
+            \Artisan::call('config:clear');
+            $fixes[] = "Cleared config cache";
+        } catch (Exception $e) {
+            $errors[] = "Config cache clear failed: " . $e->getMessage();
+        }
+        
+        try {
+            \Artisan::call('cache:clear');
+            $fixes[] = "Cleared application cache";
+        } catch (Exception $e) {
+            $errors[] = "App cache clear failed: " . $e->getMessage();
+        }
+        
+        // 4. Create enhanced CSS fix
+        $css_dir = public_path('css');
+        if (!is_dir($css_dir)) {
+            if (mkdir($css_dir, 0755, true)) {
+                $fixes[] = "Created css directory";
+            }
+        }
+        
+        $css_content = "/* iCheck 404 Fix - Enhanced */
+.icheckbox_square-blue, .iradio_square-blue {
+    background-image: url('../img/icheck/blue.png') !important;
+    background-repeat: no-repeat !important;
+    background-position: 0 0 !important;
+}
+
+@media (-webkit-min-device-pixel-ratio: 1.5), (min-resolution: 144dpi) {
+    .icheckbox_square-blue, .iradio_square-blue {
+        background-image: url('../img/icheck/blue@2x.png') !important;
+        background-size: 240px 24px !important;
+    }
+}
+
+/* Fallback paths */
+.icheckbox_square-blue.fallback, .iradio_square-blue.fallback {
+    background-image: url('/pos/public/img/icheck/blue.png') !important;
+}
+
+/* Force visibility */
+.icheckbox_square-blue, .iradio_square-blue {
+    display: inline-block !important;
+    width: 20px !important;
+    height: 20px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    vertical-align: top !important;
+    background: white !important;
+    border: 1px solid #ccc !important;
+    cursor: pointer !important;
+}";
+        
+        if (file_put_contents(public_path('css/icheck-404-fix.css'), $css_content)) {
+            $fixes[] = "Created enhanced CSS fix file";
+            chmod(public_path('css/icheck-404-fix.css'), 0644);
+        } else {
+            $errors[] = "Failed to create CSS fix file";
+        }
+        
+        // 5. Test files and show detailed status
+        $test_files = [
+            public_path('img/icheck/blue.png') => 'iCheck Blue Image',
+            public_path('img/icheck/blue@2x.png') => 'iCheck Blue Retina',
+            public_path('css/icheck-404-fix.css') => 'CSS Fix File',
+            public_path('css/app.css') => 'Main CSS',
+            public_path('js/app.js') => 'Main JavaScript',
+            public_path('images/vendor/icheck/skins/square/blue.png') => 'Source iCheck Blue'
+        ];
+        
+        $html = "<!DOCTYPE html><html><head><title>Complete 404 Fix Results</title></head><body>";
+        $html .= "<h1>🔧 Complete 404 Fix Results</h1>";
+        
+        if (!empty($fixes)) {
+            $html .= "<h2>✅ Fixes Applied (" . count($fixes) . "):</h2><ul>";
+            foreach ($fixes as $fix) {
+                $html .= "<li style='color: green;'>$fix</li>";
+            }
+            $html .= "</ul>";
+        }
+        
+        if (!empty($errors)) {
+            $html .= "<h2>❌ Errors (" . count($errors) . "):</h2><ul>";
+            foreach ($errors as $error) {
+                $html .= "<li style='color: red;'>$error</li>";
+            }
+            $html .= "</ul>";
+        }
+        
+        $html .= "<h2>📋 Detailed File Status:</h2>";
+        foreach ($test_files as $file => $desc) {
+            $exists = file_exists($file);
+            $color = $exists ? 'green' : 'red';
+            $status = $exists ? '✅' : '❌';
+            $size = $exists ? ' (' . filesize($file) . ' bytes)' : '';
+            $html .= "<div style='color: $color;'>$status $desc: $file$size</div>";
+        }
+        
+        // Check permissions
+        $html .= "<h2>🔐 Directory Permissions:</h2>";
+        $dirs_to_check = [
+            public_path('img') => 'img directory',
+            public_path('img/icheck') => 'img/icheck directory',
+            public_path('css') => 'css directory'
+        ];
+        
+        foreach ($dirs_to_check as $dir => $desc) {
+            if (is_dir($dir)) {
+                $perms = substr(sprintf('%o', fileperms($dir)), -4);
+                $html .= "<div style='color: green;'>✅ $desc: $perms</div>";
+            } else {
+                $html .= "<div style='color: red;'>❌ $desc: Not found</div>";
+            }
+        }
+        
+        $html .= "<h2>📝 Implementation Steps:</h2>";
+        $html .= "<div style='background: #fff3cd; padding: 15px; border-radius: 5px;'>";
+        $html .= "<p><strong>1. Add this CSS to your main layout (resources/views/layouts/app.blade.php):</strong></p>";
+        $html .= "<code>&lt;link rel=\"stylesheet\" href=\"{{ asset('css/icheck-404-fix.css') }}\"&gt;</code><br><br>";
+        $html .= "<p><strong>2. Clear browser cache:</strong> Ctrl+F5 or Cmd+Shift+R</p>";
+        $html .= "<p><strong>3. Test checkboxes in User Management pages</p>";
+        $html .= "</div>";
+        
+        $html .= "<h2>🔗 Test Your Application:</h2>";
+        $html .= "<a href='/pos/home' style='color: #007bff; margin-right: 20px;'>🔗 Test Dashboard</a>";
+        $html .= "<a href='/pos/debug/fix-commission-datatable' style='color: #007bff;'>🔗 Test Commission Debug</a>";
+        
+        $html .= "</body></html>";
+        
+        return $html;
+    });
+
     Route::get('/fix-404-errors', function() {
         $fixes = [];
         
