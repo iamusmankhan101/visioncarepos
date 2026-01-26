@@ -36,6 +36,37 @@ class Contact extends Authenticatable
         return $this->belongsTo(\App\Business::class);
     }
 
+    /**
+     * Get the location that owns the contact.
+     */
+    public function location()
+    {
+        return $this->belongsTo(\App\BusinessLocation::class, 'location_id');
+    }
+
+    /**
+     * Scope to filter contacts by location
+     */
+    public function scopeForLocation($query, $location_id)
+    {
+        if (!empty($location_id)) {
+            return $query->where('location_id', $location_id);
+        }
+        return $query;
+    }
+
+    /**
+     * Scope to filter contacts by user's permitted locations
+     */
+    public function scopeForUserLocations($query)
+    {
+        $permitted_locations = auth()->user()->permitted_locations();
+        if ($permitted_locations != 'all') {
+            return $query->whereIn('location_id', $permitted_locations);
+        }
+        return $query;
+    }
+
     public function scopeActive($query)
     {
         return $query->where('contacts.contact_status', 'active');

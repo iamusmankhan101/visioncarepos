@@ -105,6 +105,23 @@ class ContactUtil extends Util
                 $input['contact_id'] = $this->generateReferenceNumber('contacts', $ref_count, $input['business_id']);
             }
 
+            // Auto-assign location if not provided
+            if (empty($input['location_id'])) {
+                // Get user's permitted locations
+                $permitted_locations = auth()->user()->permitted_locations();
+                
+                if ($permitted_locations != 'all' && !empty($permitted_locations)) {
+                    // If user has limited locations, assign the first one
+                    $input['location_id'] = is_array($permitted_locations) ? $permitted_locations[0] : $permitted_locations;
+                } else {
+                    // If user has access to all locations, try to get from request or session
+                    $location_id = request()->get('location_id') ?? session('user.default_location_id');
+                    if (!empty($location_id)) {
+                        $input['location_id'] = $location_id;
+                    }
+                }
+            }
+
             $opening_balance = isset($input['opening_balance']) ? $input['opening_balance'] : 0;
             if (isset($input['opening_balance'])) {
                 unset($input['opening_balance']);
@@ -216,6 +233,17 @@ class ContactUtil extends Util
         $query = Contact::leftjoin('transactions AS t', 'contacts.id', '=', 't.contact_id')
                     ->leftjoin('customer_groups AS cg', 'contacts.customer_group_id', '=', 'cg.id')
                     ->where('contacts.business_id', $business_id);
+
+        // Add location filtering for contacts
+        $permitted_locations = auth()->user()->permitted_locations();
+        if ($permitted_locations != 'all') {
+            $query->whereIn('contacts.location_id', $permitted_locations);
+        }
+
+        // Apply specific location filter if provided
+        if (request()->has('location_id') && !empty(request()->get('location_id'))) {
+            $query->where('contacts.location_id', request()->get('location_id'));
+        }
 
         if ($type == 'supplier') {
             $query->onlySuppliers();
