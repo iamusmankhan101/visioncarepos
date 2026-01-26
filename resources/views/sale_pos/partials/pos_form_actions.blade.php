@@ -50,6 +50,14 @@
                             class="fas fa-edit tw-text-[#009ce4]"></i> @lang('sale.draft')</button>
                 @endif
 
+                @if (auth()->user()->can('view_cash_register'))
+                    <button type="button"
+                        class="tw-font-bold tw-text-gray-700 tw-text-xs md:tw-text-sm tw-flex tw-flex-col tw-items-center tw-justify-center tw-gap-1"
+                        id="pos-register" data-toggle="modal" data-target=".register_details_modal" 
+                        data-href="/cash-register/register-details" title="@lang('lang_v1.register_details')"><i
+                            class="fas fa-cash-register tw-text-[#28a745]"></i> @lang('lang_v1.register')</button>
+                @endif
+
                 @if (!Gate::check('disable_quotation') || auth()->user()->can('superadmin') || auth()->user()->can('admin'))
                     <button type="button"
                         class="tw-font-bold tw-text-gray-700 tw-cursor-pointer tw-text-xs md:tw-text-sm tw-flex tw-flex-col tw-items-center tw-justify-center tw-gap-1 @if ($is_mobile) col-xs-6 @endif"

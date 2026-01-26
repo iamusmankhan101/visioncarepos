@@ -4,6 +4,36 @@ console.log('POS.JS LOADED - Version: 2025-12-28-RELATED-CUSTOMERS-v2');
 var global_brand_id = null;
 var global_p_category_id = null;
 var global_is_clear_local_storage = false;
+// Handle register button click
+$(document).on('click', '#pos-register', function(e) {
+    e.preventDefault();
+    
+    var url = $(this).data('href');
+    if (url) {
+        $('.register_details_modal').load(url, function() {
+            $('.register_details_modal').modal('show');
+        });
+    }
+});
+
+// Handle register modal events
+$(document).on('show.bs.modal', '.register_details_modal', function () {
+    __currency_convert_recursively($(this));
+});
+
+// Handle close register button if present in modal
+$(document).on('click', '.close-register-btn', function(e) {
+    e.preventDefault();
+    
+    var url = $(this).data('href');
+    if (url) {
+        $('.close_register_modal').load(url, function() {
+            $('.register_details_modal').modal('hide');
+            $('.close_register_modal').modal('show');
+        });
+    }
+});
+
 $(document).ready(function() {
     customer_set = false;
     //Prevent enter key function except texarea
