@@ -358,27 +358,32 @@ label:has(.input-icheck) {
 
     __page_leave_confirmation('#user_edit_form');
     
-    $('#selected_contacts').on('ifChecked', function(event){
-      $('div.selected_contacts_div').removeClass('hide');
-    });
-    $('#selected_contacts').on('ifUnchecked', function(event){
-      $('div.selected_contacts_div').addClass('hide');
-    });
-
-    $('#is_enable_service_staff_pin').on('ifChecked', function(event){
-      $('div.service_staff_pin_div').removeClass('hide');
+    // Handle selected contacts checkbox
+    $('#selected_contacts').on('change', function(event){
+      if (this.checked) {
+        $('div.selected_contacts_div').removeClass('hide');
+      } else {
+        $('div.selected_contacts_div').addClass('hide');
+      }
     });
 
-    $('#is_enable_service_staff_pin').on('ifUnchecked', function(event){
-      $('div.service_staff_pin_div').addClass('hide');
-      $('#service_staff_pin').val('');
+    // Handle service staff pin checkbox
+    $('#is_enable_service_staff_pin').on('change', function(event){
+      if (this.checked) {
+        $('div.service_staff_pin_div').removeClass('hide');
+      } else {
+        $('div.service_staff_pin_div').addClass('hide');
+        $('#service_staff_pin').val('');
+      }
     });
 
-    $('#allow_login').on('ifChecked', function(event){
-      $('div.user_auth_fields').removeClass('hide');
-    });
-    $('#allow_login').on('ifUnchecked', function(event){
-      $('div.user_auth_fields').addClass('hide');
+    // Handle allow login checkbox
+    $('#allow_login').on('change', function(event){
+      if (this.checked) {
+        $('div.user_auth_fields').removeClass('hide');
+      } else {
+        $('div.user_auth_fields').addClass('hide');
+      }
     });
 
     $('#user_allowed_contacts').select2({

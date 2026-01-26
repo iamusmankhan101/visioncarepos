@@ -386,27 +386,32 @@ label:has(.input-icheck) {
     // Page leave confirmation
     __page_leave_confirmation('#user_add_form');
     
-    // Event handlers for checkboxes (using both regular and iCheck events)
-    $('#selected_contacts').on('change ifChecked', function(event){
-      $('div.selected_contacts_div').removeClass('hide');
-    });
-    $('#selected_contacts').on('ifUnchecked', function(event){
-      $('div.selected_contacts_div').addClass('hide');
-    });
-
-    $('#is_enable_service_staff_pin').on('change ifChecked', function(event){
-      $('div.service_staff_pin_div').removeClass('hide');
-    });
-    $('#is_enable_service_staff_pin').on('ifUnchecked', function(event){
-      $('div.service_staff_pin_div').addClass('hide');
-      $('#service_staff_pin').val('');
+    // Handle selected contacts checkbox
+    $('#selected_contacts').on('change', function(event){
+      if (this.checked) {
+        $('div.selected_contacts_div').removeClass('hide');
+      } else {
+        $('div.selected_contacts_div').addClass('hide');
+      }
     });
 
-    $('#allow_login').on('change ifChecked', function(event){
-      $('div.user_auth_fields').removeClass('hide');
+    // Handle service staff pin checkbox
+    $('#is_enable_service_staff_pin').on('change', function(event){
+      if (this.checked) {
+        $('div.service_staff_pin_div').removeClass('hide');
+      } else {
+        $('div.service_staff_pin_div').addClass('hide');
+        $('#service_staff_pin').val('');
+      }
     });
-    $('#allow_login').on('ifUnchecked', function(event){
-      $('div.user_auth_fields').addClass('hide');
+
+    // Handle allow login checkbox
+    $('#allow_login').on('change', function(event){
+      if (this.checked) {
+        $('div.user_auth_fields').removeClass('hide');
+      } else {
+        $('div.user_auth_fields').addClass('hide');
+      }
     });
 
     // Select2 initialization
