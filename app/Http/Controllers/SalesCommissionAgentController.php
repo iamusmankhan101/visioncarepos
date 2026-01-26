@@ -39,7 +39,7 @@ class SalesCommissionAgentController extends Controller
                         ->where('is_cmmsn_agnt', 1)
                         ->select(['id',
                             DB::raw("CONCAT(COALESCE(surname, ''), ' ', COALESCE(first_name, ''), ' ', COALESCE(last_name, '')) as full_name"),
-                            'email', 'contact_no', 'address', 'cmmsn_percent', ]);
+                            'email', 'contact_no', 'address', 'cmmsn_percent', 'condition', ]);
 
             return Datatables::of($users)
                 ->addColumn(
@@ -90,7 +90,7 @@ class SalesCommissionAgentController extends Controller
         }
 
         try {
-            $input = $request->only(['surname', 'first_name', 'last_name', 'email', 'address', 'contact_no', 'cmmsn_percent']);
+            $input = $request->only(['surname', 'first_name', 'last_name', 'email', 'address', 'contact_no', 'cmmsn_percent', 'condition']);
             $input['cmmsn_percent'] = $this->commonUtil->num_uf($input['cmmsn_percent']);
             $business_id = $request->session()->get('user.business_id');
             $input['business_id'] = $business_id;
@@ -146,7 +146,7 @@ class SalesCommissionAgentController extends Controller
 
         if (request()->ajax()) {
             try {
-                $input = $request->only(['surname', 'first_name', 'last_name', 'email', 'address', 'contact_no', 'cmmsn_percent']);
+                $input = $request->only(['surname', 'first_name', 'last_name', 'email', 'address', 'contact_no', 'cmmsn_percent', 'condition']);
                 $input['cmmsn_percent'] = $this->commonUtil->num_uf($input['cmmsn_percent']);
                 $business_id = $request->session()->get('user.business_id');
 

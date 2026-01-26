@@ -55,6 +55,13 @@
         </div>
       </div>
 
+      <div class="col-md-6">
+        <div class="form-group">
+          {!! Form::label('condition', __( 'lang_v1.condition' ) . ':') !!}
+            {!! Form::text('condition', null, ['class' => 'form-control', 'placeholder' => __( 'lang_v1.condition_placeholder' ) ]); !!}
+        </div>
+      </div>
+
       </div>
     </div>
 

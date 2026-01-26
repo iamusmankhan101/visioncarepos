@@ -54,6 +54,13 @@
             {!! Form::text('cmmsn_percent', @num_format($user->cmmsn_percent), ['class' => 'form-control input_number', 'placeholder' => __( 'lang_v1.cmmsn_percent' ), 'required' ]); !!}
         </div>
       </div>
+
+      <div class="col-md-6">
+        <div class="form-group">
+          {!! Form::label('condition', __( 'lang_v1.condition' ) . ':') !!}
+            {!! Form::text('condition', $user->condition, ['class' => 'form-control', 'placeholder' => __( 'lang_v1.condition_placeholder' ) ]); !!}
+        </div>
+      </div>
       
       </div>
     </div>

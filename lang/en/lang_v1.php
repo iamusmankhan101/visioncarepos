@@ -16,6 +16,8 @@ return [
     'contact_no' => 'Contact No.',
     'commission_agent' => 'Commission Agent',
     'cmmsn_percent' => 'Sales Commission Percentage (%)',
+    'condition' => 'Condition',
+    'condition_placeholder' => 'Enter condition (text and numbers allowed)',
     'sales_added' => 'Sales Added',
     'sales_with_commission' => 'Sales With Commission',
     // 'total_sale_with_commission' => 'Total Sale With Commission',
