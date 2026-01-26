@@ -209,26 +209,95 @@
     {!! Form::close() !!}
   @stop
 @section('javascript')
+<!-- Immediate Checkbox Visibility Fix -->
+<style>
+  /* Force checkboxes to be visible immediately */
+  .input-icheck {
+    display: inline-block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    width: 18px !important;
+    height: 18px !important;
+    margin-right: 8px !important;
+    vertical-align: middle !important;
+    position: relative !important;
+    z-index: 1 !important;
+  }
+  
+  .input-icheck + label {
+    cursor: pointer !important;
+    user-select: none !important;
+  }
+  
+  .checkbox {
+    display: block !important;
+    margin: 10px 0 !important;
+  }
+  
+  .form-group .checkbox {
+    margin-top: 0 !important;
+  }
+</style>
+
 <script type="text/javascript">
+  // IMMEDIATE FIX: Make all checkboxes visible right now
+  (function() {
+    console.log('🚨 IMMEDIATE CHECKBOX FIX: Making checkboxes visible...');
+    
+    // Force all input-icheck elements to be visible
+    var checkboxes = document.querySelectorAll('.input-icheck');
+    console.log('Found ' + checkboxes.length + ' checkboxes to make visible');
+    
+    for (var i = 0; i < checkboxes.length; i++) {
+      var checkbox = checkboxes[i];
+      checkbox.style.display = 'inline-block';
+      checkbox.style.visibility = 'visible';
+      checkbox.style.opacity = '1';
+      checkbox.style.width = '18px';
+      checkbox.style.height = '18px';
+      checkbox.style.marginRight = '8px';
+      checkbox.style.verticalAlign = 'middle';
+      
+      console.log('✅ Made visible:', checkbox.name || checkbox.id || 'checkbox-' + i);
+    }
+  })();
+
   $(document).ready(function(){
     // Fix for checkboxes not showing - Force iCheck initialization
     console.log('Initializing iCheck for user edit...');
     
-    // Force initialize iCheck for all checkboxes with input-icheck class
+    // Ensure checkboxes are visible first
+    $('.input-icheck').css({
+      'display': 'inline-block',
+      'visibility': 'visible',
+      'opacity': '1'
+    });
+    
+    // Try to initialize iCheck
     setTimeout(function() {
-      $('input[type="checkbox"].input-icheck, input[type="radio"].input-icheck').each(function() {
-        var $this = $(this);
-        
-        // Check if already initialized
-        if (!$this.parent().hasClass('icheckbox_square-blue') && !$this.parent().hasClass('iradio_square-blue')) {
-          console.log('Initializing iCheck for:', $this.attr('name') || $this.attr('id'));
+      if (typeof $.fn.iCheck !== 'undefined') {
+        $('.input-icheck').each(function() {
+          var $this = $(this);
           
-          $this.iCheck({
-            checkboxClass: 'icheckbox_square-blue',
-            radioClass: 'iradio_square-blue'
-          });
-        }
-      });
+          // Check if already initialized
+          if (!$this.parent().hasClass('icheckbox_square-blue') && !$this.parent().hasClass('iradio_square-blue')) {
+            console.log('Initializing iCheck for:', $this.attr('name') || $this.attr('id'));
+            
+            try {
+              $this.iCheck({
+                checkboxClass: 'icheckbox_square-blue',
+                radioClass: 'iradio_square-blue'
+              });
+            } catch (error) {
+              console.error('iCheck failed for:', $this.attr('name'), error);
+              // Keep checkbox visible as fallback
+              $this.css('display', 'inline-block');
+            }
+          }
+        });
+      } else {
+        console.warn('iCheck not available, using regular checkboxes');
+      }
     }, 500); // Delay to ensure DOM is ready
 
     __page_leave_confirmation('#user_edit_form');

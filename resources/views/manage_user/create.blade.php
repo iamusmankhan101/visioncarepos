@@ -236,7 +236,65 @@ input[type="checkbox"].input-icheck:not(.icheckbox_square-blue input) {
 {!! Form::close() !!}
   @stop
 @section('javascript')
+<!-- Immediate Checkbox Visibility Fix -->
+<style>
+  /* Force checkboxes to be visible immediately */
+  .input-icheck {
+    display: inline-block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    width: 18px !important;
+    height: 18px !important;
+    margin-right: 8px !important;
+    vertical-align: middle !important;
+    position: relative !important;
+    z-index: 1 !important;
+  }
+  
+  .input-icheck + label {
+    cursor: pointer !important;
+    user-select: none !important;
+  }
+  
+  .checkbox {
+    display: block !important;
+    margin: 10px 0 !important;
+  }
+  
+  .form-group .checkbox {
+    margin-top: 0 !important;
+  }
+  
+  /* Hide problematic iCheck wrappers */
+  .icheckbox_square-blue.disabled,
+  .iradio_square-blue.disabled {
+    display: none !important;
+  }
+</style>
+
 <script type="text/javascript">
+  // IMMEDIATE FIX: Make all checkboxes visible right now
+  (function() {
+    console.log('🚨 IMMEDIATE CHECKBOX FIX: Making checkboxes visible...');
+    
+    // Force all input-icheck elements to be visible
+    var checkboxes = document.querySelectorAll('.input-icheck');
+    console.log('Found ' + checkboxes.length + ' checkboxes to make visible');
+    
+    for (var i = 0; i < checkboxes.length; i++) {
+      var checkbox = checkboxes[i];
+      checkbox.style.display = 'inline-block';
+      checkbox.style.visibility = 'visible';
+      checkbox.style.opacity = '1';
+      checkbox.style.width = '18px';
+      checkbox.style.height = '18px';
+      checkbox.style.marginRight = '8px';
+      checkbox.style.verticalAlign = 'middle';
+      
+      console.log('✅ Made visible:', checkbox.name || checkbox.id || 'checkbox-' + i);
+    }
+  })();
+
   // Comprehensive checkbox fix for user management
   function initializeCheckboxes() {
     console.log('🔧 Starting checkbox initialization...');
@@ -249,16 +307,26 @@ input[type="checkbox"].input-icheck:not(.icheckbox_square-blue input) {
     
     // Check if iCheck plugin is loaded
     if (typeof jQuery.fn.iCheck === 'undefined') {
-      console.error('❌ iCheck plugin not loaded!');
-      // Fallback: show regular checkboxes
-      $('input[type="checkbox"].input-icheck').css('display', 'inline-block');
+      console.error('❌ iCheck plugin not loaded! Using fallback...');
+      // Fallback: ensure regular checkboxes are visible and functional
+      $('.input-icheck').each(function() {
+        $(this).css({
+          'display': 'inline-block',
+          'visibility': 'visible',
+          'opacity': '1',
+          'width': '18px',
+          'height': '18px',
+          'margin-right': '8px',
+          'vertical-align': 'middle'
+        });
+      });
       return false;
     }
     
     console.log('✅ jQuery and iCheck plugin loaded');
     
     // Initialize all checkboxes with input-icheck class
-    $('input[type="checkbox"].input-icheck, input[type="radio"].input-icheck').each(function() {
+    $('.input-icheck').each(function() {
       var $this = $(this);
       var name = $this.attr('name') || $this.attr('id') || 'unnamed';
       
@@ -271,10 +339,7 @@ input[type="checkbox"].input-icheck:not(.icheckbox_square-blue input) {
       }
       
       try {
-        // Make sure checkbox is visible first
-        $this.css('display', 'none'); // Hide original checkbox
-        
-        // Initialize iCheck
+        // Initialize iCheck (don't hide the original checkbox first)
         $this.iCheck({
           checkboxClass: 'icheckbox_square-blue',
           radioClass: 'iradio_square-blue'
@@ -283,12 +348,16 @@ input[type="checkbox"].input-icheck:not(.icheckbox_square-blue input) {
         // Mark as initialized
         $this.data('icheck-initialized', true);
         
-        console.log('✅ Initialized checkbox:', name);
+        console.log('✅ Initialized iCheck for:', name);
         
       } catch (error) {
-        console.error('❌ Error initializing checkbox:', name, error);
-        // Fallback: show regular checkbox
-        $this.css('display', 'inline-block');
+        console.error('❌ Error initializing iCheck for:', name, error);
+        // Fallback: ensure regular checkbox is visible
+        $this.css({
+          'display': 'inline-block',
+          'visibility': 'visible',
+          'opacity': '1'
+        });
       }
     });
     
