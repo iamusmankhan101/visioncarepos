@@ -371,6 +371,72 @@
     @if (auth()->user()->can('dashboard.data'))
         <div class="tw-px-5 tw-py-6">
             <div class="tw-grid tw-grid-cols-1 tw-gap-4 sm:tw-gap-5 lg:tw-grid-cols-2">
+                {{-- SALES COMMISSION AGENTS SECTION --}}
+                @if (auth()->user()->can('user.view') || auth()->user()->can('user.create'))
+                    <div
+                        class="tw-transition-all lg:tw-col-span-2 tw-duration-200 tw-bg-white tw-shadow-sm tw-rounded-xl tw-ring-1 hover:tw-shadow-md hover:tw--translate-y-0.5 tw-ring-gray-200">
+                        <div class="tw-p-4 sm:tw-p-5">
+                            <div class="tw-flex tw-items-center tw-gap-2.5">
+                                <div
+                                    class="tw-border-2 tw-flex tw-items-center tw-justify-center tw-rounded-full tw-w-10 tw-h-10">
+                                    <svg aria-hidden="true" class="tw-text-green-500 tw-size-5 tw-shrink-0"
+                                        xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2"
+                                        stroke="currentColor" fill="none" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                        <path d="M16 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>
+                                        <path d="M12 8m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>
+                                        <path d="M8 16m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>
+                                        <path d="M12 8v5l4 -2"></path>
+                                        <path d="M8 16l4 -8"></path>
+                                    </svg>
+                                </div>
+                                <div class="tw-flex tw-items-center tw-flex-1 tw-min-w-0 tw-gap-1">
+                                    <div class="tw-w-full sm:tw-w-1/2 md:tw-w-1/2">
+                                        <h3 class="tw-font-bold tw-text-base lg:tw-text-xl">
+                                            @lang('lang_v1.sales_commission_agents')
+                                        </h3>
+                                    </div>
+                                    <div class="tw-w-full sm:tw-w-1/2 md:tw-w-1/2">
+                                        @if (count($all_locations) > 1)
+                                            {!! Form::select('commission_agents_location', $all_locations, session('user.current_location_id'), [
+                                                'class' => 'form-control select2',
+                                                'placeholder' => __('lang_v1.select_location'),
+                                                'id' => 'commission_agents_location',
+                                            ]) !!}
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tw-flow-root tw-mt-5 tw-border-gray-200">
+                                <div class="tw--mx-4 tw--my-2 tw-overflow-x-auto sm:tw--mx-5">
+                                    <div class="tw-inline-block tw-min-w-full tw-py-2 tw-align-middle sm:tw-px-5">
+                                        <table class="table table-bordered table-striped" id="commission_agents_table">
+                                            <thead>
+                                                <tr>
+                                                    <th>@lang('business.name')</th>
+                                                    <th>@lang('lang_v1.contact_no')</th>
+                                                    <th>@lang('lang_v1.commission_percent')</th>
+                                                    <th>@lang('lang_v1.total_sales')</th>
+                                                    <th>@lang('sale.total_amount')</th>
+                                                    <th>@lang('lang_v1.total_commission')</th>
+                                                    <th>@lang('lang_v1.performance')</th>
+                                                    @if (!empty($custom_labels['sales_commission_agent']['custom_field_1']))
+                                                        <th>{{ $custom_labels['sales_commission_agent']['custom_field_1'] }}</th>
+                                                    @else
+                                                        <th>@lang('lang_v1.condition')</th>
+                                                    @endif
+                                                </tr>
+                                            </thead>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+                {{-- END SALES COMMISSION AGENTS SECTION --}}
+
                 {{-- PENDING SHIPMENTS SECTION - MOVED ABOVE SALES LAST 30 DAYS --}}
                 @if (auth()->user()->can('access_pending_shipments_only') ||
                         auth()->user()->can('access_shipping') ||
@@ -1345,6 +1411,47 @@
                     });
                 });
             @endif
+
+            // Sales Commission Agents Table
+            commission_agents_table = $('#commission_agents_table').DataTable({
+                processing: true,
+                serverSide: true,
+                ordering: false,
+                searching: false,
+                scrollY: "75vh",
+                scrollX: true,
+                scrollCollapse: true,
+                fixedHeader: false,
+                dom: 'Btirp',
+                ajax: {
+                    "url": '/home/sales-commission-agents',
+                    "data": function(d) {
+                        if ($('#commission_agents_location').length > 0) {
+                            d.location_id = $('#commission_agents_location').val();
+                        }
+                        // Add date range if needed (default to current month)
+                        d.start_date = moment().startOf('month').format('YYYY-MM-DD');
+                        d.end_date = moment().endOf('month').format('YYYY-MM-DD');
+                    }
+                },
+                columns: [
+                    { data: 'full_name', name: 'full_name' },
+                    { data: 'contact_no', name: 'contact_no' },
+                    { data: 'cmmsn_percent', name: 'cmmsn_percent' },
+                    { data: 'total_sales', name: 'total_sales' },
+                    { data: 'total_amount', name: 'total_amount' },
+                    { data: 'total_commission', name: 'total_commission' },
+                    { data: 'performance', name: 'performance' },
+                    { data: 'condition', name: 'condition' }
+                ],
+                fnDrawCallback: function(oSettings) {
+                    __currency_convert_recursively($('#commission_agents_table'));
+                },
+            });
+
+            $('#commission_agents_location').change(function() {
+                commission_agents_table.ajax.reload();
+            });
 
             sell_table = $('#shipments_table').DataTable({
                 processing: true,
