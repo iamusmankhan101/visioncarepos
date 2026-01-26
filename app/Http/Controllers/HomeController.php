@@ -78,8 +78,6 @@ class HomeController extends Controller
             return view('home.index');
         }
 
-        // HEROKU FIX: Load minimal data on initial page load
-        // Charts and heavy data will be loaded via AJAX
         $all_locations = BusinessLocation::forDropdown($business_id)->toArray();
         
         // Set default location if not set in session
@@ -108,10 +106,26 @@ class HomeController extends Controller
             }
         }
 
-        // Return view without heavy chart data - charts will load via AJAX
+        // Generate charts
+        $sells_chart_1 = null;
+        $sells_chart_2 = null;
+        
+        if (!empty($all_locations)) {
+            try {
+                // Sales Last 30 Days Chart
+                $sells_chart_1 = $this->generateSalesChart($business_id, 30);
+                
+                // Sales Current Financial Year Chart
+                $sells_chart_2 = $this->generateSalesChartFY($business_id);
+            } catch (\Exception $e) {
+                // If chart generation fails, continue without charts
+                \Log::warning('Chart generation failed: ' . $e->getMessage());
+            }
+        }
+
         return view('home.index', compact('widgets', 'all_locations', 'common_settings', 'is_admin'))
-            ->with('sells_chart_1', null)
-            ->with('sells_chart_2', null);
+            ->with('sells_chart_1', $sells_chart_1)
+            ->with('sells_chart_2', $sells_chart_2);
     }
 
     /**
@@ -589,5 +603,118 @@ class HomeController extends Controller
         }
         
         return response()->json(['success' => false, 'message' => 'Invalid request'], 400);
+    }
+
+    /**
+     * Generate sales chart for last N days
+     */
+    private function generateSalesChart($business_id, $days = 30)
+    {
+        $start_date = \Carbon::now()->subDays($days)->startOfDay();
+        $end_date = \Carbon::now()->endOfDay();
+        
+        $location_id = session('user.current_location_id');
+        
+        // Get sales data for the period
+        $sales_data = DB::table('transactions')
+            ->select(
+                DB::raw('DATE(transaction_date) as date'),
+                DB::raw('SUM(final_total) as total')
+            )
+            ->where('business_id', $business_id)
+            ->where('type', 'sell')
+            ->where('status', 'final')
+            ->whereBetween('transaction_date', [$start_date, $end_date]);
+            
+        if ($location_id) {
+            $sales_data->where('location_id', $location_id);
+        }
+        
+        $sales_data = $sales_data->groupBy(DB::raw('DATE(transaction_date)'))
+            ->orderBy('date')
+            ->get();
+        
+        // Prepare chart data
+        $dates = [];
+        $amounts = [];
+        
+        // Fill in missing dates with 0
+        $current_date = $start_date->copy();
+        while ($current_date <= $end_date) {
+            $date_str = $current_date->format('Y-m-d');
+            $dates[] = $current_date->format('M d');
+            
+            $found = $sales_data->firstWhere('date', $date_str);
+            $amounts[] = $found ? (float)$found->total : 0;
+            
+            $current_date->addDay();
+        }
+        
+        $chart = new CommonChart;
+        $chart->title(__('home.sells_last_30_days'));
+        $chart->labels($dates);
+        $chart->dataset(__('home.total_sell'), 'line', $amounts);
+        $chart->options($this->__chartOptions(__('home.total_sell')));
+        
+        return $chart;
+    }
+
+    /**
+     * Generate sales chart for current financial year
+     */
+    private function generateSalesChartFY($business_id)
+    {
+        $fy = $this->businessUtil->getCurrentFinancialYear($business_id);
+        $start_date = $fy['start'];
+        $end_date = $fy['end'];
+        
+        $location_id = session('user.current_location_id');
+        
+        // Get monthly sales data
+        $sales_data = DB::table('transactions')
+            ->select(
+                DB::raw('YEAR(transaction_date) as year'),
+                DB::raw('MONTH(transaction_date) as month'),
+                DB::raw('SUM(final_total) as total')
+            )
+            ->where('business_id', $business_id)
+            ->where('type', 'sell')
+            ->where('status', 'final')
+            ->whereBetween('transaction_date', [$start_date, $end_date]);
+            
+        if ($location_id) {
+            $sales_data->where('location_id', $location_id);
+        }
+        
+        $sales_data = $sales_data->groupBy(DB::raw('YEAR(transaction_date)'), DB::raw('MONTH(transaction_date)'))
+            ->orderBy('year')
+            ->orderBy('month')
+            ->get();
+        
+        // Prepare chart data
+        $months = [];
+        $amounts = [];
+        
+        $current_date = \Carbon::parse($start_date);
+        $end_carbon = \Carbon::parse($end_date);
+        
+        while ($current_date <= $end_carbon) {
+            $months[] = $current_date->format('M Y');
+            
+            $found = $sales_data->where('year', $current_date->year)
+                               ->where('month', $current_date->month)
+                               ->first();
+            $amounts[] = $found ? (float)$found->total : 0;
+            
+            $current_date->addMonth();
+        }
+        
+        $chart = new CommonChart;
+        $chart->title(__('home.sells_current_fy'));
+        $chart->labels($months);
+        $chart->dataset(__('home.total_sell'), 'column', $amounts);
+        $chart->options($this->__chartOptions(__('home.total_sell')));
+        
+        return $chart;
     }
 }
