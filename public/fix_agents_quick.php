@@ -3,13 +3,14 @@
 // Quick web-accessible fix for commission agents
 header('Content-Type: text/plain');
 
-try {
-    require_once '../vendor/autoload.php';
-    $app = require_once '../bootstrap/app.php';
-    $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
-    $kernel->bootstrap();
+require_once '../vendor/autoload.php';
+$app = require_once '../bootstrap/app.php';
+$kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+$kernel->bootstrap();
 
-    use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\DB;
+
+try {
 
     echo "🔧 Fixing Commission Agents Data...\n\n";
 

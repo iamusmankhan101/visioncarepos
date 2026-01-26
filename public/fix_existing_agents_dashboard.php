@@ -3,13 +3,14 @@
 // Comprehensive fix for existing commission agents dashboard
 header('Content-Type: text/html; charset=utf-8');
 
-try {
-    require_once '../vendor/autoload.php';
-    $app = require_once '../bootstrap/app.php';
-    $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
-    $kernel->bootstrap();
+require_once '../vendor/autoload.php';
+$app = require_once '../bootstrap/app.php';
+$kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+$kernel->bootstrap();
 
-    use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\DB;
+
+try {
 
     echo '<!DOCTYPE html>
     <html>

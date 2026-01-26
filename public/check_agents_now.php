@@ -3,13 +3,14 @@
 // Quick check of commission agents data
 header('Content-Type: text/html');
 
-try {
-    require_once '../vendor/autoload.php';
-    $app = require_once '../bootstrap/app.php';
-    $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
-    $kernel->bootstrap();
+require_once '../vendor/autoload.php';
+$app = require_once '../bootstrap/app.php';
+$kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+$kernel->bootstrap();
 
-    use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\DB;
+
+try {
 
     echo '<h2>Commission Agents Status Check</h2>';
 
