@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Checkbox Visibility Test</title>
+    <link rel="stylesheet" href="css/force-checkboxes.css">
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { border: 1px solid #ddd; padding: 20px; margin: 20px 0; border-radius: 4px; }
+        .success { color: #28a745; }
+        .error { color: #dc3545; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Checkbox Visibility Test</h1>
+    
+    <div class="test-section">
+        <h2>Test 1: Basic Checkboxes</h2>
+        <div class="checkbox">
+            <label>
+                <input type="checkbox" class="input-icheck" id="test1"> Basic checkbox with input-icheck class
+            </label>
+        </div>
+        <div class="checkbox">
+            <label>
+                <input type="checkbox" class="input-icheck" id="test2" checked> Pre-checked checkbox
+            </label>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test 2: User Management Style Checkboxes</h2>
+        <div class="checkbox">
+            <label>
+                <input type="checkbox" class="input-icheck" name="is_active" value="active" checked> Status for user
+            </label>
+        </div>
+        <div class="checkbox">
+            <label>
+                <input type="checkbox" class="input-icheck" name="allow_login" value="1"> Allow Login
+            </label>
+        </div>
+        <div class="checkbox">
+            <label>
+                <input type="checkbox" class="input-icheck" name="selected_contacts" value="1"> Allow Selected Contacts
+            </label>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test 3: Location Checkboxes</h2>
+        <div class="checkbox">
+            <label>
+                <input type="checkbox" class="input-icheck" name="access_all_locations" value="access_all_locations" checked> All Locations
+            </label>
+        </div>
+        <div class="checkbox">
+            <label>
+                <input type="checkbox" class="input-icheck" name="location_permissions[]" value="location.1"> Vision Care (BL0001)
+            </label>
+        </div>
+        <div class="checkbox">
+            <label>
+                <input type="checkbox" class="input-icheck" name="location_permissions[]" value="location.2"> Test Location
+            </label>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>📊 Test Results</h2>
+        <div id="results"></div>
+        <button onclick="runTest()" style="background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer;">Run Visibility Test</button>
+    </div>
+    
+    <script>
+    function runTest() {
+        const results = document.getElementById('results');
+        const checkboxes = document.querySelectorAll('.input-icheck');
+        let visibleCount = 0;
+        let hiddenCount = 0;
+        
+        results.innerHTML = '<h3>Testing ' + checkboxes.length + ' checkboxes...</h3>';
+        
+        checkboxes.forEach((checkbox, index) => {
+            const computed = window.getComputedStyle(checkbox);
+            const isVisible = computed.display !== 'none' && 
+                             computed.visibility !== 'hidden' && 
+                             computed.opacity !== '0';
+            
+            if (isVisible) {
+                visibleCount++;
+                results.innerHTML += '<div class="success">✅ Checkbox ' + (index + 1) + ': VISIBLE</div>';
+            } else {
+                hiddenCount++;
+                results.innerHTML += '<div class="error">❌ Checkbox ' + (index + 1) + ': HIDDEN</div>';
+            }
+        });
+        
+        results.innerHTML += '<hr>';
+        if (hiddenCount === 0) {
+            results.innerHTML += '<div class="success"><strong>🎉 ALL CHECKBOXES ARE VISIBLE!</strong></div>';
+            results.innerHTML += '<div>✅ ' + visibleCount + ' checkboxes working correctly</div>';
+        } else {
+            results.innerHTML += '<div class="error"><strong>⚠️ SOME CHECKBOXES ARE HIDDEN</strong></div>';
+            results.innerHTML += '<div>✅ ' + visibleCount + ' visible, ❌ ' + hiddenCount + ' hidden</div>';
+        }
+    }
+    
+    // Auto-run test on page load
+    window.onload = function() {
+        setTimeout(runTest, 500);
+    };
+    </script>
+</body>
+</html>
