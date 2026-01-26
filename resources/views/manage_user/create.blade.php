@@ -1,3 +1,7 @@
+@extends('layouts.app')
+
+@section('title', __( 'user.add_user' ))
+
 @section('css')
 <style>
 /* Fallback CSS for checkboxes if iCheck fails */
@@ -27,12 +31,108 @@ input[type="checkbox"].input-icheck:not(.icheckbox_square-blue input) {
     position: static !important;
     display: inline-block !important;
 }
+
+/* Hide iCheck wrappers completely */
+.icheckbox_square-blue,
+.iradio_square-blue {
+    display: none !important;
+}
+
+/* Force input-icheck elements to be visible and styled */
+.input-icheck {
+    display: inline-block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    width: 18px !important;
+    height: 18px !important;
+    margin: 0 8px 0 0 !important;
+    vertical-align: middle !important;
+    position: relative !important;
+    z-index: 1 !important;
+    cursor: pointer !important;
+    
+    /* Custom styling to replace iCheck */
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    border: 2px solid #007cba !important;
+    border-radius: 3px !important;
+    background: white !important;
+    outline: none !important;
+    transition: all 0.2s ease !important;
+}
+
+/* Hover state */
+.input-icheck:hover {
+    border-color: #005a87 !important;
+    box-shadow: 0 0 5px rgba(0, 124, 186, 0.3) !important;
+}
+
+/* Focus state */
+.input-icheck:focus {
+    border-color: #005a87 !important;
+    box-shadow: 0 0 0 2px rgba(0, 124, 186, 0.2) !important;
+}
+
+/* Checked state */
+.input-icheck:checked {
+    background: #007cba !important;
+    border-color: #007cba !important;
+}
+
+/* Checkmark for checked checkboxes */
+.input-icheck[type="checkbox"]:checked::after {
+    content: '✓' !important;
+    position: absolute !important;
+    top: -2px !important;
+    left: 2px !important;
+    color: white !important;
+    font-size: 14px !important;
+    font-weight: bold !important;
+    line-height: 1 !important;
+}
+
+/* Radio button styling */
+.input-icheck[type="radio"] {
+    border-radius: 50% !important;
+}
+
+/* Radio button checked state */
+.input-icheck[type="radio"]:checked::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 3px !important;
+    left: 3px !important;
+    width: 8px !important;
+    height: 8px !important;
+    border-radius: 50% !important;
+    background: white !important;
+}
+
+/* Label styling */
+.input-icheck + label,
+label:has(.input-icheck) {
+    cursor: pointer !important;
+    user-select: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    margin: 0 !important;
+    padding: 5px 0 !important;
+}
+
+/* Checkbox container styling */
+.checkbox {
+    display: block !important;
+    margin: 10px 0 !important;
+    min-height: 20px !important;
+}
+
+.form-group .checkbox {
+    margin-top: 0 !important;
+    margin-bottom: 10px !important;
+}
 </style>
 @endsection
-
-@extends('layouts.app')
-
-@section('title', __( 'user.add_user' ))
 
 @section('content')
 

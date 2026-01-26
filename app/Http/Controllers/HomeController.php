@@ -457,7 +457,10 @@ class HomeController extends Controller
 
                 return Datatables::of($query)
                     ->editColumn('name', function ($row) {
-                        return $row->name ?: 'N/A';
+                        $name = $row->name ?: 'N/A';
+                        // Debug: Log the name being returned
+                        \Log::info('Commission Agent Name: ' . $name . ' (ID: ' . $row->id . ')');
+                        return $name;
                     })
                     ->editColumn('contact_no', function ($row) {
                         return $row->contact_no ?: 'N/A';
@@ -495,15 +498,65 @@ class HomeController extends Controller
             } catch (\Exception $e) {
                 \Log::error('Sales Commission Agents DataTable Error: ' . $e->getMessage());
                 
-                // Return empty DataTable response
-                return response()->json([
-                    'draw' => request()->input('draw', 1),
-                    'recordsTotal' => 0,
-                    'recordsFiltered' => 0,
-                    'data' => [],
-                    'error' => 'Error loading commission agents data'
-                ]);
+                // Fallback: Return basic commission agents data without sales
+                try {
+                    $fallback_query = DB::table('users')
+                        ->where('business_id', $business_id)
+                        ->where('is_cmmsn_agnt', 1)
+                        ->whereNull('deleted_at')
+                        ->select(
+                            'id',
+                            DB::raw("TRIM(CONCAT(COALESCE(surname, ''), ' ', COALESCE(first_name, ''), ' ', COALESCE(last_name, ''))) as name"),
+                            'contact_no',
+                            'cmmsn_percent',
+                            DB::raw("0 as total_sales"),
+                            DB::raw("0 as total_amount"),
+                            DB::raw("0 as total_commission"),
+                            DB::raw("'' as condition")
+                        );
+                    
+                    return Datatables::of($fallback_query)
+                        ->editColumn('name', function ($row) {
+                            return $row->name ?: 'Agent ' . $row->id;
+                        })
+                        ->editColumn('contact_no', function ($row) {
+                            return $row->contact_no ?: 'N/A';
+                        })
+                        ->editColumn('cmmsn_percent', function ($row) {
+                            return ($row->cmmsn_percent ?: 0) . '%';
+                        })
+                        ->editColumn('total_amount', function ($row) {
+                            return '<span class="display_currency" data-currency_symbol="true">0.00</span>';
+                        })
+                        ->editColumn('total_commission', function ($row) {
+                            return '<span class="display_currency" data-currency_symbol="true">0.00</span>';
+                        })
+                        ->addColumn('performance', function ($row) {
+                            return '<span class="badge badge-secondary">No Sales</span>';
+                        })
+                        ->editColumn('condition', function ($row) {
+                            return 'None';
+                        })
+                        ->rawColumns(['total_amount', 'total_commission', 'performance'])
+                        ->make(false);
+                        
+                } catch (\Exception $fallback_error) {
+                    \Log::error('Fallback query also failed: ' . $fallback_error->getMessage());
+                    
+                    // Return empty DataTable response
+                    return response()->json([
+                        'draw' => request()->input('draw', 1),
+                        'recordsTotal' => 0,
+                        'recordsFiltered' => 0,
+                        'data' => [],
+                        'error' => 'Error loading commission agents data: ' . $e->getMessage()
+                    ]);
+                }
             }
+        }
+        
+        return response()->json(['success' => false, 'message' => 'Invalid request'], 400);
+    }            }
         }
     }
 
