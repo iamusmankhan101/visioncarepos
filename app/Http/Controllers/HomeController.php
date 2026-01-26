@@ -81,6 +81,22 @@ class HomeController extends Controller
         // HEROKU FIX: Load minimal data on initial page load
         // Charts and heavy data will be loaded via AJAX
         $all_locations = BusinessLocation::forDropdown($business_id)->toArray();
+        
+        // Set default location if not set in session
+        if (!session('user.current_location_id') && !empty($all_locations)) {
+            $permitted_locations = auth()->user()->permitted_locations();
+            if ($permitted_locations != 'all') {
+                $default_location_id = is_array($permitted_locations) ? $permitted_locations[0] : $permitted_locations;
+            } else {
+                $default_location_id = array_key_first($all_locations);
+            }
+            
+            if ($default_location_id && isset($all_locations[$default_location_id])) {
+                session(['user.current_location_id' => $default_location_id]);
+                session(['user.current_location_name' => $all_locations[$default_location_id]]);
+            }
+        }
+        
         $common_settings = ! empty(session('business.common_settings')) ? session('business.common_settings') : [];
         
         // Get Dashboard widgets from module
@@ -109,6 +125,12 @@ class HomeController extends Controller
             $start = request()->start;
             $end = request()->end;
             $location_id = request()->location_id;
+            
+            // If no location_id provided, use current location from session
+            if (empty($location_id)) {
+                $location_id = session('user.current_location_id');
+            }
+            
             $business_id = request()->session()->get('user.business_id');
 
             // get user id parameter
@@ -515,5 +537,57 @@ class HomeController extends Controller
         $response = $this->moduleUtil->getLocationFromCoordinates($latlng_array[0], $latlng_array[1]);
 
         return ['address' => $response];
+    }
+
+    /**
+     * Switch user's current location and update session
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\Response
+     */
+    public function switchLocation(Request $request)
+    {
+        if ($request->ajax()) {
+            $business_id = $request->session()->get('user.business_id');
+            $location_id = $request->input('location_id');
+            
+            // Validate that the location belongs to the business and user has access
+            $permitted_locations = auth()->user()->permitted_locations();
+            
+            if ($permitted_locations != 'all' && !in_array($location_id, $permitted_locations)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Access denied to this location'
+                ], 403);
+            }
+            
+            // Verify location exists and belongs to business
+            $location = BusinessLocation::where('business_id', $business_id)
+                                      ->where('id', $location_id)
+                                      ->where('is_active', 1)
+                                      ->first();
+            
+            if (!$location) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Location not found'
+                ], 404);
+            }
+            
+            // Update session with new location
+            $request->session()->put('user.current_location_id', $location_id);
+            $request->session()->put('user.current_location_name', $location->name);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Location switched successfully',
+                'location' => [
+                    'id' => $location->id,
+                    'name' => $location->name
+                ]
+            ]);
+        }
+        
+        return response()->json(['success' => false, 'message' => 'Invalid request'], 400);
     }
 }

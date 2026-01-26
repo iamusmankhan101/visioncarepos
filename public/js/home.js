@@ -16,15 +16,51 @@ $(document).ready(function() {
     }
 
     $('#dashboard_location').change( function(e) {
-        var start = $('#dashboard_date_filter')
-                    .data('daterangepicker')
-                    .startDate.format('YYYY-MM-DD');
+        var location_id = $(this).val();
+        
+        // Switch location via AJAX
+        if (location_id) {
+            $.ajax({
+                method: 'POST',
+                url: '/home/switch-location',
+                dataType: 'json',
+                data: {
+                    location_id: location_id,
+                    _token: $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(response) {
+                    if (response.success) {
+                        // Show success message
+                        toastr.success('Location switched to: ' + response.location.name);
+                        
+                        // Reload the page to show location-specific data
+                        setTimeout(function() {
+                            window.location.reload();
+                        }, 1000);
+                    } else {
+                        toastr.error(response.message || 'Failed to switch location');
+                    }
+                },
+                error: function(xhr) {
+                    var errorMessage = 'Failed to switch location';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    }
+                    toastr.error(errorMessage);
+                }
+            });
+        } else {
+            // If no location selected, just update statistics
+            var start = $('#dashboard_date_filter')
+                        .data('daterangepicker')
+                        .startDate.format('YYYY-MM-DD');
 
-        var end = $('#dashboard_date_filter')
-                    .data('daterangepicker')
-                    .endDate.format('YYYY-MM-DD');
+            var end = $('#dashboard_date_filter')
+                        .data('daterangepicker')
+                        .endDate.format('YYYY-MM-DD');
 
-        update_statistics(start, end);
+            update_statistics(start, end);
+        }
     });
 
     //atock alert datatables

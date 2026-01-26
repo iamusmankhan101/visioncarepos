@@ -22,7 +22,7 @@
                             @if ($is_admin)
                                 <div class="tw-mt-2 sm:tw-w-1/3 md:tw-w-1/4 ">
                                     @if (count($all_locations) > 1)
-                                        {!! Form::select('dashboard_location', $all_locations, null, [
+                                        {!! Form::select('dashboard_location', $all_locations, session('user.current_location_id'), [
                                             'class' => 'form-control select2',
                                             'placeholder' => __('lang_v1.select_location'),
                                             'id' => 'dashboard_location',
@@ -400,7 +400,7 @@
                                     </div>
                                     <div class="tw-w-full sm:tw-w-1/2 md:tw-w-1/2">
                                         @if (count($all_locations) > 1)
-                                            {!! Form::select('pending_shipments_location', $all_locations, null, [
+                                            {!! Form::select('pending_shipments_location', $all_locations, session('user.current_location_id'), [
                                                 'class' => 'form-control select2 ',
                                                 'placeholder' => __('lang_v1.select_location'),
                                                 'id' => 'pending_shipments_location',
@@ -575,7 +575,7 @@
                                         </h3>
                                     </div>
                                     <div class="tw-w-full sm:tw-w-1/2 md:tw-w-1/2">
-                                        {!! Form::select('sales_payment_dues_location', $all_locations, null, [
+                                        {!! Form::select('sales_payment_dues_location', $all_locations, session('user.current_location_id'), [
                                             'class' => 'form-control select2',
                                             'placeholder' => __('lang_v1.select_location'),
                                             'id' => 'sales_payment_dues_location',
@@ -632,7 +632,7 @@
                                     </div>
                                     <div class="tw-w-full sm:tw-w-1/2 md:tw-w-1/2">
                                         @if (count($all_locations) > 1)
-                                            {!! Form::select('purchase_payment_dues_location', $all_locations, null, [
+                                            {!! Form::select('purchase_payment_dues_location', $all_locations, session('user.current_location_id'), [
                                                 'class' => 'form-control select2 ',
                                                 'placeholder' => __('lang_v1.select_location'),
                                                 'id' => 'purchase_payment_dues_location',
@@ -687,7 +687,7 @@
                                     </div>
                                     <div class="tw-w-full sm:tw-w-1/2 md:tw-w-1/2">
                                         @if (count($all_locations) > 1)
-                                            {!! Form::select('stock_alert_location', $all_locations, null, [
+                                            {!! Form::select('stock_alert_location', $all_locations, session('user.current_location_id'), [
                                                 'class' => 'form-control select2',
                                                 'placeholder' => __('lang_v1.select_location'),
                                                 'id' => 'stock_alert_location',
@@ -792,7 +792,7 @@
                                     </div>
                                     <div class="tw-w-full sm:tw-w-1/2 md:tw-w-1/2">
                                         @if (count($all_locations) > 1)
-                                            {!! Form::select('so_location', $all_locations, null, [
+                                            {!! Form::select('so_location', $all_locations, session('user.current_location_id'), [
                                                 'class' => 'form-control select2',
                                                 'placeholder' => __('lang_v1.select_location'),
                                                 'id' => 'so_location',
