@@ -1,9 +1,27 @@
 @section('css')
 <style>
 /* MODERN CHECKBOX ICONS - PROFESSIONAL STYLING */
+
+/* ANTI-ICHECK: Hide all iCheck wrappers immediately */
+.icheckbox_square-blue,
+.iradio_square-blue,
+.icheckbox_square-blue *:not(input),
+.iradio_square-blue *:not(input) {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    position: absolute !important;
+    left: -9999px !important;
+    top: -9999px !important;
+    width: 0 !important;
+    height: 0 !important;
+}
+
 .input-icheck,
 input[type="checkbox"].input-icheck,
-input.input-icheck {
+input.input-icheck,
+.icheckbox_square-blue input[type="checkbox"],
+.iradio_square-blue input[type="radio"] {
     /* Size and positioning */
     width: 20px !important;
     height: 20px !important;
@@ -17,7 +35,7 @@ input.input-icheck {
     visibility: visible !important;
     opacity: 1 !important;
     position: relative !important;
-    z-index: 1000 !important;
+    z-index: 9999 !important;
     
     /* Remove default styling */
     appearance: none !important;
@@ -440,7 +458,26 @@ label:has(.input-icheck) {
 <script type="text/javascript">
   // IMMEDIATE FIX: Make all checkboxes visible right now
   (function() {
-    console.log('🚨 CSS-ONLY CHECKBOX FIX: Making checkboxes visible...');
+    console.log('🚨 ANTI-ICHECK FIX: Preventing iCheck initialization...');
+    
+    // Block iCheck from initializing
+    window.iCheck = function() { 
+      console.log('🚫 Blocked iCheck initialization');
+      return this; 
+    };
+    
+    if (window.jQuery) {
+      window.jQuery.fn.iCheck = function() { 
+        console.log('🚫 Blocked jQuery iCheck initialization');
+        return this; 
+      };
+      if (window.$) {
+        window.$.fn.iCheck = function() { 
+          console.log('🚫 Blocked $ iCheck initialization');
+          return this; 
+        };
+      }
+    }
     
     // Force all input-icheck elements to be visible
     var checkboxes = document.querySelectorAll('.input-icheck');
@@ -451,11 +488,13 @@ label:has(.input-icheck) {
       checkbox.style.display = 'inline-block';
       checkbox.style.visibility = 'visible';
       checkbox.style.opacity = '1';
+      checkbox.style.position = 'relative';
+      checkbox.style.zIndex = '9999';
       
       console.log('✅ Made visible:', checkbox.name || checkbox.id || 'checkbox-' + i);
     }
     
-    // Remove any iCheck wrappers that might be interfering
+    // Remove any iCheck wrappers that might already exist
     var iCheckWrappers = document.querySelectorAll('.icheckbox_square-blue, .iradio_square-blue');
     for (var j = 0; j < iCheckWrappers.length; j++) {
       var wrapper = iCheckWrappers[j];
@@ -466,6 +505,36 @@ label:has(.input-icheck) {
         console.log('✅ Removed iCheck wrapper for:', input.name || input.id);
       }
     }
+    
+    // Set up continuous monitoring to prevent iCheck from taking over
+    setInterval(function() {
+      // Remove any new iCheck wrappers
+      var newWrappers = document.querySelectorAll('.icheckbox_square-blue, .iradio_square-blue');
+      newWrappers.forEach(function(wrapper) {
+        var input = wrapper.querySelector('input');
+        if (input) {
+          wrapper.parentNode.insertBefore(input, wrapper);
+          wrapper.remove();
+          input.style.setProperty('display', 'inline-block', 'important');
+          input.style.setProperty('visibility', 'visible', 'important');
+          input.style.setProperty('opacity', '1', 'important');
+          console.log('🔄 Removed new iCheck wrapper for:', input.name || input.id);
+        }
+      });
+      
+      // Ensure all checkboxes remain visible
+      document.querySelectorAll('.input-icheck').forEach(function(checkbox) {
+        if (checkbox.style.display === 'none' || 
+            checkbox.style.visibility === 'hidden' || 
+            checkbox.style.opacity === '0') {
+          
+          checkbox.style.setProperty('display', 'inline-block', 'important');
+          checkbox.style.setProperty('visibility', 'visible', 'important');
+          checkbox.style.setProperty('opacity', '1', 'important');
+        }
+      });
+    }, 500);
+    
   })();
 
   $(document).ready(function() {
