@@ -226,11 +226,23 @@ input[type="radio"].input-icheck {
   visibility: visible !important;
 }
 
-/* Make labels clickable */
+/* Make labels clickable and visible */
 .checkbox label,
 .radio label {
   cursor: pointer !important;
   display: inline-block !important;
+  font-weight: normal !important;
+  margin-bottom: 0 !important;
+  color: #333 !important;
+  font-size: 14px !important;
+}
+
+/* Ensure label text is visible */
+.checkbox label span,
+.radio label span {
+  display: inline !important;
+  visibility: visible !important;
+  color: #333 !important;
 }
 
 /* iCheck wrapper visibility */
@@ -238,6 +250,7 @@ input[type="radio"].input-icheck {
 .iradio_square-blue {
   display: inline-block !important;
   margin-right: 5px !important;
+  vertical-align: middle !important;
 }
 
 /* Force visibility for location permissions */
@@ -245,6 +258,23 @@ input[type="radio"].input-icheck {
 .col-md-12 .checkbox {
   display: block !important;
   margin: 5px 0 !important;
+}
+
+/* Ensure iCheck doesn't hide label text */
+.icheckbox_square-blue + span,
+.iradio_square-blue + span {
+  display: inline !important;
+  visibility: visible !important;
+  color: #333 !important;
+  margin-left: 5px !important;
+}
+
+/* Fix for missing label text */
+.checkbox label:after {
+  content: attr(data-label) !important;
+  display: inline !important;
+  margin-left: 5px !important;
+  color: #333 !important;
 }
 </style>
 @endsection
@@ -255,7 +285,7 @@ input[type="radio"].input-icheck {
   function emergencyCheckboxFix() {
     console.log('🚨 EMERGENCY CHECKBOX FIX STARTING...');
     
-    // Add emergency CSS
+    // Add emergency CSS for label text
     var emergencyCSS = `
       <style id="emergency-checkbox-fix">
         /* Force all checkboxes to be visible */
@@ -271,27 +301,32 @@ input[type="radio"].input-icheck {
           z-index: 999 !important;
         }
         
-        /* Remove any hiding from iCheck */
-        .icheckbox_square-blue input,
-        .iradio_square-blue input {
-          display: inline-block !important;
-          visibility: visible !important;
-          opacity: 1 !important;
-          position: static !important;
-        }
-        
-        /* Ensure labels work */
+        /* Ensure labels and text are visible */
         .checkbox label,
         .radio label {
           cursor: pointer !important;
           display: inline-block !important;
+          font-weight: normal !important;
+          color: #333 !important;
+          font-size: 14px !important;
+          margin-bottom: 0 !important;
         }
         
-        /* Show iCheck wrappers if they exist */
+        /* Show label text after iCheck */
         .icheckbox_square-blue,
         .iradio_square-blue {
           display: inline-block !important;
           margin-right: 5px !important;
+          vertical-align: middle !important;
+        }
+        
+        /* Ensure text nodes are visible */
+        .checkbox label .label-text,
+        .radio label .label-text {
+          display: inline !important;
+          visibility: visible !important;
+          color: #333 !important;
+          margin-left: 5px !important;
         }
       </style>
     `;
@@ -301,15 +336,26 @@ input[type="radio"].input-icheck {
       console.log('✅ Emergency CSS injected');
     }
     
-    // Force all checkboxes to be visible
+    // Force all checkboxes to be visible and preserve label text
     var $allCheckboxes = $('input[type="checkbox"].input-icheck, input[type="radio"].input-icheck');
     console.log('Found ' + $allCheckboxes.length + ' checkboxes to fix');
     
     $allCheckboxes.each(function(index) {
       var $checkbox = $(this);
       var name = $checkbox.attr('name') || $checkbox.attr('id') || 'checkbox-' + index;
+      var $label = $checkbox.closest('label');
       
       console.log('Processing: ' + name);
+      
+      // Store original label text
+      var originalText = '';
+      if ($label.length > 0) {
+        // Get text content excluding the checkbox
+        var labelClone = $label.clone();
+        labelClone.find('input').remove();
+        originalText = labelClone.text().trim();
+        console.log('Original text for ' + name + ': "' + originalText + '"');
+      }
       
       // Remove any iCheck wrapper that might be problematic
       var $parent = $checkbox.parent();
@@ -330,10 +376,21 @@ input[type="radio"].input-icheck {
         'z-index': '999'
       });
       
-      // Ensure it's not hidden by parent elements
-      $checkbox.parents().each(function() {
-        $(this).css('overflow', 'visible');
-      });
+      // Ensure label is visible and has text
+      if ($label.length > 0) {
+        $label.css({
+          'display': 'inline-block',
+          'cursor': 'pointer',
+          'font-weight': 'normal',
+          'color': '#333',
+          'font-size': '14px'
+        });
+        
+        // Add text span if missing
+        if (originalText && $label.find('.label-text').length === 0) {
+          $label.append('<span class="label-text">' + originalText + '</span>');
+        }
+      }
       
       console.log('✅ Fixed visibility for: ' + name);
     });
@@ -346,6 +403,15 @@ input[type="radio"].input-icheck {
         $allCheckboxes.each(function() {
           var $this = $(this);
           var name = $this.attr('name') || $this.attr('id') || 'unnamed';
+          var $label = $this.closest('label');
+          
+          // Store label text before iCheck
+          var labelText = '';
+          if ($label.length > 0) {
+            var labelClone = $label.clone();
+            labelClone.find('input, .icheckbox_square-blue, .iradio_square-blue').remove();
+            labelText = labelClone.text().trim();
+          }
           
           if (!$this.parent().hasClass('icheckbox_square-blue') && 
               !$this.parent().hasClass('iradio_square-blue')) {
@@ -354,6 +420,14 @@ input[type="radio"].input-icheck {
                 checkboxClass: 'icheckbox_square-blue',
                 radioClass: 'iradio_square-blue'
               });
+              
+              // Restore label text after iCheck
+              if (labelText && $label.length > 0) {
+                if ($label.find('.label-text').length === 0) {
+                  $label.append('<span class="label-text"> ' + labelText + '</span>');
+                }
+              }
+              
               console.log('✅ iCheck OK for: ' + name);
             } catch (error) {
               console.log('❌ iCheck failed for ' + name + ', keeping as regular checkbox');
