@@ -404,6 +404,15 @@ class HomeController extends Controller
             $start_date = request()->input('start_date', \Carbon::now()->startOfMonth()->format('Y-m-d'));
             $end_date = request()->input('end_date', \Carbon::now()->endOfMonth()->format('Y-m-d'));
             
+            // Check if condition column exists
+            $conditionColumnExists = false;
+            try {
+                $columns = DB::select("SHOW COLUMNS FROM users LIKE 'condition'");
+                $conditionColumnExists = !empty($columns);
+            } catch (\Exception $e) {
+                // Column doesn't exist, continue without it
+            }
+            
             // Get sales commission agents with their performance
             $query = DB::table('users as u')
                 ->leftJoin('transactions as t', function($join) use ($start_date, $end_date, $location_id) {
@@ -425,26 +434,40 @@ class HomeController extends Controller
                     'u.email',
                     'u.contact_no',
                     'u.cmmsn_percent',
-                    'u.condition',
                     DB::raw('COUNT(t.id) as total_sales'),
                     DB::raw('COALESCE(SUM(t.final_total), 0) as total_amount'),
                     DB::raw('COALESCE(SUM(t.final_total * u.cmmsn_percent / 100), 0) as total_commission')
-                )
-                ->groupBy('u.id', 'u.surname', 'u.first_name', 'u.last_name', 'u.email', 'u.contact_no', 'u.cmmsn_percent', 'u.condition')
-                ->orderBy('total_amount', 'desc');
+                );
+            
+            // Add condition column only if it exists
+            if ($conditionColumnExists) {
+                $query->addSelect('u.condition');
+                $query->groupBy('u.id', 'u.surname', 'u.first_name', 'u.last_name', 'u.email', 'u.contact_no', 'u.cmmsn_percent', 'u.condition');
+            } else {
+                $query->addSelect(DB::raw("'' as condition"));
+                $query->groupBy('u.id', 'u.surname', 'u.first_name', 'u.last_name', 'u.email', 'u.contact_no', 'u.cmmsn_percent');
+            }
+            
+            $query->orderBy('total_amount', 'desc');
 
             return Datatables::of($query)
                 ->editColumn('full_name', function ($row) {
-                    return trim($row->full_name);
+                    return trim($row->full_name) ?: 'N/A';
+                })
+                ->editColumn('contact_no', function ($row) {
+                    return $row->contact_no ?: 'N/A';
                 })
                 ->editColumn('total_amount', function ($row) {
-                    return '<span class="display_currency" data-currency_symbol="true">' . $row->total_amount . '</span>';
+                    return '<span class="display_currency" data-currency_symbol="true">' . number_format($row->total_amount, 2) . '</span>';
                 })
                 ->editColumn('total_commission', function ($row) {
-                    return '<span class="display_currency" data-currency_symbol="true">' . $row->total_commission . '</span>';
+                    return '<span class="display_currency" data-currency_symbol="true">' . number_format($row->total_commission, 2) . '</span>';
                 })
                 ->editColumn('cmmsn_percent', function ($row) {
-                    return $row->cmmsn_percent . '%';
+                    return ($row->cmmsn_percent ?: 0) . '%';
+                })
+                ->editColumn('condition', function ($row) {
+                    return $row->condition ?: 'None';
                 })
                 ->addColumn('performance', function ($row) {
                     // Simple performance indicator based on sales count
