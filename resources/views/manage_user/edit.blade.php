@@ -210,62 +210,26 @@
   @stop
 @section('javascript')
 <script type="text/javascript">
-  // Robust checkbox fix that prevents disappearing
-  function ensureCheckboxesVisibleEdit() {
-    console.log('Ensuring checkboxes are visible in edit...');
+  $(document).ready(function(){
+    // Fix for checkboxes not showing - Force iCheck initialization
+    console.log('Initializing iCheck for user edit...');
     
-    // Find all input-icheck elements
-    $('input[type="checkbox"].input-icheck, input[type="radio"].input-icheck').each(function() {
-      var $input = $(this);
-      var $parent = $input.parent();
-      var inputName = $input.attr('name') || $input.attr('id') || 'unnamed';
-      
-      // Check if properly initialized and visible
-      var isProperlyInitialized = $parent.hasClass('icheckbox_square-blue') || $parent.hasClass('iradio_square-blue');
-      var isVisible = $parent.is(':visible') && $input.is(':visible');
-      
-      if (!isProperlyInitialized || !isVisible) {
-        console.log('Fixing checkbox in edit:', inputName);
+    // Force initialize iCheck for all checkboxes with input-icheck class
+    setTimeout(function() {
+      $('input[type="checkbox"].input-icheck, input[type="radio"].input-icheck').each(function() {
+        var $this = $(this);
         
-        // Clean up if needed
-        if (isProperlyInitialized && !isVisible) {
-          try {
-            $input.iCheck('destroy');
-          } catch(e) {
-            console.log('Could not destroy iCheck instance');
-          }
-        }
-        
-        // Reinitialize
-        try {
-          $input.iCheck({
+        // Check if already initialized
+        if (!$this.parent().hasClass('icheckbox_square-blue') && !$this.parent().hasClass('iradio_square-blue')) {
+          console.log('Initializing iCheck for:', $this.attr('name') || $this.attr('id'));
+          
+          $this.iCheck({
             checkboxClass: 'icheckbox_square-blue',
             radioClass: 'iradio_square-blue'
           });
-          console.log('Successfully initialized in edit:', inputName);
-        } catch(e) {
-          console.error('Failed to initialize in edit:', inputName, e);
         }
-      }
-    });
-  }
-
-  $(document).ready(function(){
-    // Initialize multiple times to ensure it works
-    setTimeout(ensureCheckboxesVisibleEdit, 100);
-    setTimeout(ensureCheckboxesVisibleEdit, 800);
-    setTimeout(ensureCheckboxesVisibleEdit, 1500);
-    
-    // Monitor and fix if they disappear
-    setInterval(function() {
-      var visibleInputs = $('input[type="checkbox"].input-icheck:visible').length;
-      var visibleWrappers = $('.icheckbox_square-blue:visible, .iradio_square-blue:visible').length;
-      
-      if (visibleInputs > 0 && visibleWrappers === 0) {
-        console.log('Checkboxes disappeared in edit, fixing...');
-        ensureCheckboxesVisibleEdit();
-      }
-    }, 2000);
+      });
+    }, 500); // Delay to ensure DOM is ready
 
     __page_leave_confirmation('#user_edit_form');
     

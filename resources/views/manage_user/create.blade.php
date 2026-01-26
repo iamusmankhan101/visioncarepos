@@ -1,3 +1,35 @@
+@section('css')
+<style>
+/* Fallback CSS for checkboxes if iCheck fails */
+.input-icheck {
+    display: inline-block !important;
+    width: auto !important;
+    height: auto !important;
+    margin-right: 5px;
+}
+
+/* Ensure checkbox labels are clickable */
+.checkbox label {
+    cursor: pointer;
+    font-weight: normal;
+}
+
+/* Debug styles */
+.checkbox-debug {
+    border: 1px dashed #ccc;
+    padding: 5px;
+    margin: 2px 0;
+}
+
+/* Force visibility for troubleshooting */
+input[type="checkbox"].input-icheck:not(.icheckbox_square-blue input) {
+    opacity: 1 !important;
+    position: static !important;
+    display: inline-block !important;
+}
+</style>
+@endsection
+
 @extends('layouts.app')
 
 @section('title', __( 'user.add_user' ))
@@ -203,341 +235,105 @@
   </div>
 {!! Form::close() !!}
   @stop
-
-@section('css')
-<style>
-/* Emergency checkbox visibility fix */
-input[type="checkbox"].input-icheck,
-input[type="radio"].input-icheck {
-  display: inline-block !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  position: static !important;
-  width: 16px !important;
-  height: 16px !important;
-  margin-right: 8px !important;
-  z-index: 999 !important;
-}
-
-/* Ensure checkbox containers are visible */
-.checkbox,
-.radio {
-  display: block !important;
-  visibility: visible !important;
-}
-
-/* Make labels clickable and visible */
-.checkbox label,
-.radio label {
-  cursor: pointer !important;
-  display: inline-block !important;
-  font-weight: normal !important;
-  margin-bottom: 0 !important;
-  color: #333 !important;
-  font-size: 14px !important;
-}
-
-/* Ensure label text is visible */
-.checkbox label span,
-.radio label span {
-  display: inline !important;
-  visibility: visible !important;
-  color: #333 !important;
-}
-
-/* iCheck wrapper visibility */
-.icheckbox_square-blue,
-.iradio_square-blue {
-  display: inline-block !important;
-  margin-right: 5px !important;
-  vertical-align: middle !important;
-}
-
-/* Force visibility for location permissions */
-.col-md-9 .checkbox,
-.col-md-12 .checkbox {
-  display: block !important;
-  margin: 5px 0 !important;
-}
-
-/* Ensure iCheck doesn't hide label text */
-.icheckbox_square-blue + span,
-.iradio_square-blue + span {
-  display: inline !important;
-  visibility: visible !important;
-  color: #333 !important;
-  margin-left: 5px !important;
-}
-
-/* Fix for missing label text */
-.checkbox label:after {
-  content: attr(data-label) !important;
-  display: inline !important;
-  margin-left: 5px !important;
-  color: #333 !important;
-}
-</style>
-@endsection
-
 @section('javascript')
 <script type="text/javascript">
-  // Emergency checkbox visibility fix - MUST WORK!
-  function emergencyCheckboxFix() {
-    console.log('🚨 EMERGENCY CHECKBOX FIX STARTING...');
+  // Comprehensive checkbox fix for user management
+  function initializeCheckboxes() {
+    console.log('🔧 Starting checkbox initialization...');
     
-    // Add emergency CSS for label text
-    var emergencyCSS = `
-      <style id="emergency-checkbox-fix">
-        /* Force all checkboxes to be visible */
-        input[type="checkbox"].input-icheck,
-        input[type="radio"].input-icheck {
-          display: inline-block !important;
-          visibility: visible !important;
-          opacity: 1 !important;
-          position: static !important;
-          width: 16px !important;
-          height: 16px !important;
-          margin-right: 8px !important;
-          z-index: 999 !important;
-        }
-        
-        /* Ensure labels and text are visible */
-        .checkbox label,
-        .radio label {
-          cursor: pointer !important;
-          display: inline-block !important;
-          font-weight: normal !important;
-          color: #333 !important;
-          font-size: 14px !important;
-          margin-bottom: 0 !important;
-        }
-        
-        /* Show label text after iCheck */
-        .icheckbox_square-blue,
-        .iradio_square-blue {
-          display: inline-block !important;
-          margin-right: 5px !important;
-          vertical-align: middle !important;
-        }
-        
-        /* Ensure text nodes are visible */
-        .checkbox label .label-text,
-        .radio label .label-text {
-          display: inline !important;
-          visibility: visible !important;
-          color: #333 !important;
-          margin-left: 5px !important;
-        }
-      </style>
-    `;
-    
-    if ($('#emergency-checkbox-fix').length === 0) {
-      $('head').append(emergencyCSS);
-      console.log('✅ Emergency CSS injected');
+    // Check if jQuery is loaded
+    if (typeof jQuery === 'undefined') {
+      console.error('❌ jQuery not loaded!');
+      return false;
     }
     
-    // Force all checkboxes to be visible and preserve label text
-    var $allCheckboxes = $('input[type="checkbox"].input-icheck, input[type="radio"].input-icheck');
-    console.log('Found ' + $allCheckboxes.length + ' checkboxes to fix');
+    // Check if iCheck plugin is loaded
+    if (typeof jQuery.fn.iCheck === 'undefined') {
+      console.error('❌ iCheck plugin not loaded!');
+      // Fallback: show regular checkboxes
+      $('input[type="checkbox"].input-icheck').css('display', 'inline-block');
+      return false;
+    }
     
-    $allCheckboxes.each(function(index) {
-      var $checkbox = $(this);
-      var name = $checkbox.attr('name') || $checkbox.attr('id') || 'checkbox-' + index;
-      var $label = $checkbox.closest('label');
-      
-      console.log('Processing: ' + name);
-      
-      // Store original label text
-      var originalText = '';
-      if ($label.length > 0) {
-        // Get text content excluding the checkbox
-        var labelClone = $label.clone();
-        labelClone.find('input').remove();
-        originalText = labelClone.text().trim();
-        console.log('Original text for ' + name + ': "' + originalText + '"');
-      }
-      
-      // Remove any iCheck wrapper that might be problematic
-      var $parent = $checkbox.parent();
-      if ($parent.hasClass('icheckbox_square-blue') || $parent.hasClass('iradio_square-blue')) {
-        console.log('Unwrapping iCheck for: ' + name);
-        $checkbox.unwrap();
-      }
-      
-      // Force visibility styles
-      $checkbox.css({
-        'display': 'inline-block',
-        'visibility': 'visible',
-        'opacity': '1',
-        'position': 'static',
-        'width': '16px',
-        'height': '16px',
-        'margin-right': '8px',
-        'z-index': '999'
-      });
-      
-      // Ensure label is visible and has text
-      if ($label.length > 0) {
-        $label.css({
-          'display': 'inline-block',
-          'cursor': 'pointer',
-          'font-weight': 'normal',
-          'color': '#333',
-          'font-size': '14px'
-        });
-        
-        // Add text span if missing
-        if (originalText && $label.find('.label-text').length === 0) {
-          $label.append('<span class="label-text">' + originalText + '</span>');
-        }
-      }
-      
-      console.log('✅ Fixed visibility for: ' + name);
-    });
+    console.log('✅ jQuery and iCheck plugin loaded');
     
-    // Try to initialize iCheck after making them visible
-    setTimeout(function() {
-      if (typeof $.fn.iCheck !== 'undefined') {
-        console.log('Attempting iCheck initialization...');
-        
-        $allCheckboxes.each(function() {
-          var $this = $(this);
-          var name = $this.attr('name') || $this.attr('id') || 'unnamed';
-          var $label = $this.closest('label');
-          
-          // Store label text before iCheck
-          var labelText = '';
-          if ($label.length > 0) {
-            var labelClone = $label.clone();
-            labelClone.find('input, .icheckbox_square-blue, .iradio_square-blue').remove();
-            labelText = labelClone.text().trim();
-          }
-          
-          if (!$this.parent().hasClass('icheckbox_square-blue') && 
-              !$this.parent().hasClass('iradio_square-blue')) {
-            try {
-              $this.iCheck({
-                checkboxClass: 'icheckbox_square-blue',
-                radioClass: 'iradio_square-blue'
-              });
-              
-              // Restore label text after iCheck
-              if (labelText && $label.length > 0) {
-                if ($label.find('.label-text').length === 0) {
-                  $label.append('<span class="label-text"> ' + labelText + '</span>');
-                }
-              }
-              
-              console.log('✅ iCheck OK for: ' + name);
-            } catch (error) {
-              console.log('❌ iCheck failed for ' + name + ', keeping as regular checkbox');
-            }
-          }
-        });
-      } else {
-        console.log('❌ iCheck plugin not available - using regular checkboxes');
-      }
-    }, 200);
-  }
-  
-  // Run emergency fix immediately and repeatedly
-  emergencyCheckboxFix();
-  
-  $(document).ready(function() {
-    emergencyCheckboxFix();
-    setTimeout(emergencyCheckboxFix, 500);
-    setTimeout(emergencyCheckboxFix, 1000);
-    setTimeout(emergencyCheckboxFix, 2000);
-  });
-  
-  // Robust checkbox fix that prevents disappearing
-  function ensureCheckboxesVisible() {
-    console.log('Ensuring checkboxes are visible...');
-    
-    // Find all input-icheck elements
+    // Initialize all checkboxes with input-icheck class
     $('input[type="checkbox"].input-icheck, input[type="radio"].input-icheck').each(function() {
-      var $input = $(this);
-      var $parent = $input.parent();
-      var inputName = $input.attr('name') || $input.attr('id') || 'unnamed';
+      var $this = $(this);
+      var name = $this.attr('name') || $this.attr('id') || 'unnamed';
       
-      // Check if properly initialized and visible
-      var isProperlyInitialized = $parent.hasClass('icheckbox_square-blue') || $parent.hasClass('iradio_square-blue');
-      var isVisible = $parent.is(':visible') && $input.is(':visible');
+      // Skip if already initialized
+      if ($this.parent().hasClass('icheckbox_square-blue') || 
+          $this.parent().hasClass('iradio_square-blue') ||
+          $this.data('icheck-initialized')) {
+        console.log('⚠️ Checkbox already initialized:', name);
+        return;
+      }
       
-      if (!isProperlyInitialized || !isVisible) {
-        console.log('Fixing checkbox:', inputName);
+      try {
+        // Make sure checkbox is visible first
+        $this.css('display', 'none'); // Hide original checkbox
         
-        // Clean up if needed
-        if (isProperlyInitialized && !isVisible) {
-          try {
-            $input.iCheck('destroy');
-          } catch(e) {
-            console.log('Could not destroy iCheck instance');
-          }
-        }
+        // Initialize iCheck
+        $this.iCheck({
+          checkboxClass: 'icheckbox_square-blue',
+          radioClass: 'iradio_square-blue'
+        });
         
-        // Reinitialize
-        try {
-          $input.iCheck({
-            checkboxClass: 'icheckbox_square-blue',
-            radioClass: 'iradio_square-blue'
-          });
-          console.log('Successfully initialized:', inputName);
-        } catch(e) {
-          console.error('Failed to initialize:', inputName, e);
-        }
+        // Mark as initialized
+        $this.data('icheck-initialized', true);
+        
+        console.log('✅ Initialized checkbox:', name);
+        
+      } catch (error) {
+        console.error('❌ Error initializing checkbox:', name, error);
+        // Fallback: show regular checkbox
+        $this.css('display', 'inline-block');
       }
     });
+    
+    return true;
   }
   
-  // Initialize multiple times to ensure it works
+  // Multiple initialization attempts
   $(document).ready(function() {
-    // Initial attempt
-    setTimeout(ensureCheckboxesVisible, 100);
+    console.log('📋 Document ready - initializing checkboxes...');
     
-    // Second attempt after app.js loads
-    setTimeout(ensureCheckboxesVisible, 800);
+    // Immediate attempt
+    initializeCheckboxes();
     
-    // Third attempt for safety
-    setTimeout(ensureCheckboxesVisible, 1500);
+    // Delayed attempts
+    setTimeout(initializeCheckboxes, 100);
+    setTimeout(initializeCheckboxes, 500);
+    setTimeout(initializeCheckboxes, 1000);
     
-    // Monitor and fix if they disappear
-    setInterval(function() {
-      var visibleInputs = $('input[type="checkbox"].input-icheck:visible').length;
-      var visibleWrappers = $('.icheckbox_square-blue:visible, .iradio_square-blue:visible').length;
-      
-      if (visibleInputs > 0 && visibleWrappers === 0) {
-        console.log('Checkboxes disappeared, fixing...');
-        ensureCheckboxesVisible();
-      }
-    }, 2000);
-  });
-
-  __page_leave_confirmation('#user_add_form');
-  $(document).ready(function(){
-    $('#selected_contacts').on('ifChecked', function(event){
+    // Page leave confirmation
+    __page_leave_confirmation('#user_add_form');
+    
+    // Event handlers for checkboxes (using both regular and iCheck events)
+    $('#selected_contacts').on('change ifChecked', function(event){
       $('div.selected_contacts_div').removeClass('hide');
     });
     $('#selected_contacts').on('ifUnchecked', function(event){
       $('div.selected_contacts_div').addClass('hide');
     });
 
-    $('#is_enable_service_staff_pin').on('ifChecked', function(event){
+    $('#is_enable_service_staff_pin').on('change ifChecked', function(event){
       $('div.service_staff_pin_div').removeClass('hide');
     });
-
     $('#is_enable_service_staff_pin').on('ifUnchecked', function(event){
       $('div.service_staff_pin_div').addClass('hide');
       $('#service_staff_pin').val('');
     });
 
-    $('#allow_login').on('ifChecked', function(event){
+    $('#allow_login').on('change ifChecked', function(event){
       $('div.user_auth_fields').removeClass('hide');
     });
     $('#allow_login').on('ifUnchecked', function(event){
       $('div.user_auth_fields').addClass('hide');
     });
 
+    // Select2 initialization
     $('#user_allowed_contacts').select2({
         ajax: {
             url: '/contacts/customers',
@@ -545,7 +341,7 @@ input[type="radio"].input-icheck {
             delay: 250,
             data: function(params) {
                 return {
-                    q: params.term, // search term
+                    q: params.term,
                     page: params.page,
                     all_contact: true
                 };
@@ -562,8 +358,7 @@ input[type="radio"].input-icheck {
                 template += data.supplier_business_name + "<br>";
             }
             template += data.text + "<br>" + LANG.mobile + ": " + data.mobile;
-
-            return  template;
+            return template;
         },
         minimumInputLength: 1,
         escapeMarkup: function(markup) {
@@ -572,61 +367,64 @@ input[type="radio"].input-icheck {
     });
   });
 
+  // Form validation
   $('form#user_add_form').validate({
-                rules: {
-                    first_name: {
-                        required: true,
-                    },
-                    email: {
-                        email: true,
-                        remote: {
-                            url: "/business/register/check-email",
-                            type: "post",
-                            data: {
-                                email: function() {
-                                    return $( "#email" ).val();
-                                }
-                            }
-                        }
-                    },
-                    password: {
-                        required: true,
-                        minlength: 5
-                    },
-                    confirm_password: {
-                        equalTo: "#password"
-                    },
-                    username: {
-                        minlength: 5,
-                        remote: {
-                            url: "/business/register/check-username",
-                            type: "post",
-                            data: {
-                                username: function() {
-                                    return $( "#username" ).val();
-                                },
-                                @if(!empty($username_ext))
-                                  username_ext: "{{$username_ext}}"
-                                @endif
-                            }
-                        }
-                    }
-                },
-                messages: {
-                    password: {
-                        minlength: 'Password should be minimum 5 characters',
-                    },
-                    confirm_password: {
-                        equalTo: 'Should be same as password'
-                    },
-                    username: {
-                        remote: 'Invalid username or User already exist'
-                    },
-                    email: {
-                        remote: '{{ __("validation.unique", ["attribute" => __("business.email")]) }}'
+    rules: {
+        first_name: {
+            required: true,
+        },
+        email: {
+            email: true,
+            remote: {
+                url: "/business/register/check-email",
+                type: "post",
+                data: {
+                    email: function() {
+                        return $( "#email" ).val();
                     }
                 }
-            });
+            }
+        },
+        password: {
+            required: true,
+            minlength: 5
+        },
+        confirm_password: {
+            equalTo: "#password"
+        },
+        username: {
+            minlength: 5,
+            remote: {
+                url: "/business/register/check-username",
+                type: "post",
+                data: {
+                    username: function() {
+                        return $( "#username" ).val();
+                    },
+                    @if(!empty($username_ext))
+                      username_ext: "{{$username_ext}}"
+                    @endif
+                }
+            }
+        }
+    },
+    messages: {
+        password: {
+            minlength: 'Password should be minimum 5 characters',
+        },
+        confirm_password: {
+            equalTo: 'Should be same as password'
+        },
+        username: {
+            remote: 'Invalid username or User already exist'
+        },
+        email: {
+            remote: '{{ __("validation.unique", ["attribute" => __("business.email")]) }}'
+        }
+    }
+  });
+  
+  // Username display
   $('#username').change( function(){
     if($('#show_username').length > 0){
       if($(this).val().trim() != ''){
@@ -636,8 +434,5 @@ input[type="radio"].input-icheck {
       }
     }
   });
-
-
-  
 </script>
 @endsection
