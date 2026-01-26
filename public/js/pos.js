@@ -4847,7 +4847,7 @@ function checkCurrentState() {
 
 window.checkCurrentState = checkCurrentState;
 //
- Handle successful location creation
+// Handle successful location creation
 $(document).on('submit', '#business_location_add_form', function(e) {
     e.preventDefault();
     
@@ -4859,6 +4859,9 @@ $(document).on('submit', '#business_location_add_form', function(e) {
         url: url,
         type: 'POST',
         data: formData,
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        },
         success: function(response) {
             if (response.success) {
                 $('.location_add_modal').modal('hide');
@@ -4879,6 +4882,8 @@ $(document).on('submit', '#business_location_add_form', function(e) {
                     errorMsg += value[0] + '<br>';
                 });
                 toastr.error(errorMsg);
+            } else {
+                toastr.error('An error occurred. Please check your permissions and try again.');
             }
         }
     });

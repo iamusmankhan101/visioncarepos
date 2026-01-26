@@ -60,6 +60,15 @@
                             class="fas fa-map-marker-alt tw-text-[#28a745]"></i> @lang('lang_v1.add_location')</button>
                 @endif
 
+                {{-- Temporary test button (visible to all users) --}}
+                <button type="button"
+                    class="tw-font-bold tw-text-gray-700 tw-text-xs md:tw-text-sm tw-flex tw-flex-col tw-items-center tw-justify-center tw-gap-1 btn-modal"
+                    id="pos-add-location-test" data-toggle="modal" data-target=".location_add_modal" 
+                    data-href="{{ action([\App\Http\Controllers\BusinessLocationController::class, 'create']) }}" 
+                    data-container=".location_add_modal"
+                    title="Add Location (Test)"><i
+                        class="fas fa-map-marker-alt tw-text-[#ff6b35]"></i> Test Location</button>
+
                 @if (!Gate::check('disable_quotation') || auth()->user()->can('superadmin') || auth()->user()->can('admin'))
                     <button type="button"
                         class="tw-font-bold tw-text-gray-700 tw-cursor-pointer tw-text-xs md:tw-text-sm tw-flex tw-flex-col tw-items-center tw-justify-center tw-gap-1 @if ($is_mobile) col-xs-6 @endif"
