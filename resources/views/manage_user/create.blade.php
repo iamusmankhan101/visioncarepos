@@ -205,26 +205,67 @@
   @stop
 @section('javascript')
 <script type="text/javascript">
-  // Fix for checkboxes not showing - Force iCheck initialization
-  $(document).ready(function() {
-    console.log('Initializing iCheck for user management...');
+  // Robust checkbox fix that prevents disappearing
+  function ensureCheckboxesVisible() {
+    console.log('Ensuring checkboxes are visible...');
     
-    // Force initialize iCheck for all checkboxes with input-icheck class
-    setTimeout(function() {
-      $('input[type="checkbox"].input-icheck, input[type="radio"].input-icheck').each(function() {
-        var $this = $(this);
+    // Find all input-icheck elements
+    $('input[type="checkbox"].input-icheck, input[type="radio"].input-icheck').each(function() {
+      var $input = $(this);
+      var $parent = $input.parent();
+      var inputName = $input.attr('name') || $input.attr('id') || 'unnamed';
+      
+      // Check if properly initialized and visible
+      var isProperlyInitialized = $parent.hasClass('icheckbox_square-blue') || $parent.hasClass('iradio_square-blue');
+      var isVisible = $parent.is(':visible') && $input.is(':visible');
+      
+      if (!isProperlyInitialized || !isVisible) {
+        console.log('Fixing checkbox:', inputName);
         
-        // Check if already initialized
-        if (!$this.parent().hasClass('icheckbox_square-blue') && !$this.parent().hasClass('iradio_square-blue')) {
-          console.log('Initializing iCheck for:', $this.attr('name') || $this.attr('id'));
-          
-          $this.iCheck({
+        // Clean up if needed
+        if (isProperlyInitialized && !isVisible) {
+          try {
+            $input.iCheck('destroy');
+          } catch(e) {
+            console.log('Could not destroy iCheck instance');
+          }
+        }
+        
+        // Reinitialize
+        try {
+          $input.iCheck({
             checkboxClass: 'icheckbox_square-blue',
             radioClass: 'iradio_square-blue'
           });
+          console.log('Successfully initialized:', inputName);
+        } catch(e) {
+          console.error('Failed to initialize:', inputName, e);
         }
-      });
-    }, 500); // Delay to ensure DOM is ready
+      }
+    });
+  }
+  
+  // Initialize multiple times to ensure it works
+  $(document).ready(function() {
+    // Initial attempt
+    setTimeout(ensureCheckboxesVisible, 100);
+    
+    // Second attempt after app.js loads
+    setTimeout(ensureCheckboxesVisible, 800);
+    
+    // Third attempt for safety
+    setTimeout(ensureCheckboxesVisible, 1500);
+    
+    // Monitor and fix if they disappear
+    setInterval(function() {
+      var visibleInputs = $('input[type="checkbox"].input-icheck:visible').length;
+      var visibleWrappers = $('.icheckbox_square-blue:visible, .iradio_square-blue:visible').length;
+      
+      if (visibleInputs > 0 && visibleWrappers === 0) {
+        console.log('Checkboxes disappeared, fixing...');
+        ensureCheckboxesVisible();
+      }
+    }, 2000);
   });
 
   __page_leave_confirmation('#user_add_form');
