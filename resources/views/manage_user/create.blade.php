@@ -205,6 +205,28 @@
   @stop
 @section('javascript')
 <script type="text/javascript">
+  // Fix for checkboxes not showing - Force iCheck initialization
+  $(document).ready(function() {
+    console.log('Initializing iCheck for user management...');
+    
+    // Force initialize iCheck for all checkboxes with input-icheck class
+    setTimeout(function() {
+      $('input[type="checkbox"].input-icheck, input[type="radio"].input-icheck').each(function() {
+        var $this = $(this);
+        
+        // Check if already initialized
+        if (!$this.parent().hasClass('icheckbox_square-blue') && !$this.parent().hasClass('iradio_square-blue')) {
+          console.log('Initializing iCheck for:', $this.attr('name') || $this.attr('id'));
+          
+          $this.iCheck({
+            checkboxClass: 'icheckbox_square-blue',
+            radioClass: 'iradio_square-blue'
+          });
+        }
+      });
+    }, 500); // Delay to ensure DOM is ready
+  });
+
   __page_leave_confirmation('#user_add_form');
   $(document).ready(function(){
     $('#selected_contacts').on('ifChecked', function(event){
