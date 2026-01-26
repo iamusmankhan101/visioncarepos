@@ -404,62 +404,106 @@ class HomeController extends Controller
             $start_date = request()->input('start_date', \Carbon::now()->startOfMonth()->format('Y-m-d'));
             $end_date = request()->input('end_date', \Carbon::now()->endOfMonth()->format('Y-m-d'));
             
-            // Get sales commission agents with their performance
-            $query = DB::table('users as u')
-                ->leftJoin('transactions as t', function($join) use ($start_date, $end_date, $location_id) {
-                    $join->on('u.id', '=', 't.commission_agent')
-                         ->where('t.type', 'sell')
-                         ->where('t.status', 'final')
-                         ->whereBetween('t.transaction_date', [$start_date, $end_date]);
-                    
-                    if ($location_id) {
-                        $join->where('t.location_id', $location_id);
-                    }
-                })
-                ->where('u.business_id', $business_id)
-                ->where('u.is_cmmsn_agnt', 1)
-                ->whereNull('u.deleted_at')
-                ->select(
-                    'u.id',
-                    DB::raw("CONCAT(COALESCE(u.surname, ''), ' ', COALESCE(u.first_name, ''), ' ', COALESCE(u.last_name, '')) as full_name"),
-                    'u.email',
-                    'u.contact_no',
-                    'u.cmmsn_percent',
-                    'u.condition',
-                    DB::raw('COUNT(t.id) as total_sales'),
-                    DB::raw('COALESCE(SUM(t.final_total), 0) as total_amount'),
-                    DB::raw('COALESCE(SUM(t.final_total * u.cmmsn_percent / 100), 0) as total_commission')
-                )
-                ->groupBy('u.id', 'u.surname', 'u.first_name', 'u.last_name', 'u.email', 'u.contact_no', 'u.cmmsn_percent', 'u.condition')
-                ->orderBy('total_amount', 'desc');
+            try {
+                // Get sales commission agents with their performance
+                $query = DB::table('users as u')
+                    ->leftJoin('transactions as t', function($join) use ($start_date, $end_date, $location_id) {
+                        $join->on('u.id', '=', 't.commission_agent')
+                             ->where('t.type', 'sell')
+                             ->where('t.status', 'final')
+                             ->whereBetween('t.transaction_date', [$start_date, $end_date]);
+                        
+                        if ($location_id) {
+                            $join->where('t.location_id', $location_id);
+                        }
+                    })
+                    ->where('u.business_id', $business_id)
+                    ->where('u.is_cmmsn_agnt', 1)
+                    ->whereNull('u.deleted_at');
 
-            return Datatables::of($query)
-                ->editColumn('full_name', function ($row) {
-                    return trim($row->full_name);
-                })
-                ->editColumn('total_amount', function ($row) {
-                    return '<span class="display_currency" data-currency_symbol="true">' . $row->total_amount . '</span>';
-                })
-                ->editColumn('total_commission', function ($row) {
-                    return '<span class="display_currency" data-currency_symbol="true">' . $row->total_commission . '</span>';
-                })
-                ->editColumn('cmmsn_percent', function ($row) {
-                    return $row->cmmsn_percent . '%';
-                })
-                ->addColumn('performance', function ($row) {
-                    // Simple performance indicator based on sales count
-                    if ($row->total_sales >= 10) {
-                        return '<span class="badge badge-success">Excellent</span>';
-                    } elseif ($row->total_sales >= 5) {
-                        return '<span class="badge badge-warning">Good</span>';
-                    } elseif ($row->total_sales > 0) {
-                        return '<span class="badge badge-info">Fair</span>';
-                    } else {
-                        return '<span class="badge badge-secondary">No Sales</span>';
-                    }
-                })
-                ->rawColumns(['total_amount', 'total_commission', 'performance'])
-                ->make(false);
+                // Check if condition column exists
+                $columns = DB::select("SHOW COLUMNS FROM users LIKE 'condition'");
+                $has_condition_column = !empty($columns);
+
+                if ($has_condition_column) {
+                    $query->select(
+                        'u.id',
+                        DB::raw("TRIM(CONCAT(COALESCE(u.surname, ''), ' ', COALESCE(u.first_name, ''), ' ', COALESCE(u.last_name, ''))) as full_name"),
+                        'u.email',
+                        'u.contact_no',
+                        'u.cmmsn_percent',
+                        'u.condition',
+                        DB::raw('COUNT(t.id) as total_sales'),
+                        DB::raw('COALESCE(SUM(t.final_total), 0) as total_amount'),
+                        DB::raw('COALESCE(SUM(t.final_total * u.cmmsn_percent / 100), 0) as total_commission')
+                    )
+                    ->groupBy('u.id', 'u.surname', 'u.first_name', 'u.last_name', 'u.email', 'u.contact_no', 'u.cmmsn_percent', 'u.condition');
+                } else {
+                    $query->select(
+                        'u.id',
+                        DB::raw("TRIM(CONCAT(COALESCE(u.surname, ''), ' ', COALESCE(u.first_name, ''), ' ', COALESCE(u.last_name, ''))) as full_name"),
+                        'u.email',
+                        'u.contact_no',
+                        'u.cmmsn_percent',
+                        DB::raw("'' as condition"),
+                        DB::raw('COUNT(t.id) as total_sales'),
+                        DB::raw('COALESCE(SUM(t.final_total), 0) as total_amount'),
+                        DB::raw('COALESCE(SUM(t.final_total * u.cmmsn_percent / 100), 0) as total_commission')
+                    )
+                    ->groupBy('u.id', 'u.surname', 'u.first_name', 'u.last_name', 'u.email', 'u.contact_no', 'u.cmmsn_percent');
+                }
+
+                $query->orderBy('total_amount', 'desc');
+
+                return Datatables::of($query)
+                    ->editColumn('full_name', function ($row) {
+                        return $row->full_name ?: 'N/A';
+                    })
+                    ->editColumn('contact_no', function ($row) {
+                        return $row->contact_no ?: 'N/A';
+                    })
+                    ->editColumn('email', function ($row) {
+                        return $row->email ?: 'N/A';
+                    })
+                    ->editColumn('total_amount', function ($row) {
+                        return '<span class="display_currency" data-currency_symbol="true">' . number_format($row->total_amount, 2) . '</span>';
+                    })
+                    ->editColumn('total_commission', function ($row) {
+                        return '<span class="display_currency" data-currency_symbol="true">' . number_format($row->total_commission, 2) . '</span>';
+                    })
+                    ->editColumn('cmmsn_percent', function ($row) {
+                        return ($row->cmmsn_percent ?: 0) . '%';
+                    })
+                    ->editColumn('condition', function ($row) {
+                        return $row->condition ?: 'None';
+                    })
+                    ->addColumn('performance', function ($row) {
+                        // Simple performance indicator based on sales count
+                        if ($row->total_sales >= 10) {
+                            return '<span class="badge badge-success">Excellent</span>';
+                        } elseif ($row->total_sales >= 5) {
+                            return '<span class="badge badge-warning">Good</span>';
+                        } elseif ($row->total_sales > 0) {
+                            return '<span class="badge badge-info">Fair</span>';
+                        } else {
+                            return '<span class="badge badge-secondary">No Sales</span>';
+                        }
+                    })
+                    ->rawColumns(['total_amount', 'total_commission', 'performance'])
+                    ->make(false);
+                    
+            } catch (\Exception $e) {
+                \Log::error('Sales Commission Agents DataTable Error: ' . $e->getMessage());
+                
+                // Return empty DataTable response
+                return response()->json([
+                    'draw' => request()->input('draw', 1),
+                    'recordsTotal' => 0,
+                    'recordsFiltered' => 0,
+                    'data' => [],
+                    'error' => 'Error loading commission agents data'
+                ]);
+            }
         }
     }
 
