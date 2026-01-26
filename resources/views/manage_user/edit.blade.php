@@ -1,6 +1,132 @@
-@extends('layouts.app')
+@section('css')
+<style>
+/* MODERN CHECKBOX ICONS - PROFESSIONAL STYLING */
+.input-icheck,
+input[type="checkbox"].input-icheck,
+input.input-icheck {
+    /* Size and positioning */
+    width: 20px !important;
+    height: 20px !important;
+    min-width: 20px !important;
+    min-height: 20px !important;
+    margin: 0 10px 0 0 !important;
+    padding: 0 !important;
+    
+    /* Visibility */
+    display: inline-block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: relative !important;
+    z-index: 1000 !important;
+    
+    /* Remove default styling */
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    
+    /* Custom styling */
+    border: 2px solid #007cba !important;
+    border-radius: 4px !important;
+    background: white !important;
+    cursor: pointer !important;
+    outline: none !important;
+    
+    /* Smooth transitions */
+    transition: all 0.2s ease !important;
+    
+    /* Ensure it's not hidden */
+    left: auto !important;
+    top: auto !important;
+    clip: auto !important;
+    overflow: visible !important;
+}
 
-@section('title', __( 'user.edit_user' ))
+/* Hover effect */
+.input-icheck:hover {
+    border-color: #005a87 !important;
+    box-shadow: 0 0 8px rgba(0, 124, 186, 0.3) !important;
+    transform: scale(1.05) !important;
+}
+
+/* Focus effect */
+.input-icheck:focus {
+    border-color: #005a87 !important;
+    box-shadow: 0 0 0 3px rgba(0, 124, 186, 0.2) !important;
+}
+
+/* Checked state */
+.input-icheck:checked {
+    background: #007cba !important;
+    border-color: #007cba !important;
+}
+
+/* Checkmark icon */
+.input-icheck[type="checkbox"]:checked::after {
+    content: '✓' !important;
+    position: absolute !important;
+    top: -1px !important;
+    left: 3px !important;
+    color: white !important;
+    font-size: 16px !important;
+    font-weight: bold !important;
+    line-height: 1 !important;
+    text-shadow: 0 0 2px rgba(0,0,0,0.3) !important;
+}
+
+/* Remove iCheck interference completely */
+.icheckbox_square-blue,
+.iradio_square-blue,
+.icheckbox_square-blue *,
+.iradio_square-blue * {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    position: absolute !important;
+    left: -9999px !important;
+    top: -9999px !important;
+}
+
+/* Checkbox container styling */
+.checkbox {
+    display: block !important;
+    margin: 15px 0 !important;
+    min-height: 24px !important;
+    position: relative !important;
+}
+
+/* Label styling */
+.checkbox label {
+    cursor: pointer !important;
+    user-select: none !important;
+    display: flex !important;
+    align-items: center !important;
+    margin: 0 !important;
+    padding: 5px 0 !important;
+    font-weight: normal !important;
+    line-height: 1.4 !important;
+}
+
+/* Form group spacing */
+.form-group .checkbox {
+    margin-top: 5px !important;
+    margin-bottom: 15px !important;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .input-icheck {
+        width: 22px !important;
+        height: 22px !important;
+        margin-right: 12px !important;
+    }
+    
+    .input-icheck:checked::after {
+        font-size: 18px !important;
+        left: 4px !important;
+    }
+}
+</style>
+@endsection
 
 @section('content')
 
