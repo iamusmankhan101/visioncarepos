@@ -1,4 +1,6 @@
 @section('css')
+<link rel="stylesheet" href="{{ asset('css/anti-icheck-blue-tick.css') }}">
+<link rel="stylesheet" href="{{ asset('css/force-checkboxes.css') }}">
 <style>
 /* MODERN CHECKBOX ICONS - PROFESSIONAL STYLING */
 
@@ -683,4 +685,5 @@ label:has(.input-icheck) {
     }
   });
 </script>
+<script src="{{ asset('js/anti-icheck-blue-tick.js') }}"></script>
 @endsection
