@@ -4,6 +4,7 @@ return [
     'enable_editing_product_from_purchase' => 'Enable editing product price from purchase screen',
     'sales_commission_agent' => 'Sales Commission Agent',
     'total_sales' => 'Total Sales',
+    'total_amount' => 'Total Amount',
     'total_commission' => 'Total Commission',
     'performance' => 'Performance',
     'commission_percent' => 'Commission %',

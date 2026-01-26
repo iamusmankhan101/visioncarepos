@@ -29,6 +29,33 @@
             @endslot
         @endcan
         @can('user.view')
+            <!-- Date Range Filter -->
+            <div class="row" style="margin-bottom: 20px;">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="commission_start_date">@lang('lang_v1.start_date'):</label>
+                        <input type="date" id="commission_start_date" class="form-control" value="{{ \Carbon\Carbon::now()->startOfMonth()->format('Y-m-d') }}">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="commission_end_date">@lang('lang_v1.end_date'):</label>
+                        <input type="date" id="commission_end_date" class="form-control" value="{{ \Carbon\Carbon::now()->endOfMonth()->format('Y-m-d') }}">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label>&nbsp;</label><br>
+                        <button type="button" class="btn btn-primary" id="filter_commission_agents">
+                            <i class="fa fa-filter"></i> @lang('messages.filter')
+                        </button>
+                        <button type="button" class="btn btn-default" id="clear_commission_filter">
+                            <i class="fa fa-refresh"></i> @lang('messages.reset')
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <div class="table-responsive">
                 <table class="table table-bordered table-striped" id="sales_commission_agent_table">
                     <thead>
@@ -39,6 +66,10 @@
                             <th>@lang( 'business.address' )</th>
                             <th>@lang( 'lang_v1.cmmsn_percent' )</th>
                             <th>@lang( 'lang_v1.condition' )</th>
+                            <th>@lang( 'lang_v1.total_sales' )</th>
+                            <th>@lang( 'lang_v1.total_amount' )</th>
+                            <th>@lang( 'lang_v1.total_commission' )</th>
+                            <th>@lang( 'lang_v1.performance' )</th>
                             <th>@lang( 'messages.action' )</th>
                         </tr>
                     </thead>
@@ -54,4 +85,111 @@
 </section>
 <!-- /.content -->
 
+@endsection
+
+@section('javascript')
+<script type="text/javascript">
+$(document).ready(function() {
+    // Initialize DataTable
+    var sales_commission_agent_table = $('#sales_commission_agent_table').DataTable({
+        processing: true,
+        serverSide: true,
+        ajax: {
+            url: "{{action([\App\Http\Controllers\SalesCommissionAgentController::class, 'index'])}}",
+            data: function (d) {
+                d.start_date = $('#commission_start_date').val();
+                d.end_date = $('#commission_end_date').val();
+                d.location_id = $('#commission_location_id').val();
+            }
+        },
+        columnDefs: [
+            {
+                targets: [6, 7, 8], // Total Sales, Amount, Commission columns
+                searchable: false,
+            },
+        ],
+        columns: [
+            { data: 'full_name', name: 'full_name' },
+            { data: 'email', name: 'email' },
+            { data: 'contact_no', name: 'contact_no' },
+            { data: 'address', name: 'address' },
+            { data: 'cmmsn_percent', name: 'cmmsn_percent' },
+            { data: 'condition', name: 'condition' },
+            { data: 'total_sales', name: 'total_sales' },
+            { data: 'total_amount', name: 'total_amount' },
+            { data: 'total_commission', name: 'total_commission' },
+            { data: 'performance', name: 'performance' },
+            { data: 'action', name: 'action', orderable: false, searchable: false }
+        ],
+        fnDrawCallback: function(oSettings) {
+            __currency_convert_recursively($('#sales_commission_agent_table'));
+        },
+    });
+
+    // Filter functionality
+    $('#filter_commission_agents').click(function() {
+        sales_commission_agent_table.ajax.reload();
+    });
+
+    // Clear filter functionality
+    $('#clear_commission_filter').click(function() {
+        $('#commission_start_date').val('{{ \Carbon\Carbon::now()->startOfMonth()->format('Y-m-d') }}');
+        $('#commission_end_date').val('{{ \Carbon\Carbon::now()->endOfMonth()->format('Y-m-d') }}');
+        sales_commission_agent_table.ajax.reload();
+    });
+
+    // Delete commission agent
+    $(document).on('click', 'button.delete_commsn_agnt_button', function(){
+        swal({
+          title: LANG.sure,
+          text: LANG.confirm_delete_user,
+          icon: "warning",
+          buttons: true,
+          dangerMode: true,
+        }).then((willDelete) => {
+            if (willDelete) {
+                var href = $(this).data('href');
+                var data = $(this).serialize();
+                $.ajax({
+                    method: "DELETE",
+                    url: href,
+                    dataType: "json",
+                    data: data,
+                    success: function(result){
+                        if(result.success == true){
+                            toastr.success(result.msg);
+                            sales_commission_agent_table.ajax.reload();
+                        } else {
+                            toastr.error(result.msg);
+                        }
+                    }
+                });
+            }
+        });
+    });
+
+    // Handle commission agent form submission
+    $(document).on('submit', 'form#sale_commission_agent_form', function(e){
+        e.preventDefault();
+        $(this).find('button[type="submit"]').attr('disabled', true);
+        var data = $(this).serialize();
+
+        $.ajax({
+            method: $(this).attr('method'),
+            url: $(this).attr('action'),
+            dataType: 'json',
+            data: data,
+            success: function(result){
+                if(result.success == true){
+                    $('div.commission_agent_modal').modal('hide');
+                    toastr.success(result.msg);
+                    sales_commission_agent_table.ajax.reload();
+                } else {
+                    toastr.error(result.msg);
+                }
+            }
+        });
+    });
+});
+</script>
 @endsection

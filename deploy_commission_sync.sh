@@ -1,0 +1,56 @@
+#!/bin/bash
+
+# Deploy Commission Agents Data Sync
+echo "🔄 Deploying Commission Agents Data Sync..."
+
+echo ""
+echo "📋 Changes Made:"
+echo "1. ✅ Updated SalesCommissionAgentController to match dashboard data structure"
+echo "2. ✅ Enhanced Sales Commission Agents page with performance metrics"
+echo "3. ✅ Added date range filtering to dedicated page"
+echo "4. ✅ Synchronized data queries between dashboard and dedicated page"
+echo "5. ✅ Added missing language keys"
+
+echo ""
+echo "🎯 What's Now Synchronized:"
+echo "• Agent names and contact information"
+echo "• Sales performance metrics (total sales, amounts, commissions)"
+echo "• Performance indicators (Excellent/Good/Fair/No Sales)"
+echo "• Date range filtering"
+echo "• Location-based filtering"
+echo "• Commission calculations"
+
+echo ""
+echo "📊 New Columns in Sales Commission Agents Page:"
+echo "• Total Sales - Number of sales transactions"
+echo "• Total Amount - Sum of all sales amounts"
+echo "• Total Commission - Calculated commission earnings"
+echo "• Performance - Performance indicator badge"
+
+echo ""
+echo "🔧 Files Modified:"
+echo "• app/Http/Controllers/SalesCommissionAgentController.php - Enhanced with performance data"
+echo "• resources/views/sales_commission_agent/index.blade.php - Added new columns and filtering"
+echo "• lang/en/lang_v1.php - Added missing language keys"
+
+echo ""
+echo "✅ Deployment Complete!"
+echo ""
+echo "📋 Verification Steps:"
+echo "1. Visit your Dashboard - Sales Commission section should show agent data"
+echo "2. Visit Sales Commission Agents page - should show same data with additional columns"
+echo "3. Use date range filters on both pages - data should match"
+echo "4. Performance indicators should be consistent"
+
+echo ""
+echo "🎯 Expected Result:"
+echo "Both pages now show identical commission agent data with:"
+echo "- Real agent names (not N/A)"
+echo "- Accurate sales performance metrics"
+echo "- Consistent commission calculations"
+echo "- Synchronized filtering options"
+
+echo ""
+echo "🔍 Test the sync by running:"
+echo "php sync_commission_agents_data.php"
+echo ""
