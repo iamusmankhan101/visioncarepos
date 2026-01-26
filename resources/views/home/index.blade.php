@@ -1432,18 +1432,27 @@
                         // Add date range if needed (default to current month)
                         d.start_date = moment().startOf('month').format('YYYY-MM-DD');
                         d.end_date = moment().endOf('month').format('YYYY-MM-DD');
+                    },
+                    "error": function(xhr, error, code) {
+                        console.log('Commission agents AJAX error:', error);
+                        console.log('Response:', xhr.responseText);
                     }
                 },
                 columns: [
-                    { data: 'full_name', name: 'full_name' },
-                    { data: 'contact_no', name: 'contact_no' },
-                    { data: 'cmmsn_percent', name: 'cmmsn_percent' },
-                    { data: 'total_sales', name: 'total_sales' },
-                    { data: 'total_amount', name: 'total_amount' },
-                    { data: 'total_commission', name: 'total_commission' },
-                    { data: 'performance', name: 'performance' },
-                    { data: 'condition', name: 'condition' }
+                    { data: 'full_name', name: 'full_name', defaultContent: 'N/A' },
+                    { data: 'contact_no', name: 'contact_no', defaultContent: 'N/A' },
+                    { data: 'cmmsn_percent', name: 'cmmsn_percent', defaultContent: '0%' },
+                    { data: 'total_sales', name: 'total_sales', defaultContent: '0' },
+                    { data: 'total_amount', name: 'total_amount', defaultContent: '$0.00' },
+                    { data: 'total_commission', name: 'total_commission', defaultContent: '$0.00' },
+                    { data: 'performance', name: 'performance', defaultContent: '<span class="badge badge-secondary">No Data</span>' },
+                    { data: 'condition', name: 'condition', defaultContent: 'None' }
                 ],
+                language: {
+                    emptyTable: "No commission agents found. Create commission agents first.",
+                    zeroRecords: "No commission agents match the current filters.",
+                    processing: "Loading commission agents data..."
+                },
                 fnDrawCallback: function(oSettings) {
                     __currency_convert_recursively($('#commission_agents_table'));
                 },
