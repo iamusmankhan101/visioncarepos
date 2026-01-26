@@ -131,6 +131,108 @@ Route::middleware(['setData', 'auth', 'SetSessionData', 'language', 'timezone', 
     Route::get('/home/purchase-payment-dues', [HomeController::class, 'getPurchasePaymentDues']);
     Route::get('/home/sales-payment-dues', [HomeController::class, 'getSalesPaymentDues']);
     Route::get('/home/sales-commission-agents', [HomeController::class, 'getSalesCommissionAgents']);
+    Route::get('/debug/fix-commission-datatable', function() {
+        try {
+            // Load database
+            $business_id = 1;
+            
+            // Step 1: Add condition column if missing
+            $columns = DB::select("SHOW COLUMNS FROM users LIKE 'condition'");
+            if (empty($columns)) {
+                DB::statement("ALTER TABLE `users` ADD COLUMN `condition` TEXT NULL COMMENT 'Condition field' AFTER `cmmsn_percent`");
+                $message1 = "✓ Added condition column";
+            } else {
+                $message1 = "✓ Condition column exists";
+            }
+            
+            // Step 2: Create test commission agents if none exist
+            $agent_count = DB::table('users')
+                ->where('business_id', $business_id)
+                ->where('is_cmmsn_agnt', 1)
+                ->whereNull('deleted_at')
+                ->count();
+            
+            if ($agent_count == 0) {
+                // Create test agents
+                $agents = [
+                    ['John', 'Smith', 'john.smith.test@example.com', '555-0001', 5.00, 'Min 5 sales/month'],
+                    ['Sarah', 'Johnson', 'sarah.johnson.test@example.com', '555-0002', 7.50, 'Target $10k monthly']
+                ];
+                
+                $created = 0;
+                foreach ($agents as $agent) {
+                    try {
+                        DB::table('users')->insert([
+                            'business_id' => $business_id,
+                            'user_type' => 'user',
+                            'first_name' => $agent[0],
+                            'surname' => $agent[1],
+                            'username' => strtolower($agent[0] . '_' . $agent[1] . '_' . time()),
+                            'email' => $agent[2],
+                            'password' => bcrypt('password123'),
+                            'is_cmmsn_agnt' => 1,
+                            'cmmsn_percent' => $agent[4],
+                            'condition' => $agent[5],
+                            'contact_no' => $agent[3],
+                            'created_at' => now(),
+                            'updated_at' => now()
+                        ]);
+                        $created++;
+                    } catch (Exception $e) {
+                        // Agent might already exist, continue
+                    }
+                }
+                $message2 = "✓ Created {$created} test commission agents";
+            } else {
+                $message2 = "✓ Found {$agent_count} commission agents";
+            }
+            
+            // Step 3: Test query
+            $start_date = \Carbon::now()->startOfMonth()->format('Y-m-d');
+            $end_date = \Carbon::now()->endOfMonth()->format('Y-m-d');
+            
+            $results = DB::table('users as u')
+                ->leftJoin('transactions as t', function($join) use ($start_date, $end_date) {
+                    $join->on('u.id', '=', 't.commission_agent')
+                         ->where('t.type', 'sell')
+                         ->where('t.status', 'final')
+                         ->whereBetween('t.transaction_date', [$start_date, $end_date]);
+                })
+                ->where('u.business_id', $business_id)
+                ->where('u.is_cmmsn_agnt', 1)
+                ->whereNull('u.deleted_at')
+                ->select(
+                    'u.id',
+                    DB::raw("CONCAT(COALESCE(u.surname, ''), ' ', COALESCE(u.first_name, ''), ' ', COALESCE(u.last_name, '')) as full_name"),
+                    'u.email',
+                    'u.contact_no',
+                    'u.cmmsn_percent',
+                    'u.condition',
+                    DB::raw('COUNT(t.id) as total_sales'),
+                    DB::raw('COALESCE(SUM(t.final_total), 0) as total_amount'),
+                    DB::raw('COALESCE(SUM(t.final_total * u.cmmsn_percent / 100), 0) as total_commission')
+                )
+                ->groupBy('u.id', 'u.surname', 'u.first_name', 'u.last_name', 'u.email', 'u.contact_no', 'u.cmmsn_percent', 'u.condition')
+                ->get();
+            
+            $message3 = "✓ Query test successful - Found " . count($results) . " records";
+            
+            return response()->json([
+                'success' => true,
+                'messages' => [$message1, $message2, $message3],
+                'data_count' => count($results),
+                'sample_data' => $results->first()
+            ]);
+            
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
+        }
+    });
     Route::post('/home/switch-location', [HomeController::class, 'switchLocation']);
     Route::post('/attach-medias-to-model', [HomeController::class, 'attachMediasToGivenModel'])->name('attach.medias.to.model');
     Route::get('/calendar', [HomeController::class, 'getCalendar'])->name('calendar');
