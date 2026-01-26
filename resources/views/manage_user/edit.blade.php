@@ -209,20 +209,15 @@
     {!! Form::close() !!}
   @stop
 @section('javascript')
-<!-- ULTIMATE CHECKBOX FIX - CSS ONLY SOLUTION -->
+<!-- CSS-Only Checkbox Fix - No Images Required -->
 <style>
-/* Hide all iCheck wrappers completely */
+/* Hide iCheck wrappers completely */
 .icheckbox_square-blue,
-.iradio_square-blue,
-.icheckbox_minimal,
-.iradio_minimal,
-.icheckbox_flat-blue,
-.iradio_flat-blue {
+.iradio_square-blue {
     display: none !important;
-    visibility: hidden !important;
 }
 
-/* Force all input-icheck elements to be visible */
+/* Force input-icheck elements to be visible and styled */
 .input-icheck {
     display: inline-block !important;
     visibility: visible !important;
@@ -232,15 +227,13 @@
     margin: 0 8px 0 0 !important;
     vertical-align: middle !important;
     position: relative !important;
-    z-index: 999 !important;
+    z-index: 1 !important;
     cursor: pointer !important;
     
-    /* Remove any webkit appearance */
+    /* Custom styling to replace iCheck */
+    appearance: none !important;
     -webkit-appearance: none !important;
     -moz-appearance: none !important;
-    appearance: none !important;
-    
-    /* Custom checkbox styling */
     border: 2px solid #007cba !important;
     border-radius: 3px !important;
     background: white !important;
@@ -248,13 +241,13 @@
     transition: all 0.2s ease !important;
 }
 
-/* Hover effects */
+/* Hover state */
 .input-icheck:hover {
     border-color: #005a87 !important;
     box-shadow: 0 0 5px rgba(0, 124, 186, 0.3) !important;
 }
 
-/* Focus effects */
+/* Focus state */
 .input-icheck:focus {
     border-color: #005a87 !important;
     box-shadow: 0 0 0 2px rgba(0, 124, 186, 0.2) !important;
@@ -266,9 +259,9 @@
     border-color: #007cba !important;
 }
 
-/* Checkmark for checkboxes */
+/* Checkmark for checked checkboxes */
 .input-icheck[type="checkbox"]:checked::after {
-    content: "✓" !important;
+    content: '✓' !important;
     position: absolute !important;
     top: -2px !important;
     left: 2px !important;
@@ -283,9 +276,9 @@
     border-radius: 50% !important;
 }
 
-/* Radio button checked dot */
+/* Radio button checked state */
 .input-icheck[type="radio"]:checked::after {
-    content: "" !important;
+    content: '' !important;
     position: absolute !important;
     top: 3px !important;
     left: 3px !important;
@@ -296,8 +289,8 @@
 }
 
 /* Label styling */
-.checkbox label,
-.radio label {
+.input-icheck + label,
+label:has(.input-icheck) {
     cursor: pointer !important;
     user-select: none !important;
     display: inline-flex !important;
@@ -306,123 +299,87 @@
     padding: 5px 0 !important;
 }
 
-/* Container styling */
-.checkbox,
-.radio {
+/* Checkbox container styling */
+.checkbox {
     display: block !important;
     margin: 10px 0 !important;
     min-height: 20px !important;
 }
 
-/* Form group checkbox styling */
-.form-group .checkbox,
-.form-group .radio {
+.form-group .checkbox {
     margin-top: 0 !important;
     margin-bottom: 10px !important;
-}
-
-/* Ensure checkboxes are always visible in forms */
-form .input-icheck {
-    display: inline-block !important;
-    visibility: visible !important;
 }
 </style>
 
 <script type="text/javascript">
-// ULTIMATE CHECKBOX FIX - JavaScript Solution
-(function() {
-    console.log('🔧 CHECKBOX FIX: Starting immediate fix...');
+  // IMMEDIATE FIX: Make all checkboxes visible right now
+  (function() {
+    console.log('🚨 CSS-ONLY CHECKBOX FIX: Making checkboxes visible...');
     
-    // Function to make checkboxes visible
-    function makeCheckboxesVisible() {
-        // Find all input-icheck elements
-        var checkboxes = document.querySelectorAll('.input-icheck');
-        console.log('Found ' + checkboxes.length + ' checkboxes to fix');
-        
-        for (var i = 0; i < checkboxes.length; i++) {
-            var checkbox = checkboxes[i];
-            
-            // Force visibility
-            checkbox.style.display = 'inline-block';
-            checkbox.style.visibility = 'visible';
-            checkbox.style.opacity = '1';
-            checkbox.style.width = '18px';
-            checkbox.style.height = '18px';
-            checkbox.style.margin = '0 8px 0 0';
-            checkbox.style.position = 'relative';
-            checkbox.style.zIndex = '999';
-            
-            console.log('✅ Fixed checkbox:', checkbox.name || checkbox.id || 'checkbox-' + i);
-        }
-        
-        // Remove iCheck wrappers
-        var wrappers = document.querySelectorAll('.icheckbox_square-blue, .iradio_square-blue, .icheckbox_minimal, .iradio_minimal');
-        for (var j = 0; j < wrappers.length; j++) {
-            var wrapper = wrappers[j];
-            var input = wrapper.querySelector('input');
-            if (input) {
-                // Move input out of wrapper
-                wrapper.parentNode.insertBefore(input, wrapper);
-                wrapper.remove();
-                console.log('✅ Removed iCheck wrapper');
-            }
-        }
+    // Force all input-icheck elements to be visible
+    var checkboxes = document.querySelectorAll('.input-icheck');
+    console.log('Found ' + checkboxes.length + ' checkboxes to make visible');
+    
+    for (var i = 0; i < checkboxes.length; i++) {
+      var checkbox = checkboxes[i];
+      checkbox.style.display = 'inline-block';
+      checkbox.style.visibility = 'visible';
+      checkbox.style.opacity = '1';
+      
+      console.log('✅ Made visible:', checkbox.name || checkbox.id || 'checkbox-' + i);
     }
     
-    // Run immediately
-    makeCheckboxesVisible();
-    
-    // Run when DOM is ready
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', makeCheckboxesVisible);
+    // Remove any iCheck wrappers that might be interfering
+    var iCheckWrappers = document.querySelectorAll('.icheckbox_square-blue, .iradio_square-blue');
+    for (var j = 0; j < iCheckWrappers.length; j++) {
+      var wrapper = iCheckWrappers[j];
+      var input = wrapper.querySelector('input');
+      if (input) {
+        wrapper.parentNode.insertBefore(input, wrapper);
+        wrapper.remove();
+        console.log('✅ Removed iCheck wrapper for:', input.name || input.id);
+      }
     }
-    
-    // Run when window loads
-    window.addEventListener('load', makeCheckboxesVisible);
-    
-    // Run periodically to catch dynamically added checkboxes
-    setInterval(makeCheckboxesVisible, 2000);
-    
-    console.log('🔧 CHECKBOX FIX: Setup complete');
-})();
+  })();
 
-$(document).ready(function(){
+  $(document).ready(function(){
     console.log('📋 Document ready - CSS-only checkboxes active');
     
     // Ensure checkboxes are visible
     $('.input-icheck').css({
-        'display': 'inline-block',
-        'visibility': 'visible',
-        'opacity': '1'
+      'display': 'inline-block',
+      'visibility': 'visible',
+      'opacity': '1'
     });
     
-    // Use regular checkbox events instead of iCheck events
-    $('#selected_contacts').on('change', function(){
-        if ($(this).is(':checked')) {
-            $('div.selected_contacts_div').removeClass('hide');
-        } else {
-            $('div.selected_contacts_div').addClass('hide');
-        }
-    });
-
-    $('#is_enable_service_staff_pin').on('change', function(){
-        if ($(this).is(':checked')) {
-            $('div.service_staff_pin_div').removeClass('hide');
-        } else {
-            $('div.service_staff_pin_div').addClass('hide');
-            $('#service_staff_pin').val('');
-        }
-    });
-
-    $('#allow_login').on('change', function(){
-        if ($(this).is(':checked')) {
-            $('div.user_auth_fields').removeClass('hide');
-        } else {
-            $('div.user_auth_fields').addClass('hide');
-        }
-    });
+    // Don't try to initialize iCheck - use regular checkbox events
+    console.log('Using regular checkbox events instead of iCheck');
 
     __page_leave_confirmation('#user_edit_form');
+    
+    $('#selected_contacts').on('ifChecked', function(event){
+      $('div.selected_contacts_div').removeClass('hide');
+    });
+    $('#selected_contacts').on('ifUnchecked', function(event){
+      $('div.selected_contacts_div').addClass('hide');
+    });
+
+    $('#is_enable_service_staff_pin').on('ifChecked', function(event){
+      $('div.service_staff_pin_div').removeClass('hide');
+    });
+
+    $('#is_enable_service_staff_pin').on('ifUnchecked', function(event){
+      $('div.service_staff_pin_div').addClass('hide');
+      $('#service_staff_pin').val('');
+    });
+
+    $('#allow_login').on('ifChecked', function(event){
+      $('div.user_auth_fields').removeClass('hide');
+    });
+    $('#allow_login').on('ifUnchecked', function(event){
+      $('div.user_auth_fields').addClass('hide');
+    });
 
     $('#user_allowed_contacts').select2({
         ajax: {
@@ -456,62 +413,62 @@ $(document).ready(function(){
             return markup;
         },
     });
-});
+  });
 
-$('form#user_edit_form').validate({
-    rules: {
-        first_name: {
-            required: true,
-        },
-        email: {
-            email: true,
-            remote: {
-                url: "/business/register/check-email",
-                type: "post",
-                data: {
-                    email: function() {
-                        return $( "#email" ).val();
+  $('form#user_edit_form').validate({
+                rules: {
+                    first_name: {
+                        required: true,
                     },
-                    user_id: {{$user->id}}
-                }
-            }
-        },
-        password: {
-            minlength: 5
-        },
-        confirm_password: {
-            equalTo: "#password",
-        },
-        username: {
-            minlength: 5,
-            remote: {
-                url: "/business/register/check-username",
-                type: "post",
-                data: {
-                    username: function() {
-                        return $( "#username" ).val();
+                    email: {
+                        email: true,
+                        remote: {
+                            url: "/business/register/check-email",
+                            type: "post",
+                            data: {
+                                email: function() {
+                                    return $( "#email" ).val();
+                                },
+                                user_id: {{$user->id}}
+                            }
+                        }
                     },
-                    @if(!empty($username_ext))
-                      username_ext: "{{$username_ext}}"
-                    @endif
+                    password: {
+                        minlength: 5
+                    },
+                    confirm_password: {
+                        equalTo: "#password",
+                    },
+                    username: {
+                        minlength: 5,
+                        remote: {
+                            url: "/business/register/check-username",
+                            type: "post",
+                            data: {
+                                username: function() {
+                                    return $( "#username" ).val();
+                                },
+                                @if(!empty($username_ext))
+                                  username_ext: "{{$username_ext}}"
+                                @endif
+                            }
+                        }
+                    }
+                },
+                messages: {
+                    password: {
+                        minlength: 'Password should be minimum 5 characters',
+                    },
+                    confirm_password: {
+                        equalTo: 'Should be same as password'
+                    },
+                    username: {
+                        remote: 'Invalid username or User already exist'
+                    },
+                    email: {
+                        remote: '{{ __("validation.unique", ["attribute" => __("business.email")]) }}'
+                    }
                 }
-            }
-        }
-    },
-    messages: {
-        password: {
-            minlength: 'Password should be minimum 5 characters',
-        },
-        confirm_password: {
-            equalTo: 'Should be same as password'
-        },
-        username: {
-            remote: 'Invalid username or User already exist'
-        },
-        email: {
-            remote: '{{ __("validation.unique", ["attribute" => __("business.email")]) }}'
-        }
-    }
-});
+            });
 </script>
 @endsection
