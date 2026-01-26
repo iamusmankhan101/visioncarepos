@@ -131,6 +131,121 @@ Route::middleware(['setData', 'auth', 'SetSessionData', 'language', 'timezone', 
     Route::get('/home/purchase-payment-dues', [HomeController::class, 'getPurchasePaymentDues']);
     Route::get('/home/sales-payment-dues', [HomeController::class, 'getSalesPaymentDues']);
     Route::get('/home/sales-commission-agents', [HomeController::class, 'getSalesCommissionAgents']);
+    Route::get('/fix-404-errors', function() {
+        $fixes = [];
+        
+        // 1. Create img/icheck directory
+        $public_img = public_path('img');
+        $public_icheck = public_path('img/icheck');
+        
+        if (!is_dir($public_img)) {
+            mkdir($public_img, 0755, true);
+            $fixes[] = "Created img directory";
+        }
+        
+        if (!is_dir($public_icheck)) {
+            mkdir($public_icheck, 0755, true);
+            $fixes[] = "Created img/icheck directory";
+        }
+        
+        // 2. Copy iCheck files
+        $icheck_files = [
+            public_path('images/vendor/icheck/skins/square/blue.png') => public_path('img/icheck/blue.png'),
+            public_path('images/vendor/icheck/skins/square/blue@2x.png') => public_path('img/icheck/blue@2x.png')
+        ];
+        
+        foreach ($icheck_files as $source => $dest) {
+            if (file_exists($source) && !file_exists($dest)) {
+                if (copy($source, $dest)) {
+                    $fixes[] = "Copied " . basename($dest);
+                }
+            }
+        }
+        
+        // 3. Clear Laravel cache
+        try {
+            \Artisan::call('route:clear');
+            $fixes[] = "Cleared route cache";
+        } catch (Exception $e) {}
+        
+        try {
+            \Artisan::call('config:clear');
+            $fixes[] = "Cleared config cache";
+        } catch (Exception $e) {}
+        
+        try {
+            \Artisan::call('cache:clear');
+            $fixes[] = "Cleared application cache";
+        } catch (Exception $e) {}
+        
+        // 4. Create CSS fix
+        $css_dir = public_path('css');
+        if (!is_dir($css_dir)) {
+            mkdir($css_dir, 0755, true);
+            $fixes[] = "Created css directory";
+        }
+        
+        $css_content = "/* iCheck 404 Fix */
+.icheckbox_square-blue, .iradio_square-blue {
+    background-image: url('../img/icheck/blue.png') !important;
+}
+@media (-webkit-min-device-pixel-ratio: 1.5) {
+    .icheckbox_square-blue, .iradio_square-blue {
+        background-image: url('../img/icheck/blue@2x.png') !important;
+        background-size: 240px 24px !important;
+    }
+}";
+        
+        if (file_put_contents(public_path('css/icheck-404-fix.css'), $css_content)) {
+            $fixes[] = "Created CSS fix file";
+        }
+        
+        // Test files
+        $test_files = [
+            public_path('img/icheck/blue.png') => 'iCheck Blue Image',
+            public_path('img/icheck/blue@2x.png') => 'iCheck Blue Retina',
+            public_path('css/icheck-404-fix.css') => 'CSS Fix File',
+            public_path('css/app.css') => 'Main CSS',
+            public_path('js/app.js') => 'Main JavaScript'
+        ];
+        
+        $html = "<!DOCTYPE html><html><head><title>404 Fix Results</title></head><body>";
+        $html .= "<h1>🔧 404 Fix Results</h1>";
+        
+        if (!empty($fixes)) {
+            $html .= "<h2>✅ Fixes Applied:</h2><ul>";
+            foreach ($fixes as $fix) {
+                $html .= "<li style='color: green;'>$fix</li>";
+            }
+            $html .= "</ul>";
+        } else {
+            $html .= "<p style='color: blue;'>No fixes needed - everything already in place!</p>";
+        }
+        
+        $html .= "<h2>📋 File Status:</h2>";
+        foreach ($test_files as $file => $desc) {
+            $exists = file_exists($file);
+            $color = $exists ? 'green' : 'red';
+            $status = $exists ? '✅' : '❌';
+            $html .= "<div style='color: $color;'>$status $desc</div>";
+        }
+        
+        $html .= "<h2>📝 Next Steps:</h2>";
+        $html .= "<div style='background: #fff3cd; padding: 15px; border-radius: 5px;'>";
+        $html .= "<p><strong>Add this CSS link to your main layout file:</strong></p>";
+        $html .= "<code>&lt;link rel=\"stylesheet\" href=\"{{ asset('css/icheck-404-fix.css') }}\"&gt;</code>";
+        $html .= "<p><strong>Then clear your browser cache:</strong> Ctrl+F5 or Cmd+Shift+R</p>";
+        $html .= "</div>";
+        
+        $html .= "<h2>🔗 Test Routes:</h2>";
+        $html .= "<a href='/home' style='color: #007bff;'>🔗 Test Dashboard</a><br>";
+        $html .= "<a href='/debug/fix-commission-datatable' style='color: #007bff;'>🔗 Test Commission Debug</a>";
+        
+        $html .= "</body></html>";
+        
+        return $html;
+    });
+
     Route::get('/debug/fix-commission-datatable', function() {
         try {
             // Load database

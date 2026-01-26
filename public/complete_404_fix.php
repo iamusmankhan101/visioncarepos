@@ -64,30 +64,57 @@ if (!file_exists('css/icheck-fix.css')) {
     $fixes_applied[] = "iCheck CSS fix";
 }
 
-// 4. Clear Laravel caches
-echo "<h2>🔧 Fix 3: Clear Laravel Caches</h2>";
-$laravel_root = dirname(__DIR__);
-chdir($laravel_root);
+// 4. Clear Laravel caches (Manual method - exec() disabled on hosting)
+echo "<h2>🔧 Fix 3: Clear Laravel Caches (Manual)</h2>";
+echo "<div style='background: #fff3cd; padding: 15px; border-radius: 5px;'>";
+echo "<p><strong>Note:</strong> exec() function is disabled on this hosting. Please run these commands manually via SSH or hosting control panel:</p>";
+echo "<ul>";
+echo "<li><code>php artisan route:clear</code></li>";
+echo "<li><code>php artisan config:clear</code></li>";
+echo "<li><code>php artisan cache:clear</code></li>";
+echo "<li><code>php artisan view:clear</code></li>";
+echo "</ul>";
 
-$cache_commands = [
-    'php artisan route:clear' => 'Route cache',
-    'php artisan config:clear' => 'Config cache',
-    'php artisan cache:clear' => 'Application cache',
-    'php artisan view:clear' => 'View cache'
+// Try to clear cache files manually
+$cache_cleared = [];
+$cache_paths = [
+    '../bootstrap/cache/routes.php' => 'Route cache',
+    '../bootstrap/cache/config.php' => 'Config cache',
+    '../bootstrap/cache/services.php' => 'Services cache'
 ];
 
-foreach ($cache_commands as $command => $description) {
-    $output = [];
-    $return_code = 0;
-    exec($command . ' 2>&1', $output, $return_code);
-    
-    if ($return_code === 0) {
-        echo "<div style='color: green;'>✅ Cleared: $description</div>";
-        $fixes_applied[] = $description;
+foreach ($cache_paths as $cache_file => $description) {
+    if (file_exists($cache_file)) {
+        if (unlink($cache_file)) {
+            echo "<div style='color: green;'>✅ Manually cleared: $description</div>";
+            $cache_cleared[] = $description;
+            $fixes_applied[] = $description;
+        } else {
+            echo "<div style='color: orange;'>⚠️ Could not delete: $description</div>";
+        }
     } else {
-        echo "<div style='color: orange;'>⚠️ Warning: $description (Code: $return_code)</div>";
+        echo "<div style='color: blue;'>ℹ️ Not found (already clear): $description</div>";
+        $cache_cleared[] = $description;
     }
 }
+
+// Clear storage cache if possible
+$storage_cache_dir = '../storage/framework/cache/data';
+if (is_dir($storage_cache_dir)) {
+    $cache_files = glob($storage_cache_dir . '/*');
+    $deleted_count = 0;
+    foreach ($cache_files as $cache_file) {
+        if (is_file($cache_file) && unlink($cache_file)) {
+            $deleted_count++;
+        }
+    }
+    if ($deleted_count > 0) {
+        echo "<div style='color: green;'>✅ Cleared $deleted_count application cache files</div>";
+        $fixes_applied[] = "Application cache ($deleted_count files)";
+    }
+}
+
+echo "</div>";
 
 // 5. Test critical routes
 echo "<h2>🔧 Fix 4: Route Testing</h2>";
