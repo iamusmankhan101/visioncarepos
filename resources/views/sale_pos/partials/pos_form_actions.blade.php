@@ -69,6 +69,13 @@
                     title="Add Location (Test)"><i
                         class="fas fa-map-marker-alt tw-text-[#ff6b35]"></i> Test Location</button>
 
+                {{-- SUPER OBVIOUS TEST BUTTON --}}
+                <button type="button"
+                    style="background-color: red !important; color: white !important; padding: 15px !important; font-size: 16px !important; border: 3px solid yellow !important;"
+                    onclick="alert('BUTTON WORKS! This proves the POS actions are loading.')">
+                    🚨 CLICK ME 🚨
+                </button>
+
                 @if (!Gate::check('disable_quotation') || auth()->user()->can('superadmin') || auth()->user()->can('admin'))
                     <button type="button"
                         class="tw-font-bold tw-text-gray-700 tw-cursor-pointer tw-text-xs md:tw-text-sm tw-flex tw-flex-col tw-items-center tw-justify-center tw-gap-1 @if ($is_mobile) col-xs-6 @endif"
