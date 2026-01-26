@@ -414,7 +414,7 @@
                                         <table class="table table-bordered table-striped" id="commission_agents_table">
                                             <thead>
                                                 <tr>
-                                                    <th>@lang('business.name')</th>
+                                                    <th>@lang('user.name')</th>
                                                     <th>@lang('lang_v1.contact_no')</th>
                                                     <th>@lang('lang_v1.commission_percent')</th>
                                                     <th>@lang('lang_v1.total_sales')</th>
