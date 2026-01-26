@@ -74,21 +74,21 @@ input.input-icheck,
 
 /* Checked state */
 .input-icheck:checked {
-    background: #007cba !important;
+    background: white !important;
     border-color: #007cba !important;
 }
 
-/* Checkmark icon */
+/* Checkmark icon - BLUE TICK */
 .input-icheck[type="checkbox"]:checked::after {
     content: '✓' !important;
     position: absolute !important;
     top: -1px !important;
     left: 3px !important;
-    color: white !important;
+    color: #007cba !important;
     font-size: 16px !important;
     font-weight: bold !important;
     line-height: 1 !important;
-    text-shadow: 0 0 2px rgba(0,0,0,0.3) !important;
+    text-shadow: 0 0 2px rgba(0, 124, 186, 0.3) !important;
 }
 
 /* Remove iCheck interference completely */
