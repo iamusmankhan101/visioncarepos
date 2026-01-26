@@ -22,7 +22,7 @@ $(document).on('show.bs.modal', '.register_details_modal', function () {
 });
 
 // Handle add location button click
-$(document).on('click', '#pos-add-location', function(e) {
+$(document).on('click', '#pos-add-location, #pos-add-location-test', function(e) {
     e.preventDefault();
     var url = $(this).data('href');
     if (url) {
