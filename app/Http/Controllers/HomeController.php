@@ -428,7 +428,7 @@ class HomeController extends Controller
                 if ($has_condition_column) {
                     $query->select(
                         'u.id',
-                        DB::raw("TRIM(CONCAT(COALESCE(u.surname, ''), ' ', COALESCE(u.first_name, ''), ' ', COALESCE(u.last_name, ''))) as full_name"),
+                        DB::raw("TRIM(CONCAT(COALESCE(u.surname, ''), ' ', COALESCE(u.first_name, ''), ' ', COALESCE(u.last_name, ''))) as name"),
                         'u.email',
                         'u.contact_no',
                         'u.cmmsn_percent',
@@ -441,7 +441,7 @@ class HomeController extends Controller
                 } else {
                     $query->select(
                         'u.id',
-                        DB::raw("TRIM(CONCAT(COALESCE(u.surname, ''), ' ', COALESCE(u.first_name, ''), ' ', COALESCE(u.last_name, ''))) as full_name"),
+                        DB::raw("TRIM(CONCAT(COALESCE(u.surname, ''), ' ', COALESCE(u.first_name, ''), ' ', COALESCE(u.last_name, ''))) as name"),
                         'u.email',
                         'u.contact_no',
                         'u.cmmsn_percent',
@@ -456,8 +456,8 @@ class HomeController extends Controller
                 $query->orderBy('total_amount', 'desc');
 
                 return Datatables::of($query)
-                    ->editColumn('full_name', function ($row) {
-                        return $row->full_name ?: 'N/A';
+                    ->editColumn('name', function ($row) {
+                        return $row->name ?: 'N/A';
                     })
                     ->editColumn('contact_no', function ($row) {
                         return $row->contact_no ?: 'N/A';

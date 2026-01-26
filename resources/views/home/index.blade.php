@@ -1439,7 +1439,7 @@
                     }
                 },
                 columns: [
-                    { data: 'full_name', name: 'full_name', defaultContent: 'N/A' },
+                    { data: 'name', name: 'name', defaultContent: 'N/A' },
                     { data: 'contact_no', name: 'contact_no', defaultContent: 'N/A' },
                     { data: 'cmmsn_percent', name: 'cmmsn_percent', defaultContent: '0%' },
                     { data: 'total_sales', name: 'total_sales', defaultContent: '0' },
