@@ -168,17 +168,4 @@ label, .form-group label {
     color: white !important;
 }
 </style>
-@endsectionund-color: #28a745;
-    border-color: #28a745;
-}
-
-.form-control {
-    padding: 10px;
-    font-size: 14px;
-}
-
-.alert {
-    margin-bottom: 20px;
-}
-</style>
 @endsection
