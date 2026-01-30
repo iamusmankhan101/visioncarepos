@@ -8,8 +8,8 @@
         <div class="col-md-8 col-md-offset-2">
             <div class="login-content">
                 <div class="login-header">
-                    <h3 class="text-center">@lang('Select or Register Business')</h3>
-                    <p class="text-center text-muted">Choose an existing business or register a new one</p>
+                    <h3 class="text-center">@lang('Welcome! Select Your Business')</h3>
+                    <p class="text-center text-muted">Choose your business to continue to POS system</p>
                 </div>
 
                 @if(session('success'))

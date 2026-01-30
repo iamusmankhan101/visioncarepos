@@ -33,8 +33,9 @@ class CheckBusinessSelection
             return $next($request);
         }
 
-        // If user doesn't have a business_id, redirect to business selection
-        if (!$user->business_id) {
+        // Always redirect to business selection if user hasn't selected a business in this session
+        // This ensures users go through business selection every time they login
+        if (!session()->has('selected_business_id') || !$user->business_id) {
             return redirect()->route('business.select');
         }
 

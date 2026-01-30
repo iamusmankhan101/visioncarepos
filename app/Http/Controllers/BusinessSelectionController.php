@@ -140,9 +140,17 @@ class BusinessSelectionController extends Controller
             $user->business_id = $business->id;
             $user->save();
 
+            // Set session to indicate business has been selected
+            session(['selected_business_id' => $business->id]);
+
             DB::commit();
 
-            return redirect()->route('business.select')->with('success', 'Business registered successfully!');
+            // Redirect based on user permissions after successful registration
+            if (!$user->can('dashboard.data') && $user->can('sell.create')) {
+                return redirect('/pos/create')->with('success', 'Business registered successfully! Welcome to your POS.');
+            }
+
+            return redirect('/home')->with('success', 'Business registered successfully!');
 
         } catch (\Exception $e) {
             DB::rollback();
@@ -179,6 +187,9 @@ class BusinessSelectionController extends Controller
         // Update user's business_id
         $user->business_id = $business->id;
         $user->save();
+
+        // Set session to indicate business has been selected
+        session(['selected_business_id' => $business->id]);
 
         // Clear any cached business data
         session()->forget(['business', 'location']);
