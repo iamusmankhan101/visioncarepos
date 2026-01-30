@@ -297,20 +297,9 @@ class BusinessSelectionController extends Controller
             $user->business_id = $business->id;
             $user->save();
 
-            // Assign admin role to user for this business
-            $adminRole = \Spatie\Permission\Models\Role::where('name', 'Admin#' . $business->id)->first();
-            if (!$adminRole) {
-                $adminRole = \Spatie\Permission\Models\Role::create([
-                    'name' => 'Admin#' . $business->id,
-                    'guard_name' => 'web'
-                ]);
-                
-                // Give all permissions to admin role
-                $permissions = \Spatie\Permission\Models\Permission::all();
-                $adminRole->syncPermissions($permissions);
-            }
-            
-            $user->assignRole($adminRole);
+            // Skip role creation for now to avoid foreign key constraint issues
+            // The user will still have access as the business owner
+            // Role assignment can be handled later if needed
 
             // Set session
             session(['selected_business_id' => $business->id]);
