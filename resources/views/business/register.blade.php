@@ -166,6 +166,29 @@
                     <div class="row">
                         <div class="col-md-12">
                             <h4>@lang('Features')</h4>
+                            
+                            <!-- Full Business Setup Option -->
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="full-business-setup-section" style="background: rgba(0, 123, 255, 0.1); border: 2px solid #007bff; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+                                        <div class="checkbox">
+                                            <label style="font-size: 16px; font-weight: bold;">
+                                                <input type="checkbox" name="full_business_setup" value="1" {{ old('full_business_setup', 1) ? 'checked' : '' }} id="full_business_setup">
+                                                <i class="fa fa-rocket" style="color: #007bff; margin-right: 5px;"></i>
+                                                @lang('Complete Business Setup')
+                                            </label>
+                                            <p style="margin: 10px 0 0 25px; font-size: 14px; color: rgba(255, 255, 255, 0.8);">
+                                                @lang('Automatically create essential data for your business including tax rates, product categories, brands, units, customer groups, and expense categories. This gives you a fully functional POS system from day one!')
+                                            </p>
+                                            <div style="margin: 10px 0 0 25px; font-size: 13px; color: rgba(255, 255, 255, 0.7);">
+                                                <strong>@lang('Includes'):</strong> 
+                                                Tax Rates (VAT/GST), Product Categories, Brands, Units, Customer Groups, Expense Categories, Payment Methods
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
                             <div class="row">
                                 <div class="col-md-4">
                                     <div class="checkbox">
