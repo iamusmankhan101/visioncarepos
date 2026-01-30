@@ -100,7 +100,7 @@
                     <div class="tw-absolute tw-inset-0 tw-flex tw-items-center">
                         <div class="tw-w-full tw-border-t tw-border-gray-300"></div>
                     </div>
-                    <div class="tw-relative tw-flex tw-justify-center tw-text-sm">
+                    <div class="tw-relative tw-flex tw-justify-center tw-text-sm tw-pt-5">
                         <span class="tw-px-4 tw-bg-white tw-text-gray-500 tw-font-medium">OR</span>
                     </div>
                 </div>
@@ -121,12 +121,14 @@
                     </p>
                 </div>
                 
-                <a href="/business/register" class="tw-w-full tw-bg-blue-600 tw-text-white tw-py-3 tw-px-4 tw-rounded-lg tw-font-semibold tw-hover:bg-blue-700 tw-focus:outline-none tw-focus:ring-2 tw-focus:ring-blue-500 tw-focus:ring-offset-2 tw-transition-colors tw-duration-200 tw-flex tw-items-center tw-justify-center">
-                    <svg class="tw-w-5 tw-h-5 tw-mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                    </svg>
-                    Register New Business
-                </a>
+                <div class="tw-flex tw-justify-center">
+                    <a href="/business/register" class="tw-bg-blue-600 tw-text-white tw-py-3 tw-px-8 tw-rounded-lg tw-font-semibold tw-hover:bg-blue-700 tw-focus:outline-none tw-focus:ring-2 tw-focus:ring-blue-500 tw-focus:ring-offset-2 tw-transition-colors tw-duration-200 tw-flex tw-items-center tw-justify-center tw-min-w-0">
+                        <svg class="tw-w-5 tw-h-5 tw-mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                        Register New Business
+                    </a>
+                </div>
             </div>
 
             <!-- Logout Section -->
