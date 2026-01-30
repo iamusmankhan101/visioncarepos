@@ -7,9 +7,6 @@
     <div class="tw-max-w-4xl tw-w-full tw-space-y-8">
         <!-- Vision Care Header -->
         <div class="tw-text-center">
-            <div class="tw-mx-auto tw-h-20 tw-w-20 tw-flex tw-items-center tw-justify-center tw-bg-white tw-rounded-full tw-shadow-lg tw-mb-6">
-                <img src="{{ asset('img/logo-small.png') }}" alt="Vision Care" class="tw-h-12 tw-w-12 tw-object-contain" />
-            </div>
             <h2 class="tw-text-3xl tw-font-bold tw-text-white tw-mb-2">Vision Care POS</h2>
             <p class="tw-text-blue-200 tw-text-lg">Register New Business</p>
             <p class="tw-text-blue-300 tw-text-sm tw-mt-2">Fill in the details to create your business</p>
