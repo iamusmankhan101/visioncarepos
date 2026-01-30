@@ -200,7 +200,13 @@ class Util
         if (! session()->has('business') && ! empty($business_id)) {
             $enabled_modules = Business::find($business_id)->enabled_modules;
         }
-        $enabled_modules = (! empty($enabled_modules) && $enabled_modules != 'null') ? $enabled_modules : [];
+        
+        // Fix: Ensure enabled_modules is an array (decode JSON if it's a string)
+        if (is_string($enabled_modules)) {
+            $enabled_modules = json_decode($enabled_modules, true);
+        }
+        
+        $enabled_modules = (! empty($enabled_modules) && $enabled_modules != 'null' && is_array($enabled_modules)) ? $enabled_modules : [];
 
         return $enabled_modules;
         //Module::has('Restaurant');
