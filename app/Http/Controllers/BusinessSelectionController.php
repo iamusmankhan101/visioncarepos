@@ -166,7 +166,11 @@ class BusinessSelectionController extends Controller
                     'hide_recent_trans' => 0,
                     'disable_discount' => 0,
                     'disable_order_tax' => 0,
-                    'is_pos_subtotal_editable' => 0
+                    'is_pos_subtotal_editable' => 0,
+                    'print_on_suspend' => 0,
+                    'show_pricing_on_product_sugesstion' => 1,
+                    'enable_payment_link' => 0,
+                    'inline_service_staff' => 0
                 ]),
                 'enabled_modules' => json_encode([
                     'purchases', 'add_sale', 'pos', 'stock_transfers', 'stock_adjustment',

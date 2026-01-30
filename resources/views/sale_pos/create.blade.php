@@ -12,7 +12,7 @@
             <input type="hidden" id="reward_point_enabled">
         @endif
         @php
-            $is_discount_enabled = $pos_settings['disable_discount'] != 1 ? true : false;
+            $is_discount_enabled = isset($pos_settings['disable_discount']) && $pos_settings['disable_discount'] != 1 ? true : false;
             $is_rp_enabled = session('business.enable_rp') == 1 ? true : false;
         @endphp
         {!! Form::open([
