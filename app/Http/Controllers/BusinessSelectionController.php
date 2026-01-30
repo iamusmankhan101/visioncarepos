@@ -182,32 +182,14 @@ class BusinessSelectionController extends Controller
             $business_data['owner_id'] = $user->id;
             $business_data['created_by'] = $user->id;
             $business_data['is_active'] = 1;
-            
-            // Handle array fields that need JSON encoding
-            $business_data['pos_settings'] = json_encode($request->get('pos_settings', []));
-            $business_data['weighing_scale_setting'] = json_encode($request->get('weighing_scale_setting', []));
-            $business_data['enabled_modules'] = json_encode($request->get('enabled_modules', []));
-            $business_data['ref_no_prefixes'] = json_encode($request->get('ref_no_prefixes', []));
-            $business_data['email_settings'] = json_encode($request->get('email_settings', []));
-            $business_data['sms_settings'] = json_encode($request->get('sms_settings', []));
-            $business_data['custom_labels'] = json_encode($request->get('custom_labels', []));
-            $business_data['common_settings'] = json_encode($request->get('common_settings', []));
-            
-            // Handle boolean fields properly
-            $business_data['keyboard_shortcuts'] = $request->has('keyboard_shortcuts') ? 1 : 0;
-            $business_data['enable_brand'] = $request->has('enable_brand') ? 1 : 0;
-            $business_data['enable_category'] = $request->has('enable_category') ? 1 : 0;
-            $business_data['enable_sub_category'] = $request->has('enable_sub_category') ? 1 : 0;
-            $business_data['enable_price_tax'] = $request->has('enable_price_tax') ? 1 : 0;
-            $business_data['enable_purchase_status'] = $request->has('enable_purchase_status') ? 1 : 0;
-            $business_data['enable_lot_number'] = $request->has('enable_lot_number') ? 1 : 0;
-            $business_data['enable_sub_units'] = $request->has('enable_sub_units') ? 1 : 0;
-            $business_data['enable_racks'] = $request->has('enable_racks') ? 1 : 0;
-            $business_data['enable_row'] = $request->has('enable_row') ? 1 : 0;
-            $business_data['enable_position'] = $request->has('enable_position') ? 1 : 0;
-            $business_data['enable_editing_product_from_purchase'] = $request->has('enable_editing_product_from_purchase') ? 1 : 0;
-            $business_data['enable_inline_tax'] = $request->has('enable_inline_tax') ? 1 : 0;
-            $business_data['enable_rp'] = $request->has('enable_rp') ? 1 : 0;
+            $business_data['pos_settings'] = $request->get('pos_settings', []);
+            $business_data['weighing_scale_setting'] = $request->get('weighing_scale_setting', []);
+            $business_data['enabled_modules'] = $request->get('enabled_modules', []);
+            $business_data['ref_no_prefixes'] = $request->get('ref_no_prefixes', []);
+            $business_data['email_settings'] = $request->get('email_settings', []);
+            $business_data['sms_settings'] = $request->get('sms_settings', []);
+            $business_data['custom_labels'] = $request->get('custom_labels', []);
+            $business_data['common_settings'] = $request->get('common_settings', []);
 
             $business = Business::create($business_data);
 
@@ -297,9 +279,20 @@ class BusinessSelectionController extends Controller
             $user->business_id = $business->id;
             $user->save();
 
-            // Skip role creation for now to avoid foreign key constraint issues
-            // The user will still have access as the business owner
-            // Role assignment can be handled later if needed
+            // Assign admin role to user for this business
+            $adminRole = \Spatie\Permission\Models\Role::where('name', 'Admin#' . $business->id)->first();
+            if (!$adminRole) {
+                $adminRole = \Spatie\Permission\Models\Role::create([
+                    'name' => 'Admin#' . $business->id,
+                    'guard_name' => 'web'
+                ]);
+                
+                // Give all permissions to admin role
+                $permissions = \Spatie\Permission\Models\Permission::all();
+                $adminRole->syncPermissions($permissions);
+            }
+            
+            $user->assignRole($adminRole);
 
             // Set session
             session(['selected_business_id' => $business->id]);
