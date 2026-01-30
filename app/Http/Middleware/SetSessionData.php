@@ -32,6 +32,14 @@ class SetSessionData
             ];
             $business = Business::findOrFail($user->business_id);
 
+            // Fix: Ensure enabled_modules is an array
+            if (is_string($business->enabled_modules)) {
+                $business->enabled_modules = json_decode($business->enabled_modules, true) ?: [];
+            }
+            if (!is_array($business->enabled_modules)) {
+                $business->enabled_modules = [];
+            }
+
             $currency = $business->currency;
             $currency_data = ['id' => $currency->id,
                 'code' => $currency->code,
