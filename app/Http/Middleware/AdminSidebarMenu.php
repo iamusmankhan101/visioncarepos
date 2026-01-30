@@ -23,6 +23,16 @@ class AdminSidebarMenu
 
         Menu::create('admin-sidebar-menu', function ($menu) {
             $enabled_modules = !empty(session('business.enabled_modules')) ? session('business.enabled_modules') : [];
+            
+            // Ensure enabled_modules is an array (decode JSON if it's a string)
+            if (is_string($enabled_modules)) {
+                $enabled_modules = json_decode($enabled_modules, true) ?: [];
+            }
+            
+            // Fallback to empty array if not an array
+            if (!is_array($enabled_modules)) {
+                $enabled_modules = [];
+            }
 
             $common_settings = !empty(session('business.common_settings')) ? session('business.common_settings') : [];
             $pos_settings = !empty(session('business.pos_settings')) ? json_decode(session('business.pos_settings'), true) : [];
