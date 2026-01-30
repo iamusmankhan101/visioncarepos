@@ -103,7 +103,7 @@ class BusinessSelectionController extends Controller
     }
 
     /**
-     * Store new business (comprehensive setup with full form validation)
+     * Store new business (comprehensive setup)
      */
     public function store(Request $request)
     {
@@ -112,86 +112,84 @@ class BusinessSelectionController extends Controller
                 'name' => 'required|string|max:255',
                 'currency_id' => 'required|exists:currencies,id',
                 'start_date' => 'required|date',
-                'business_logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
                 'fy_start_month' => 'required|integer|min:1|max:12',
                 'accounting_method' => 'required|in:fifo,lifo,avco',
                 'transaction_edit_days' => 'required|integer|min:0',
                 'stock_expiry_alert_days' => 'required|integer|min:0',
-                'keyboard_shortcuts' => 'boolean',
-                'pos_settings' => 'array',
-                'weighing_scale_setting' => 'array',
-                'enable_brand' => 'boolean',
-                'enable_category' => 'boolean',
-                'enable_sub_category' => 'boolean',
-                'enable_price_tax' => 'boolean',
-                'enable_purchase_status' => 'boolean',
-                'enable_lot_number' => 'boolean',
-                'default_unit' => 'nullable|exists:units,id',
-                'enable_sub_units' => 'boolean',
-                'enable_racks' => 'boolean',
-                'enable_row' => 'boolean',
-                'enable_position' => 'boolean',
-                'enable_editing_product_from_purchase' => 'boolean',
-                'sales_cmsn_agnt' => 'required|in:logged_in_user,user,percentage',
-                'item_addition_method' => 'required|integer|min:1|max:2',
-                'enable_inline_tax' => 'boolean',
-                'currency_symbol_placement' => 'required|in:before,after',
-                'enabled_modules' => 'array',
                 'date_format' => 'required|string',
                 'time_format' => 'required|in:12,24',
-                'ref_no_prefixes' => 'array',
-                'theme_color' => 'nullable|string',
-                'created_by' => 'nullable|exists:users,id',
-                'enable_rp' => 'boolean',
-                'rp_name' => 'nullable|string',
-                'amount_for_unit_rp' => 'nullable|numeric',
-                'min_order_total_for_rp' => 'nullable|numeric',
-                'max_rp_per_order' => 'nullable|numeric',
-                'redeem_amount_per_unit_rp' => 'nullable|numeric',
-                'min_order_total_for_redeem' => 'nullable|numeric',
-                'min_redeem_point' => 'nullable|numeric',
-                'max_redeem_point' => 'nullable|numeric',
-                'rp_expiry_period' => 'nullable|integer',
-                'rp_expiry_type' => 'nullable|in:month,year',
-                'email_settings' => 'array',
-                'sms_settings' => 'array',
-                'custom_labels' => 'array',
-                'common_settings' => 'array',
-                'is_active' => 'boolean',
+                'currency_symbol_placement' => 'required|in:before,after',
+                'sales_cmsn_agnt' => 'required|in:logged_in_user,user,percentage',
+                'item_addition_method' => 'required|integer|min:1|max:2',
             ]);
 
             DB::beginTransaction();
             
             $user = Auth::user();
             
-            // Create comprehensive business with form data
-            $business_data = $request->only([
-                'name', 'currency_id', 'start_date', 'fy_start_month', 'accounting_method',
-                'transaction_edit_days', 'stock_expiry_alert_days', 'keyboard_shortcuts',
-                'enable_brand', 'enable_category', 'enable_sub_category', 'enable_price_tax',
-                'enable_purchase_status', 'enable_lot_number', 'default_unit', 'enable_sub_units',
-                'enable_racks', 'enable_row', 'enable_position', 'enable_editing_product_from_purchase',
-                'sales_cmsn_agnt', 'item_addition_method', 'enable_inline_tax', 'currency_symbol_placement',
-                'date_format', 'time_format', 'theme_color', 'enable_rp', 'rp_name',
-                'amount_for_unit_rp', 'min_order_total_for_rp', 'max_rp_per_order',
-                'redeem_amount_per_unit_rp', 'min_order_total_for_redeem', 'min_redeem_point',
-                'max_redeem_point', 'rp_expiry_period', 'rp_expiry_type'
+            // Create comprehensive business with all necessary settings
+            $business = Business::create([
+                'name' => $request->name,
+                'owner_id' => $user->id,
+                'created_by' => $user->id,
+                'is_active' => 1,
+                'currency_id' => $request->currency_id,
+                'start_date' => $request->start_date,
+                'fy_start_month' => $request->fy_start_month,
+                'accounting_method' => $request->accounting_method,
+                'transaction_edit_days' => $request->transaction_edit_days,
+                'stock_expiry_alert_days' => $request->stock_expiry_alert_days,
+                'date_format' => $request->date_format,
+                'time_format' => $request->time_format,
+                'currency_symbol_placement' => $request->currency_symbol_placement,
+                'sales_cmsn_agnt' => $request->sales_cmsn_agnt,
+                'item_addition_method' => $request->item_addition_method,
+                'enable_brand' => $request->has('enable_brand') ? 1 : 0,
+                'enable_category' => $request->has('enable_category') ? 1 : 0,
+                'enable_sub_category' => $request->has('enable_sub_category') ? 1 : 0,
+                'enable_price_tax' => $request->has('enable_price_tax') ? 1 : 0,
+                'enable_purchase_status' => $request->has('enable_purchase_status') ? 1 : 0,
+                'enable_lot_number' => $request->has('enable_lot_number') ? 1 : 0,
+                'enable_sub_units' => $request->has('enable_sub_units') ? 1 : 0,
+                'enable_racks' => $request->has('enable_racks') ? 1 : 0,
+                'enable_row' => $request->has('enable_row') ? 1 : 0,
+                'enable_position' => $request->has('enable_position') ? 1 : 0,
+                'enable_editing_product_from_purchase' => $request->has('enable_editing_product_from_purchase') ? 1 : 0,
+                'enable_inline_tax' => $request->has('enable_inline_tax') ? 1 : 0,
+                'keyboard_shortcuts' => $request->has('keyboard_shortcuts') ? 1 : 0,
+                'pos_settings' => json_encode([
+                    'amount_rounding_method' => 'none',
+                    'disable_pay_checkout' => 0,
+                    'disable_draft' => 0,
+                    'disable_express_checkout' => 0,
+                    'hide_product_suggestion' => 0,
+                    'hide_recent_trans' => 0,
+                    'disable_discount' => 0,
+                    'disable_order_tax' => 0,
+                    'is_pos_subtotal_editable' => 0
+                ]),
+                'enabled_modules' => json_encode([
+                    'purchases', 'add_sale', 'pos', 'stock_transfers', 'stock_adjustment',
+                    'expenses', 'account', 'tables', 'modifiers', 'service_staff',
+                    'kitchen', 'communication', 'booking', 'crm_module'
+                ]),
+                'ref_no_prefixes' => json_encode([
+                    'purchase' => 'PO',
+                    'stock_transfer' => 'ST',
+                    'stock_adjustment' => 'SA',
+                    'sell_return' => 'CN',
+                    'expense' => 'EP',
+                    'contacts' => 'CO',
+                    'purchase_payment' => 'PP',
+                    'sell_payment' => 'SP',
+                    'expense_payment' => 'EP',
+                    'business_location' => 'BL',
+                    'username' => '',
+                    'subscription' => 'SU',
+                    'draft' => 'DF',
+                    'quotation' => 'QU'
+                ])
             ]);
-
-            // Set defaults and user data
-            $business_data['owner_id'] = $user->id;
-            $business_data['created_by'] = $user->id;
-            $business_data['is_active'] = 1;
-            $business_data['pos_settings'] = $request->get('pos_settings', []);
-            $business_data['weighing_scale_setting'] = $request->get('weighing_scale_setting', []);
-            $business_data['enabled_modules'] = $request->get('enabled_modules', []);
-            $business_data['ref_no_prefixes'] = $request->get('ref_no_prefixes', []);
-            $business_data['email_settings'] = $request->get('email_settings', []);
-            $business_data['sms_settings'] = $request->get('sms_settings', []);
-            $business_data['custom_labels'] = $request->get('custom_labels', []);
-            $business_data['common_settings'] = $request->get('common_settings', []);
-
-            $business = Business::create($business_data);
 
             // Create default business location
             $location = \App\BusinessLocation::create([
