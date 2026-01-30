@@ -48,6 +48,7 @@ use App\Http\Controllers\SalesOrderController;
 use App\Http\Controllers\SellController;
 use App\Http\Controllers\SellingPriceGroupController;
 use App\Http\Controllers\SellPosController;
+use App\Http\Controllers\BusinessSelectionController;
 use App\Http\Controllers\SellReturnController;
 use App\Http\Controllers\StockAdjustmentController;
 use App\Http\Controllers\StockTransferController;
@@ -84,6 +85,14 @@ Route::middleware(['setData'])->group(function () {
     Route::post('login', [App\Http\Controllers\Auth\LoginController::class, 'login']);
     Route::post('logout', [App\Http\Controllers\Auth\LoginController::class, 'logout'])->name('logout');
 
+    // Business Selection Routes
+    Route::middleware(['auth'])->group(function () {
+        Route::get('business/select', [BusinessSelectionController::class, 'select'])->name('business.select');
+        Route::get('business/register', [BusinessSelectionController::class, 'register'])->name('business.register');
+        Route::post('business/store', [BusinessSelectionController::class, 'store'])->name('business.store');
+        Route::post('business/switch', [BusinessSelectionController::class, 'switch'])->name('business.switch');
+    });
+
     // Registration Routes
     Route::get('register', [App\Http\Controllers\Auth\RegisterController::class, 'showRegistrationForm'])->name('register');
     Route::post('register', [App\Http\Controllers\Auth\RegisterController::class, 'register']);
@@ -111,7 +120,7 @@ Route::middleware(['setData'])->group(function () {
 });
 
 //Routes for authenticated users only
-Route::middleware(['setData', 'auth', 'SetSessionData', 'language', 'timezone', 'AdminSidebarMenu', 'CheckUserLogin'])->group(function () {
+Route::middleware(['setData', 'auth', 'SetSessionData', 'language', 'timezone', 'AdminSidebarMenu', 'CheckUserLogin', 'CheckBusinessSelection'])->group(function () {
     
     Route::get('pos/payment/{id}', [SellPosController::class, 'edit'])->name('edit-pos-payment');
     Route::get('service-staff-availability', [SellPosController::class, 'showServiceStaffAvailibility']);

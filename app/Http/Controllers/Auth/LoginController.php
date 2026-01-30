@@ -127,6 +127,17 @@ class LoginController extends Controller
     protected function redirectTo()
     {
         $user = \Auth::user();
+        
+        // If user doesn't have a business_id, redirect to business selection
+        if (!$user->business_id) {
+            return '/business/select';
+        }
+        
+        // If user's business is not active, redirect to business selection
+        if ($user->business && !$user->business->is_active) {
+            return '/business/select';
+        }
+        
         if (! $user->can('dashboard.data') && $user->can('sell.create')) {
             return '/pos/create';
         }

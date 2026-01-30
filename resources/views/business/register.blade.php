@@ -1,52 +1,288 @@
-@extends('layouts.auth2')
-@section('title', __('lang_v1.register'))
+@extends('layouts.auth')
+
+@section('title', __('Register Business'))
 
 @section('content')
-
-    <div class="col-md-8 col-xs-12 col-md-offset-2 tw-mt-6">
-        <div
-            class=" tw-p-2 sm:tw-p-3 tw-mb-4 tw-transition-all tw-duration-200  tw-bg-white tw-shadow-sm tw-rounded-xl tw-ring-1 tw-ring-gray-200">
-            <div class="tw-flex tw-flex-col tw-gap-4 tw-dw-rounded-box tw-dw-p-6 tw-dw-max-w-md">
-                <div class="tw-flex tw-flex-col rounded-2xl tw-dw-p-6 tw-dw-max-w-md text-center">
-                    {{-- <svg xmlns="http://www.w3.org/2000/svg" class="tw-ml-4 tw-mt-4 icon icon-tabler icon-tabler-circle-key-filled" width="44" height="44" viewBox="0 0 24 24" stroke-width="1.5" stroke="#2c3e50" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                        <path d="M12 2c5.523 0 10 4.477 10 10a10 10 0 0 1 -20 0c0 -5.523 4.477 -10 10 -10zm2 5a3 3 0 0 0 -2.98 2.65l-.015 .174l-.005 .176l.005 .176c.019 .319 .087 .624 .197 .908l.09 .209l-3.5 3.5l-.082 .094a1 1 0 0 0 0 1.226l.083 .094l1.5 1.5l.094 .083a1 1 0 0 0 1.226 0l.094 -.083l.083 -.094a1 1 0 0 0 0 -1.226l-.083 -.094l-.792 -.793l.585 -.585l.793 .792l.094 .083a1 1 0 0 0 1.403 -1.403l-.083 -.094l-.792 -.793l.792 -.792a3 3 0 1 0 1.293 -5.708zm0 2a1 1 0 1 1 0 2a1 1 0 0 1 0 -2z" stroke-width="0" fill="currentColor" />
-                    </svg> --}}
-                    {{-- <svg xmlns="http://www.w3.org/2000/svg" class="tw-mr-3 tw-mt-1 icon icon-tabler icon-tabler-lock-up" width="44" height="44" viewBox="0 0 24 24" stroke-width="1.5" stroke="#2c3e50" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                        <path d="M12.5 21h-5.5a2 2 0 0 1 -2 -2v-6a2 2 0 0 1 2 -2h10a2 2 0 0 1 1.739 1.01" />
-                        <path d="M11 16a1 1 0 1 0 2 0a1 1 0 0 0 -2 0" />
-                        <path d="M8 11v-4a4 4 0 1 1 8 0v4" />
-                        <path d="M19 22v-6" />
-                        <path d="M22 19l-3 -3l-3 3" />
-                    </svg>
-                    <h1 class="tw-dw-text-3xl tw-dw-font-bold"> {{ config('app.name', 'ultimatePOS') }} - @lang('business.register_and_get_started_in_minutes')</h1> --}}
-                    <h1 class="tw-text-lg md:tw-text-xl tw-font-semibold tw-text-[#1e1e1e]">
-                            Vision Care POS
-                      </h1>
-                      <h2 class="tw-text-sm tw-font-medium tw-text-gray-500">
-                            @lang('business.register_and_get_started_in_minutes')
-                      </h2>
+<div class="login-form col-md-12 col-xs-12 right-col-content-register">
+    <div class="row">
+        <div class="col-md-10 col-md-offset-1">
+            <div class="login-content">
+                <div class="login-header">
+                    <h3 class="text-center">@lang('Register New Business')</h3>
+                    <p class="text-center text-muted">Fill in the details to create your business</p>
                 </div>
-            {!! Form::open([
-                'url' => route('business.postRegister'),
-                'method' => 'post',
-                'id' => 'business_register_form',
-                'files' => true,
-            ]) !!}
-            @include('business.partials.register_form', ['is_register' => true])
-            {!! Form::hidden('package_id', $package_id) !!}
-            {!! Form::close() !!}
+
+                @if($errors->any())
+                    <div class="alert alert-danger">
+                        <ul class="mb-0">
+                            @foreach($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
+                <form method="POST" action="{{ route('business.store') }}" enctype="multipart/form-data">
+                    @csrf
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="name">@lang('Business Name') <span class="text-danger">*</span></label>
+                                <input type="text" name="name" id="name" class="form-control" 
+                                       value="{{ old('name') }}" required>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="currency_id">@lang('Currency') <span class="text-danger">*</span></label>
+                                <select name="currency_id" id="currency_id" class="form-control" required>
+                                    <option value="">@lang('Select Currency')</option>
+                                    @php
+                                        $currencies = \App\Currency::all();
+                                    @endphp
+                                    @foreach($currencies as $currency)
+                                        <option value="{{ $currency->id }}" {{ old('currency_id') == $currency->id ? 'selected' : '' }}>
+                                            {{ $currency->code }} - {{ $currency->currency }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="start_date">@lang('Business Start Date') <span class="text-danger">*</span></label>
+                                <input type="date" name="start_date" id="start_date" class="form-control" 
+                                       value="{{ old('start_date', date('Y-m-d')) }}" required>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="fy_start_month">@lang('Financial Year Start Month') <span class="text-danger">*</span></label>
+                                <select name="fy_start_month" id="fy_start_month" class="form-control" required>
+                                    @for($i = 1; $i <= 12; $i++)
+                                        <option value="{{ $i }}" {{ old('fy_start_month', 1) == $i ? 'selected' : '' }}>
+                                            {{ date('F', mktime(0, 0, 0, $i, 1)) }}
+                                        </option>
+                                    @endfor
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="accounting_method">@lang('Accounting Method') <span class="text-danger">*</span></label>
+                                <select name="accounting_method" id="accounting_method" class="form-control" required>
+                                    <option value="fifo" {{ old('accounting_method', 'fifo') == 'fifo' ? 'selected' : '' }}>FIFO</option>
+                                    <option value="lifo" {{ old('accounting_method') == 'lifo' ? 'selected' : '' }}>LIFO</option>
+                                    <option value="avco" {{ old('accounting_method') == 'avco' ? 'selected' : '' }}>AVCO</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="transaction_edit_days">@lang('Transaction Edit Days') <span class="text-danger">*</span></label>
+                                <input type="number" name="transaction_edit_days" id="transaction_edit_days" 
+                                       class="form-control" value="{{ old('transaction_edit_days', 30) }}" min="0" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="date_format">@lang('Date Format') <span class="text-danger">*</span></label>
+                                <select name="date_format" id="date_format" class="form-control" required>
+                                    <option value="d-m-Y" {{ old('date_format', 'd-m-Y') == 'd-m-Y' ? 'selected' : '' }}>dd-mm-yyyy</option>
+                                    <option value="m-d-Y" {{ old('date_format') == 'm-d-Y' ? 'selected' : '' }}>mm-dd-yyyy</option>
+                                    <option value="d/m/Y" {{ old('date_format') == 'd/m/Y' ? 'selected' : '' }}>dd/mm/yyyy</option>
+                                    <option value="m/d/Y" {{ old('date_format') == 'm/d/Y' ? 'selected' : '' }}>mm/dd/yyyy</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="time_format">@lang('Time Format') <span class="text-danger">*</span></label>
+                                <select name="time_format" id="time_format" class="form-control" required>
+                                    <option value="12" {{ old('time_format', '12') == '12' ? 'selected' : '' }}>12 Hour</option>
+                                    <option value="24" {{ old('time_format') == '24' ? 'selected' : '' }}>24 Hour</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="currency_symbol_placement">@lang('Currency Symbol Placement') <span class="text-danger">*</span></label>
+                                <select name="currency_symbol_placement" id="currency_symbol_placement" class="form-control" required>
+                                    <option value="before" {{ old('currency_symbol_placement', 'before') == 'before' ? 'selected' : '' }}>Before Amount</option>
+                                    <option value="after" {{ old('currency_symbol_placement') == 'after' ? 'selected' : '' }}>After Amount</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="sales_cmsn_agnt">@lang('Sales Commission Agent') <span class="text-danger">*</span></label>
+                                <select name="sales_cmsn_agnt" id="sales_cmsn_agnt" class="form-control" required>
+                                    <option value="logged_in_user" {{ old('sales_cmsn_agnt', 'logged_in_user') == 'logged_in_user' ? 'selected' : '' }}>Logged in User</option>
+                                    <option value="user" {{ old('sales_cmsn_agnt') == 'user' ? 'selected' : '' }}>User</option>
+                                    <option value="percentage" {{ old('sales_cmsn_agnt') == 'percentage' ? 'selected' : '' }}>Percentage</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="item_addition_method">@lang('Item Addition Method') <span class="text-danger">*</span></label>
+                                <select name="item_addition_method" id="item_addition_method" class="form-control" required>
+                                    <option value="1" {{ old('item_addition_method', '1') == '1' ? 'selected' : '' }}>Add to End</option>
+                                    <option value="2" {{ old('item_addition_method') == '2' ? 'selected' : '' }}>Add to Beginning</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="stock_expiry_alert_days">@lang('Stock Expiry Alert Days') <span class="text-danger">*</span></label>
+                                <input type="number" name="stock_expiry_alert_days" id="stock_expiry_alert_days" 
+                                       class="form-control" value="{{ old('stock_expiry_alert_days', 30) }}" min="0" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h4>@lang('Features')</h4>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="checkbox">
+                                        <label>
+                                            <input type="checkbox" name="enable_brand" value="1" {{ old('enable_brand', 1) ? 'checked' : '' }}>
+                                            @lang('Enable Brand')
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="checkbox">
+                                        <label>
+                                            <input type="checkbox" name="enable_category" value="1" {{ old('enable_category', 1) ? 'checked' : '' }}>
+                                            @lang('Enable Category')
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="checkbox">
+                                        <label>
+                                            <input type="checkbox" name="enable_sub_category" value="1" {{ old('enable_sub_category', 1) ? 'checked' : '' }}>
+                                            @lang('Enable Sub Category')
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="checkbox">
+                                        <label>
+                                            <input type="checkbox" name="enable_price_tax" value="1" {{ old('enable_price_tax', 1) ? 'checked' : '' }}>
+                                            @lang('Enable Price & Tax')
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="checkbox">
+                                        <label>
+                                            <input type="checkbox" name="enable_racks" value="1" {{ old('enable_racks') ? 'checked' : '' }}>
+                                            @lang('Enable Racks')
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="checkbox">
+                                        <label>
+                                            <input type="checkbox" name="keyboard_shortcuts" value="1" {{ old('keyboard_shortcuts', 1) ? 'checked' : '' }}>
+                                            @lang('Enable Keyboard Shortcuts')
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group text-center mt-4">
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="fa fa-check"></i> @lang('Register Business')
+                        </button>
+                        
+                        <a href="{{ route('business.select') }}" class="btn btn-default btn-lg ml-2">
+                            <i class="fa fa-arrow-left"></i> @lang('Back')
+                        </a>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
-@stop
-@section('javascript')
-    <script type="text/javascript">
-        $(document).ready(function() {
-            $('.change_lang').click(function() {
-                window.location = "{{ route('business.getRegister') }}?lang=" + $(this).attr('value');
-            });
-        })
-    </script>
+</div>
+
+<style>
+.login-header {
+    margin-bottom: 30px;
+}
+
+.login-header h3 {
+    color: #333;
+    font-weight: 600;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-control {
+    padding: 10px;
+    font-size: 14px;
+}
+
+.btn-lg {
+    padding: 12px 30px;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.checkbox {
+    margin-bottom: 10px;
+}
+
+.checkbox label {
+    font-weight: normal;
+}
+
+.text-danger {
+    color: #dc3545;
+}
+
+.alert {
+    margin-bottom: 20px;
+}
+
+h4 {
+    color: #333;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 5px;
+}
+</style>
 @endsection
