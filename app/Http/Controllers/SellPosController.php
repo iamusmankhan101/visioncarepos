@@ -112,6 +112,41 @@ class SellPosController extends Controller
     }
 
     /**
+     * Show the form for creating a new POS sale.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function create()
+    {
+        try {
+            // Check if user has selected a business
+            if (!session()->has('selected_business_id')) {
+                return redirect()->route('business.select')
+                    ->with('error', 'Please select a business first.');
+            }
+
+            // Get business details
+            $business_id = session('selected_business_id');
+            $user = auth()->user();
+            
+            if (!$user) {
+                return redirect()->route('login');
+            }
+
+            // Get necessary data for POS
+            $business = $user->business;
+            $locations = $business ? $business->locations : collect();
+            
+            // Return the POS create view
+            return view('sale_pos.create', compact('business', 'locations'));
+            
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Error accessing POS: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Display a listing of the resource.
      *
      * @return \Illuminate\Http\Response
