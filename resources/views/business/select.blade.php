@@ -13,7 +13,7 @@
         </div>
 
         <!-- Main Content Card -->
-        <div class="tw-bg-white tw-rounded-2xl tw-shadow-2xl tw-p-8 tw-space-y-6">
+        <div class="tw-bg-white tw-rounded-2xl tw-shadow-2xl tw-space-y-6" style="padding: 52px;">
             
             @if(session('success'))
                 <div class="tw-bg-green-50 tw-border tw-border-green-200 tw-rounded-lg tw-p-4">
