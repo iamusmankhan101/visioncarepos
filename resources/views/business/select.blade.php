@@ -48,9 +48,6 @@
                                         @foreach($available_businesses as $business)
                                             <option value="{{ $business->id }}">
                                                 {{ $business->name }}
-                                                @if($business->owner_id == auth()->id())
-                                                    <span class="text-muted">(Owner)</span>
-                                                @endif
                                             </option>
                                         @endforeach
                                     </select>
@@ -72,11 +69,20 @@
                     <div class="business-registration-section">
                         <h4 class="text-center mb-3">@lang('Register New Business')</h4>
                         
-                        <div class="text-center">
-                            <a href="{{ route('business.register') }}" class="btn btn-success btn-block">
-                                <i class="fa fa-plus"></i> @lang('Register New Business')
-                            </a>
-                        </div>
+                        <form method="POST" action="{{ route('business.store') }}">
+                            @csrf
+                            <div class="form-group">
+                                <label for="name">@lang('Business Name') <span class="text-danger">*</span></label>
+                                <input type="text" name="name" id="name" class="form-control" 
+                                       value="{{ old('name') }}" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-success btn-block">
+                                    <i class="fa fa-plus"></i> @lang('Register Business')
+                                </button>
+                            </div>
+                        </form>
                     </div>
 
                     <div class="text-center mt-4">

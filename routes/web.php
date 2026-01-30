@@ -91,6 +91,25 @@ Route::middleware(['setData'])->group(function () {
         Route::get('business/register', [BusinessSelectionController::class, 'register'])->name('business.register');
         Route::post('business/store', [BusinessSelectionController::class, 'store'])->name('business.store');
         Route::post('business/switch', [BusinessSelectionController::class, 'switch'])->name('business.switch');
+        
+        // Test route for debugging
+        Route::get('test-business-select', function() {
+            try {
+                $user = auth()->user();
+                if (!$user) {
+                    return 'User not authenticated';
+                }
+                
+                // Use the same simplified query as the controller
+                $businesses = \App\Business::where('is_active', 1)
+                    ->where('owner_id', $user->id)
+                    ->get();
+                    
+                return view('business.select', ['available_businesses' => $businesses]);
+            } catch (\Exception $e) {
+                return 'Error: ' . $e->getMessage() . '<br><br>Stack: <pre>' . $e->getTraceAsString() . '</pre>';
+            }
+        });
     });
 
     // Registration Routes
