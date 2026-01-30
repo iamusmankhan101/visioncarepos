@@ -262,9 +262,6 @@ class SellPosController extends Controller
         //Added check because $users is of no use if enable_contact_assign if false
         $users = config('constants.enable_contact_assign') ? User::forDropdown($business_id, false, false, false, true) : [];
 
-        // Get enabled modules for the business
-        $enabled_modules = $this->moduleUtil->allModulesEnabled($business_id);
-
         return view('sale_pos.create')
             ->with(compact(
                 'edit_discount',
@@ -298,7 +295,6 @@ class SellPosController extends Controller
                 'default_invoice_schemes',
                 'invoice_layouts',
                 'users',
-                'enabled_modules',
             ));
     }
 

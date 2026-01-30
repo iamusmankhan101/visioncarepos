@@ -129,7 +129,7 @@
 		{!! Form::hidden('default_price_group', $default_price_group_id, ['id' => 'default_price_group']) !!}
 	@endif
 
-	@if(is_array($enabled_modules) && in_array('types_of_service', $enabled_modules) && !empty($types_of_service))
+	@if(in_array('types_of_service', $enabled_modules) && !empty($types_of_service))
 		<div class="col-md-4 col-sm-6">
 			<div class="form-group">
 				<div class="input-group">
@@ -178,7 +178,7 @@
 		</div>
 	</div>
 	
-	@if(is_array($enabled_modules) && in_array('subscription', $enabled_modules))
+	@if(in_array('subscription', $enabled_modules))
 		<div class="col-md-4 col-sm-6">
 			<label>
               {!! Form::checkbox('is_recurring', 1, false, ['class' => 'input-icheck', 'id' => 'is_recurring']); !!} @lang('lang_v1.subscribe')?
@@ -187,7 +187,7 @@
 	@endif
 	
 	<!-- Call restaurant module if defined -->
-    @if((is_array($enabled_modules) && in_array('tables', $enabled_modules)) || (is_array($enabled_modules) && in_array('service_staff', $enabled_modules)))
+    @if(in_array('tables' ,$enabled_modules) || in_array('service_staff' ,$enabled_modules))
     	<div class="clearfix"></div>
     	<span id="restaurant_module_span">
       		<div class="col-md-3"></div>
