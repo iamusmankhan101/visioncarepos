@@ -8,9 +8,14 @@
         <div class="tw-absolute tw-top-2 md:tw-top-5 tw-left-4 md:tw-left-8 tw-flex tw-items-center tw-gap-4"
             style="text-align: left">
             <a href="{{ url('/') }}">
-                <div
-                    class="lg:tw-w-16 md:tw-h-16 tw-w-12 tw-h-12 tw-flex tw-items-center tw-justify-center tw-mx-auto tw-overflow-hidden tw-p-0.5 tw-mb-4">
-                    <img src="{{ asset('img/logo-small.png') }}" alt="lock" class="tw-object-fill opacity-50" />
+                <div class="tw-flex tw-items-center tw-gap-3">
+                    <div class="lg:tw-w-16 md:tw-h-16 tw-w-12 tw-h-12 tw-flex tw-items-center tw-justify-center tw-mx-auto tw-overflow-hidden tw-p-0.5 tw-bg-white tw-rounded-full tw-shadow-lg">
+                        <img src="{{ asset('img/logo-small.png') }}" alt="Vision Care" class="tw-object-contain tw-w-8 tw-h-8 md:tw-w-10 md:tw-h-10" />
+                    </div>
+                    <div class="tw-hidden md:tw-block">
+                        <h1 class="tw-text-white tw-font-bold tw-text-lg md:tw-text-xl tw-mb-0">Vision Care</h1>
+                        <p class="tw-text-blue-200 tw-text-xs md:tw-text-sm tw-mb-0">POS System</p>
+                    </div>
                 </div>
             </a>
 
