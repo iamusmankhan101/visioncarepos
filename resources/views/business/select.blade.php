@@ -131,6 +131,13 @@
     padding: 10px;
     font-size: 14px;
     color: #333 !important;
+    background-color: white !important;
+}
+
+/* Ensure dropdown/select fields have black text */
+select.form-control, select.form-control option {
+    color: #333 !important;
+    background-color: white !important;
 }
 
 .alert {

@@ -313,6 +313,19 @@ label, .checkbox label, h4, .login-header h3, .login-header p {
 /* Keep form controls readable */
 .form-control, .btn {
     color: #333 !important;
+    background-color: white !important;
+}
+
+/* Ensure dropdown/select fields have black text */
+select.form-control, select.form-control option {
+    color: #333 !important;
+    background-color: white !important;
+}
+
+/* Input fields should also have black text */
+input.form-control {
+    color: #333 !important;
+    background-color: white !important;
 }
 
 /* Make required asterisks more visible */
