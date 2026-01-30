@@ -92,10 +92,10 @@
 <style>
 .business-selection-section, .business-registration-section {
     padding: 20px;
-    border: 1px solid #e0e0e0;
+    border: 1px solid rgba(255, 255, 255, 0.3);
     border-radius: 8px;
     margin-bottom: 20px;
-    background-color: #f9f9f9;
+    background-color: rgba(255, 255, 255, 0.1);
 }
 
 .login-header {
@@ -103,8 +103,12 @@
 }
 
 .login-header h3 {
-    color: #333;
+    color: white !important;
     font-weight: 600;
+}
+
+.login-header p {
+    color: white !important;
 }
 
 .btn-block {
@@ -126,10 +130,35 @@
 .form-control {
     padding: 10px;
     font-size: 14px;
+    color: #333 !important;
 }
 
 .alert {
     margin-bottom: 20px;
+}
+
+/* Make all labels white */
+label, .form-group label {
+    color: white !important;
+    font-weight: 500;
+}
+
+/* Make all text white */
+.login-content, .login-content p, .text-center, .text-muted {
+    color: white !important;
+}
+
+/* Keep buttons readable */
+.btn, .btn * {
+    color: white !important;
+}
+
+.btn-link {
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.btn-link:hover {
+    color: white !important;
 }
 </style>
 @endsectionund-color: #28a745;

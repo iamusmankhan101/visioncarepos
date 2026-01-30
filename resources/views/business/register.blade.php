@@ -243,12 +243,22 @@
 }
 
 .login-header h3 {
-    color: #333;
+    color: white;
     font-weight: 600;
+}
+
+.login-header p {
+    color: white;
 }
 
 .form-group {
     margin-bottom: 20px;
+}
+
+.form-group label {
+    color: white !important;
+    font-weight: 500;
+    font-size: 14px;
 }
 
 .form-control {
@@ -268,10 +278,11 @@
 
 .checkbox label {
     font-weight: normal;
+    color: white !important;
 }
 
 .text-danger {
-    color: #dc3545;
+    color: #ff6b6b !important;
 }
 
 .alert {
@@ -279,10 +290,35 @@
 }
 
 h4 {
-    color: #333;
+    color: white !important;
     margin-bottom: 15px;
-    border-bottom: 1px solid #e0e0e0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
     padding-bottom: 5px;
+}
+
+/* Additional white text styling */
+.login-content {
+    color: white;
+}
+
+.login-content * {
+    color: white;
+}
+
+/* Override any dark text */
+label, .checkbox label, h4, .login-header h3, .login-header p {
+    color: white !important;
+}
+
+/* Keep form controls readable */
+.form-control, .btn {
+    color: #333 !important;
+}
+
+/* Make required asterisks more visible */
+.text-danger {
+    color: #ff6b6b !important;
+    font-weight: bold;
 }
 </style>
 @endsection
