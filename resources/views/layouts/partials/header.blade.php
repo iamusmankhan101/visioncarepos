@@ -35,6 +35,101 @@
                         <path d="M10 10l-2 2l2 2" />
                     </svg>
                 </button>
+
+                {{-- Business Switcher Dropdown --}}
+                @php
+                    $user_businesses = \App\Business::where('owner_id', auth()->user()->id)
+                                                  ->orWhere('created_by', auth()->user()->id)
+                                                  ->where('is_active', 1)
+                                                  ->get();
+                    $current_business = session('business') ?? auth()->user()->business;
+                @endphp
+                
+                @if($user_businesses->count() > 1)
+                    <details class="tw-dw-dropdown tw-relative tw-inline-block tw-text-left">
+                        <summary class="tw-inline-flex tw-transition-all tw-ring-1 tw-ring-white/10 hover:tw-text-white tw-cursor-pointer tw-duration-200 tw-bg-@if(!empty(session('business.theme_color'))){{session('business.theme_color')}}@else{{'primary'}}@endif-800 hover:tw-bg-@if(!empty(session('business.theme_color'))){{session('business.theme_color')}}@else{{'primary'}}@endif-700 tw-py-1.5 tw-px-3 tw-rounded-lg tw-items-center tw-justify-center tw-text-sm tw-font-medium tw-text-white tw-gap-2">
+                            <svg aria-hidden="true" class="tw-size-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                <path d="M3 21l18 0" />
+                                <path d="M5 21v-16a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v16" />
+                                <path d="M9 9l0 .01" />
+                                <path d="M15 9l0 .01" />
+                                <path d="M9 12l0 .01" />
+                                <path d="M15 12l0 .01" />
+                                <path d="M9 15l0 .01" />
+                                <path d="M15 15l0 .01" />
+                            </svg>
+                            <span class="tw-hidden md:tw-block tw-max-w-32 tw-truncate">
+                                {{ $current_business->name ?? 'Select Business' }}
+                            </span>
+                            <svg aria-hidden="true" class="tw-size-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                <path d="M6 9l6 6l6 -6" />
+                            </svg>
+                        </summary>
+                        
+                        <ul class="tw-dw-menu tw-dw-dropdown-content tw-dw-z-[1] tw-dw-bg-base-100 tw-dw-rounded-box tw-w-64 tw-absolute tw-left-0 tw-z-10 tw-mt-2 tw-origin-top-left tw-bg-white tw-rounded-lg tw-shadow-lg tw-ring-1 tw-ring-gray-200 focus:tw-outline-none"
+                            role="menu" tabindex="-1">
+                            <div class="tw-p-2" role="none">
+                                <div class="tw-px-3 tw-py-2 tw-text-xs tw-font-medium tw-text-gray-500 tw-uppercase tw-tracking-wider">
+                                    Switch Business
+                                </div>
+                                @foreach($user_businesses as $business)
+                                    <form method="POST" action="/business/switch" class="tw-inline-block tw-w-full">
+                                        @csrf
+                                        <input type="hidden" name="business_id" value="{{ $business->id }}">
+                                        <button type="submit" 
+                                            class="tw-w-full tw-flex tw-items-center tw-gap-3 tw-px-3 tw-py-2 tw-text-sm tw-font-medium tw-text-left tw-transition-all tw-duration-200 tw-rounded-lg hover:tw-bg-gray-100 {{ $current_business && $current_business->id == $business->id ? 'tw-bg-blue-50 tw-text-blue-700' : 'tw-text-gray-600 hover:tw-text-gray-900' }}"
+                                            role="menuitem" tabindex="-1">
+                                            <div class="tw-flex-shrink-0">
+                                                @if($current_business && $current_business->id == $business->id)
+                                                    <svg class="tw-w-4 tw-h-4 tw-text-blue-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                                                    </svg>
+                                                @else
+                                                    <svg class="tw-w-4 tw-h-4 tw-text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                                        <path d="M3 21l18 0" />
+                                                        <path d="M5 21v-16a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v16" />
+                                                        <path d="M9 9l0 .01" />
+                                                        <path d="M15 9l0 .01" />
+                                                        <path d="M9 12l0 .01" />
+                                                        <path d="M15 12l0 .01" />
+                                                        <path d="M9 15l0 .01" />
+                                                        <path d="M15 15l0 .01" />
+                                                    </svg>
+                                                @endif
+                                            </div>
+                                            <div class="tw-flex-1 tw-min-w-0">
+                                                <div class="tw-font-medium tw-truncate">{{ $business->name }}</div>
+                                                @if($current_business && $current_business->id == $business->id)
+                                                    <div class="tw-text-xs tw-text-blue-600">Current Business</div>
+                                                @endif
+                                            </div>
+                                        </button>
+                                    </form>
+                                @endforeach
+                                
+                                <div class="tw-border-t tw-border-gray-200 tw-mt-2 tw-pt-2">
+                                    <a href="/business/register" 
+                                        class="tw-flex tw-items-center tw-gap-2 tw-px-3 tw-py-2 tw-text-sm tw-font-medium tw-text-gray-600 tw-transition-all tw-duration-200 tw-rounded-lg hover:tw-text-gray-900 hover:tw-bg-gray-100"
+                                        role="menuitem" tabindex="-1">
+                                        <svg class="tw-w-4 tw-h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                            <path d="M12 5l0 14" />
+                                            <path d="M5 12l14 0" />
+                                        </svg>
+                                        Add New Business
+                                    </a>
+                                </div>
+                            </div>
+                        </ul>
+                    </details>
+                @endif
             </div>
 
 
