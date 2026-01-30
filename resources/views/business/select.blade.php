@@ -66,7 +66,7 @@
 
                     <div class="business-registration-section">
                         <div class="text-center">
-                            <a href="{{ route('business.register') }}" class="btn btn-success btn-block">
+                            <a href="/business/register" class="btn btn-success btn-block">
                                 <i class="fa fa-plus"></i> @lang('Register New Business')
                             </a>
                         </div>
