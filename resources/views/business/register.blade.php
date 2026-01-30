@@ -57,7 +57,7 @@
                                     @lang('Business Name') <span class="tw-text-red-500">*</span>
                                 </label>
                                 <input type="text" name="name" id="name" 
-                                       class="tw-w-full tw-px-4 tw-py-3 tw-border tw-border-gray-300 tw-rounded-lg tw-focus:ring-2 tw-focus:ring-blue-500 tw-focus:border-blue-500 tw-transition-colors" 
+                                       class="tw-w-full tw-px-4 tw-py-3 tw-border tw-border-gray-300 tw-rounded-lg tw-focus:ring-2 tw-focus:ring-blue-500 tw-focus:border-blue-500 tw-transition-colors tw-bg-white tw-text-black" 
                                        value="{{ old('name') }}" required placeholder="Enter your business name">
                             </div>
                             
@@ -66,7 +66,7 @@
                                     @lang('Currency') <span class="tw-text-red-500">*</span>
                                 </label>
                                 <select name="currency_id" id="currency_id" 
-                                        class="tw-w-full tw-px-4 tw-py-3 tw-border tw-border-gray-300 tw-rounded-lg tw-focus:ring-2 tw-focus:ring-blue-500 tw-focus:border-blue-500 tw-transition-colors" required>
+                                        class="tw-w-full tw-px-4 tw-py-3 tw-border tw-border-gray-300 tw-rounded-lg tw-focus:ring-2 tw-focus:ring-blue-500 tw-focus:border-blue-500 tw-transition-colors tw-bg-white tw-text-black" required>
                                     <option value="">@lang('Select Currency')</option>
                                     @php
                                         $currencies = \App\Currency::all();
@@ -86,7 +86,7 @@
                                     @lang('Business Start Date') <span class="tw-text-red-500">*</span>
                                 </label>
                                 <input type="date" name="start_date" id="start_date" 
-                                       class="tw-w-full tw-px-4 tw-py-3 tw-border tw-border-gray-300 tw-rounded-lg tw-focus:ring-2 tw-focus:ring-blue-500 tw-focus:border-blue-500 tw-transition-colors" 
+                                       class="tw-w-full tw-px-4 tw-py-3 tw-border tw-border-gray-300 tw-rounded-lg tw-focus:ring-2 tw-focus:ring-blue-500 tw-focus:border-blue-500 tw-transition-colors tw-bg-white tw-text-black" 
                                        value="{{ old('start_date', date('Y-m-d')) }}" required>
                             </div>
                             
@@ -95,7 +95,7 @@
                                     @lang('Financial Year Start Month') <span class="tw-text-red-500">*</span>
                                 </label>
                                 <select name="fy_start_month" id="fy_start_month" 
-                                        class="tw-w-full tw-px-4 tw-py-3 tw-border tw-border-gray-300 tw-rounded-lg tw-focus:ring-2 tw-focus:ring-blue-500 tw-focus:border-blue-500 tw-transition-colors" required>
+                                        class="tw-w-full tw-px-4 tw-py-3 tw-border tw-border-gray-300 tw-rounded-lg tw-focus:ring-2 tw-focus:ring-blue-500 tw-focus:border-blue-500 tw-transition-colors tw-bg-white tw-text-black" required>
                                     @for($i = 1; $i <= 12; $i++)
                                         <option value="{{ $i }}" {{ old('fy_start_month', 1) == $i ? 'selected' : '' }}>
                                             {{ date('F', mktime(0, 0, 0, $i, 1)) }}
@@ -122,7 +122,7 @@
                                     @lang('Accounting Method') <span class="tw-text-red-500">*</span>
                                 </label>
                                 <select name="accounting_method" id="accounting_method" 
-                                        class="tw-w-full tw-px-4 tw-py-3 tw-border tw-border-gray-300 tw-rounded-lg tw-focus:ring-2 tw-focus:ring-blue-500 tw-focus:border-blue-500 tw-transition-colors" required>
+                                        class="tw-w-full tw-px-4 tw-py-3 tw-border tw-border-gray-300 tw-rounded-lg tw-focus:ring-2 tw-focus:ring-blue-500 tw-focus:border-blue-500 tw-transition-colors tw-bg-white tw-text-black" required>
                                     <option value="fifo" {{ old('accounting_method', 'fifo') == 'fifo' ? 'selected' : '' }}>FIFO</option>
                                     <option value="lifo" {{ old('accounting_method') == 'lifo' ? 'selected' : '' }}>LIFO</option>
                                     <option value="avco" {{ old('accounting_method') == 'avco' ? 'selected' : '' }}>AVCO</option>
@@ -134,7 +134,7 @@
                                     @lang('Transaction Edit Days') <span class="tw-text-red-500">*</span>
                                 </label>
                                 <input type="number" name="transaction_edit_days" id="transaction_edit_days" 
-                                       class="tw-w-full tw-px-4 tw-py-3 tw-border tw-border-gray-300 tw-rounded-lg tw-focus:ring-2 tw-focus:ring-blue-500 tw-focus:border-blue-500 tw-transition-colors" 
+                                       class="tw-w-full tw-px-4 tw-py-3 tw-border tw-border-gray-300 tw-rounded-lg tw-focus:ring-2 tw-focus:ring-blue-500 tw-focus:border-blue-500 tw-transition-colors tw-bg-white tw-text-black" 
                                        value="{{ old('transaction_edit_days', 30) }}" min="0" required placeholder="30">
                             </div>
                         </div>
@@ -145,7 +145,7 @@
                                     @lang('Date Format') <span class="tw-text-red-500">*</span>
                                 </label>
                                 <select name="date_format" id="date_format" 
-                                        class="tw-w-full tw-px-4 tw-py-3 tw-border tw-border-gray-300 tw-rounded-lg tw-focus:ring-2 tw-focus:ring-blue-500 tw-focus:border-blue-500 tw-transition-colors" required>
+                                        class="tw-w-full tw-px-4 tw-py-3 tw-border tw-border-gray-300 tw-rounded-lg tw-focus:ring-2 tw-focus:ring-blue-500 tw-focus:border-blue-500 tw-transition-colors tw-bg-white tw-text-black" required>
                                     <option value="d-m-Y" {{ old('date_format', 'd-m-Y') == 'd-m-Y' ? 'selected' : '' }}>dd-mm-yyyy</option>
                                     <option value="m-d-Y" {{ old('date_format') == 'm-d-Y' ? 'selected' : '' }}>mm-dd-yyyy</option>
                                     <option value="d/m/Y" {{ old('date_format') == 'd/m/Y' ? 'selected' : '' }}>dd/mm/yyyy</option>
@@ -158,7 +158,7 @@
                                     @lang('Time Format') <span class="tw-text-red-500">*</span>
                                 </label>
                                 <select name="time_format" id="time_format" 
-                                        class="tw-w-full tw-px-4 tw-py-3 tw-border tw-border-gray-300 tw-rounded-lg tw-focus:ring-2 tw-focus:ring-blue-500 tw-focus:border-blue-500 tw-transition-colors" required>
+                                        class="tw-w-full tw-px-4 tw-py-3 tw-border tw-border-gray-300 tw-rounded-lg tw-focus:ring-2 tw-focus:ring-blue-500 tw-focus:border-blue-500 tw-transition-colors tw-bg-white tw-text-black" required>
                                     <option value="12" {{ old('time_format', '12') == '12' ? 'selected' : '' }}>12 Hour</option>
                                     <option value="24" {{ old('time_format') == '24' ? 'selected' : '' }}>24 Hour</option>
                                 </select>
@@ -171,7 +171,7 @@
                                     @lang('Currency Symbol Placement') <span class="tw-text-red-500">*</span>
                                 </label>
                                 <select name="currency_symbol_placement" id="currency_symbol_placement" 
-                                        class="tw-w-full tw-px-4 tw-py-3 tw-border tw-border-gray-300 tw-rounded-lg tw-focus:ring-2 tw-focus:ring-blue-500 tw-focus:border-blue-500 tw-transition-colors" required>
+                                        class="tw-w-full tw-px-4 tw-py-3 tw-border tw-border-gray-300 tw-rounded-lg tw-focus:ring-2 tw-focus:ring-blue-500 tw-focus:border-blue-500 tw-transition-colors tw-bg-white tw-text-black" required>
                                     <option value="before" {{ old('currency_symbol_placement', 'before') == 'before' ? 'selected' : '' }}>Before Amount</option>
                                     <option value="after" {{ old('currency_symbol_placement') == 'after' ? 'selected' : '' }}>After Amount</option>
                                 </select>
@@ -182,7 +182,7 @@
                                     @lang('Sales Commission Agent') <span class="tw-text-red-500">*</span>
                                 </label>
                                 <select name="sales_cmsn_agnt" id="sales_cmsn_agnt" 
-                                        class="tw-w-full tw-px-4 tw-py-3 tw-border tw-border-gray-300 tw-rounded-lg tw-focus:ring-2 tw-focus:ring-blue-500 tw-focus:border-blue-500 tw-transition-colors" required>
+                                        class="tw-w-full tw-px-4 tw-py-3 tw-border tw-border-gray-300 tw-rounded-lg tw-focus:ring-2 tw-focus:ring-blue-500 tw-focus:border-blue-500 tw-transition-colors tw-bg-white tw-text-black" required>
                                     <option value="logged_in_user" {{ old('sales_cmsn_agnt', 'logged_in_user') == 'logged_in_user' ? 'selected' : '' }}>Logged in User</option>
                                     <option value="user" {{ old('sales_cmsn_agnt') == 'user' ? 'selected' : '' }}>User</option>
                                     <option value="percentage" {{ old('sales_cmsn_agnt') == 'percentage' ? 'selected' : '' }}>Percentage</option>
@@ -196,7 +196,7 @@
                                     @lang('Item Addition Method') <span class="tw-text-red-500">*</span>
                                 </label>
                                 <select name="item_addition_method" id="item_addition_method" 
-                                        class="tw-w-full tw-px-4 tw-py-3 tw-border tw-border-gray-300 tw-rounded-lg tw-focus:ring-2 tw-focus:ring-blue-500 tw-focus:border-blue-500 tw-transition-colors" required>
+                                        class="tw-w-full tw-px-4 tw-py-3 tw-border tw-border-gray-300 tw-rounded-lg tw-focus:ring-2 tw-focus:ring-blue-500 tw-focus:border-blue-500 tw-transition-colors tw-bg-white tw-text-black" required>
                                     <option value="1" {{ old('item_addition_method', '1') == '1' ? 'selected' : '' }}>Add to End</option>
                                     <option value="2" {{ old('item_addition_method') == '2' ? 'selected' : '' }}>Add to Beginning</option>
                                 </select>
@@ -207,7 +207,7 @@
                                     @lang('Stock Expiry Alert Days') <span class="tw-text-red-500">*</span>
                                 </label>
                                 <input type="number" name="stock_expiry_alert_days" id="stock_expiry_alert_days" 
-                                       class="tw-w-full tw-px-4 tw-py-3 tw-border tw-border-gray-300 tw-rounded-lg tw-focus:ring-2 tw-focus:ring-blue-500 tw-focus:border-blue-500 tw-transition-colors" 
+                                       class="tw-w-full tw-px-4 tw-py-3 tw-border tw-border-gray-300 tw-rounded-lg tw-focus:ring-2 tw-focus:ring-blue-500 tw-focus:border-blue-500 tw-transition-colors tw-bg-white tw-text-black" 
                                        value="{{ old('stock_expiry_alert_days', 30) }}" min="0" required placeholder="30">
                             </div>
                         </div>
