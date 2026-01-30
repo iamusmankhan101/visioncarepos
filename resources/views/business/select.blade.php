@@ -13,7 +13,7 @@
         </div>
 
         <!-- Main Content Card -->
-        <div class="tw-bg-white tw-rounded-2xl tw-shadow-2xl tw-space-y-6" style="padding: 52px;">
+        <div class="tw-bg-white tw-rounded-2xl tw-shadow-2xl tw-space-y-8" style="padding: 52px;">
             
             @if(session('success'))
                 <div class="tw-bg-green-50 tw-border tw-border-green-200 tw-rounded-lg tw-p-4">
@@ -66,15 +66,15 @@
 
             @if($available_businesses->count() > 0)
                 <!-- Business Selection Section -->
-                <div class="tw-space-y-6">
+                <div class="tw-space-y-8">
                     <div class="tw-text-center">
                         <h3 class="tw-text-xl tw-font-semibold tw-text-gray-900 tw-mb-2">Your Businesses</h3>
                         <p class="tw-text-gray-600 tw-text-sm">Select a business to access your POS system</p>
                     </div>
                     
-                    <form method="POST" action="{{ route('business.switch') }}" class="tw-space-y-4">
+                    <form method="POST" action="{{ route('business.switch') }}" class="tw-space-y-6">
                         @csrf
-                        <div class="tw-space-y-2">
+                        <div class="tw-space-y-3">
                             <label for="business_id" class="tw-block tw-text-sm tw-font-medium tw-text-gray-700">
                                 Select Business:
                             </label>
@@ -96,7 +96,7 @@
                 </div>
 
                 <!-- Divider -->
-                <div class="tw-relative tw-my-8">
+                <div class="tw-relative tw-my-12">
                     <div class="tw-absolute tw-inset-0 tw-flex tw-items-center">
                         <div class="tw-w-full tw-border-t tw-border-gray-300"></div>
                     </div>
@@ -107,7 +107,7 @@
             @endif
 
             <!-- Register New Business Section -->
-            <div class="tw-space-y-4">
+            <div class="tw-space-y-6">
                 <div class="tw-text-center">
                     <h3 class="tw-text-xl tw-font-semibold tw-text-gray-900 tw-mb-2">
                         @if($available_businesses->count() > 0) Create New Business @else Get Started @endif
@@ -121,7 +121,7 @@
                     </p>
                 </div>
                 
-                <a href="/business/register" class="tw-w-full tw-bg-green-600 tw-text-white tw-py-3 tw-px-4 tw-rounded-lg tw-font-semibold tw-hover:bg-green-700 tw-focus:outline-none tw-focus:ring-2 tw-focus:ring-green-500 tw-focus:ring-offset-2 tw-transition-colors tw-duration-200 tw-flex tw-items-center tw-justify-center">
+                <a href="/business/register" class="tw-w-full tw-bg-blue-600 tw-text-white tw-py-3 tw-px-4 tw-rounded-lg tw-font-semibold tw-hover:bg-blue-700 tw-focus:outline-none tw-focus:ring-2 tw-focus:ring-blue-500 tw-focus:ring-offset-2 tw-transition-colors tw-duration-200 tw-flex tw-items-center tw-justify-center">
                     <svg class="tw-w-5 tw-h-5 tw-mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                     </svg>
@@ -130,7 +130,7 @@
             </div>
 
             <!-- Logout Section -->
-            <div class="tw-pt-4 tw-border-t tw-border-gray-200">
+            <div class="tw-pt-8 tw-border-t tw-border-gray-200">
                 <a href="{{ route('logout') }}" 
                    onclick="event.preventDefault(); document.getElementById('logout-form').submit();"
                    class="tw-w-full tw-text-gray-600 tw-hover:text-gray-800 tw-py-2 tw-px-4 tw-rounded-lg tw-font-medium tw-transition-colors tw-duration-200 tw-flex tw-items-center tw-justify-center">
