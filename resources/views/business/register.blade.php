@@ -22,7 +22,7 @@
                     </div>
                 @endif
 
-                <form method="POST" action="{{ route('business.store') }}" enctype="multipart/form-data">
+                <form method="POST" action="/business/store" enctype="multipart/form-data">
                     @csrf
                     
                     <div class="row">
@@ -227,7 +227,7 @@
                             <i class="fa fa-check"></i> @lang('Register Business')
                         </button>
                         
-                        <a href="{{ route('business.select') }}" class="btn btn-default btn-lg ml-2">
+                        <a href="/business/select" class="btn btn-default btn-lg ml-2">
                             <i class="fa fa-arrow-left"></i> @lang('Back')
                         </a>
                     </div>
