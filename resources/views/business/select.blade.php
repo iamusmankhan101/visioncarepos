@@ -37,7 +37,7 @@
                 <div class="login-form-container">
                     @if($available_businesses->count() > 0)
                         <div class="business-selection-section">
-                            <form method="POST" action="{{ route('business.switch') }}">
+                            <form method="POST" action="/business/switch">
                                 @csrf
                                 <div class="form-group">
                                     <label for="business_id">@lang('Select Business'):</label>
@@ -66,20 +66,20 @@
 
                     <div class="business-registration-section">
                         <div class="text-center">
-                            <a href="{{ route('business.register') }}" class="btn btn-success btn-block">
+                            <a href="/business/register" class="btn btn-success btn-block">
                                 <i class="fa fa-plus"></i> @lang('Register New Business')
                             </a>
                         </div>
                     </div>
 
                     <div class="text-center mt-4">
-                        <a href="{{ route('logout') }}" 
+                        <a href="/logout" 
                            onclick="event.preventDefault(); document.getElementById('logout-form').submit();"
                            class="btn btn-link">
                             <i class="fa fa-sign-out"></i> @lang('Logout')
                         </a>
                         
-                        <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+                        <form id="logout-form" action="/logout" method="POST" style="display: none;">
                             @csrf
                         </form>
                     </div>
@@ -120,6 +120,19 @@
 
 .btn-success {
     background-color: #28a745;
+    border-color: #28a745;
+}
+
+.form-control {
+    padding: 10px;
+    font-size: 14px;
+}
+
+.alert {
+    margin-bottom: 20px;
+}
+</style>
+@endsectionund-color: #28a745;
     border-color: #28a745;
 }
 
