@@ -97,11 +97,52 @@ class BusinessSelectionController extends Controller
             $user->business_id = $business->id;
             $user->save();
 
-            // Set session to indicate business has been selected
+            // IMPORTANT: Clear ALL session data to force refresh
+            session()->forget(['user', 'business', 'currency', 'financial_year', 'location']);
             session(['selected_business_id' => $business->id]);
 
-            // Clear any cached business data
-            session()->forget(['business', 'location']);
+            // Force refresh session data by setting up business data immediately
+            $business_util = new \App\Utils\BusinessUtil();
+            
+            // Set user session data
+            $session_data = [
+                'id' => $user->id,
+                'surname' => $user->surname,
+                'first_name' => $user->first_name,
+                'last_name' => $user->last_name,
+                'email' => $user->email,
+                'business_id' => $user->business_id,
+                'language' => $user->language,
+            ];
+
+            // Ensure enabled_modules is properly formatted
+            if (is_string($business->enabled_modules)) {
+                $business->enabled_modules = json_decode($business->enabled_modules, true) ?: [];
+            }
+            if (!is_array($business->enabled_modules)) {
+                $business->enabled_modules = [];
+            }
+
+            // Set currency data
+            $currency = $business->currency;
+            $currency_data = [
+                'id' => $currency->id,
+                'code' => $currency->code,
+                'symbol' => $currency->symbol,
+                'thousand_separator' => $currency->thousand_separator,
+                'decimal_separator' => $currency->decimal_separator,
+            ];
+
+            // Set financial year
+            $financial_year = $business_util->getCurrentFinancialYear($business->id);
+
+            // Put all data into session
+            session([
+                'user' => $session_data,
+                'business' => $business,
+                'currency' => $currency_data,
+                'financial_year' => $financial_year
+            ]);
 
             // Ensure user has proper permissions for this business
             try {
@@ -129,7 +170,7 @@ class BusinessSelectionController extends Controller
                 }
                 
             } catch (\Exception $permissionException) {
-                Log::warning('Permission assignment failed during business switch: ' . $permissionException->getMessage());
+                Log::error('Permission assignment failed during business switch: ' . $permissionException->getMessage());
                 // Continue anyway - permissions might not be critical for basic functionality
             }
 
