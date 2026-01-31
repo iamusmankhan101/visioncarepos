@@ -35,6 +35,29 @@
                 @endif
 
                 <div class="login-form-container">
+                    <!-- DEBUG SECTION - Remove this after testing -->
+                    <div style="background: rgba(255,0,0,0.8); color: white; padding: 15px; margin: 10px 0; border-radius: 5px;">
+                        <h4>🔧 DEBUG: Delete Functionality Test</h4>
+                        <p><strong>Available Businesses Count:</strong> {{ $available_businesses->count() }}</p>
+                        @if($available_businesses->count() > 0)
+                            <p><strong>Businesses Found:</strong></p>
+                            @foreach($available_businesses as $business)
+                                <div style="border: 1px solid white; padding: 8px; margin: 5px 0; border-radius: 3px;">
+                                    <strong>{{ $business->name }}</strong> (ID: {{ $business->id }})
+                                    <button type="button" 
+                                            class="btn btn-danger btn-sm" 
+                                            style="margin-left: 10px; padding: 4px 8px;"
+                                            onclick="alert('Delete button works for: {{ $business->name }}')">
+                                        🗑️ TEST DELETE
+                                    </button>
+                                </div>
+                            @endforeach
+                        @else
+                            <p style="color: yellow;">⚠️ No businesses found! This is why delete buttons aren't showing.</p>
+                        @endif
+                    </div>
+                    <!-- END DEBUG SECTION -->
+
                     @if($available_businesses->count() > 0)
                         <div class="business-selection-section">
                             <form method="POST" action="/business/switch">
@@ -63,7 +86,7 @@
                                 <h5 class="text-center mb-3">@lang('Manage Your Businesses')</h5>
                                 
                                 @foreach($available_businesses as $business)
-                                    <div class="business-item d-flex justify-content-between align-items-center mb-2 p-3">
+                                    <div class="business-item mb-2 p-3" style="display: flex; justify-content: space-between; align-items: center;">
                                         <div class="business-info">
                                             <strong>{{ $business->name }}</strong>
                                             <small class="d-block text-muted">
@@ -250,8 +273,6 @@ label, .form-group label {
     color: rgba(255, 255, 255, 0.8) !important;
 }
 
-.btn-link:hover {
-    color: white !important;
 .btn-link:hover {
     color: white !important;
 }
