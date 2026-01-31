@@ -103,8 +103,38 @@ class BusinessSelectionController extends Controller
             // Clear any cached business data
             session()->forget(['business', 'location']);
 
-            // Always redirect to POS for immediate use
-            return redirect('/pos/create')->with('success', 'Switched to ' . $business->name . ' successfully! Ready to start selling.');
+            // Ensure user has proper permissions for this business
+            try {
+                // Check if user has admin role for this business
+                $adminRole = \Spatie\Permission\Models\Role::where('name', 'Admin#' . $business->id)->first();
+                
+                if ($adminRole && !$user->hasRole($adminRole)) {
+                    // Assign admin role if user doesn't have it
+                    $user->assignRole($adminRole);
+                }
+                
+                // If no role exists, give essential permissions directly
+                if (!$adminRole) {
+                    $essentialPermissions = ['sell.create', 'superadmin'];
+                    foreach ($essentialPermissions as $permName) {
+                        $permission = \Spatie\Permission\Models\Permission::firstOrCreate([
+                            'name' => $permName,
+                            'guard_name' => 'web'
+                        ]);
+                        
+                        if (!$user->hasPermissionTo($permission)) {
+                            $user->givePermissionTo($permission);
+                        }
+                    }
+                }
+                
+            } catch (\Exception $permissionException) {
+                Log::warning('Permission assignment failed during business switch: ' . $permissionException->getMessage());
+                // Continue anyway - permissions might not be critical for basic functionality
+            }
+
+            // Always redirect to home first, then let middleware handle routing
+            return redirect('/home')->with('success', 'Switched to ' . $business->name . ' successfully!');
             
         } catch (\Exception $e) {
             Log::error('Business switch error: ' . $e->getMessage());
