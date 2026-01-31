@@ -57,6 +57,31 @@
                                     </button>
                                 </div>
                             </form>
+
+                            <!-- Business Management Section -->
+                            <div class="business-management-section mt-4">
+                                <h5 class="text-center mb-3">@lang('Manage Your Businesses')</h5>
+                                
+                                @foreach($available_businesses as $business)
+                                    <div class="business-item d-flex justify-content-between align-items-center mb-2 p-3">
+                                        <div class="business-info">
+                                            <strong>{{ $business->name }}</strong>
+                                            <small class="d-block text-muted">
+                                                Created: {{ $business->created_at->format('M d, Y') }}
+                                            </small>
+                                        </div>
+                                        <div class="business-actions">
+                                            <button type="button" 
+                                                    class="btn btn-danger btn-sm delete-business-btn" 
+                                                    data-business-id="{{ $business->id }}"
+                                                    data-business-name="{{ $business->name }}"
+                                                    title="Delete Business">
+                                                <i class="fa fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
                         </div>
 
                         <div class="text-center my-4">
@@ -88,6 +113,67 @@
         </div>
     </div>
 </div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteBusinessModal" tabindex="-1" role="dialog" aria-labelledby="deleteBusinessModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteBusinessModalLabel">
+                    <i class="fa fa-warning"></i> @lang('Delete Business')
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <i class="fa fa-exclamation-triangle"></i>
+                    <strong>@lang('Warning!'):</strong> @lang('This action cannot be undone.')
+                </div>
+                
+                <p>@lang('Are you sure you want to delete the business') "<strong id="businessNameToDelete"></strong>"?</p>
+                
+                <p class="text-muted small">
+                    @lang('This will permanently delete:')
+                </p>
+                <ul class="text-muted small">
+                    <li>@lang('All business data and settings')</li>
+                    <li>@lang('All products and inventory')</li>
+                    <li>@lang('All customers and suppliers')</li>
+                    <li>@lang('All sales and purchase records')</li>
+                    <li>@lang('All financial data')</li>
+                </ul>
+                
+                <div class="form-group mt-3">
+                    <label for="confirmBusinessName">
+                        @lang('Type the business name to confirm deletion:')
+                    </label>
+                    <input type="text" 
+                           class="form-control" 
+                           id="confirmBusinessName" 
+                           placeholder="@lang('Enter business name')"
+                           autocomplete="off">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                    <i class="fa fa-times"></i> @lang('Cancel')
+                </button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn" disabled>
+                    <i class="fa fa-trash"></i> @lang('Delete Business')
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Hidden form for delete submission -->
+<form id="deleteBusinessForm" method="POST" action="{{ route('business.delete') }}" style="display: none;">
+    @csrf
+    @method('DELETE')
+    <input type="hidden" name="business_id" id="deleteBusinessId">
+</form>
 
 <style>
 .business-selection-section, .business-registration-section {
@@ -166,6 +252,124 @@ label, .form-group label {
 
 .btn-link:hover {
     color: white !important;
+.btn-link:hover {
+    color: white !important;
+}
+
+/* Business management styles */
+.business-management-section {
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    padding-top: 20px;
+}
+
+.business-item {
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    transition: background-color 0.2s;
+}
+
+.business-item:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+}
+
+.business-info strong {
+    color: white !important;
+    font-size: 16px;
+}
+
+.business-info small {
+    color: rgba(255, 255, 255, 0.7) !important;
+    font-size: 12px;
+}
+
+.delete-business-btn {
+    background-color: #dc3545;
+    border-color: #dc3545;
+    padding: 6px 10px;
+    font-size: 12px;
+}
+
+.delete-business-btn:hover {
+    background-color: #c82333;
+    border-color: #bd2130;
+}
+
+/* Modal styles */
+.modal-content {
+    background-color: #fff !important;
+    color: #333 !important;
+}
+
+.modal-header.bg-danger {
+    background-color: #dc3545 !important;
+}
+
+.modal-body, .modal-footer {
+    color: #333 !important;
+}
+
+.modal-body p, .modal-body li, .modal-body label {
+    color: #333 !important;
+}
+
+.alert-warning {
+    background-color: #fff3cd;
+    border-color: #ffeaa7;
+    color: #856404;
 }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let businessIdToDelete = null;
+    let businessNameToDelete = '';
+    
+    // Handle delete button clicks
+    document.querySelectorAll('.delete-business-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            businessIdToDelete = this.getAttribute('data-business-id');
+            businessNameToDelete = this.getAttribute('data-business-name');
+            
+            document.getElementById('businessNameToDelete').textContent = businessNameToDelete;
+            document.getElementById('deleteBusinessId').value = businessIdToDelete;
+            document.getElementById('confirmBusinessName').value = '';
+            document.getElementById('confirmDeleteBtn').disabled = true;
+            
+            $('#deleteBusinessModal').modal('show');
+        });
+    });
+    
+    // Handle business name confirmation
+    document.getElementById('confirmBusinessName').addEventListener('input', function() {
+        const enteredName = this.value.trim();
+        const confirmBtn = document.getElementById('confirmDeleteBtn');
+        
+        if (enteredName === businessNameToDelete) {
+            confirmBtn.disabled = false;
+            confirmBtn.classList.remove('btn-secondary');
+            confirmBtn.classList.add('btn-danger');
+        } else {
+            confirmBtn.disabled = true;
+            confirmBtn.classList.remove('btn-danger');
+            confirmBtn.classList.add('btn-secondary');
+        }
+    });
+    
+    // Handle confirm delete
+    document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+        if (!this.disabled) {
+            document.getElementById('deleteBusinessForm').submit();
+        }
+    });
+    
+    // Reset modal when closed
+    $('#deleteBusinessModal').on('hidden.bs.modal', function() {
+        document.getElementById('confirmBusinessName').value = '';
+        document.getElementById('confirmDeleteBtn').disabled = true;
+        businessIdToDelete = null;
+        businessNameToDelete = '';
+    });
+});
+</script>
 @endsection

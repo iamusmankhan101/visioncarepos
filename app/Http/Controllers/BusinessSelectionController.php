@@ -4,6 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Business;
 use App\User;
+use App\BusinessLocation;
+use App\TaxRate;
+use App\CustomerGroup;
+use App\Category;
+use App\Brands;
+use App\Unit;
+use App\Contact;
+use App\Product;
+use App\Transaction;
+use App\Voucher;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -99,6 +109,91 @@ class BusinessSelectionController extends Controller
         } catch (\Exception $e) {
             Log::error('Business switch error: ' . $e->getMessage());
             return back()->withErrors(['error' => 'Unable to switch business. Please try again.']);
+        }
+    }
+
+    /**
+     * Delete a business
+     */
+    public function delete(Request $request)
+    {
+        try {
+            $request->validate([
+                'business_id' => 'required|exists:business,id'
+            ]);
+
+            $user = Auth::user();
+            $business = Business::findOrFail($request->business_id);
+
+            // Check if user is the owner of this business
+            if ($business->owner_id != $user->id) {
+                return back()->withErrors(['error' => 'You can only delete businesses you own.']);
+            }
+
+            // Check if this is the user's current business
+            if ($user->business_id == $business->id) {
+                // Clear the user's current business selection
+                $user->business_id = null;
+                $user->save();
+                
+                // Clear session
+                session()->forget(['selected_business_id', 'business', 'location']);
+            }
+
+            DB::beginTransaction();
+
+            try {
+                // Delete related data in proper order to avoid foreign key constraints
+                
+                // Delete business locations
+                \App\BusinessLocation::where('business_id', $business->id)->delete();
+                
+                // Delete tax rates
+                \App\TaxRate::where('business_id', $business->id)->delete();
+                
+                // Delete customer groups
+                \App\CustomerGroup::where('business_id', $business->id)->delete();
+                
+                // Delete categories
+                \App\Category::where('business_id', $business->id)->delete();
+                
+                // Delete brands
+                \App\Brands::where('business_id', $business->id)->delete();
+                
+                // Delete units
+                \App\Unit::where('business_id', $business->id)->delete();
+                
+                // Delete contacts (customers/suppliers)
+                \App\Contact::where('business_id', $business->id)->delete();
+                
+                // Delete products
+                \App\Product::where('business_id', $business->id)->delete();
+                
+                // Delete transactions
+                \App\Transaction::where('business_id', $business->id)->delete();
+                
+                // Delete vouchers
+                \App\Voucher::where('business_id', $business->id)->delete();
+                
+                // Delete roles associated with this business
+                \Spatie\Permission\Models\Role::where('name', 'like', '%#' . $business->id)->delete();
+                
+                // Finally delete the business itself
+                $business->delete();
+
+                DB::commit();
+
+                return redirect()->route('business.select')->with('success', 'Business deleted successfully.');
+                
+            } catch (\Exception $e) {
+                DB::rollback();
+                Log::error('Business deletion error: ' . $e->getMessage());
+                return back()->withErrors(['error' => 'Unable to delete business. Some data may still be associated with it.']);
+            }
+            
+        } catch (\Exception $e) {
+            Log::error('Business delete validation error: ' . $e->getMessage());
+            return back()->withErrors(['error' => 'Unable to delete business. Please try again.']);
         }
     }
 

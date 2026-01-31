@@ -91,6 +91,7 @@ Route::middleware(['setData'])->group(function () {
         Route::get('business/register', [BusinessSelectionController::class, 'register'])->name('business.register');
         Route::post('business/store', [BusinessSelectionController::class, 'store'])->name('business.store');
         Route::post('business/switch', [BusinessSelectionController::class, 'switch'])->name('business.switch');
+        Route::delete('business/delete', [BusinessSelectionController::class, 'delete'])->name('business.delete');
         
         // Test route for debugging
         Route::get('test-business-select', function() {
