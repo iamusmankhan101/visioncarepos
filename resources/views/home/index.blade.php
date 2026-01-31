@@ -1746,46 +1746,15 @@
                                                     // Handle WhatsApp link if provided
                                                     if (response.whatsapp_link) {
                                                         console.log('📱 WhatsApp link received:', response.whatsapp_link);
+                                                        console.log('🚀 Automatically opening WhatsApp...');
                                                         
-                                                        // Show WhatsApp notification with action button
-                                                        var whatsappHtml = '<div class="alert alert-success alert-dismissible" style="margin-top: 10px;">' +
-                                                                          '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>' +
-                                                                          '<h4><i class="icon fa fa-whatsapp"></i> WhatsApp Notification Ready!</h4>' +
-                                                                          '<p>Customer notification is ready to send.</p>' +
-                                                                          '<a href="' + response.whatsapp_link + '" target="_blank" class="btn btn-success btn-sm">' +
-                                                                          '<i class="fa fa-whatsapp"></i> Open WhatsApp</a>' +
-                                                                          '</div>';
+                                                        // Automatically open WhatsApp
+                                                        window.open(response.whatsapp_link, '_blank');
                                                         
-                                                        // Add WhatsApp notification to the page
-                                                        if ($('.whatsapp-notifications').length === 0) {
-                                                            $('body').append('<div class="whatsapp-notifications" style="position: fixed; top: 70px; right: 20px; z-index: 9999; max-width: 350px;"></div>');
-                                                        }
-                                                        $('.whatsapp-notifications').html(whatsappHtml);
-                                                        
-                                                        // Auto-remove after 10 seconds
-                                                        setTimeout(function() {
-                                                            $('.whatsapp-notifications .alert').fadeOut();
-                                                        }, 10000);
-                                                        
-                                                        // Also show toastr with WhatsApp action
+                                                        // Show simple success message
                                                         if (typeof toastr !== 'undefined') {
-                                                            toastr.success(
-                                                                '<a href="' + response.whatsapp_link + '" target="_blank" style="color: white; text-decoration: underline;">Click to open WhatsApp</a>',
-                                                                'Customer Notification Ready!',
-                                                                {
-                                                                    allowHtml: true,
-                                                                    timeOut: 8000,
-                                                                    onclick: function() {
-                                                                        window.open(response.whatsapp_link, '_blank');
-                                                                    }
-                                                                }
-                                                            );
+                                                            toastr.success('Order status updated successfully! WhatsApp opened automatically.', 'Success');
                                                         }
-                                                        
-                                                        // Optional: Auto-open WhatsApp (uncomment if desired)
-                                                        // setTimeout(function() {
-                                                        //     window.open(response.whatsapp_link, '_blank');
-                                                        // }, 2000);
                                                     }
                                                     
                                                     // Reload the shipments DataTable to show updated status
