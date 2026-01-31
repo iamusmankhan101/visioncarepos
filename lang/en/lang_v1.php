@@ -1664,8 +1664,7 @@ return [
     'no_permission_to_print' => 'You do not have permission to print invoices',
     'too_many_invoices_limit_50' => 'Too many invoices selected. Please limit to 50 invoices at once.',
     'invoices_ready_to_print' => 'invoices ready to print',
-
-];
+    
     // Enhanced Commission System Language Keys
     'target_exceeded' => 'Target Exceeded',
     'target_not_exceeded' => 'Target Not Exceeded',
@@ -1680,3 +1679,11 @@ return [
     'when_target_met' => 'When Target Met',
     'when_target_exceeded' => 'When Target Exceeded',
     'bonus' => 'Bonus',
+    'target_status' => 'Target Status',
+    'commission_applicable' => 'Commission Applicable',
+    'no_target' => 'No Target',
+    'achieved' => 'Achieved',
+    'pending' => 'Pending',
+    'target_not_met' => 'Target Not Met',
+
+];
