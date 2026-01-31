@@ -2,6 +2,8 @@
 @section('title', __('lang_v1.sales_commission_agents'))
 
 @section('content')
+    <!-- Enhanced Commission Agents CSS -->
+    <link rel="stylesheet" href="{{ asset('css/commission-agents-enhanced.css') }}">
 
 <!-- Content Header (Page header) -->
 <section class="content-header">
@@ -39,6 +41,8 @@
                             <th>@lang( 'business.address' )</th>
                             <th>@lang( 'lang_v1.cmmsn_percent' )</th>
                             <th>@lang( 'lang_v1.condition' )</th>
+                            <th>@lang( 'lang_v1.target_status' )</th>
+                            <th>@lang( 'lang_v1.commission_applicable' )</th>
                             <th>@lang( 'messages.action' )</th>
                         </tr>
                     </thead>

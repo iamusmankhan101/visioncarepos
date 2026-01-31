@@ -1666,3 +1666,17 @@ return [
     'invoices_ready_to_print' => 'invoices ready to print',
 
 ];
+    // Enhanced Commission System Language Keys
+    'target_exceeded' => 'Target Exceeded',
+    'target_not_exceeded' => 'Target Not Exceeded',
+    'no_condition' => 'No Condition Set',
+    'upgrade_for_targets' => 'Upgrade for Targets',
+    'always' => 'Always',
+    'applicable' => 'Applicable',
+    'monthly' => 'Monthly',
+    'quarterly' => 'Quarterly',
+    'yearly' => 'Yearly',
+    'always_apply' => 'Always Apply',
+    'when_target_met' => 'When Target Met',
+    'when_target_exceeded' => 'When Target Exceeded',
+    'bonus' => 'Bonus',
