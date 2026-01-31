@@ -123,9 +123,13 @@ class HomeController extends Controller
             }
         }
 
+        // Get sales commission agents data for dashboard
+        $commission_agents_data = $this->getSalesCommissionAgentsData($business_id);
+
         return view('home.index', compact('widgets', 'all_locations', 'common_settings', 'is_admin'))
             ->with('sells_chart_1', $sells_chart_1)
-            ->with('sells_chart_2', $sells_chart_2);
+            ->with('sells_chart_2', $sells_chart_2)
+            ->with('commission_agents_data', $commission_agents_data);
     }
 
     /**
@@ -716,5 +720,102 @@ class HomeController extends Controller
         $chart->options($this->__chartOptions(__('home.total_sell')));
         
         return $chart;
+    }
+
+    /**
+     * Get sales commission agents data for dashboard
+     *
+     * @param int $business_id
+     * @return array
+     */
+    private function getSalesCommissionAgentsData($business_id)
+    {
+        try {
+            // Get current month start and end dates
+            $current_month_start = now()->startOfMonth()->format('Y-m-d H:i:s');
+            $current_month_end = now()->endOfMonth()->format('Y-m-d H:i:s');
+            
+            // Get last month start and end dates
+            $last_month_start = now()->subMonth()->startOfMonth()->format('Y-m-d H:i:s');
+            $last_month_end = now()->subMonth()->endOfMonth()->format('Y-m-d H:i:s');
+
+            // Get all commission agents for this business
+            $agents = User::where('business_id', $business_id)
+                         ->where('is_cmmsn_agnt', 1)
+                         ->select([
+                             'id',
+                             DB::raw("CONCAT(COALESCE(surname, ''), ' ', COALESCE(first_name, ''), ' ', COALESCE(last_name, '')) as full_name"),
+                             'cmmsn_percent',
+                             'condition'
+                         ])
+                         ->get();
+
+            $agents_data = [];
+            
+            foreach ($agents as $agent) {
+                // Get current month sales for this agent
+                $current_month_sales = DB::table('transactions')
+                    ->where('business_id', $business_id)
+                    ->where('type', 'sell')
+                    ->where('status', 'final')
+                    ->where('commission_agent', $agent->id)
+                    ->whereBetween('transaction_date', [$current_month_start, $current_month_end])
+                    ->sum('final_total');
+
+                // Get last month sales for this agent
+                $last_month_sales = DB::table('transactions')
+                    ->where('business_id', $business_id)
+                    ->where('type', 'sell')
+                    ->where('status', 'final')
+                    ->where('commission_agent', $agent->id)
+                    ->whereBetween('transaction_date', [$last_month_start, $last_month_end])
+                    ->sum('final_total');
+
+                // Calculate commission amounts
+                $current_month_commission = ($current_month_sales * $agent->cmmsn_percent) / 100;
+                $last_month_commission = ($last_month_sales * $agent->cmmsn_percent) / 100;
+
+                // Calculate growth percentage
+                $growth_percentage = 0;
+                if ($last_month_sales > 0) {
+                    $growth_percentage = (($current_month_sales - $last_month_sales) / $last_month_sales) * 100;
+                } elseif ($current_month_sales > 0) {
+                    $growth_percentage = 100; // 100% growth if no sales last month but sales this month
+                }
+
+                // Get total number of transactions this month
+                $current_month_transactions = DB::table('transactions')
+                    ->where('business_id', $business_id)
+                    ->where('type', 'sell')
+                    ->where('status', 'final')
+                    ->where('commission_agent', $agent->id)
+                    ->whereBetween('transaction_date', [$current_month_start, $current_month_end])
+                    ->count();
+
+                $agents_data[] = [
+                    'id' => $agent->id,
+                    'name' => $agent->full_name,
+                    'commission_percent' => $agent->cmmsn_percent,
+                    'condition' => $agent->condition,
+                    'current_month_sales' => $current_month_sales,
+                    'last_month_sales' => $last_month_sales,
+                    'current_month_commission' => $current_month_commission,
+                    'last_month_commission' => $last_month_commission,
+                    'growth_percentage' => round($growth_percentage, 1),
+                    'current_month_transactions' => $current_month_transactions,
+                ];
+            }
+
+            // Sort by current month sales (highest first)
+            usort($agents_data, function($a, $b) {
+                return $b['current_month_sales'] <=> $a['current_month_sales'];
+            });
+
+            return $agents_data;
+            
+        } catch (\Exception $e) {
+            \Log::error('Error getting sales commission agents data: ' . $e->getMessage());
+            return [];
+        }
     }
 }

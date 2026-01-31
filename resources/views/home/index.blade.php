@@ -371,6 +371,122 @@
     @if (auth()->user()->can('dashboard.data'))
         <div class="tw-px-5 tw-py-6">
             <div class="tw-grid tw-grid-cols-1 tw-gap-4 sm:tw-gap-5 lg:tw-grid-cols-2">
+                {{-- SALES COMMISSION AGENTS PROGRESS SECTION --}}
+                @if (!empty($commission_agents_data) && count($commission_agents_data) > 0)
+                    <div class="tw-transition-all lg:tw-col-span-2 tw-duration-200 tw-bg-white tw-shadow-sm tw-rounded-xl tw-ring-1 hover:tw-shadow-md hover:tw--translate-y-0.5 tw-ring-gray-200">
+                        <div class="tw-p-4 sm:tw-p-5">
+                            <div class="tw-flex tw-items-center tw-gap-2.5">
+                                <div class="tw-border-2 tw-flex tw-items-center tw-justify-center tw-rounded-full tw-w-10 tw-h-10">
+                                    <svg aria-hidden="true" class="tw-text-blue-500 tw-size-5 tw-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                        <path d="M16 4v4a1 1 0 0 0 1 1h4"></path>
+                                        <path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z"></path>
+                                        <path d="M12 17v-6"></path>
+                                        <path d="M9.5 14.5l2.5 2.5l2.5 -2.5"></path>
+                                    </svg>
+                                </div>
+                                <div class="tw-flex tw-items-center tw-flex-1 tw-min-w-0 tw-gap-1">
+                                    <div class="tw-w-full">
+                                        <h3 class="tw-font-bold tw-text-base lg:tw-text-xl">
+                                            @lang('Sales Commission Agents Progress')
+                                        </h3>
+                                        <p class="tw-text-sm tw-text-gray-500 tw-mt-1">
+                                            Current month performance vs last month
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="tw-mt-5">
+                                <div class="tw-grid tw-grid-cols-1 sm:tw-grid-cols-2 lg:tw-grid-cols-3 tw-gap-4">
+                                    @foreach($commission_agents_data as $agent)
+                                        <div class="tw-bg-gray-50 tw-rounded-lg tw-p-4 tw-border tw-border-gray-200 hover:tw-border-blue-300 tw-transition-colors">
+                                            <div class="tw-flex tw-items-start tw-justify-between tw-mb-3">
+                                                <div class="tw-flex-1 tw-min-w-0">
+                                                    <h4 class="tw-font-semibold tw-text-gray-900 tw-truncate">
+                                                        {{ $agent['name'] }}
+                                                    </h4>
+                                                    <p class="tw-text-sm tw-text-gray-500">
+                                                        {{ $agent['commission_percent'] }}% Commission
+                                                    </p>
+                                                </div>
+                                                <div class="tw-flex tw-items-center tw-gap-1">
+                                                    @if($agent['growth_percentage'] > 0)
+                                                        <svg class="tw-w-4 tw-h-4 tw-text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fill-rule="evenodd" d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                                                        </svg>
+                                                        <span class="tw-text-sm tw-font-medium tw-text-green-600">
+                                                            +{{ $agent['growth_percentage'] }}%
+                                                        </span>
+                                                    @elseif($agent['growth_percentage'] < 0)
+                                                        <svg class="tw-w-4 tw-h-4 tw-text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fill-rule="evenodd" d="M14.707 10.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 12.586V5a1 1 0 012 0v7.586l2.293-2.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                                        </svg>
+                                                        <span class="tw-text-sm tw-font-medium tw-text-red-600">
+                                                            {{ $agent['growth_percentage'] }}%
+                                                        </span>
+                                                    @else
+                                                        <span class="tw-text-sm tw-font-medium tw-text-gray-500">
+                                                            0%
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="tw-space-y-2">
+                                                <div class="tw-flex tw-justify-between tw-items-center">
+                                                    <span class="tw-text-sm tw-text-gray-600">This Month Sales:</span>
+                                                    <span class="tw-font-semibold tw-text-gray-900">
+                                                        {{ session('currency.symbol') }}{{ number_format($agent['current_month_sales'], 2) }}
+                                                    </span>
+                                                </div>
+                                                
+                                                <div class="tw-flex tw-justify-between tw-items-center">
+                                                    <span class="tw-text-sm tw-text-gray-600">Commission Earned:</span>
+                                                    <span class="tw-font-semibold tw-text-blue-600">
+                                                        {{ session('currency.symbol') }}{{ number_format($agent['current_month_commission'], 2) }}
+                                                    </span>
+                                                </div>
+                                                
+                                                <div class="tw-flex tw-justify-between tw-items-center">
+                                                    <span class="tw-text-sm tw-text-gray-600">Transactions:</span>
+                                                    <span class="tw-font-medium tw-text-gray-700">
+                                                        {{ $agent['current_month_transactions'] }}
+                                                    </span>
+                                                </div>
+                                                
+                                                @if($agent['last_month_sales'] > 0)
+                                                    <div class="tw-pt-2 tw-border-t tw-border-gray-200">
+                                                        <div class="tw-flex tw-justify-between tw-items-center">
+                                                            <span class="tw-text-xs tw-text-gray-500">Last Month:</span>
+                                                            <span class="tw-text-xs tw-text-gray-500">
+                                                                {{ session('currency.symbol') }}{{ number_format($agent['last_month_sales'], 2) }}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                                
+                                @if(count($commission_agents_data) > 6)
+                                    <div class="tw-mt-4 tw-text-center">
+                                        <a href="{{ action([\App\Http\Controllers\SalesCommissionAgentController::class, 'index']) }}" 
+                                           class="tw-inline-flex tw-items-center tw-gap-2 tw-px-4 tw-py-2 tw-text-sm tw-font-medium tw-text-blue-600 tw-bg-blue-50 tw-rounded-lg hover:tw-bg-blue-100 tw-transition-colors">
+                                            <span>View All Agents</span>
+                                            <svg class="tw-w-4 tw-h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                            </svg>
+                                        </a>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                @endif
+                {{-- END SALES COMMISSION AGENTS PROGRESS SECTION --}}
+                
                 {{-- PENDING SHIPMENTS SECTION - MOVED ABOVE SALES LAST 30 DAYS --}}
                 @if (auth()->user()->can('access_pending_shipments_only') ||
                         auth()->user()->can('access_shipping') ||
