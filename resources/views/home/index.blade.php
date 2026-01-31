@@ -433,38 +433,108 @@
                                                 </div>
                                             </div>
                                             
-                                            <div class="tw-space-y-2">
-                                                <div class="tw-flex tw-justify-between tw-items-center">
-                                                    <span class="tw-text-sm tw-text-gray-600">This Month Sales:</span>
-                                                    <span class="tw-font-semibold tw-text-gray-900">
-                                                        {{ session('currency.symbol') }}{{ number_format($agent['current_month_sales'], 2) }}
-                                                    </span>
+                                            <!-- Tabbed Content for Different Time Periods -->
+                                            <div class="tw-space-y-3">
+                                                <!-- Tab Navigation -->
+                                                <div class="tw-flex tw-bg-gray-200 tw-rounded-lg tw-p-1" role="tablist">
+                                                    <button class="agent-tab tw-flex-1 tw-px-2 tw-py-1 tw-text-xs tw-font-medium tw-rounded-md tw-transition-colors tw-bg-white tw-text-gray-900 tw-shadow-sm" 
+                                                            data-agent="{{ $agent['id'] }}" data-tab="today" role="tab">
+                                                        Today
+                                                    </button>
+                                                    <button class="agent-tab tw-flex-1 tw-px-2 tw-py-1 tw-text-xs tw-font-medium tw-rounded-md tw-transition-colors tw-text-gray-600 hover:tw-text-gray-900" 
+                                                            data-agent="{{ $agent['id'] }}" data-tab="week" role="tab">
+                                                        Week
+                                                    </button>
+                                                    <button class="agent-tab tw-flex-1 tw-px-2 tw-py-1 tw-text-xs tw-font-medium tw-rounded-md tw-transition-colors tw-text-gray-600 hover:tw-text-gray-900" 
+                                                            data-agent="{{ $agent['id'] }}" data-tab="month" role="tab">
+                                                        Month
+                                                    </button>
                                                 </div>
                                                 
-                                                <div class="tw-flex tw-justify-between tw-items-center">
-                                                    <span class="tw-text-sm tw-text-gray-600">Commission Earned:</span>
-                                                    <span class="tw-font-semibold tw-text-blue-600">
-                                                        {{ session('currency.symbol') }}{{ number_format($agent['current_month_commission'], 2) }}
-                                                    </span>
-                                                </div>
-                                                
-                                                <div class="tw-flex tw-justify-between tw-items-center">
-                                                    <span class="tw-text-sm tw-text-gray-600">Transactions:</span>
-                                                    <span class="tw-font-medium tw-text-gray-700">
-                                                        {{ $agent['current_month_transactions'] }}
-                                                    </span>
-                                                </div>
-                                                
-                                                @if($agent['last_month_sales'] > 0)
-                                                    <div class="tw-pt-2 tw-border-t tw-border-gray-200">
-                                                        <div class="tw-flex tw-justify-between tw-items-center">
-                                                            <span class="tw-text-xs tw-text-gray-500">Last Month:</span>
-                                                            <span class="tw-text-xs tw-text-gray-500">
-                                                                {{ session('currency.symbol') }}{{ number_format($agent['last_month_sales'], 2) }}
-                                                            </span>
-                                                        </div>
+                                                <!-- Today's Data -->
+                                                <div class="agent-content agent-content-{{ $agent['id'] }}-today tw-space-y-2">
+                                                    <div class="tw-text-center tw-mb-2">
+                                                        <span class="tw-text-xs tw-text-gray-500">{{ $agent['today_date'] }}</span>
                                                     </div>
-                                                @endif
+                                                    <div class="tw-flex tw-justify-between tw-items-center">
+                                                        <span class="tw-text-sm tw-text-gray-600">Sales:</span>
+                                                        <span class="tw-font-semibold tw-text-gray-900">
+                                                            {{ session('currency.symbol') }}{{ number_format($agent['today_sales'], 2) }}
+                                                        </span>
+                                                    </div>
+                                                    <div class="tw-flex tw-justify-between tw-items-center">
+                                                        <span class="tw-text-sm tw-text-gray-600">Commission:</span>
+                                                        <span class="tw-font-semibold tw-text-blue-600">
+                                                            {{ session('currency.symbol') }}{{ number_format($agent['today_commission'], 2) }}
+                                                        </span>
+                                                    </div>
+                                                    <div class="tw-flex tw-justify-between tw-items-center">
+                                                        <span class="tw-text-sm tw-text-gray-600">Transactions:</span>
+                                                        <span class="tw-font-medium tw-text-gray-700">
+                                                            {{ $agent['today_transactions'] }}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- This Week's Data -->
+                                                <div class="agent-content agent-content-{{ $agent['id'] }}-week tw-space-y-2 tw-hidden">
+                                                    <div class="tw-text-center tw-mb-2">
+                                                        <span class="tw-text-xs tw-text-gray-500">{{ $agent['current_week_period'] }}</span>
+                                                    </div>
+                                                    <div class="tw-flex tw-justify-between tw-items-center">
+                                                        <span class="tw-text-sm tw-text-gray-600">Sales:</span>
+                                                        <span class="tw-font-semibold tw-text-gray-900">
+                                                            {{ session('currency.symbol') }}{{ number_format($agent['current_week_sales'], 2) }}
+                                                        </span>
+                                                    </div>
+                                                    <div class="tw-flex tw-justify-between tw-items-center">
+                                                        <span class="tw-text-sm tw-text-gray-600">Commission:</span>
+                                                        <span class="tw-font-semibold tw-text-blue-600">
+                                                            {{ session('currency.symbol') }}{{ number_format($agent['current_week_commission'], 2) }}
+                                                        </span>
+                                                    </div>
+                                                    <div class="tw-flex tw-justify-between tw-items-center">
+                                                        <span class="tw-text-sm tw-text-gray-600">Transactions:</span>
+                                                        <span class="tw-font-medium tw-text-gray-700">
+                                                            {{ $agent['current_week_transactions'] }}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- This Month's Data -->
+                                                <div class="agent-content agent-content-{{ $agent['id'] }}-month tw-space-y-2 tw-hidden">
+                                                    <div class="tw-text-center tw-mb-2">
+                                                        <span class="tw-text-xs tw-text-gray-500">{{ $agent['current_month_period'] }}</span>
+                                                    </div>
+                                                    <div class="tw-flex tw-justify-between tw-items-center">
+                                                        <span class="tw-text-sm tw-text-gray-600">Sales:</span>
+                                                        <span class="tw-font-semibold tw-text-gray-900">
+                                                            {{ session('currency.symbol') }}{{ number_format($agent['current_month_sales'], 2) }}
+                                                        </span>
+                                                    </div>
+                                                    <div class="tw-flex tw-justify-between tw-items-center">
+                                                        <span class="tw-text-sm tw-text-gray-600">Commission:</span>
+                                                        <span class="tw-font-semibold tw-text-blue-600">
+                                                            {{ session('currency.symbol') }}{{ number_format($agent['current_month_commission'], 2) }}
+                                                        </span>
+                                                    </div>
+                                                    <div class="tw-flex tw-justify-between tw-items-center">
+                                                        <span class="tw-text-sm tw-text-gray-600">Transactions:</span>
+                                                        <span class="tw-font-medium tw-text-gray-700">
+                                                            {{ $agent['current_month_transactions'] }}
+                                                        </span>
+                                                    </div>
+                                                    @if($agent['last_month_sales'] > 0)
+                                                        <div class="tw-pt-2 tw-border-t tw-border-gray-200">
+                                                            <div class="tw-flex tw-justify-between tw-items-center">
+                                                                <span class="tw-text-xs tw-text-gray-500">Last Month:</span>
+                                                                <span class="tw-text-xs tw-text-gray-500">
+                                                                    {{ session('currency.symbol') }}{{ number_format($agent['last_month_sales'], 2) }}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    @endif
+                                                </div>
                                             </div>
                                         </div>
                                     @endforeach
@@ -1562,6 +1632,32 @@
 
             $('#pending_shipments_location').change(function() {
                 sell_table.ajax.reload();
+            });
+        });
+    </script>
+    
+    <!-- Sales Commission Agent Tab Switching JavaScript -->
+    <script>
+        $(document).ready(function() {
+            // Handle tab switching for commission agents
+            $('.agent-tab').on('click', function() {
+                var agentId = $(this).data('agent');
+                var tabName = $(this).data('tab');
+                
+                // Remove active class from all tabs for this agent
+                $('[data-agent="' + agentId + '"]').removeClass('tw-bg-white tw-text-gray-900 tw-shadow-sm')
+                                                   .addClass('tw-text-gray-600 hover:tw-text-gray-900');
+                
+                // Add active class to clicked tab
+                $(this).removeClass('tw-text-gray-600 hover:tw-text-gray-900')
+                       .addClass('tw-bg-white tw-text-gray-900 tw-shadow-sm');
+                
+                // Hide all content for this agent
+                $('.agent-content-' + agentId + '-today, .agent-content-' + agentId + '-week, .agent-content-' + agentId + '-month')
+                    .addClass('tw-hidden');
+                
+                // Show selected content
+                $('.agent-content-' + agentId + '-' + tabName).removeClass('tw-hidden');
             });
         });
     </script>

@@ -731,13 +731,27 @@ class HomeController extends Controller
     private function getSalesCommissionAgentsData($business_id)
     {
         try {
-            // Get current month start and end dates
-            $current_month_start = now()->startOfMonth()->format('Y-m-d H:i:s');
-            $current_month_end = now()->endOfMonth()->format('Y-m-d H:i:s');
+            // Get business timezone or default to system timezone
+            $business_timezone = session('business.time_zone', config('app.timezone', 'UTC'));
             
-            // Get last month start and end dates
-            $last_month_start = now()->subMonth()->startOfMonth()->format('Y-m-d H:i:s');
-            $last_month_end = now()->subMonth()->endOfMonth()->format('Y-m-d H:i:s');
+            // Create Carbon instance with business timezone
+            $now = \Carbon\Carbon::now($business_timezone);
+            
+            // Get current month start and end dates (accurate to business timezone)
+            $current_month_start = $now->copy()->startOfMonth()->format('Y-m-d 00:00:00');
+            $current_month_end = $now->copy()->endOfMonth()->format('Y-m-d 23:59:59');
+            
+            // Get last month start and end dates (accurate to business timezone)
+            $last_month_start = $now->copy()->subMonth()->startOfMonth()->format('Y-m-d 00:00:00');
+            $last_month_end = $now->copy()->subMonth()->endOfMonth()->format('Y-m-d 23:59:59');
+            
+            // Get current week start and end dates for additional tracking
+            $current_week_start = $now->copy()->startOfWeek()->format('Y-m-d 00:00:00');
+            $current_week_end = $now->copy()->endOfWeek()->format('Y-m-d 23:59:59');
+            
+            // Get today's date range
+            $today_start = $now->copy()->startOfDay()->format('Y-m-d 00:00:00');
+            $today_end = $now->copy()->endOfDay()->format('Y-m-d 23:59:59');
 
             // Get all commission agents for this business
             $agents = User::where('business_id', $business_id)
@@ -770,10 +784,30 @@ class HomeController extends Controller
                     ->where('commission_agent', $agent->id)
                     ->whereBetween('transaction_date', [$last_month_start, $last_month_end])
                     ->sum('final_total');
+                
+                // Get current week sales for this agent
+                $current_week_sales = DB::table('transactions')
+                    ->where('business_id', $business_id)
+                    ->where('type', 'sell')
+                    ->where('status', 'final')
+                    ->where('commission_agent', $agent->id)
+                    ->whereBetween('transaction_date', [$current_week_start, $current_week_end])
+                    ->sum('final_total');
+                
+                // Get today's sales for this agent
+                $today_sales = DB::table('transactions')
+                    ->where('business_id', $business_id)
+                    ->where('type', 'sell')
+                    ->where('status', 'final')
+                    ->where('commission_agent', $agent->id)
+                    ->whereBetween('transaction_date', [$today_start, $today_end])
+                    ->sum('final_total');
 
                 // Calculate commission amounts
                 $current_month_commission = ($current_month_sales * $agent->cmmsn_percent) / 100;
                 $last_month_commission = ($last_month_sales * $agent->cmmsn_percent) / 100;
+                $current_week_commission = ($current_week_sales * $agent->cmmsn_percent) / 100;
+                $today_commission = ($today_sales * $agent->cmmsn_percent) / 100;
 
                 // Calculate growth percentage
                 $growth_percentage = 0;
@@ -791,6 +825,24 @@ class HomeController extends Controller
                     ->where('commission_agent', $agent->id)
                     ->whereBetween('transaction_date', [$current_month_start, $current_month_end])
                     ->count();
+                
+                // Get total number of transactions this week
+                $current_week_transactions = DB::table('transactions')
+                    ->where('business_id', $business_id)
+                    ->where('type', 'sell')
+                    ->where('status', 'final')
+                    ->where('commission_agent', $agent->id)
+                    ->whereBetween('transaction_date', [$current_week_start, $current_week_end])
+                    ->count();
+                
+                // Get total number of transactions today
+                $today_transactions = DB::table('transactions')
+                    ->where('business_id', $business_id)
+                    ->where('type', 'sell')
+                    ->where('status', 'final')
+                    ->where('commission_agent', $agent->id)
+                    ->whereBetween('transaction_date', [$today_start, $today_end])
+                    ->count();
 
                 $agents_data[] = [
                     'id' => $agent->id,
@@ -799,10 +851,20 @@ class HomeController extends Controller
                     'condition' => $agent->condition,
                     'current_month_sales' => $current_month_sales,
                     'last_month_sales' => $last_month_sales,
+                    'current_week_sales' => $current_week_sales,
+                    'today_sales' => $today_sales,
                     'current_month_commission' => $current_month_commission,
                     'last_month_commission' => $last_month_commission,
+                    'current_week_commission' => $current_week_commission,
+                    'today_commission' => $today_commission,
                     'growth_percentage' => round($growth_percentage, 1),
                     'current_month_transactions' => $current_month_transactions,
+                    'current_week_transactions' => $current_week_transactions,
+                    'today_transactions' => $today_transactions,
+                    // Add formatted date ranges for display
+                    'current_month_period' => $now->copy()->startOfMonth()->format('M d') . ' - ' . $now->copy()->endOfMonth()->format('M d, Y'),
+                    'current_week_period' => $now->copy()->startOfWeek()->format('M d') . ' - ' . $now->copy()->endOfWeek()->format('M d, Y'),
+                    'today_date' => $now->format('M d, Y'),
                 ];
             }
 

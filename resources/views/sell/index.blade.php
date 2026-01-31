@@ -363,6 +363,12 @@
                     // Re-attach click handlers for order status buttons after DataTable redraw
                     console.log('DataTable redrawn, attaching order status handlers...');
                     
+                    // Ensure modal container exists
+                    if ($('.view_modal').length === 0) {
+                        console.warn('⚠️ Modal container .view_modal not found, creating it...');
+                        $('body').append('<div class="modal fade view_modal" tabindex="-1" role="dialog" aria-labelledby="gridSystemModalLabel"></div>');
+                    }
+                    
                     // Use event delegation to handle dynamically added buttons
                     $('#sell_table').off('click', '.quick-order-status-btn').on('click', '.quick-order-status-btn', function(e) {
                         e.preventDefault();
@@ -370,17 +376,30 @@
                         
                         var url = $(this).data('href');
                         var transactionId = $(this).data('transaction-id');
+                        var currentStatus = $(this).data('current-status');
                         
                         console.log('🎯 Order status button clicked');
                         console.log('URL:', url);
                         console.log('Transaction ID:', transactionId);
+                        console.log('Current Status:', currentStatus);
                         
                         if (!url) {
                             console.error('❌ No URL found for order status button');
                             if (typeof toastr !== 'undefined') {
-                                toastr.error('Error: No URL found');
+                                toastr.error('Error: No URL found for order status');
                             } else {
-                                alert('Error: No URL found');
+                                alert('Error: No URL found for order status');
+                            }
+                            return false;
+                        }
+                        
+                        // Check if modal container exists
+                        if ($('.view_modal').length === 0) {
+                            console.error('❌ Modal container not found');
+                            if (typeof toastr !== 'undefined') {
+                                toastr.error('Error: Modal container not found');
+                            } else {
+                                alert('Error: Modal container not found');
                             }
                             return false;
                         }
@@ -391,23 +410,71 @@
                         
                         console.log('📡 Making AJAX request to:', url);
                         
+                        // Show loading indicator
+                        if (typeof toastr !== 'undefined') {
+                            toastr.info('Loading order status modal...');
+                        }
+                        
                         $.ajax({
                             url: url,
                             method: 'GET',
+                            timeout: 10000, // 10 second timeout
                             beforeSend: function() {
                                 console.log('📡 Loading order status modal...');
                             },
                             success: function(result) {
                                 console.log('✅ Modal loaded successfully');
+                                console.log('Response type:', typeof result);
                                 console.log('Response length:', result ? result.length : 0);
                                 
                                 if (result && result.trim().length > 0) {
-                                    $('.view_modal').html(result).modal('show');
-                                    console.log('✅ Modal should be visible now');
+                                    try {
+                                        // Clear any existing modal content
+                                        $('.view_modal').html('');
+                                        
+                                        // Set new content and show modal
+                                        $('.view_modal').html(result);
+                                        
+                                        // Ensure Bootstrap modal is properly initialized
+                                        if (typeof $.fn.modal === 'undefined') {
+                                            console.error('❌ Bootstrap modal not available');
+                                            if (typeof toastr !== 'undefined') {
+                                                toastr.error('Bootstrap modal not available');
+                                            }
+                                            return;
+                                        }
+                                        
+                                        $('.view_modal').modal({
+                                            backdrop: 'static',
+                                            keyboard: false,
+                                            show: true
+                                        });
+                                        
+                                        console.log('✅ Modal should be visible now');
+                                        
+                                        // Verify modal is actually showing
+                                        setTimeout(function() {
+                                            if ($('.view_modal').hasClass('in') || $('.view_modal').hasClass('show')) {
+                                                console.log('✅ Modal is visible');
+                                            } else {
+                                                console.warn('⚠️ Modal might not be visible');
+                                                // Try alternative method
+                                                $('.view_modal').show();
+                                            }
+                                        }, 500);
+                                        
+                                    } catch (modalError) {
+                                        console.error('❌ Error showing modal:', modalError);
+                                        if (typeof toastr !== 'undefined') {
+                                            toastr.error('Error displaying modal');
+                                        }
+                                    }
                                 } else {
                                     console.error('❌ Empty response from server');
                                     if (typeof toastr !== 'undefined') {
                                         toastr.error('Error: Empty response from server');
+                                    } else {
+                                        alert('Error: Empty response from server');
                                     }
                                 }
                             },
@@ -416,16 +483,18 @@
                                     status: xhr.status,
                                     statusText: xhr.statusText,
                                     error: error,
-                                    responseText: xhr.responseText
+                                    responseText: xhr.responseText ? xhr.responseText.substring(0, 200) : 'No response'
                                 });
                                 
                                 var errorMsg = 'Error loading order status modal';
                                 if (xhr.status === 404) {
-                                    errorMsg = 'Order status modal not found (404)';
+                                    errorMsg = 'Order status modal not found (404). Check if route exists.';
                                 } else if (xhr.status === 500) {
-                                    errorMsg = 'Server error loading modal (500)';
+                                    errorMsg = 'Server error loading modal (500). Check server logs.';
                                 } else if (xhr.status === 403) {
-                                    errorMsg = 'Permission denied (403)';
+                                    errorMsg = 'Permission denied (403). Check user permissions.';
+                                } else if (status === 'timeout') {
+                                    errorMsg = 'Request timeout. Server might be slow.';
                                 }
                                 
                                 if (typeof toastr !== 'undefined') {
@@ -433,6 +502,15 @@
                                 } else {
                                     alert(errorMsg);
                                 }
+                                
+                                // Log detailed error for debugging
+                                console.log('Full error details:', {
+                                    url: url,
+                                    transactionId: transactionId,
+                                    xhr: xhr,
+                                    status: status,
+                                    error: error
+                                });
                             },
                             complete: function() {
                                 // Re-enable button
@@ -444,9 +522,18 @@
                         return false;
                     });
                     
-                    // Debug: Count order status buttons
+                    // Debug: Count order status buttons and log their details
                     var buttonCount = $('#sell_table .quick-order-status-btn').length;
                     console.log('📊 Found', buttonCount, 'order status buttons after redraw');
+                    
+                    // Log details of first few buttons for debugging
+                    $('#sell_table .quick-order-status-btn').slice(0, 3).each(function(index) {
+                        console.log('Button', index + 1, ':', {
+                            href: $(this).data('href'),
+                            transactionId: $(this).data('transaction-id'),
+                            currentStatus: $(this).data('current-status')
+                        });
+                    });
                 },
                 "footerCallback": function(row, data, start, end, display) {
                     var footer_sale_total = 0;
