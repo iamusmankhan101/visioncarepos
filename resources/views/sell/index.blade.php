@@ -2,6 +2,8 @@
 @section('title', __('lang_v1.all_sales'))
 
 @section('content')
+    <!-- Order Status Modal Fix CSS -->
+    <link rel="stylesheet" href="{{ asset('css/order-status-modal-fix.css') }}">
 
     <!-- Content Header (Page header) -->
     <section class="content-header no-print">
@@ -152,6 +154,12 @@
 @section('javascript')
     <script type="text/javascript">
         $(document).ready(function() {
+            // Ensure modal container exists at page load
+            if ($('.view_modal').length === 0) {
+                console.log('📦 Creating modal container at page load...');
+                $('body').append('<div class="modal fade view_modal" tabindex="-1" role="dialog" aria-labelledby="gridSystemModalLabel"></div>');
+            }
+            
             //Date range as a button
             var startLast30 = moment().subtract(29, 'days');
             var endLast = moment();
@@ -451,6 +459,39 @@
                                         });
                                         
                                         console.log('✅ Modal should be visible now');
+                                        
+                                        // Handle form submission
+                                        $('.view_modal').find('#quick_order_status_form').on('submit', function(e) {
+                                            e.preventDefault();
+                                            
+                                            var formData = $(this).serialize();
+                                            var formUrl = $(this).attr('action');
+                                            
+                                            console.log('📤 Submitting order status form:', formUrl);
+                                            
+                                            $.ajax({
+                                                url: formUrl,
+                                                method: 'PUT',
+                                                data: formData,
+                                                headers: {
+                                                    'X-CSRF-TOKEN': $('meta[name=csrf-token]').attr('content')
+                                                },
+                                                success: function(response) {
+                                                    console.log('✅ Order status updated successfully');
+                                                    toastr.success('Order status updated successfully');
+                                                    $('.view_modal').modal('hide');
+                                                    
+                                                    // Reload the DataTable to show updated status
+                                                    if (typeof sell_table !== 'undefined' && sell_table.ajax) {
+                                                        sell_table.ajax.reload(null, false);
+                                                    }
+                                                },
+                                                error: function(xhr, status, error) {
+                                                    console.error('❌ Error updating order status:', error);
+                                                    toastr.error('Error updating order status: ' + error);
+                                                }
+                                            });
+                                        });
                                         
                                         // Verify modal is actually showing
                                         setTimeout(function() {
