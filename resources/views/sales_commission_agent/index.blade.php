@@ -39,6 +39,8 @@
                             <th>@lang( 'business.address' )</th>
                             <th>@lang( 'lang_v1.cmmsn_percent' )</th>
                             <th>@lang( 'lang_v1.condition' )</th>
+                            <th>@lang( 'lang_v1.target_status' )</th>
+                            <th>@lang( 'lang_v1.commission_applicable' )</th>
                             <th>@lang( 'messages.action' )</th>
                         </tr>
                     </thead>
