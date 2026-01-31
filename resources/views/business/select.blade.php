@@ -35,29 +35,6 @@
                 @endif
 
                 <div class="login-form-container">
-                    <!-- DEBUG SECTION - Remove this after testing -->
-                    <div style="background: rgba(255,0,0,0.8); color: white; padding: 15px; margin: 10px 0; border-radius: 5px;">
-                        <h4>🔧 DEBUG: Delete Functionality Test</h4>
-                        <p><strong>Available Businesses Count:</strong> {{ $available_businesses->count() }}</p>
-                        @if($available_businesses->count() > 0)
-                            <p><strong>Businesses Found:</strong></p>
-                            @foreach($available_businesses as $business)
-                                <div style="border: 1px solid white; padding: 8px; margin: 5px 0; border-radius: 3px;">
-                                    <strong>{{ $business->name }}</strong> (ID: {{ $business->id }})
-                                    <button type="button" 
-                                            class="btn btn-danger btn-sm" 
-                                            style="margin-left: 10px; padding: 4px 8px;"
-                                            onclick="alert('Delete button works for: {{ $business->name }}')">
-                                        🗑️ TEST DELETE
-                                    </button>
-                                </div>
-                            @endforeach
-                        @else
-                            <p style="color: yellow;">⚠️ No businesses found! This is why delete buttons aren't showing.</p>
-                        @endif
-                    </div>
-                    <!-- END DEBUG SECTION -->
-
                     @if($available_businesses->count() > 0)
                         <div class="business-selection-section">
                             <form method="POST" action="/business/switch">
@@ -85,25 +62,34 @@
                             <div class="business-management-section mt-4">
                                 <h5 class="text-center mb-3">@lang('Manage Your Businesses')</h5>
                                 
-                                @foreach($available_businesses as $business)
-                                    <div class="business-item mb-2 p-3" style="display: flex; justify-content: space-between; align-items: center;">
-                                        <div class="business-info">
-                                            <strong>{{ $business->name }}</strong>
-                                            <small class="d-block text-muted">
-                                                Created: {{ $business->created_at->format('M d, Y') }}
-                                            </small>
+                                <div class="business-list">
+                                    @foreach($available_businesses as $business)
+                                        <div class="business-item-row">
+                                            <table style="width: 100%; background-color: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 6px; margin-bottom: 10px;">
+                                                <tr>
+                                                    <td style="padding: 15px; vertical-align: middle;">
+                                                        <div class="business-info">
+                                                            <strong style="color: white; font-size: 16px;">{{ $business->name }}</strong><br>
+                                                            <small style="color: rgba(255, 255, 255, 0.7); font-size: 12px;">
+                                                                Created: {{ $business->created_at->format('M d, Y') }}
+                                                            </small>
+                                                        </div>
+                                                    </td>
+                                                    <td style="padding: 15px; text-align: right; vertical-align: middle; width: 80px;">
+                                                        <button type="button" 
+                                                                class="btn btn-danger btn-sm delete-business-btn" 
+                                                                data-business-id="{{ $business->id }}"
+                                                                data-business-name="{{ $business->name }}"
+                                                                title="Delete Business"
+                                                                style="background-color: #dc3545; border-color: #dc3545; padding: 6px 10px; font-size: 12px;">
+                                                            <i class="fa fa-trash"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            </table>
                                         </div>
-                                        <div class="business-actions">
-                                            <button type="button" 
-                                                    class="btn btn-danger btn-sm delete-business-btn" 
-                                                    data-business-id="{{ $business->id }}"
-                                                    data-business-name="{{ $business->name }}"
-                                                    title="Delete Business">
-                                                <i class="fa fa-trash"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                @endforeach
+                                    @endforeach
+                                </div>
                             </div>
                         </div>
 
@@ -283,37 +269,33 @@ label, .form-group label {
     padding-top: 20px;
 }
 
-.business-item {
-    background-color: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 6px;
+.business-management-section h5 {
+    color: white !important;
+    font-weight: 500;
+    margin-bottom: 15px;
+}
+
+.business-item-row table {
     transition: background-color 0.2s;
 }
 
-.business-item:hover {
-    background-color: rgba(255, 255, 255, 0.15);
-}
-
-.business-info strong {
-    color: white !important;
-    font-size: 16px;
-}
-
-.business-info small {
-    color: rgba(255, 255, 255, 0.7) !important;
-    font-size: 12px;
+.business-item-row table:hover {
+    background-color: rgba(255, 255, 255, 0.15) !important;
 }
 
 .delete-business-btn {
-    background-color: #dc3545;
-    border-color: #dc3545;
+    background-color: #dc3545 !important;
+    border-color: #dc3545 !important;
+    color: white !important;
     padding: 6px 10px;
     font-size: 12px;
+    border-radius: 4px;
 }
 
 .delete-business-btn:hover {
-    background-color: #c82333;
-    border-color: #bd2130;
+    background-color: #c82333 !important;
+    border-color: #bd2130 !important;
+    color: white !important;
 }
 
 /* Modal styles */
