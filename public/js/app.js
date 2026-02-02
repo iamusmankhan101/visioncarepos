@@ -1,19 +1,42 @@
 $(document).ready(function() {
-    // Fix checkbox issues globally
+    // PREVENT iCheck initialization - Use native checkboxes
     if (typeof $.fn.iCheck !== 'undefined') {
-        // Initialize iCheck for all checkboxes and radios
-        $('input[type="checkbox"], input[type="radio"]').iCheck({
-            checkboxClass: 'icheckbox_square-blue',
-            radioClass: 'iradio_square-blue'
-        });
-        
-        // Force visibility
-        $('.icheckbox_square-blue, .iradio_square-blue').css({
-            'display': 'inline-block !important',
-            'visibility': 'visible !important',
-            'opacity': '1 !important'
-        });
+        // Override iCheck function to do nothing
+        $.fn.iCheck = function() {
+            return this;
+        };
     }
+    
+    // Force all checkboxes to be native and visible
+    setTimeout(function() {
+        $('input[type="checkbox"], input[type="radio"]').each(function() {
+            var $input = $(this);
+            
+            // Remove from any iCheck wrapper
+            var $wrapper = $input.closest('.icheckbox_square-blue, .iradio_square-blue');
+            if ($wrapper.length) {
+                $input.insertBefore($wrapper);
+                $wrapper.remove();
+            }
+            
+            // Remove iCheck helper
+            $input.siblings('.iCheck-helper').remove();
+            
+            // Force native styling
+            $input.css({
+                'display': 'inline-block',
+                'visibility': 'visible',
+                'opacity': '1',
+                'position': 'static',
+                'left': 'auto',
+                'top': 'auto',
+                'width': '18px',
+                'height': '18px',
+                'margin': '0 8px 0 0',
+                'z-index': '9999'
+            });
+        });
+    }, 50);
     
     getTotalUnreadNotifications();
     $('body').on('click', 'label', function(e) {

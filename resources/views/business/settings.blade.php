@@ -115,22 +115,45 @@
 
     $(document).ready(function(){
 
-        // Fix checkbox issues - Force iCheck initialization
-        if (typeof $.fn.iCheck !== 'undefined') {
-            // Destroy existing iCheck instances and reinitialize
-            $('input[type="checkbox"], input[type="radio"]').iCheck('destroy');
-            $('input[type="checkbox"], input[type="radio"]').iCheck({
-                checkboxClass: 'icheckbox_square-blue',
-                radioClass: 'iradio_square-blue'
+        // NUCLEAR CHECKBOX FIX - Destroy iCheck completely
+        setTimeout(function() {
+            // Remove all iCheck wrappers
+            $('.icheckbox_square-blue, .iradio_square-blue').each(function() {
+                var $wrapper = $(this);
+                var $input = $wrapper.find('input');
+                
+                if ($input.length) {
+                    // Move the input outside the wrapper
+                    $input.insertBefore($wrapper);
+                    // Remove the wrapper completely
+                    $wrapper.remove();
+                }
             });
-        }
-        
-        // Force checkbox visibility
-        $('.icheckbox_square-blue, .iradio_square-blue').css({
-            'display': 'inline-block',
-            'visibility': 'visible',
-            'opacity': '1'
-        });
+            
+            // Remove iCheck helper elements
+            $('.iCheck-helper').remove();
+            
+            // Force all checkboxes to be visible and functional
+            $('input[type="checkbox"], input[type="radio"]').each(function() {
+                $(this).css({
+                    'display': 'inline-block',
+                    'visibility': 'visible',
+                    'opacity': '1',
+                    'position': 'static',
+                    'left': 'auto',
+                    'top': 'auto',
+                    'width': '18px',
+                    'height': '18px',
+                    'margin': '0 8px 0 0',
+                    'z-index': '9999'
+                });
+                
+                // Remove any iCheck classes
+                $(this).removeClass('icheckbox_square-blue iradio_square-blue');
+            });
+            
+            console.log('✅ Checkboxes fixed - iCheck destroyed');
+        }, 100);
 
     
         $('#test_email_btn').click( function() {
