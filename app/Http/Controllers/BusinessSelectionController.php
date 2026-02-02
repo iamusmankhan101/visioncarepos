@@ -67,6 +67,7 @@ class BusinessSelectionController extends Controller
                         'enabled_modules' => $business->enabled_modules,
                         'currency_precision' => $business->currency_precision ?? 2,
                         'quantity_precision' => $business->quantity_precision ?? 2,
+                        'time_zone' => $business->time_zone ?? 'UTC',
                     ]
                 ]);
                 

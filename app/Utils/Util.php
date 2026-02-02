@@ -1499,7 +1499,14 @@ class Util
 
         $business = session()->has('business') ? session('business') : Business::find($business_id);
 
-        date_default_timezone_set($business->time_zone);
+        // Handle both array (from session) and object (from database) formats
+        if (is_array($business)) {
+            $time_zone = $business['time_zone'] ?? 'UTC';
+        } else {
+            $time_zone = $business->time_zone ?? 'UTC';
+        }
+
+        date_default_timezone_set($time_zone);
 
         $activity = activity()
             ->performedOn($on)
