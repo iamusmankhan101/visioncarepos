@@ -78,7 +78,9 @@ class AppServiceProvider extends ServiceProvider
         View::composer(
             ['*'],
             function ($view) {
-                $enabled_modules = ! empty(session('business.enabled_modules')) ? session('business.enabled_modules') : [];
+                // Use the proper method to get enabled modules (handles JSON decoding)
+                $util = new \App\Utils\Util();
+                $enabled_modules = $util->allModulesEnabled();
 
                 $__is_pusher_enabled = isPusherEnabled();
 
