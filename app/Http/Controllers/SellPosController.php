@@ -176,7 +176,59 @@ class SellPosController extends Controller
 
         //Check if there is a open register, if no then redirect to Create Register screen.
         if ($this->cashRegisterUtil->countOpenedRegister() == 0) {
-            return redirect()->action([\App\Http\Controllers\CashRegisterController::class, 'create'], ['sub_type' => $sub_type]);
+            // Check if user is a cashier or has limited access - auto-create cash register
+            $user = auth()->user();
+            $userRoles = $user->getRoleNames();
+            $isCashier = $userRoles->contains(function ($role) {
+                return str_contains(strtolower($role), 'cashier') || str_contains(strtolower($role), 'pos');
+            });
+            
+            $hasLimitedAccess = !$user->can('superadmin') && 
+                               !$user->can('admin') && 
+                               ($user->can('sell.create') || $user->can('pos.create'));
+            
+            if ($isCashier || $hasLimitedAccess) {
+                // Auto-create cash register for cashier users
+                try {
+                    $user_id = request()->session()->get('user.id');
+                    $business_id = request()->session()->get('user.business_id');
+                    
+                    // Get the first available business location
+                    $business_locations = \App\BusinessLocation::where('business_id', $business_id)
+                                                              ->where('is_active', 1)
+                                                              ->first();
+                    
+                    if ($business_locations) {
+                        $register = \App\CashRegister::create([
+                            'business_id' => $business_id,
+                            'user_id' => $user_id,
+                            'status' => 'open',
+                            'location_id' => $business_locations->id,
+                            'created_at' => \Carbon\Carbon::now()->format('Y-m-d H:i:00'),
+                        ]);
+                        
+                        // Add initial amount of 0 (no cash in register)
+                        $register->cash_register_transactions()->create([
+                            'amount' => 0,
+                            'pay_method' => 'cash',
+                            'type' => 'credit',
+                            'transaction_type' => 'initial',
+                        ]);
+                        
+                        // Continue to POS screen
+                    } else {
+                        // No business location found, redirect to cash register creation
+                        return redirect()->action([\App\Http\Controllers\CashRegisterController::class, 'create'], ['sub_type' => $sub_type]);
+                    }
+                } catch (\Exception $e) {
+                    \Log::error('Auto cash register creation failed: ' . $e->getMessage());
+                    // Fall back to manual cash register creation
+                    return redirect()->action([\App\Http\Controllers\CashRegisterController::class, 'create'], ['sub_type' => $sub_type]);
+                }
+            } else {
+                // For admin users, show the cash register creation form
+                return redirect()->action([\App\Http\Controllers\CashRegisterController::class, 'create'], ['sub_type' => $sub_type]);
+            }
         }
 
         $register_details = $this->cashRegisterUtil->getCurrentCashRegister(auth()->user()->id);
