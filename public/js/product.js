@@ -591,6 +591,9 @@ $(document).ready(function() {
 
     if ($('textarea#product_description').length > 0) {
         tinymce.init({
+            base_url: base_path + '/js',
+            skin_url: base_path + '/js/skins/ui/oxide',
+            content_css: base_path + '/js/skins/content/default/content.min.css',
             selector: 'textarea#product_description',
             height:250
         });

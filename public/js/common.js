@@ -584,6 +584,9 @@ $(document).on('shown.bs.modal', '.contains_select2, .view_modal', function () {
 //common configuration : tinyMCE editor
 
 tinymce.overrideDefaults({
+    base_url: base_path + '/js',
+    skin_url: base_path + '/js/skins/ui/oxide',
+    content_css: base_path + '/js/skins/content/default/content.min.css',
     height: 300,
     language: app_locale, // Set language dynamically
     language_url: base_path + '/js/lang/tiny/' + app_locale + '.js', // Dynamic URL

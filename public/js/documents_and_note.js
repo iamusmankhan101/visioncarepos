@@ -16,6 +16,9 @@ $(document).ready(function(){
     var dropzoneForDocsAndNotes = {};
     $(document).on('shown.bs.modal','.docus_note_modal', function (e) {
         tinymce.init({
+            base_url: base_path + '/js',
+            skin_url: base_path + '/js/skins/ui/oxide',
+            content_css: base_path + '/js/skins/content/default/content.min.css',
             selector: 'textarea#docs_note_description',
         });
         $('form#docus_notes_form').validate();

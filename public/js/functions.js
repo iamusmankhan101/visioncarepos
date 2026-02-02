@@ -478,6 +478,9 @@ function __page_leave_confirmation(form) {
 //initialize tinyMCE editor for invoice template
 function init_tinymce(editor_id) {
     tinymce.init({
+        base_url: base_path + '/js',
+        skin_url: base_path + '/js/skins/ui/oxide',
+        content_css: base_path + '/js/skins/content/default/content.min.css',
         selector: 'textarea#' + editor_id,
         plugins: [
         'advlist autolink link image lists charmap print preview hr anchor pagebreak',
