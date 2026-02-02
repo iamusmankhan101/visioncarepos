@@ -50,6 +50,11 @@ class CheckBusinessSelection
                         'currency_precision' => $business->currency_precision ?? 2,
                         'quantity_precision' => $business->quantity_precision ?? 2,
                         'time_zone' => $business->time_zone ?? 'UTC',
+                        'date_format' => $business->date_format ?? 'd/m/Y',
+                        'time_format' => $business->time_format ?? 24,
+                        'currency_symbol_placement' => $business->currency_symbol_placement ?? 'before',
+                        'ref_no_prefixes' => $business->ref_no_prefixes ?? [],
+                        'pos_settings' => $business->pos_settings ?? [],
                     ]
                 ]);
                 

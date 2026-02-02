@@ -1497,16 +1497,34 @@ class Util
             $business_id = $on->business_id;
         }
 
-        $business = session()->has('business') ? session('business') : Business::find($business_id);
-
-        // Handle both array (from session) and object (from database) formats
-        if (is_array($business)) {
-            $time_zone = $business['time_zone'] ?? 'UTC';
-        } else {
-            $time_zone = $business->time_zone ?? 'UTC';
+        $business = session()->has('business') ? session('business') : null;
+        
+        // If no business in session, try to get from database
+        if (!$business && !empty($business_id)) {
+            try {
+                $business = Business::find($business_id);
+            } catch (\Exception $e) {
+                $business = null;
+            }
         }
 
-        date_default_timezone_set($time_zone);
+        // Handle timezone setting with multiple fallbacks
+        $time_zone = 'UTC'; // Default fallback
+        
+        if ($business) {
+            if (is_array($business)) {
+                $time_zone = $business['time_zone'] ?? 'UTC';
+            } elseif (is_object($business)) {
+                $time_zone = $business->time_zone ?? 'UTC';
+            }
+        }
+
+        // Ensure we have a valid timezone
+        try {
+            date_default_timezone_set($time_zone);
+        } catch (\Exception $e) {
+            date_default_timezone_set('UTC');
+        }
 
         $activity = activity()
             ->performedOn($on)

@@ -68,6 +68,11 @@ class BusinessSelectionController extends Controller
                         'currency_precision' => $business->currency_precision ?? 2,
                         'quantity_precision' => $business->quantity_precision ?? 2,
                         'time_zone' => $business->time_zone ?? 'UTC',
+                        'date_format' => $business->date_format ?? 'd/m/Y',
+                        'time_format' => $business->time_format ?? 24,
+                        'currency_symbol_placement' => $business->currency_symbol_placement ?? 'before',
+                        'ref_no_prefixes' => $business->ref_no_prefixes ?? [],
+                        'pos_settings' => $business->pos_settings ?? [],
                     ]
                 ]);
                 
@@ -168,7 +173,21 @@ class BusinessSelectionController extends Controller
             // Put all data into session
             session([
                 'user' => $session_data,
-                'business' => $business,
+                'business' => [
+                    'id' => $business->id,
+                    'name' => $business->name,
+                    'currency_id' => $business->currency_id,
+                    'start_date' => $business->start_date,
+                    'enabled_modules' => $business->enabled_modules,
+                    'currency_precision' => $business->currency_precision ?? 2,
+                    'quantity_precision' => $business->quantity_precision ?? 2,
+                    'time_zone' => $business->time_zone ?? 'UTC',
+                    'date_format' => $business->date_format ?? 'd/m/Y',
+                    'time_format' => $business->time_format ?? 24,
+                    'currency_symbol_placement' => $business->currency_symbol_placement ?? 'before',
+                    'ref_no_prefixes' => $business->ref_no_prefixes ?? [],
+                    'pos_settings' => $business->pos_settings ?? [],
+                ],
                 'currency' => $currency_data,
                 'financial_year' => $financial_year
             ]);

@@ -18,14 +18,24 @@ class Timezone
     {
         $timezone = config('app.timezone');
 
-        if (session()->has('business.time_zone')) {
-            $timezone = $request->session()->get('business.time_zone');
-        } else {
-            $timezone = Auth::user()->business->time_zone;
-        }
+        try {
+            if (session()->has('business.time_zone')) {
+                $timezone = $request->session()->get('business.time_zone');
+            } elseif (Auth::check() && Auth::user()->business) {
+                $business = Auth::user()->business;
+                $timezone = $business->time_zone ?? 'UTC';
+            }
 
-        config(['app.timezone' => $timezone]);
-        date_default_timezone_set($timezone);
+            // Validate timezone before setting
+            if (!empty($timezone) && in_array($timezone, timezone_identifiers_list())) {
+                config(['app.timezone' => $timezone]);
+                date_default_timezone_set($timezone);
+            }
+        } catch (\Exception $e) {
+            // If anything fails, use default timezone
+            $timezone = config('app.timezone', 'UTC');
+            date_default_timezone_set($timezone);
+        }
 
         return $next($request);
     }
