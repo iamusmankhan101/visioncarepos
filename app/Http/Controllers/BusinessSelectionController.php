@@ -80,7 +80,23 @@ class BusinessSelectionController extends Controller
                 $user->business_id = $business->id;
                 $user->save();
                 
-                // Redirect to home/dashboard
+                // Check if user is a cashier or has POS-only access
+                $userRoles = $user->getRoleNames();
+                $isCashier = $userRoles->contains(function ($role) {
+                    return str_contains(strtolower($role), 'cashier') || str_contains(strtolower($role), 'pos');
+                });
+                
+                // Check if user has limited permissions (only POS access)
+                $hasLimitedAccess = !$user->can('superadmin') && 
+                                   !$user->can('admin') && 
+                                   ($user->can('sell.create') || $user->can('pos.create'));
+                
+                // Redirect cashiers or users with limited access directly to POS
+                if ($isCashier || $hasLimitedAccess) {
+                    return redirect('/pos/create')->with('success', 'Welcome to POS - ' . $business->name . '!');
+                }
+                
+                // Redirect admin users to home/dashboard
                 return redirect('/home')->with('success', 'Welcome to ' . $business->name . '!');
             }
 
@@ -220,6 +236,22 @@ class BusinessSelectionController extends Controller
             } catch (\Exception $permissionException) {
                 Log::error('Permission assignment failed during business switch: ' . $permissionException->getMessage());
                 // Continue anyway - permissions might not be critical for basic functionality
+            }
+
+            // Check if user is a cashier or has POS-only access
+            $userRoles = $user->getRoleNames();
+            $isCashier = $userRoles->contains(function ($role) {
+                return str_contains(strtolower($role), 'cashier') || str_contains(strtolower($role), 'pos');
+            });
+            
+            // Check if user has limited permissions (only POS access)
+            $hasLimitedAccess = !$user->can('superadmin') && 
+                               !$user->can('admin') && 
+                               ($user->can('sell.create') || $user->can('pos.create'));
+            
+            // Redirect cashiers or users with limited access directly to POS
+            if ($isCashier || $hasLimitedAccess) {
+                return redirect('/pos/create')->with('success', 'Switched to POS - ' . $business->name . ' successfully!');
             }
 
             // Always redirect to home first, then let middleware handle routing
