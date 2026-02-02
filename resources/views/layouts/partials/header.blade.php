@@ -43,6 +43,20 @@
                                                   ->where('is_active', 1)
                                                   ->get();
                     $current_business = session('business') ?? auth()->user()->business;
+                    
+                    // Handle both array and object formats for current_business
+                    $current_business_id = null;
+                    $current_business_name = 'Select Business';
+                    
+                    if ($current_business) {
+                        if (is_array($current_business)) {
+                            $current_business_id = $current_business['id'] ?? null;
+                            $current_business_name = $current_business['name'] ?? 'Select Business';
+                        } elseif (is_object($current_business)) {
+                            $current_business_id = $current_business->id ?? null;
+                            $current_business_name = $current_business->name ?? 'Select Business';
+                        }
+                    }
                 @endphp
                 
                 @if($user_businesses->count() > 1)
@@ -62,7 +76,7 @@
                                 <path d="M15 15l0 .01" />
                             </svg>
                             <span class="tw-hidden md:tw-block tw-max-w-32 tw-truncate">
-                                {{ $current_business->name ?? 'Select Business' }}
+                                {{ $current_business_name }}
                             </span>
                             <svg aria-hidden="true" class="tw-size-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
                                 stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round"
@@ -83,10 +97,10 @@
                                         @csrf
                                         <input type="hidden" name="business_id" value="{{ $business->id }}">
                                         <button type="submit" 
-                                            class="tw-w-full tw-flex tw-items-center tw-gap-3 tw-px-3 tw-py-2 tw-text-sm tw-font-medium tw-text-left tw-transition-all tw-duration-200 tw-rounded-lg hover:tw-bg-gray-100 {{ $current_business && $current_business->id == $business->id ? 'tw-bg-blue-50 tw-text-blue-700' : 'tw-text-gray-600 hover:tw-text-gray-900' }}"
+                                            class="tw-w-full tw-flex tw-items-center tw-gap-3 tw-px-3 tw-py-2 tw-text-sm tw-font-medium tw-text-left tw-transition-all tw-duration-200 tw-rounded-lg hover:tw-bg-gray-100 {{ $current_business_id && $current_business_id == $business->id ? 'tw-bg-blue-50 tw-text-blue-700' : 'tw-text-gray-600 hover:tw-text-gray-900' }}"
                                             role="menuitem" tabindex="-1">
                                             <div class="tw-flex-shrink-0">
-                                                @if($current_business && $current_business->id == $business->id)
+                                                @if($current_business_id && $current_business_id == $business->id)
                                                     <svg class="tw-w-4 tw-h-4 tw-text-blue-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
                                                         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
                                                     </svg>
@@ -106,7 +120,7 @@
                                             </div>
                                             <div class="tw-flex-1 tw-min-w-0">
                                                 <div class="tw-font-medium tw-truncate">{{ $business->name }}</div>
-                                                @if($current_business && $current_business->id == $business->id)
+                                                @if($current_business_id && $current_business_id == $business->id)
                                                     <div class="tw-text-xs tw-text-blue-600">Current Business</div>
                                                 @endif
                                             </div>
