@@ -1,4 +1,20 @@
 $(document).ready(function() {
+    // Fix checkbox issues globally
+    if (typeof $.fn.iCheck !== 'undefined') {
+        // Initialize iCheck for all checkboxes and radios
+        $('input[type="checkbox"], input[type="radio"]').iCheck({
+            checkboxClass: 'icheckbox_square-blue',
+            radioClass: 'iradio_square-blue'
+        });
+        
+        // Force visibility
+        $('.icheckbox_square-blue, .iradio_square-blue').css({
+            'display': 'inline-block !important',
+            'visibility': 'visible !important',
+            'opacity': '1 !important'
+        });
+    }
+    
     getTotalUnreadNotifications();
     $('body').on('click', 'label', function(e) {
         var field_id = $(this).attr('for');

@@ -24,6 +24,24 @@
 
 <script src="{{ asset('js/vendor.js?v=' . $asset_v) }}"></script>
 
+<!-- TinyMCE Configuration Override - Fix 404 errors -->
+<script type="text/javascript">
+if (typeof tinymce !== 'undefined') {
+    // Override TinyMCE base URL and paths
+    tinymce.baseURL = '{{ asset("js") }}';
+    tinymce.suffix = '.min';
+    
+    // Override default configuration
+    tinymce.overrideDefaults({
+        base_url: '{{ asset("js") }}',
+        skin_url: '{{ asset("js/skins/ui/oxide") }}',
+        content_css: '{{ asset("js/skins/content/default/content.min.css") }}',
+        theme: 'silver',
+        height: 300
+    });
+}
+</script>
+
 @if (file_exists(public_path('js/lang/' . session()->get('user.language', config('app.locale')) . '.js')))
     <script src="{{ asset('js/lang/' . session()->get('user.language', config('app.locale')) . '.js?v=' . $asset_v) }}">
     </script>

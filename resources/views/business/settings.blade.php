@@ -115,6 +115,23 @@
 
     $(document).ready(function(){
 
+        // Fix checkbox issues - Force iCheck initialization
+        if (typeof $.fn.iCheck !== 'undefined') {
+            // Destroy existing iCheck instances and reinitialize
+            $('input[type="checkbox"], input[type="radio"]').iCheck('destroy');
+            $('input[type="checkbox"], input[type="radio"]').iCheck({
+                checkboxClass: 'icheckbox_square-blue',
+                radioClass: 'iradio_square-blue'
+            });
+        }
+        
+        // Force checkbox visibility
+        $('.icheckbox_square-blue, .iradio_square-blue').css({
+            'display': 'inline-block',
+            'visibility': 'visible',
+            'opacity': '1'
+        });
+
     
         $('#test_email_btn').click( function() {
             var data = {
@@ -227,6 +244,9 @@
         })
 
         tinymce.init({
+            base_url: '{{ asset("js") }}',
+            skin_url: '{{ asset("js/skins/ui/oxide") }}',
+            content_css: '{{ asset("js/skins/content/default/content.min.css") }}',
             selector: 'textarea#display_screen_heading',
             height: 250
         });

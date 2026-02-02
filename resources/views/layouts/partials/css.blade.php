@@ -11,6 +11,9 @@
 <!-- app css -->
 <link rel="stylesheet" href="{{ asset('css/app.css?v='.$asset_v) }}">
 
+<!-- Force Checkboxes Visible -->
+<link rel="stylesheet" href="{{ asset('css/force-checkboxes.css?v='.$asset_v) }}">
+
 <!-- iCheck 404 Fix -->
 <link rel="stylesheet" href="{{ asset('css/icheck-404-fix.css?v='.$asset_v) }}">>
 
