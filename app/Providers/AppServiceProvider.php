@@ -78,13 +78,33 @@ class AppServiceProvider extends ServiceProvider
         View::composer(
             ['*'],
             function ($view) {
-                // Use the proper method to get enabled modules (handles JSON decoding)
-                $util = new \App\Utils\Util();
-                $enabled_modules = $util->allModulesEnabled();
-
-                $__is_pusher_enabled = isPusherEnabled();
-
-                if (! Auth::check()) {
+                $enabled_modules = [];
+                $__is_pusher_enabled = false;
+                
+                try {
+                    // Only get enabled modules if user is authenticated and session exists
+                    if (Auth::check() && session()->has('business')) {
+                        try {
+                            // Use the proper method to get enabled modules (handles JSON decoding)
+                            $util = new \App\Utils\Util();
+                            $enabled_modules = $util->allModulesEnabled();
+                        } catch (\Exception $e) {
+                            // Fallback to session data if there's an error
+                            $enabled_modules = ! empty(session('business.enabled_modules')) ? session('business.enabled_modules') : [];
+                            
+                            // Handle JSON string if needed
+                            if (is_string($enabled_modules)) {
+                                $enabled_modules = json_decode($enabled_modules, true) ?: [];
+                            }
+                        }
+                        
+                        // Only check pusher if user is authenticated
+                        $__is_pusher_enabled = isPusherEnabled();
+                    }
+                } catch (\Exception $e) {
+                    // Log the error but don't break the page
+                    \Log::warning('AppServiceProvider view composer error: ' . $e->getMessage());
+                    $enabled_modules = [];
                     $__is_pusher_enabled = false;
                 }
 
@@ -96,41 +116,49 @@ class AppServiceProvider extends ServiceProvider
         View::composer(
             ['layouts.*'],
             function ($view) {
-                if (isAppInstalled()) {
-                    $keys = ['additional_js', 'additional_css'];
-                    $__system_settings = System::getProperties($keys, true);
+                try {
+                    if (isAppInstalled()) {
+                        $keys = ['additional_js', 'additional_css'];
+                        $__system_settings = System::getProperties($keys, true);
 
-                    //Get js,css from modules
-                    $moduleUtil = new ModuleUtil;
-                    $module_additional_script = $moduleUtil->getModuleData('get_additional_script');
-                    $additional_views = [];
-                    $additional_html = '';
-                    foreach ($module_additional_script as $key => $value) {
-                        if (! empty($value['additional_js'])) {
-                            if (isset($__system_settings['additional_js'])) {
-                                $__system_settings['additional_js'] .= $value['additional_js'];
-                            } else {
-                                $__system_settings['additional_js'] = $value['additional_js'];
+                        //Get js,css from modules
+                        $moduleUtil = new ModuleUtil;
+                        $module_additional_script = $moduleUtil->getModuleData('get_additional_script');
+                        $additional_views = [];
+                        $additional_html = '';
+                        foreach ($module_additional_script as $key => $value) {
+                            if (! empty($value['additional_js'])) {
+                                if (isset($__system_settings['additional_js'])) {
+                                    $__system_settings['additional_js'] .= $value['additional_js'];
+                                } else {
+                                    $__system_settings['additional_js'] = $value['additional_js'];
+                                }
+                            }
+                            if (! empty($value['additional_css'])) {
+                                if (isset($__system_settings['additional_css'])) {
+                                    $__system_settings['additional_css'] .= $value['additional_css'];
+                                } else {
+                                    $__system_settings['additional_css'] = $value['additional_css'];
+                                }
+                            }
+                            if (! empty($value['additional_html'])) {
+                                $additional_html .= $value['additional_html'];
+                            }
+                            if (! empty($value['additional_views'])) {
+                                $additional_views = array_merge($additional_views, $value['additional_views']);
                             }
                         }
-                        if (! empty($value['additional_css'])) {
-                            if (isset($__system_settings['additional_css'])) {
-                                $__system_settings['additional_css'] .= $value['additional_css'];
-                            } else {
-                                $__system_settings['additional_css'] = $value['additional_css'];
-                            }
-                        }
-                        if (! empty($value['additional_html'])) {
-                            $additional_html .= $value['additional_html'];
-                        }
-                        if (! empty($value['additional_views'])) {
-                            $additional_views = array_merge($additional_views, $value['additional_views']);
-                        }
+
+                        $view->with('__additional_views', $additional_views);
+                        $view->with('__additional_html', $additional_html);
+                        $view->with('__system_settings', $__system_settings);
                     }
-
-                    $view->with('__additional_views', $additional_views);
-                    $view->with('__additional_html', $additional_html);
-                    $view->with('__system_settings', $__system_settings);
+                } catch (\Exception $e) {
+                    // Log the error but don't break the page
+                    \Log::warning('AppServiceProvider layout composer error: ' . $e->getMessage());
+                    $view->with('__additional_views', []);
+                    $view->with('__additional_html', '');
+                    $view->with('__system_settings', []);
                 }
             }
         );
