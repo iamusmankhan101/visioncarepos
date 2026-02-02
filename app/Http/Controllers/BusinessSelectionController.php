@@ -50,6 +50,34 @@ class BusinessSelectionController extends Controller
                 Log::error('Business selection query error: ' . $e->getMessage());
             }
 
+            // If user has only one business, automatically select it
+            if ($available_businesses->count() === 1) {
+                $business = $available_businesses->first();
+                
+                // Set the selected business in session
+                session(['selected_business_id' => $business->id]);
+                
+                // Set up business data in session
+                session([
+                    'business' => [
+                        'id' => $business->id,
+                        'name' => $business->name,
+                        'currency_id' => $business->currency_id,
+                        'start_date' => $business->start_date,
+                        'enabled_modules' => $business->enabled_modules,
+                        'currency_precision' => $business->currency_precision ?? 2,
+                        'quantity_precision' => $business->quantity_precision ?? 2,
+                    ]
+                ]);
+                
+                // Update user's business_id
+                $user->business_id = $business->id;
+                $user->save();
+                
+                // Redirect to home/dashboard
+                return redirect('/home')->with('success', 'Welcome to ' . $business->name . '!');
+            }
+
             return view('business.select', compact('available_businesses'));
             
         } catch (\Exception $e) {
