@@ -1,3 +1,6 @@
+@extends('layouts.app')
+@section('title', __('user.add_user'))
+
 @section('css')
 <link rel="stylesheet" href="{{ asset('css/anti-icheck-blue-tick.css') }}">
 <link rel="stylesheet" href="{{ asset('css/force-checkboxes.css') }}">

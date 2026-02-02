@@ -85,21 +85,29 @@ class AppServiceProvider extends ServiceProvider
                     // Only get enabled modules if user is authenticated and session exists
                     if (Auth::check() && session()->has('business')) {
                         try {
-                            // Use the proper method to get enabled modules (handles JSON decoding)
-                            $util = new \App\Utils\Util();
-                            $enabled_modules = $util->allModulesEnabled();
-                        } catch (\Exception $e) {
-                            // Fallback to session data if there's an error
-                            $enabled_modules = ! empty(session('business.enabled_modules')) ? session('business.enabled_modules') : [];
+                            // Get enabled modules from session directly first
+                            $enabled_modules = session('business.enabled_modules', []);
                             
                             // Handle JSON string if needed
                             if (is_string($enabled_modules)) {
                                 $enabled_modules = json_decode($enabled_modules, true) ?: [];
                             }
+                            
+                            // Ensure it's an array
+                            if (!is_array($enabled_modules)) {
+                                $enabled_modules = [];
+                            }
+                        } catch (\Exception $e) {
+                            // Fallback to empty array
+                            $enabled_modules = [];
                         }
                         
                         // Only check pusher if user is authenticated
-                        $__is_pusher_enabled = isPusherEnabled();
+                        try {
+                            $__is_pusher_enabled = function_exists('isPusherEnabled') ? isPusherEnabled() : false;
+                        } catch (\Exception $e) {
+                            $__is_pusher_enabled = false;
+                        }
                     }
                 } catch (\Exception $e) {
                     // Log the error but don't break the page
