@@ -58,13 +58,28 @@ class CheckBusinessSelection
                     ]
                 ]);
                 
+                // Check if user is a cashier or has POS-only access and redirect accordingly
+                $userRoles = $user->getRoleNames();
+                $isCashier = $userRoles->contains(function ($role) {
+                    return str_contains(strtolower($role), 'cashier') || str_contains(strtolower($role), 'pos');
+                });
+                
+                // Check if user has limited permissions (only POS access)
+                $hasLimitedAccess = !$user->can('superadmin') && 
+                                   !$user->can('admin') && 
+                                   ($user->can('sell.create') || $user->can('pos.create'));
+                
+                // Redirect cashiers or users with limited access directly to POS
+                if ($isCashier || $hasLimitedAccess) {
+                    return redirect('/pos/create')->with('success', 'Welcome to POS - ' . $business->name . '!');
+                }
+                
                 return $next($request);
             }
         }
 
-        // Always redirect to business selection if user hasn't selected a business in this session
-        // This ensures users go through business selection every time they login
-        if (!session()->has('selected_business_id') || !$user->business_id) {
+        // Only redirect to business selection if user has no business_id at all
+        if (!session()->has('selected_business_id') && !$user->business_id) {
             return redirect()->route('business.select');
         }
 
