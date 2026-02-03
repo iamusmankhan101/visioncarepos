@@ -29,6 +29,7 @@
         class="tw-flex tw-flex-col md:tw-flex-row tw-items-center tw-justify-between tw-shadow-[rgba(17,_17,_26,_0.1)_0px_0px_16px] tw-bg-white tw-rounded-xl tw-mx-0 tw-mt-1 tw-mb-0 md:tw-mb-0 tw-p-3">
         <div class="tw-w-full md:tw-w-1/3">
             <div class="tw-flex tw-items-center tw-gap-2">
+                <p><strong>@lang('sale.location'): &nbsp;</strong></p>
                 <div style="width: 28%">
                     @if (empty($transaction->location_id))
                         @if (count($business_locations) > 1)
