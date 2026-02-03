@@ -97,9 +97,27 @@ class AppServiceProvider extends ServiceProvider
                             if (!is_array($enabled_modules)) {
                                 $enabled_modules = [];
                             }
+                            
+                            // CRITICAL FIX: Ensure POS module is always available for users with sell.create permission
+                            if (Auth::check() && Auth::user()->can('sell.create') && !in_array('pos', $enabled_modules)) {
+                                $enabled_modules[] = 'pos';
+                            }
+                            
+                            // Also ensure common required modules are available
+                            $required_modules = ['add_sale', 'pos_sale'];
+                            foreach ($required_modules as $module) {
+                                if (Auth::check() && Auth::user()->can('sell.create') && !in_array($module, $enabled_modules)) {
+                                    $enabled_modules[] = $module;
+                                }
+                            }
+                            
                         } catch (\Exception $e) {
-                            // Fallback to empty array
-                            $enabled_modules = [];
+                            // Fallback: if user can create sales, ensure POS is available
+                            if (Auth::check() && Auth::user()->can('sell.create')) {
+                                $enabled_modules = ['pos', 'add_sale', 'pos_sale'];
+                            } else {
+                                $enabled_modules = [];
+                            }
                         }
                         
                         // Only check pusher if user is authenticated
