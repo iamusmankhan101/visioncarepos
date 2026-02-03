@@ -116,7 +116,19 @@ class BusinessLocation extends Model
         if (empty($this->featured_products)) {
             return [];
         }
-        $query = Variation::whereIn('variations.id', $this->featured_products)
+        
+        // Ensure featured_products is an array
+        $featured_products_ids = $this->featured_products;
+        if (is_string($featured_products_ids)) {
+            $featured_products_ids = json_decode($featured_products_ids, true);
+        }
+        
+        // If still not an array or empty, return empty array
+        if (!is_array($featured_products_ids) || empty($featured_products_ids)) {
+            return [];
+        }
+        
+        $query = Variation::whereIn('variations.id', $featured_products_ids)
                                     ->join('product_locations as pl', 'pl.product_id', '=', 'variations.product_id')
                                     ->join('products as p', 'p.id', '=', 'variations.product_id')
                                     ->where('p.not_for_selling', 0)
