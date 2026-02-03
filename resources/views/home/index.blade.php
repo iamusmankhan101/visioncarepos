@@ -18,7 +18,12 @@
                             </h1>
                         </div>
     
-                        @if (auth()->user()->can('dashboard.data'))
+                        @php
+                            $can_view_dashboard_data = auth()->user()->can('dashboard.data') || 
+                                                      ($is_admin) || 
+                                                      (auth()->user()->can('sell.create') && !auth()->user()->can('superadmin'));
+                        @endphp
+                        @if ($can_view_dashboard_data)
                             @if ($is_admin)
                                 <div class="tw-mt-2 sm:tw-w-1/3 md:tw-w-1/4 ">
                                     @if (count($all_locations) > 1)
@@ -67,7 +72,12 @@
                         @endif
                     </div>
                     
-                    @if (auth()->user()->can('dashboard.data'))
+                    @php
+                        $can_view_dashboard_data = auth()->user()->can('dashboard.data') || 
+                                                  ($is_admin) || 
+                                                  (auth()->user()->can('sell.create') && !auth()->user()->can('superadmin'));
+                    @endphp
+                    @if ($can_view_dashboard_data)
                         @if ($is_admin)
                             <div class="tw-grid tw-grid-cols-1 tw-gap-4 tw-mt-6 sm:tw-grid-cols-2 xl:tw-grid-cols-4 sm:tw-gap-5">
                             
@@ -210,7 +220,12 @@
                     @endif
               
         </div>
-        @if (auth()->user()->can('dashboard.data'))
+        @php
+            $can_view_dashboard_data = auth()->user()->can('dashboard.data') || 
+                                      ($is_admin) || 
+                                      (auth()->user()->can('sell.create') && !auth()->user()->can('superadmin'));
+        @endphp
+        @if ($can_view_dashboard_data)
             @if ($is_admin)
                 <div class="tw-relative">
                     <div class="tw-absolute tw-inset-0 tw-grid" aria-hidden="true">
@@ -368,7 +383,12 @@
             @endif
         @endif
     </div>
-    @if (auth()->user()->can('dashboard.data'))
+    @php
+        $can_view_dashboard_data = auth()->user()->can('dashboard.data') || 
+                                  ($is_admin) || 
+                                  (auth()->user()->can('sell.create') && !auth()->user()->can('superadmin'));
+    @endphp
+    @if ($can_view_dashboard_data)
         <div class="tw-px-5 tw-py-6">
             <div class="tw-grid tw-grid-cols-1 tw-gap-4 sm:tw-gap-5 lg:tw-grid-cols-2">
                 {{-- SALES COMMISSION AGENTS PROGRESS SECTION --}}

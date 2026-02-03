@@ -74,7 +74,13 @@ class HomeController extends Controller
 
         $is_admin = $this->businessUtil->is_admin(auth()->user());
 
-        if (! auth()->user()->can('dashboard.data')) {
+        // Allow dashboard data for admin users or users with dashboard.data permission
+        // Also allow for cashier users who have sell.create permission (POS access)
+        $can_view_dashboard_data = auth()->user()->can('dashboard.data') || 
+                                  ($is_admin) || 
+                                  (auth()->user()->can('sell.create') && !auth()->user()->can('superadmin'));
+
+        if (!$can_view_dashboard_data) {
             return view('home.index');
         }
 
