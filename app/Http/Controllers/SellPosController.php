@@ -193,7 +193,7 @@ class SellPosController extends Controller
                     $user_id = request()->session()->get('user.id');
                     $business_id = request()->session()->get('user.business_id');
                     
-                    // Get the first available business location
+                    // Get the first available business location FOR THE CURRENT BUSINESS
                     $business_locations = \App\BusinessLocation::where('business_id', $business_id)
                                                               ->where('is_active', 1)
                                                               ->first();
@@ -213,6 +213,13 @@ class SellPosController extends Controller
                             'pay_method' => 'cash',
                             'type' => 'credit',
                             'transaction_type' => 'initial',
+                        ]);
+                        
+                        \Log::info('Auto-created cash register for business switch', [
+                            'user_id' => $user_id,
+                            'business_id' => $business_id,
+                            'location_id' => $business_locations->id,
+                            'location_name' => $business_locations->name
                         ]);
                         
                         // Continue to POS screen
@@ -246,11 +253,14 @@ class SellPosController extends Controller
         $bl_attributes = $business_locations['attributes'];
         $business_locations = $business_locations['locations'];
 
-        //set first location as default locaton
-        if (empty($default_location)) {
+        //set first location as default location - ENSURE it belongs to current business
+        if (empty($default_location) || $default_location->business_id != $business_id) {
             foreach ($business_locations as $id => $name) {
-                $default_location = BusinessLocation::findOrFail($id);
-                break;
+                $location = BusinessLocation::findOrFail($id);
+                if ($location->business_id == $business_id) {
+                    $default_location = $location;
+                    break;
+                }
             }
         }
 

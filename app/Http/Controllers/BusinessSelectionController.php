@@ -150,6 +150,26 @@ class BusinessSelectionController extends Controller
             // IMPORTANT: Clear ALL session data to force refresh
             session()->forget(['user', 'business', 'currency', 'financial_year', 'location']);
             session(['selected_business_id' => $business->id]);
+            
+            // CRITICAL: Close any open cash registers from the previous business
+            // This ensures POS shows the correct business name when switching
+            try {
+                $openRegisters = \App\CashRegister::where('user_id', $user->id)
+                                                 ->where('status', 'open')
+                                                 ->get();
+                
+                foreach ($openRegisters as $register) {
+                    // Only close registers that don't belong to the new business
+                    $registerLocation = \App\BusinessLocation::find($register->location_id);
+                    if ($registerLocation && $registerLocation->business_id != $business->id) {
+                        $register->status = 'close';
+                        $register->closed_at = \Carbon\Carbon::now();
+                        $register->save();
+                    }
+                }
+            } catch (\Exception $e) {
+                \Log::warning('Failed to close old cash registers during business switch: ' . $e->getMessage());
+            }
 
             // Force refresh session data by setting up business data immediately
             $business_util = new \App\Utils\BusinessUtil();
