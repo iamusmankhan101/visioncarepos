@@ -512,10 +512,22 @@ $(document).ready(function() {
     contact_table = $('#contact_table').DataTable({
         processing: true,
         serverSide: true,
-        fixedHeader:false,
-        scrollY:        "75vh",
-        scrollX:        true,
+        fixedHeader: false,
+        scrollY: "75vh",
+        scrollX: true,
         scrollCollapse: true,
+        // Prevent header duplication
+        initComplete: function() {
+            // Hide any duplicate headers created by scrollX/scrollY
+            $('.dataTables_scrollHead').hide();
+            
+            // Ensure original header is visible
+            $('#contact_table thead').show();
+        },
+        drawCallback: function() {
+            // Hide duplicate headers on each redraw
+            $('.dataTables_scrollHead').hide();
+        },
         "ajax": {
             "url": "/contacts",
             "data": function ( d ) {

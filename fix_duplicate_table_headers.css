@@ -1,0 +1,41 @@
+/* Fix for duplicate table headers in DataTables with scrollX/scrollY */
+
+/* Hide the duplicate header in the scroll head */
+.dataTables_scrollHead {
+    display: none !important;
+}
+
+/* Alternative: If the above is too aggressive, try this instead */
+/*
+.dataTables_scrollHeadInner table thead {
+    display: none !important;
+}
+*/
+
+/* Ensure the main table header is visible */
+#contact_table thead {
+    display: table-header-group !important;
+}
+
+/* Fix for any potential header positioning issues */
+.dataTables_wrapper .dataTables_scrollHead table {
+    margin-bottom: 0 !important;
+}
+
+/* Ensure proper table layout */
+.dataTables_wrapper .dataTables_scrollBody {
+    border-top: none !important;
+}
+
+/* Alternative approach - hide the cloned header specifically */
+.dataTables_scrollHead table.dataTable thead {
+    visibility: hidden !important;
+    height: 0 !important;
+    overflow: hidden !important;
+}
+
+/* Make sure the original header is always visible */
+.table-responsive #contact_table > thead {
+    display: table-header-group !important;
+    visibility: visible !important;
+}

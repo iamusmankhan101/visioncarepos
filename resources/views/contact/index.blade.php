@@ -6,6 +6,57 @@
 @if (!empty($api_key))
     @section('css')
         @include('contact.partials.google_map_styles')
+        <style>
+            /* Fix for duplicate table headers in DataTables */
+            .dataTables_scrollHead {
+                display: none !important;
+            }
+            
+            /* Ensure the main table header is visible */
+            #contact_table thead {
+                display: table-header-group !important;
+            }
+            
+            /* Alternative approach - hide the cloned header specifically */
+            .dataTables_scrollHead table.dataTable thead {
+                visibility: hidden !important;
+                height: 0 !important;
+                overflow: hidden !important;
+            }
+            
+            /* Make sure the original header is always visible */
+            .table-responsive #contact_table > thead {
+                display: table-header-group !important;
+                visibility: visible !important;
+            }
+        </style>
+    @endsection
+@else
+    @section('css')
+        <style>
+            /* Fix for duplicate table headers in DataTables */
+            .dataTables_scrollHead {
+                display: none !important;
+            }
+            
+            /* Ensure the main table header is visible */
+            #contact_table thead {
+                display: table-header-group !important;
+            }
+            
+            /* Alternative approach - hide the cloned header specifically */
+            .dataTables_scrollHead table.dataTable thead {
+                visibility: hidden !important;
+                height: 0 !important;
+                overflow: hidden !important;
+            }
+            
+            /* Make sure the original header is always visible */
+            .table-responsive #contact_table > thead {
+                display: table-header-group !important;
+                visibility: visible !important;
+            }
+        </style>
     @endsection
 @endif
 @section('content')
@@ -253,6 +304,19 @@
 @section('javascript')
     <script type="text/javascript">
         $(document).ready(function() {
+            // Fix for duplicate table headers
+            function fixDuplicateHeaders() {
+                $('.dataTables_scrollHead').hide();
+                $('#contact_table thead').show();
+                console.log('Fixed duplicate table headers');
+            }
+            
+            // Apply fix immediately and after DataTable operations
+            fixDuplicateHeaders();
+            $(document).on('draw.dt', '#contact_table', function() {
+                fixDuplicateHeaders();
+            });
+            
             // Bulk delete functionality for customers
             $('#select_all_customers').on('change', function() {
                 var isChecked = $(this).is(':checked');
