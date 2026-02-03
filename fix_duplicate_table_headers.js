@@ -1,75 +1,64 @@
 /**
- * Fix for duplicate table headers in DataTables
- * This script addresses the issue where DataTables with scrollX/scrollY creates duplicate headers
+ * Comprehensive fix for duplicate table headers in DataTables
+ * This script addresses the common issue where DataTables creates duplicate headers
+ * when using scrollX, scrollY, or fixedHeader options
  */
 
-$(document).ready(function() {
-    // Function to fix duplicate headers
-    function fixDuplicateHeaders() {
-        // Hide the scroll head that creates duplicate headers
-        $('.dataTables_scrollHead').hide();
+(function($) {
+    'use strict';
+    
+    // Main function to fix duplicate headers
+    function fixDuplicateTableHeaders() {
+        // Remove all duplicate header containers
+        $('.dataTables_scrollHead').remove();
+        $('.dataTables_scrollHeadInner').remove();
         
-        // Ensure the original table header is visible
-        $('#contact_table thead').show();
+        // Find all DataTables and ensure their headers are visible
+        $('.dataTable').each(function() {
+            var $table = $(this);
+            var $thead = $table.find('thead');
+            
+            // Make sure the original header is visible
+            $thead.show().css({
+                'display': 'table-header-group',
+                'visibility': 'visible',
+                'position': 'static'
+            });
+            
+            // Remove any cloned header elements
+            $table.closest('.dataTables_wrapper').find('.dataTables_scrollHead').remove();
+        });
         
-        // Remove any cloned headers that might be causing issues
-        $('.dataTables_scrollHeadInner table thead').remove();
+        // Remove any floating header elements
+        $('.dataTables_wrapper .dataTables_scroll .dataTables_scrollHead').remove();
         
-        console.log('Fixed duplicate table headers');
+        console.log('Fixed duplicate table headers for all DataTables');
     }
     
-    // Apply fix immediately
-    fixDuplicateHeaders();
-    
-    // Apply fix after DataTable operations
-    $(document).on('draw.dt', '#contact_table', function() {
-        fixDuplicateHeaders();
+    // Apply fix when document is ready
+    $(document).ready(function() {
+        fixDuplicateTableHeaders();
+        
+        // Fix after a short delay to catch any late-loading tables
+        setTimeout(fixDuplicateTableHeaders, 500);
     });
     
-    // Apply fix when filters change
-    $(document).on('ifChanged', '#has_sell_due, #has_sell_return, #has_purchase_due, #has_purchase_return, #has_advance_balance, #has_opening_balance', function() {
-        setTimeout(fixDuplicateHeaders, 100);
+    // Apply fix on DataTable events
+    $(document).on('init.dt draw.dt', '.dataTable', function() {
+        setTimeout(fixDuplicateTableHeaders, 100);
     });
     
-    $(document).on('change', '#has_no_sell_from, #cg_filter, #status_filter, #assigned_to', function() {
-        setTimeout(fixDuplicateHeaders, 100);
-    });
-    
-    // Apply fix when window is resized
+    // Apply fix on window resize
     $(window).on('resize', function() {
-        setTimeout(fixDuplicateHeaders, 100);
+        setTimeout(fixDuplicateTableHeaders, 200);
     });
-});
-
-// Alternative CSS-only approach
-var duplicateHeaderCSS = `
-<style id="duplicate-header-fix">
-/* Fix for duplicate table headers in DataTables */
-.dataTables_scrollHead {
-    display: none !important;
-}
-
-/* Ensure the main table header is visible */
-#contact_table thead {
-    display: table-header-group !important;
-    visibility: visible !important;
-}
-
-/* Hide cloned headers */
-.dataTables_scrollHead table.dataTable thead {
-    visibility: hidden !important;
-    height: 0 !important;
-    overflow: hidden !important;
-}
-
-/* Ensure proper table layout */
-.dataTables_wrapper .dataTables_scrollBody {
-    border-top: none !important;
-}
-</style>
-`;
-
-// Inject CSS fix
-if ($('#duplicate-header-fix').length === 0) {
-    $('head').append(duplicateHeaderCSS);
-}
+    
+    // Apply fix when modals are shown (in case tables are in modals)
+    $(document).on('shown.bs.modal', function() {
+        setTimeout(fixDuplicateTableHeaders, 300);
+    });
+    
+    // Expose the function globally for manual calls
+    window.fixDuplicateTableHeaders = fixDuplicateTableHeaders;
+    
+})(jQuery);

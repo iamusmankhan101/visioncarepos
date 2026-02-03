@@ -518,15 +518,16 @@ $(document).ready(function() {
         scrollCollapse: true,
         // Prevent header duplication
         initComplete: function() {
-            // Hide any duplicate headers created by scrollX/scrollY
-            $('.dataTables_scrollHead').hide();
+            // Remove any duplicate headers created by scrollX/scrollY
+            $('.dataTables_scrollHead').remove();
             
             // Ensure original header is visible
             $('#contact_table thead').show();
         },
         drawCallback: function() {
-            // Hide duplicate headers on each redraw
-            $('.dataTables_scrollHead').hide();
+            // Remove duplicate headers on each redraw
+            $('.dataTables_scrollHead').remove();
+            $('#contact_table thead').show();
         },
         "ajax": {
             "url": "/contacts",

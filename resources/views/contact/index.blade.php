@@ -7,54 +7,78 @@
     @section('css')
         @include('contact.partials.google_map_styles')
         <style>
-            /* Fix for duplicate table headers in DataTables */
+            /* Comprehensive fix for duplicate table headers in DataTables */
             .dataTables_scrollHead {
                 display: none !important;
-            }
-            
-            /* Ensure the main table header is visible */
-            #contact_table thead {
-                display: table-header-group !important;
-            }
-            
-            /* Alternative approach - hide the cloned header specifically */
-            .dataTables_scrollHead table.dataTable thead {
                 visibility: hidden !important;
                 height: 0 !important;
                 overflow: hidden !important;
+            }
+            
+            /* Remove any cloned header tables */
+            .dataTables_scrollHead table {
+                display: none !important;
+            }
+            
+            /* Ensure the main table header is always visible */
+            #contact_table thead {
+                display: table-header-group !important;
+                visibility: visible !important;
             }
             
             /* Make sure the original header is always visible */
             .table-responsive #contact_table > thead {
                 display: table-header-group !important;
                 visibility: visible !important;
+            }
+            
+            /* Fix for any wrapper elements that might hide headers */
+            .dataTables_wrapper .dataTables_scroll .dataTables_scrollHead {
+                display: none !important;
+            }
+            
+            /* Ensure table structure is correct */
+            .table-responsive table thead tr {
+                display: table-row !important;
             }
         </style>
     @endsection
 @else
     @section('css')
         <style>
-            /* Fix for duplicate table headers in DataTables */
+            /* Comprehensive fix for duplicate table headers in DataTables */
             .dataTables_scrollHead {
                 display: none !important;
-            }
-            
-            /* Ensure the main table header is visible */
-            #contact_table thead {
-                display: table-header-group !important;
-            }
-            
-            /* Alternative approach - hide the cloned header specifically */
-            .dataTables_scrollHead table.dataTable thead {
                 visibility: hidden !important;
                 height: 0 !important;
                 overflow: hidden !important;
+            }
+            
+            /* Remove any cloned header tables */
+            .dataTables_scrollHead table {
+                display: none !important;
+            }
+            
+            /* Ensure the main table header is always visible */
+            #contact_table thead {
+                display: table-header-group !important;
+                visibility: visible !important;
             }
             
             /* Make sure the original header is always visible */
             .table-responsive #contact_table > thead {
                 display: table-header-group !important;
                 visibility: visible !important;
+            }
+            
+            /* Fix for any wrapper elements that might hide headers */
+            .dataTables_wrapper .dataTables_scroll .dataTables_scrollHead {
+                display: none !important;
+            }
+            
+            /* Ensure table structure is correct */
+            .table-responsive table thead tr {
+                display: table-row !important;
             }
         </style>
     @endsection
@@ -304,17 +328,35 @@
 @section('javascript')
     <script type="text/javascript">
         $(document).ready(function() {
-            // Fix for duplicate table headers
+            // Comprehensive fix for duplicate table headers
             function fixDuplicateHeaders() {
-                $('.dataTables_scrollHead').hide();
-                $('#contact_table thead').show();
+                // Remove all duplicate header elements
+                $('.dataTables_scrollHead').remove();
+                $('.dataTables_scrollHeadInner').remove();
+                
+                // Ensure main table header is visible
+                $('#contact_table thead').show().css({
+                    'display': 'table-header-group',
+                    'visibility': 'visible'
+                });
+                
+                // Remove any cloned tables that might cause duplicates
+                $('.dataTables_wrapper .dataTables_scroll .dataTables_scrollHead table').remove();
+                
                 console.log('Fixed duplicate table headers');
             }
             
             // Apply fix immediately and after DataTable operations
             fixDuplicateHeaders();
-            $(document).on('draw.dt', '#contact_table', function() {
-                fixDuplicateHeaders();
+            
+            // Fix on various DataTable events
+            $(document).on('draw.dt init.dt', '#contact_table', function() {
+                setTimeout(fixDuplicateHeaders, 100);
+            });
+            
+            // Additional fix for window resize
+            $(window).on('resize', function() {
+                setTimeout(fixDuplicateHeaders, 200);
             });
             
             // Bulk delete functionality for customers
