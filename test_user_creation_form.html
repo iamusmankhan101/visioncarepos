@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>User Creation Form Test</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.3/jquery.validate.min.js"></script>
+</head>
+<body>
+    <h2>User Creation Form Debug Test</h2>
+    
+    <div id="debug-info">
+        <h3>Debug Information:</h3>
+        <div id="form-status">Form not submitted yet</div>
+        <div id="validation-status">Validation not checked yet</div>
+        <div id="submit-status">Submit not attempted yet</div>
+    </div>
+    
+    <hr>
+    
+    <form id="user_add_form" method="POST" action="/users">
+        <input type="hidden" name="_token" value="test-token">
+        
+        <div>
+            <label>First Name:*</label>
+            <input type="text" name="first_name" id="first_name" required>
+        </div>
+        
+        <div>
+            <label>Email:*</label>
+            <input type="email" name="email" id="email" required>
+        </div>
+        
+        <div>
+            <label>Password:*</label>
+            <input type="password" name="password" id="password" required>
+        </div>
+        
+        <div>
+            <label>Confirm Password:*</label>
+            <input type="password" name="confirm_password" id="confirm_password" required>
+        </div>
+        
+        <div>
+            <label>Role:*</label>
+            <select name="role" id="role" required>
+                <option value="">Select Role</option>
+                <option value="1">Admin</option>
+                <option value="2">User</option>
+            </select>
+        </div>
+        
+        <div>
+            <input type="checkbox" name="allow_login" value="1" checked> Allow Login
+        </div>
+        
+        <div>
+            <input type="checkbox" name="is_active" value="active" checked> Active
+        </div>
+        
+        <div>
+            <button type="submit" id="submit_user_button">Save User</button>
+        </div>
+    </form>
+    
+    <script>
+    $(document).ready(function() {
+        console.log('Document ready - starting form debug');
+        $('#form-status').text('Form loaded successfully');
+        
+        // Test form validation
+        try {
+            $('form#user_add_form').validate({
+                rules: {
+                    first_name: {
+                        required: true,
+                    },
+                    email: {
+                        email: true,
+                        required: true
+                    },
+                    password: {
+                        required: true,
+                        minlength: 5
+                    },
+                    confirm_password: {
+                        equalTo: "#password"
+                    },
+                    role: {
+                        required: true
+                    }
+                },
+                messages: {
+                    password: {
+                        minlength: 'Password should be minimum 5 characters',
+                    },
+                    confirm_password: {
+                        equalTo: 'Should be same as password'
+                    }
+                }
+            });
+            $('#validation-status').text('Validation rules applied successfully');
+            console.log('Form validation initialized');
+        } catch (e) {
+            $('#validation-status').text('Validation error: ' + e.message);
+            console.error('Validation error:', e);
+        }
+        
+        // Test form submission
+        $('#user_add_form').on('submit', function(e) {
+            e.preventDefault(); // Prevent actual submission for testing
+            
+            console.log('Form submit attempted');
+            $('#submit-status').text('Form submission attempted');
+            
+            // Check if form is valid
+            if ($(this).valid()) {
+                $('#submit-status').text('Form is valid - would submit to server');
+                console.log('Form validation passed');
+                
+                // Log form data
+                var formData = $(this).serialize();
+                console.log('Form data:', formData);
+                
+                // In real scenario, remove e.preventDefault() to allow actual submission
+                alert('Form is valid and ready to submit!\n\nForm data: ' + formData);
+            } else {
+                $('#submit-status').text('Form validation failed');
+                console.log('Form validation failed');
+            }
+        });
+        
+        // Test individual field validation
+        $('#first_name, #email, #password, #confirm_password, #role').on('blur', function() {
+            var fieldName = $(this).attr('name');
+            var isValid = $(this).valid();
+            console.log('Field ' + fieldName + ' validation:', isValid ? 'PASS' : 'FAIL');
+        });
+    });
+    </script>
+</body>
+</html>
