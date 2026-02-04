@@ -151,10 +151,6 @@ input.input-icheck,
 </style>
 @endsection
 
-@extends('layouts.app')
-
-@section('title', __( 'user.add_user' ))
-
 @section('content')
 
 <!-- Content Header (Page header) -->
