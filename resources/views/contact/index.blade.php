@@ -287,6 +287,7 @@
                                 <td></td>
                                 <td></td>
                                 <td></td>
+                                <td></td>
                                 <td @if ($type == 'supplier') colspan="6"
                             @elseif($type == 'customer')
                                 @if ($reward_enabled)
