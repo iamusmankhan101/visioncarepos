@@ -1,4 +1,4 @@
-# Featured Products Count Error Fix Summary
+![alt text](image.png)# Featured Products Count Error Fix Summary
 
 ## Issue Description
 The application was throwing a `TypeError` when accessing the POS screen:
