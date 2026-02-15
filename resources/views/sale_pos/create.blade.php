@@ -60,7 +60,7 @@
                     </div>
                     @if (empty($pos_settings['hide_product_suggestion']) && !isMobile())
                         <div class="md:tw-no-padding tw-w-full lg:tw-w-[40%] tw-px-5">
-                            @include('sale_pos.partials.pos_sidebar')
+                            @include('sale_pos.partials.pending_shipments')
                         </div>
                     @endif
                 </div>
