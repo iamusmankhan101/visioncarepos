@@ -28,7 +28,10 @@ $(document).ready(function(){
         "ajax": {
             "url": "/sells",
             "data": function ( d ) {
-                d.only_shipments = true;
+                d.only_shipments = 'true';
+                if($('#location_id').length) {
+                    d.location_id = $('#location_id').val();
+                }
             }
         },
         columnDefs: [ {

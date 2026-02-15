@@ -99,6 +99,13 @@ class SellController extends Controller
 
             $sale_type = ! empty(request()->input('sale_type')) ? request()->input('sale_type') : 'sell';
 
+            \Log::info('SellController::index called via AJAX', [
+                'only_shipments' => request()->input('only_shipments'),
+                'only_shipments_bool_check' => request()->only_shipments == 'true',
+                'location_id' => request()->input('location_id'),
+                'all' => request()->all()
+            ]);
+
             $sells = $this->transactionUtil->getListSells($business_id, $sale_type);
 
             // Apply all filters in a single reusable method
