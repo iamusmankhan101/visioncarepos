@@ -538,89 +538,105 @@ label:has(.input-icheck) {
     
   })();
 
-  // Wait for jQuery to be available before running jQuery-dependent code
-  (function waitForJQuery() {
-    if (typeof jQuery !== 'undefined' && typeof $ !== 'undefined') {
-      // jQuery is loaded, run the code
-      $(document).ready(function() {
-        console.log('📋 Document ready - CSS-only checkboxes active');
-        
-        // Ensure checkboxes are visible
-        $('.input-icheck').css({
-          'display': 'inline-block',
-          'visibility': 'visible',
-          'opacity': '1'
-        });
-        
-        // Don't try to initialize iCheck - use regular checkbox events
-        console.log('Using regular checkbox events instead of iCheck');
-        
-        // Page leave confirmation
-        __page_leave_confirmation('#user_add_form');
-        
-        // Handle selected contacts checkbox
-        $('#selected_contacts').on('change', function(event){
-          if (this.checked) {
-            $('div.selected_contacts_div').removeClass('hide');
-          } else {
-            $('div.selected_contacts_div').addClass('hide');
-          }
-        });
+  // Wait for the entire page (including jQuery) to load
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeUserForm);
+  } else {
+    // DOM already loaded, check if jQuery is ready
+    if (typeof jQuery !== 'undefined') {
+      initializeUserForm();
+    } else {
+      // jQuery not loaded yet, wait for window.onload
+      window.addEventListener('load', initializeUserForm);
+    }
+  }
 
-        // Handle service staff pin checkbox
-        $('#is_enable_service_staff_pin').on('change', function(event){
-          if (this.checked) {
-            $('div.service_staff_pin_div').removeClass('hide');
-          } else {
-            $('div.service_staff_pin_div').addClass('hide');
-            $('#service_staff_pin').val('');
-          }
-        });
+  function initializeUserForm() {
+    // Ensure jQuery is available
+    if (typeof jQuery === 'undefined' || typeof $ === 'undefined') {
+      console.error('❌ jQuery is still not loaded!');
+      return;
+    }
 
-        // Handle allow login checkbox
-        $('#allow_login').on('change', function(event){
-          if (this.checked) {
-            $('div.user_auth_fields').removeClass('hide');
-          } else {
-            $('div.user_auth_fields').addClass('hide');
-          }
-        });
+    $(document).ready(function() {
+      console.log('📋 Document ready - CSS-only checkboxes active');
+      
+      // Ensure checkboxes are visible
+      $('.input-icheck').css({
+        'display': 'inline-block',
+        'visibility': 'visible',
+        'opacity': '1'
+      });
+      
+      // Don't try to initialize iCheck - use regular checkbox events
+      console.log('Using regular checkbox events instead of iCheck');
+      
+      // Page leave confirmation
+      __page_leave_confirmation('#user_add_form');
+      
+      // Handle selected contacts checkbox
+      $('#selected_contacts').on('change', function(event){
+        if (this.checked) {
+          $('div.selected_contacts_div').removeClass('hide');
+        } else {
+          $('div.selected_contacts_div').addClass('hide');
+        }
+      });
 
-        // Select2 initialization
-        $('#user_allowed_contacts').select2({
-            ajax: {
-                url: '/contacts/customers',
-                dataType: 'json',
-                delay: 250,
-                data: function(params) {
-                    return {
-                        q: params.term,
-                        page: params.page,
-                        all_contact: true
-                    };
-                },
-                processResults: function(data) {
-                    return {
-                        results: data,
-                    };
-                },
-            },
-            templateResult: function (data) { 
-                var template = '';
-                if (data.supplier_business_name) {
-                    template += data.supplier_business_name + "<br>";
-                }
-                template += data.text + "<br>" + LANG.mobile + ": " + data.mobile;
-                return template;
-            },
-            minimumInputLength: 1,
-            escapeMarkup: function(markup) {
-                return markup;
-            },
-        });
-        
-        // Form validation
-        $('form#user_add_form').validate({
+      // Handle service staff pin checkbox
+      $('#is_enable_service_staff_pin').on('change', function(event){
+        if (this.checked) {
+          $('div.service_staff_pin_div').removeClass('hide');
+        } else {
+          $('div.service_staff_pin_div').addClass('hide');
+          $('#service_staff_pin').val('');
+        }
+      });
+
+      // Handle allow login checkbox
+      $('#allow_login').on('change', function(event){
+        if (this.checked) {
+          $('div.user_auth_fields').removeClass('hide');
+        } else {
+          $('div.user_auth_fields').addClass('hide');
+        }
+      });
+
+      // Select2 initialization
+      $('#user_allowed_contacts').select2({
+          ajax: {
+              url: '/contacts/customers',
+              dataType: 'json',
+              delay: 250,
+              data: function(params) {
+                  return {
+                      q: params.term,
+                      page: params.page,
+                      all_contact: true
+                  };
+              },
+              processResults: function(data) {
+                  return {
+                      results: data,
+                  };
+              },
+          },
+          templateResult: function (data) { 
+              var template = '';
+              if (data.supplier_business_name) {
+                  template += data.supplier_business_name + "<br>";
+              }
+              template += data.text + "<br>" + LANG.mobile + ": " + data.mobile;
+              return template;
+          },
+          minimumInputLength: 1,
+          escapeMarkup: function(markup) {
+              return markup;
+          },
+      });
+      
+      // Form validation
+      $('form#user_add_form').validate({
     rules: {
         first_name: {
             required: true,
@@ -686,13 +702,8 @@ label:has(.input-icheck) {
       }
     }
   });
-      }); // End of $(document).ready
-    } else {
-      // jQuery not loaded yet, wait and try again
-      console.log('⏳ Waiting for jQuery to load...');
-      setTimeout(waitForJQuery, 100);
-    }
-  })(); // End of waitForJQuery
+    }); // End of $(document).ready
+  } // End of initializeUserForm
 </script>
 <script src="{{ asset('js/anti-icheck-blue-tick.js') }}"></script>
 @endsection
