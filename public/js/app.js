@@ -449,9 +449,9 @@ $(document).ready(function () {
     if (contact_table_type == 'supplier') {
         var columns = [
             { data: 'action', searchable: false, orderable: false },
-            { data: 'contact_id', name: 'contact_id' },
+            { data: 'contact_id', name: 'contacts.contact_id' },
             { data: 'supplier_business_name', name: 'supplier_business_name' },
-            { data: 'name', name: 'name' },
+            { data: 'name', name: 'contacts.name' },
             { data: 'email', name: 'email' },
             { data: 'tax_number', name: 'tax_number' },
             { data: 'pay_term', name: 'pay_term', searchable: false, orderable: false },
@@ -477,9 +477,9 @@ $(document).ready(function () {
         var columns = [
             { data: 'checkbox', searchable: false, orderable: false },
             { data: 'action', searchable: false, orderable: false },
-            { data: 'contact_id', name: 'contact_id' },
+            { data: 'contact_id', name: 'contacts.contact_id' },
             { data: 'supplier_business_name', name: 'supplier_business_name' },
-            { data: 'name', name: 'name' },
+            { data: 'name', name: 'contacts.name' },
             { data: 'email', name: 'email' },
             { data: 'tax_number', name: 'tax_number' },
             { data: 'credit_limit', name: 'credit_limit' },
