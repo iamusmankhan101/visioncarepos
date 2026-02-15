@@ -287,12 +287,12 @@
                                 <td></td>
                                 <td></td>
                                 <td></td>
-                                <td @if ($type == 'supplier') colspan="6"
+                                <td @if ($type == 'supplier') colspan="7"
                             @elseif($type == 'customer')
                                 @if ($reward_enabled)
-                                    colspan="9"
+                                    colspan="10"
                                 @else
-                                    colspan="8" @endif
+                                    colspan="9" @endif
                                     @endif>
                                     <strong>
                                         @lang('sale.total'):
