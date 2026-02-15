@@ -490,7 +490,7 @@ $(document).ready(function () {
         ];
 
         if ($('#rp_col').length) {
-            columns.push({ data: 'total_rp', name: 'total_rp' });
+            columns.push({ data: 'total_rp', name: 'total_rp', searchable: false, orderable: false });
         }
         Array.prototype.push.apply(columns, [{ data: 'customer_group', name: 'cg.name' },
         { data: 'address', name: 'address', orderable: false },
