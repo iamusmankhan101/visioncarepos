@@ -5177,8 +5177,13 @@ class TransactionUtil extends Util
                     '=',
                     'bl.id'
                 )
-                ->where('transactions.business_id', $business_id)
-                ->where('transactions.type', $sale_type);
+                ->where('transactions.business_id', $business_id);
+
+        if (is_array($sale_type)) {
+            $sells->whereIn('transactions.type', $sale_type);
+        } else {
+            $sells->where('transactions.type', $sale_type);
+        }
 
         // If only counting, select minimal columns for better performance
         if ($only_count) {
@@ -5273,6 +5278,13 @@ class TransactionUtil extends Util
 
         if ($sale_type == 'sell') {
             $sells->where('transactions.status', 'final');
+        }
+
+        if (is_array($sale_type) && in_array('sell', $sale_type)) {
+             $sells->where(function ($q) use ($sale_type) {
+                $q->where('transactions.type', '!=', 'sell')
+                  ->orWhere('transactions.status', 'final');
+            });
         }
 
         return $sells;

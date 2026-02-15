@@ -116,6 +116,10 @@ class SellController extends Controller
 
                 $sale_type = ! empty(request()->input('sale_type')) ? request()->input('sale_type') : 'sell';
 
+                if (request()->input('only_shipments') == 'true') {
+                    $sale_type = ['sell', 'sales_order'];
+                }
+
                 \Log::info('SellController::index called via AJAX', [
                     'only_shipments' => request()->input('only_shipments'),
                     'only_pending_shipments' => request()->input('only_pending_shipments'),
@@ -163,7 +167,10 @@ class SellController extends Controller
 
             // Get total count using cache (expires in 60 seconds)
             $total_records = Cache::remember($cache_key, 300, function () use ($business_id, $sale_type) {
-                $count_query = $this->transactionUtil->getListSells($business_id, $sale_type, true);
+                // If filtering for shipments, ensure we count both types
+                $type_for_count = request()->input('only_shipments') == 'true' ? ['sell', 'sales_order'] : $sale_type;
+                
+                $count_query = $this->transactionUtil->getListSells($business_id, $type_for_count, true);
                 // Apply same filters (count-safe)
                 $this->applySellListFilters($count_query, $business_id, $sale_type, true);
                 // IMPORTANT: do NOT groupBy here; just count distinct ids
@@ -2613,10 +2620,13 @@ class SellController extends Controller
     protected function applySellListFilters($query, $business_id, $sale_type, $for_count = false)
     {
         // Exclude project invoices from sell list
-        if ($sale_type == 'sell') {
+        if ($sale_type == 'sell' || (is_array($sale_type) && in_array('sell', $sale_type))) {
             $query->where(function ($q) {
-                $q->where('transactions.sub_type', '!=', 'project_invoice')
-                  ->orWhereNull('transactions.sub_type');
+                $q->where('transactions.type', '!=', 'sell')
+                  ->orWhere(function($q2) {
+                        $q2->where('transactions.sub_type', '!=', 'project_invoice')
+                           ->orWhereNull('transactions.sub_type');
+                  });
             });
         }
 
@@ -2827,9 +2837,12 @@ class SellController extends Controller
         }
 
         // Sales order view restrictions
-        if ($sale_type == 'sales_order') {
+        if ($sale_type == 'sales_order' || (is_array($sale_type) && in_array('sales_order', $sale_type))) {
             if (! auth()->user()->can('so.view_all') && auth()->user()->can('so.view_own')) {
-                $query->where('transactions.created_by', request()->session()->get('user.id'));
+                $query->where(function($q){
+                    $q->where('transactions.type', '!=', 'sales_order')
+                      ->orWhere('transactions.created_by', request()->session()->get('user.id'));
+                });
             }
         }
 
