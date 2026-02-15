@@ -93,20 +93,38 @@ class SellController extends Controller
         $is_types_service_enabled = $this->moduleUtil->isModuleEnabled('types_of_service');
 
         if (request()->ajax()) {
-            $payment_types = $this->transactionUtil->payment_types(null, true, $business_id);
-            $with = [];
-            $shipping_statuses = $this->transactionUtil->shipping_statuses();
+            // Check if business_id is available
+            if (empty($business_id)) {
+                \Log::error('DataTables Ajax Error in SellController: business_id is empty in session', [
+                    'session_data' => request()->session()->all(),
+                    'user_id' => request()->session()->get('user.id'),
+                    'request_params' => request()->all()
+                ]);
+                
+                return response()->json([
+                    'error' => 'Business not selected. Please select a business first.',
+                    'data' => [],
+                    'recordsTotal' => 0,
+                    'recordsFiltered' => 0
+                ], 400);
+            }
 
-            $sale_type = ! empty(request()->input('sale_type')) ? request()->input('sale_type') : 'sell';
+            try {
+                $payment_types = $this->transactionUtil->payment_types(null, true, $business_id);
+                $with = [];
+                $shipping_statuses = $this->transactionUtil->shipping_statuses();
 
-            \Log::info('SellController::index called via AJAX', [
-                'only_shipments' => request()->input('only_shipments'),
-                'only_shipments_bool_check' => request()->only_shipments == 'true',
-                'location_id' => request()->input('location_id'),
-                'all' => request()->all()
-            ]);
+                $sale_type = ! empty(request()->input('sale_type')) ? request()->input('sale_type') : 'sell';
 
-            $sells = $this->transactionUtil->getListSells($business_id, $sale_type);
+                \Log::info('SellController::index called via AJAX', [
+                    'only_shipments' => request()->input('only_shipments'),
+                    'only_pending_shipments' => request()->input('only_pending_shipments'),
+                    'location_id' => request()->input('location_id'),
+                    'business_id' => $business_id,
+                    'all' => request()->all()
+                ]);
+
+                $sells = $this->transactionUtil->getListSells($business_id, $sale_type);
 
             // Apply all filters in a single reusable method
             $this->applySellListFilters($sells, $business_id, $sale_type, false);
@@ -637,6 +655,24 @@ class SellController extends Controller
                       ->skipTotalRecords()
                       ->setFilteredRecords($total_records)
                       ->make(true);
+                      
+            } catch (\Exception $e) {
+                \Log::error('DataTables generation error in SellController@index', [
+                    'error' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                    'business_id' => $business_id,
+                    'user_id' => request()->session()->get('user.id'),
+                    'request_params' => request()->all()
+                ]);
+                
+                return response()->json([
+                    'error' => 'Failed to load sales data: ' . $e->getMessage(),
+                    'data' => [],
+                    'recordsTotal' => 0,
+                    'recordsFiltered' => 0
+                ], 500);
+            }
         }
 
         $business_locations = BusinessLocation::forDropdown($business_id, false);
