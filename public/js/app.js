@@ -515,9 +515,9 @@ $(document).ready(function () {
         processing: true,
         serverSide: true,
         fixedHeader: false,
-        scrollY: "75vh",
-        scrollX: true,
-        scrollCollapse: true,
+        scrollY: false,
+        scrollX: false,
+        scrollCollapse: false,
         // Prevent header duplication
         initComplete: function () {
             // Remove any duplicate headers created by scrollX/scrollY
