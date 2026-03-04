@@ -727,4 +727,7 @@
         }
     });
     </script>
+    
+    {{-- Product-Customer Assignment Script --}}
+    <script src="{{ asset('js/pos_product_customer_assignment.js?v=' . time()) }}"></script>
 @endsection

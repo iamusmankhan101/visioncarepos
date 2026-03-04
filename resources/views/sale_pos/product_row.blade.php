@@ -346,6 +346,17 @@
 				</div>
 			</td>
 		@endif
+		
+		{{-- Customer Assignment Column --}}
+		<td>
+			<select name="products[{{$row_count}}][assigned_customer_id]" 
+					class="form-control product_customer_assignment" 
+					data-row="{{$row_count}}">
+				<option value="">@lang('lang_v1.select_customer')</option>
+			</select>
+			<small class="text-muted">@lang('lang_v1.assign_to_customer')</small>
+		</td>
+		
 		@php
 			$pos_unit_price = !empty($product->unit_price_before_discount) ? $product->unit_price_before_discount : $product->default_sell_price;
 
@@ -396,6 +407,16 @@
 				</div>
 			</td>
 		@endif
+		
+		{{-- Customer Assignment Column --}}
+		<td>
+			<select name="products[{{$row_count}}][assigned_customer_id]" 
+					class="form-control product_customer_assignment" 
+					data-row="{{$row_count}}">
+				<option value="">@lang('lang_v1.select_customer')</option>
+			</select>
+			<small class="text-muted">@lang('lang_v1.assign_to_customer')</small>
+		</td>
 	@endif
 	<td class="{{$hide_tax}}">
 		<input type="text" style="width: auto" name="products[{{$row_count}}][unit_price_inc_tax]" class="form-control pos_unit_price_inc_tax input_number" value="{{@num_format($unit_price_inc_tax)}}" @if(!$edit_price) readonly @endif @if(!empty($pos_settings['enable_msp'])) data-rule-min-value="{{$unit_price_inc_tax}}" data-msg-min-value="{{__('lang_v1.minimum_selling_price_error_msg', ['price' => @num_format($unit_price_inc_tax)])}}" @endif>

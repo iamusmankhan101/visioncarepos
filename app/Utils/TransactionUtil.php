@@ -384,6 +384,7 @@ class TransactionUtil extends Util
                     'res_line_order_status' => ! empty($product['res_service_staff_id']) ? 'received' : null,
                     'so_line_id' => ! empty($product['so_line_id']) ? $product['so_line_id'] : null,
                     'secondary_unit_quantity' => ! empty($product['secondary_unit_quantity']) ? $this->num_uf($product['secondary_unit_quantity']) : 0,
+                    'assigned_customer_id' => ! empty($product['assigned_customer_id']) ? $product['assigned_customer_id'] : null,
                 ];
 
                 foreach ($extra_line_parameters as $key => $value) {
@@ -1208,11 +1209,19 @@ class TransactionUtil extends Util
                     $additional_customer = Contact::find($customer_id);
                     if ($additional_customer) {
                         $customer_names[] = $additional_customer->name;
+                        
+                        // Get products assigned to this customer
+                        $assigned_products = $transaction->sell_lines()
+                            ->where('assigned_customer_id', $customer_id)
+                            ->with(['product', 'product.unit', 'variations', 'variations.product_variation'])
+                            ->get();
+                        
                         $customers_data[] = [
                             'id' => $additional_customer->id,
                             'name' => $additional_customer->name,
                             'contact_id' => $additional_customer->contact_id,
                             'mobile' => $additional_customer->mobile,
+                            'assigned_products' => $assigned_products,
                             'prescription' => [
                                 'right_eye' => [
                                     'distance' => [
@@ -1243,6 +1252,14 @@ class TransactionUtil extends Util
                     }
                 }
             }
+            
+            // Also get products assigned to the primary customer
+            $primary_assigned_products = $transaction->sell_lines()
+                ->where('assigned_customer_id', $transaction->contact_id)
+                ->with(['product', 'product.unit', 'variations', 'variations.product_variation'])
+                ->get();
+            
+            $output['primary_customer_assigned_products'] = $primary_assigned_products;
             
             if (!empty($customer_names)) {
                 $output['additional_customers'] = implode(', ', $customer_names);
