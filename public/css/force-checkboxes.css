@@ -1,0 +1,249 @@
+/* FORCE CHECKBOXES VISIBLE - NUCLEAR CSS */
+/* Include this CSS file to force all checkboxes visible */
+
+/* COMPLETELY DESTROY iCheck wrappers */
+.icheckbox_square-blue,
+.iradio_square-blue,
+.icheckbox_minimal,
+.iradio_minimal {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    width: 0 !important;
+    height: 0 !important;
+    position: absolute !important;
+    left: -9999px !important;
+    top: -9999px !important;
+    z-index: -1 !important;
+}
+
+/* FORCE SHOW NATIVE CHECKBOXES */
+.icheckbox_square-blue input[type="checkbox"],
+.iradio_square-blue input[type="radio"],
+.icheckbox_minimal input[type="checkbox"],
+.iradio_minimal input[type="radio"],
+input[type="checkbox"].input-icheck,
+input[type="radio"].input-icheck,
+input.input-icheck {
+    display: inline-block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: static !important;
+    left: auto !important;
+    top: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    width: 18px !important;
+    height: 18px !important;
+    min-width: 18px !important;
+    min-height: 18px !important;
+    max-width: 18px !important;
+    max-height: 18px !important;
+    margin: 0 8px 0 0 !important;
+    padding: 0 !important;
+    vertical-align: middle !important;
+    z-index: 999999 !important;
+    cursor: pointer !important;
+    
+    /* Native styling */
+    -webkit-appearance: checkbox !important;
+    -moz-appearance: checkbox !important;
+    appearance: checkbox !important;
+    border: 2px solid #007cba !important;
+    border-radius: 3px !important;
+    background: white !important;
+    outline: none !important;
+    box-shadow: none !important;
+    transform: none !important;
+    clip: auto !important;
+    overflow: visible !important;
+}
+
+/* Radio buttons */
+input[type="radio"].input-icheck,
+input[type="radio"] {
+    -webkit-appearance: radio !important;
+    -moz-appearance: radio !important;
+    appearance: radio !important;
+    border-radius: 50% !important;
+}
+
+/* Hover effects */
+input[type="checkbox"].input-icheck:hover,
+input[type="radio"].input-icheck:hover {
+    border-color: #005a87 !important;
+    box-shadow: 0 0 5px rgba(0, 124, 186, 0.3) !important;
+}
+
+/* Focus effects */
+input[type="checkbox"].input-icheck:focus,
+input[type="radio"].input-icheck:focus {
+    border-color: #005a87 !important;
+    box-shadow: 0 0 0 2px rgba(0, 124, 186, 0.2) !important;
+}
+
+/* Checked state */
+input[type="checkbox"].input-icheck:checked,
+input[type="radio"].input-icheck:checked {
+    background: #007cba !important;
+    border-color: #007cba !important;
+}
+
+/* Checkmark for checkboxes */
+input[type="checkbox"].input-icheck:checked::after {
+    content: '✓' !important;
+    position: absolute !important;
+    top: -2px !important;
+    left: 2px !important;
+    color: white !important;
+    font-size: 14px !important;
+    font-weight: bold !important;
+    line-height: 1 !important;
+    z-index: 999999 !important;
+}
+
+/* DESTROY iCheck helper */
+.iCheck-helper {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    width: 0 !important;
+    height: 0 !important;
+    position: absolute !important;
+    left: -9999px !important;
+    top: -9999px !important;
+}
+
+/* Force checkbox containers */
+.checkbox {
+    display: block !important;
+    margin: 10px 0 !important;
+    min-height: 20px !important;
+    position: relative !important;
+}
+
+.checkbox label {
+    cursor: pointer !important;
+    user-select: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    margin: 0 !important;
+    padding: 5px 0 !important;
+    position: relative !important;
+}
+
+/* Emergency visibility for any hidden checkboxes */
+input[type="checkbox"][style*="display: none"],
+input[type="checkbox"][style*="visibility: hidden"],
+input[type="checkbox"][style*="opacity: 0"],
+input[type="radio"][style*="display: none"],
+input[type="radio"][style*="visibility: hidden"],
+input[type="radio"][style*="opacity: 0"] {
+    display: inline-block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: static !important;
+}
+
+/* NUCLEAR OPTION - Force all checkboxes visible */
+input[type="checkbox"], 
+input[type="radio"] {
+    -webkit-appearance: checkbox !important;
+    -moz-appearance: checkbox !important;
+    appearance: checkbox !important;
+    width: 18px !important;
+    height: 18px !important;
+    display: inline-block !important;
+    position: static !important;
+    margin: 0 5px 0 0 !important;
+    cursor: pointer !important;
+    outline: none !important;
+    border: 2px solid #007bff !important;
+    border-radius: 3px !important;
+    background: white !important;
+    vertical-align: middle !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    z-index: 9999 !important;
+    left: auto !important;
+    top: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+}
+
+input[type="radio"] {
+    border-radius: 50% !important;
+    -webkit-appearance: radio !important;
+    -moz-appearance: radio !important;
+    appearance: radio !important;
+}
+
+/* Blue background when checked */
+input[type="checkbox"]:checked,
+input[type="radio"]:checked {
+    background-color: #007bff !important;
+    border-color: #007bff !important;
+    color: white !important;
+}
+
+/* Blue checkmark symbol */
+input[type="checkbox"]:checked::before,
+input[type="checkbox"]:checked::after {
+    content: "✓" !important;
+    position: absolute !important;
+    left: 2px !important;
+    top: -2px !important;
+    font-size: 14px !important;
+    color: white !important;
+    font-weight: bold !important;
+    line-height: 1 !important;
+}
+
+/* Blue tick focus state */
+input[type="checkbox"]:focus,
+input[type="radio"]:focus {
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25) !important;
+    border-color: #007bff !important;
+}
+
+/* Ensure checkboxes work in forms */
+form input[type="checkbox"],
+form input[type="radio"],
+.form-group input[type="checkbox"],
+.form-group input[type="radio"] {
+    -webkit-appearance: checkbox !important;
+    -moz-appearance: checkbox !important;
+    appearance: checkbox !important;
+    width: 18px !important;
+    height: 18px !important;
+    display: inline-block !important;
+    position: static !important;
+    margin: 0 5px 0 0 !important;
+    cursor: pointer !important;
+    outline: none !important;
+    border: 2px solid #007bff !important;
+    border-radius: 3px !important;
+    background: white !important;
+    vertical-align: middle !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    z-index: 9999 !important;
+}
+
+form input[type="radio"],
+.form-group input[type="radio"] {
+    border-radius: 50% !important;
+    -webkit-appearance: radio !important;
+    -moz-appearance: radio !important;
+    appearance: radio !important;
+}
+
+/* Blue background when checked in forms */
+form input[type="checkbox"]:checked,
+form input[type="radio"]:checked,
+.form-group input[type="checkbox"]:checked,
+.form-group input[type="radio"]:checked {
+    background-color: #007bff !important;
+    border-color: #007bff !important;
+    color: white !important;
+}
