@@ -570,6 +570,15 @@ window.addEventListener('afterprint', function() {
                             {{$line['name']}} {{$line['product_variation']}} {{$line['variation']}} 
                             @if(!empty($line['sub_sku'])), {{$line['sub_sku']}} @endif @if(!empty($line['brand'])), {{$line['brand']}} @endif @if(!empty($line['cat_code'])), {{$line['cat_code']}}@endif
                             @if(!empty($line['product_custom_fields'])), {{$line['product_custom_fields']}} @endif
+                            
+                            {{-- Display assigned customer name if available --}}
+                            @if(!empty($line['assigned_customer_name']))
+                            <br>
+                            <small style="color: #2196F3; font-weight: bold;">
+                            	<i class="fa fa-user"></i> For: {{$line['assigned_customer_name']}}
+                            </small>
+                            @endif
+                            
                             @if(!empty($line['product_description']))
                             	<small>
                             		{!!$line['product_description']!!}

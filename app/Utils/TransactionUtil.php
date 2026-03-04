@@ -1369,7 +1369,7 @@ class TransactionUtil extends Util
         $output['lines'] = [];
         $total_exempt = 0;
         if (in_array($transaction_type, ['sell', 'sales_order'])) {
-            $sell_line_relations = ['modifiers', 'sub_unit', 'warranties'];
+            $sell_line_relations = ['modifiers', 'sub_unit', 'warranties', 'assigned_customer'];
 
             if ($is_lot_number_enabled == 1) {
                 $sell_line_relations[] = 'lot_details';
@@ -2182,6 +2182,14 @@ class TransactionUtil extends Util
             ];
 
             $temp = [];
+
+            // Add assigned customer name if available
+            if (!empty($line->assigned_customer_id)) {
+                $assigned_customer = \App\Models\Contact::find($line->assigned_customer_id);
+                if ($assigned_customer) {
+                    $line_array['assigned_customer_name'] = $assigned_customer->name;
+                }
+            }
 
             if (! empty($product->product_custom_field1) && in_array('product_custom_field1', $product_custom_fields_settings)) {
                 $temp[] = $product->product_custom_field1;

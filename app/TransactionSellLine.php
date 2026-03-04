@@ -108,4 +108,12 @@ class TransactionSellLine extends Model
     {
         return $this->belongsTo(\App\TransactionSellLine::class, 'so_line_id');
     }
+
+    /**
+     * Get the assigned customer for this sell line.
+     */
+    public function assigned_customer()
+    {
+        return $this->belongsTo(\App\Contact::class, 'assigned_customer_id');
+    }
 }
