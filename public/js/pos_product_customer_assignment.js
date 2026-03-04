@@ -3,6 +3,7 @@
  * 
  * This module handles assigning specific products to specific customers
  * when multiple customers are selected in a POS transaction.
+ * Automatically includes related customers (family members) based on phone number.
  */
 
 (function() {
@@ -11,15 +12,23 @@
     // Store selected customers globally
     window.posSelectedCustomers = [];
     
+    // Store related customers cache
+    var relatedCustomersCache = {};
+    
     /**
      * Initialize product-customer assignment functionality
      */
     function initProductCustomerAssignment() {
-        console.log('🎯 Initializing Product-Customer Assignment');
+        console.log('🎯 Initializing Product-Customer Assignment with Related Customers');
         
         // Listen for customer selection changes
         $(document).on('change', '#customer_id', function() {
-            updateSelectedCustomers();
+            var customerId = $(this).val();
+            if (customerId) {
+                fetchAndAddRelatedCustomers(customerId);
+            } else {
+                updateSelectedCustomers();
+            }
         });
         
         // Listen for product row additions
@@ -37,27 +46,105 @@
     }
     
     /**
-     * Update the list of selected customers
+     * Fetch related customers from server and add them to selection
+     */
+    function fetchAndAddRelatedCustomers(customerId) {
+        console.log('🔍 Fetching related customers for:', customerId);
+        
+        // Check cache first
+        if (relatedCustomersCache[customerId]) {
+            console.log('✅ Using cached related customers');
+            addCustomersToSelection(relatedCustomersCache[customerId]);
+            return;
+        }
+        
+        // Fetch from server
+        $.ajax({
+            url: '/contacts/' + customerId + '/related-customers',
+            method: 'GET',
+            dataType: 'json',
+            success: function(response) {
+                console.log('📥 Related customers response:', response);
+                
+                if (response.success && response.has_related && response.customers) {
+                    // Cache the results
+                    relatedCustomersCache[customerId] = response.customers;
+                    
+                    // Add all related customers to selection
+                    addCustomersToSelection(response.customers);
+                    
+                    // Show notification
+                    if (typeof toastr !== 'undefined') {
+                        var count = response.customers.length;
+                        toastr.info('Found ' + count + ' related customer(s) - they have been added to the dropdown', 'Related Customers');
+                    }
+                } else {
+                    // No related customers, just add the selected one
+                    updateSelectedCustomers();
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('❌ Error fetching related customers:', error);
+                // Fallback to just adding the selected customer
+                updateSelectedCustomers();
+            }
+        });
+    }
+    
+    /**
+     * Add multiple customers to selection
+     */
+    function addCustomersToSelection(customers) {
+        // Clear existing selections
+        window.posSelectedCustomers = [];
+        
+        customers.forEach(function(customer) {
+            var displayName = customer.name;
+            
+            // Add badge for primary customer
+            if (customer.is_primary) {
+                displayName += ' (Primary)';
+            }
+            
+            // Add prescription summary if available
+            if (customer.prescription_summary) {
+                displayName += ' - ' + customer.prescription_summary;
+            }
+            
+            window.posSelectedCustomers.push({
+                id: customer.id,
+                name: displayName,
+                original_name: customer.name,
+                mobile: customer.mobile,
+                contact_id: customer.contact_id,
+                is_primary: customer.is_primary || false,
+                is_current: customer.is_current || false
+            });
+        });
+        
+        console.log('✅ Added customers to selection:', window.posSelectedCustomers);
+        populateAllCustomerDropdowns();
+    }
+    
+    /**
+     * Update the list of selected customers (single customer fallback)
      */
     function updateSelectedCustomers() {
         var customerId = $('#customer_id').val();
         var customerText = $('#customer_id option:selected').text();
         
         if (customerId && customerText) {
-            // Check if customer is already in the list
-            var exists = window.posSelectedCustomers.some(function(c) {
-                return c.id == customerId;
-            });
+            // Clear and add just this customer
+            window.posSelectedCustomers = [{
+                id: customerId,
+                name: customerText,
+                original_name: customerText,
+                is_primary: true,
+                is_current: true
+            }];
             
-            if (!exists) {
-                window.posSelectedCustomers.push({
-                    id: customerId,
-                    name: customerText
-                });
-                
-                console.log('✅ Customer added:', customerText);
-                populateAllCustomerDropdowns();
-            }
+            console.log('✅ Single customer added:', customerText);
+            populateAllCustomerDropdowns();
         }
     }
     
@@ -92,6 +179,16 @@
         // Auto-select if only one customer
         if (window.posSelectedCustomers.length === 1 && !currentValue) {
             $dropdown.val(window.posSelectedCustomers[0].id);
+        }
+        
+        // Auto-select primary customer if multiple customers but no assignment
+        if (window.posSelectedCustomers.length > 1 && !currentValue) {
+            var primaryCustomer = window.posSelectedCustomers.find(function(c) {
+                return c.is_primary || c.is_current;
+            });
+            if (primaryCustomer) {
+                $dropdown.val(primaryCustomer.id);
+            }
         }
     }
     
@@ -174,7 +271,8 @@
         if (!exists) {
             window.posSelectedCustomers.push({
                 id: customerId,
-                name: customerName
+                name: customerName,
+                original_name: customerName
             });
             
             populateAllCustomerDropdowns();
@@ -207,8 +305,21 @@
      */
     window.clearCustomerSelections = function() {
         window.posSelectedCustomers = [];
+        relatedCustomersCache = {};
         populateAllCustomerDropdowns();
         console.log('🗑️ All customer selections cleared');
+    };
+    
+    /**
+     * Refresh related customers for current selection
+     */
+    window.refreshRelatedCustomers = function() {
+        var customerId = $('#customer_id').val();
+        if (customerId) {
+            // Clear cache and refetch
+            delete relatedCustomersCache[customerId];
+            fetchAndAddRelatedCustomers(customerId);
+        }
     };
     
     /**
@@ -264,5 +375,5 @@
         });
     });
     
-    console.log('✅ Product-Customer Assignment module loaded');
+    console.log('✅ Product-Customer Assignment module loaded with Related Customers support');
 })();

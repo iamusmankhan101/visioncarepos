@@ -3,21 +3,33 @@
 ## Overview
 This feature allows you to assign specific products to specific customers when making a purchase with multiple customers in the POS screen. Each customer's invoice will only show the products assigned to them.
 
+**NEW:** The system now automatically includes related customers (family members) who share the same phone number, making it easy to assign products to different family members in a single transaction.
+
 ## How It Works
 
 ### 1. POS Screen
-When you add products to a POS transaction with multiple customers:
+When you add products to a POS transaction:
+- Select a customer from the main customer dropdown
+- **The system automatically fetches and includes all related customers (family members)**
 - A new "Customer" column appears in the product table
-- Each product row has a dropdown to select which customer the product is for
-- The dropdown is automatically populated with all selected customers
+- Each product row has a dropdown showing the main customer and all related customers
+- The dropdown is automatically populated with all family members
 
-### 2. Customer Selection
+### 2. Related Customers (Family Members)
+- **Automatic Detection:** When you select a customer, the system automatically finds all related customers who share the same phone number
+- **Visual Indicators:** 
+  - Primary customer is marked with "(Primary)" badge
+  - Prescription information is shown for each customer (if available)
+- **Smart Assignment:** Products are auto-assigned to the primary/current customer by default
+
+### 3. Customer Selection
 - Select the primary customer as usual
+- **Related customers are automatically loaded** - no manual action needed
 - Add products to the cart
-- For each product, select which customer it's for from the dropdown
-- If only one customer is selected, the product is automatically assigned to that customer
+- For each product, select which customer (or family member) it's for from the dropdown
+- If only one customer exists, the product is automatically assigned to that customer
 
-### 3. Invoice Generation
+### 4. Invoice Generation
 - When generating invoices, products are filtered by customer
 - Each customer's invoice only shows their assigned products
 - The receipt shows product assignments clearly
@@ -54,6 +66,12 @@ php artisan migrate
 ## JavaScript API
 
 ### Global Functions
+
+#### `window.refreshRelatedCustomers()`
+Refreshes the related customers list for the current selection
+```javascript
+window.refreshRelatedCustomers();
+```
 
 #### `window.addCustomerToSelection(customerId, customerName)`
 Adds a customer to the selection list
@@ -92,18 +110,24 @@ if (window.validateProductCustomerAssignments()) {
 
 ## Usage Example
 
-### Scenario: Two customers buying different products
+### Scenario: Family purchase with related customers
 
 1. **Select Primary Customer**
    - Select "John Doe" as the primary customer
+   - **System automatically finds related customers:**
+     - John Doe (Primary) - R: -1.50/-0.75/180
+     - Jane Doe - R: -2.00/-1.00/90
+     - Jimmy Doe - R: -0.50/-0.25/180
 
 2. **Add Products**
    - Add "Eyeglasses Frame A" to cart
    - Add "Contact Lenses B" to cart
+   - Add "Reading Glasses C" to cart
 
-3. **Assign Products**
-   - For "Eyeglasses Frame A", select "John Doe" from the customer dropdown
-   - For "Contact Lenses B", select "Jane Smith" from the customer dropdown
+3. **Assign Products to Family Members**
+   - For "Eyeglasses Frame A", select "John Doe (Primary)" from the customer dropdown
+   - For "Contact Lenses B", select "Jane Doe" from the customer dropdown
+   - For "Reading Glasses C", select "Jimmy Doe" from the customer dropdown
 
 4. **Complete Sale**
    - Process payment as usual
@@ -111,7 +135,33 @@ if (window.validateProductCustomerAssignments()) {
 
 5. **Result**
    - John Doe's invoice shows only "Eyeglasses Frame A"
-   - Jane Smith's invoice shows only "Contact Lenses B"
+   - Jane Doe's invoice shows only "Contact Lenses B"
+   - Jimmy Doe's invoice shows only "Reading Glasses C"
+   - All family members' prescriptions are included in their respective invoices
+
+## Related Customers (Family Members)
+
+### How Related Customers Work
+- **Phone-Based Grouping:** Customers are automatically grouped by their phone number
+- **Automatic Detection:** When you select a customer, all related customers with the same phone number are automatically loaded
+- **Visual Identification:**
+  - Primary customer is marked with "(Primary)" badge
+  - Current selected customer is highlighted
+  - Prescription information is displayed for each customer
+
+### Benefits
+1. **Family Purchases:** Easily handle purchases for entire families in one transaction
+2. **Quick Assignment:** All family members appear in the dropdown automatically
+3. **Accurate Records:** Each family member gets their own invoice with their products
+4. **Prescription Tracking:** Prescription information is shown for easy identification
+
+### Example
+If you select "John Doe" who has phone number "555-1234", the system will automatically find:
+- John Doe (Primary) - R: -1.50/-0.75/180 | L: -1.50/-0.75/180
+- Jane Doe - R: -2.00/-1.00/90 | L: -2.00/-1.00/90
+- Jimmy Doe - R: -0.50/-0.25/180 | L: -0.50/-0.25/180
+
+All three will appear in the customer dropdown for product assignment.
 
 ## Validation
 
@@ -151,6 +201,14 @@ if (!window.validateProductCustomerAssignments()) {
 - Ensure a customer is selected in the main customer field
 - Check that `window.posSelectedCustomers` array is populated
 - Open browser console and type: `console.log(window.posSelectedCustomers)`
+- Verify the related customers API is working: Check Network tab for `/contacts/{id}/related-customers` request
+
+### Related customers not loading
+- Check browser console for AJAX errors
+- Verify the route exists: `/contacts/{id}/related-customers`
+- Check that customers have the same phone number
+- Ensure customers have `contact_status = 'active'`
+- Check server logs for any errors
 
 ### Assignments not saving
 - Check that the `assigned_customer_id` column exists in `transaction_sell_lines` table
