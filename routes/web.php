@@ -1,0 +1,993 @@
+<?php
+
+use App\Http\Controllers\AccountController;
+use App\Http\Controllers\AccountReportsController;
+use App\Http\Controllers\AccountTypeController;
+// use App\Http\Controllers\Auth;
+use App\Http\Controllers\BackUpController;
+use App\Http\Controllers\BarcodeController;
+use App\Http\Controllers\BrandController;
+use App\Http\Controllers\BusinessController;
+use App\Http\Controllers\BusinessLocationController;
+use App\Http\Controllers\CashRegisterController;
+use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\CombinedPurchaseReturnController;
+use App\Http\Controllers\ContactController;
+use App\Http\Controllers\CustomerGroupController;
+use App\Http\Controllers\DashboardConfiguratorController;
+use App\Http\Controllers\DiscountController;
+use App\Http\Controllers\DocumentAndNoteController;
+use App\Http\Controllers\ExpenseCategoryController;
+use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\GroupTaxController;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\ImportOpeningStockController;
+use App\Http\Controllers\ImportProductsController;
+use App\Http\Controllers\ImportSalesController;
+use App\Http\Controllers\Install;
+use App\Http\Controllers\InvoiceLayoutController;
+use App\Http\Controllers\InvoiceSchemeController;
+use App\Http\Controllers\LabelsController;
+use App\Http\Controllers\LedgerDiscountController;
+use App\Http\Controllers\LocationSettingsController;
+use App\Http\Controllers\ManageUserController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\NotificationTemplateController;
+use App\Http\Controllers\OpeningStockController;
+use App\Http\Controllers\PrinterController;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\PurchaseController;
+use App\Http\Controllers\PurchaseOrderController;
+use App\Http\Controllers\PurchaseRequisitionController;
+use App\Http\Controllers\PurchaseReturnController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\Restaurant;
+use App\Http\Controllers\RoleController;
+use App\Http\Controllers\SalesCommissionAgentController;
+use App\Http\Controllers\SalesOrderController;
+use App\Http\Controllers\SellController;
+use App\Http\Controllers\SellingPriceGroupController;
+use App\Http\Controllers\SellPosController;
+use App\Http\Controllers\BusinessSelectionController;
+use App\Http\Controllers\SellReturnController;
+use App\Http\Controllers\StockAdjustmentController;
+use App\Http\Controllers\StockTransferController;
+use App\Http\Controllers\TaxonomyController;
+use App\Http\Controllers\TransactionPaymentController;
+use App\Http\Controllers\VoucherController;
+use App\Http\Controllers\TypesOfServiceController;
+use App\Http\Controllers\UnitController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\VariationTemplateController;
+use App\Http\Controllers\WarrantyController;
+use Illuminate\Support\Facades\Route;
+
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+|
+| Here is where you can register web routes for your application. These
+| routes are loaded by the RouteServiceProvider within a group which
+| contains the "web" middleware group. Now create something great!
+|
+*/
+
+include_once 'install_r.php';
+
+Route::get('/', function () {
+    return view('welcome');
+});
+
+Route::middleware(['setData'])->group(function () {
+    // Authentication Routes
+    Route::get('login', [App\Http\Controllers\Auth\LoginController::class, 'showLoginForm'])->name('login');
+    Route::post('login', [App\Http\Controllers\Auth\LoginController::class, 'login']);
+    Route::post('logout', [App\Http\Controllers\Auth\LoginController::class, 'logout'])->name('logout');
+
+    // Business Selection Routes
+    Route::middleware(['auth'])->group(function () {
+        Route::get('business/select', [BusinessSelectionController::class, 'select'])->name('business.select');
+        Route::get('business/register', [BusinessSelectionController::class, 'register'])->name('business.register');
+        Route::post('business/store', [BusinessSelectionController::class, 'store'])->name('business.store');
+        Route::post('business/switch', [BusinessSelectionController::class, 'switch'])->name('business.switch');
+        Route::delete('business/delete', [BusinessSelectionController::class, 'delete'])->name('business.delete');
+        
+        // Test route for debugging
+        Route::get('test-business-select', function() {
+            try {
+                $user = auth()->user();
+                if (!$user) {
+                    return 'User not authenticated';
+                }
+                
+                // Use the same simplified query as the controller
+                $businesses = \App\Business::where('is_active', 1)
+                    ->where('owner_id', $user->id)
+                    ->get();
+                    
+                return view('business.select', ['available_businesses' => $businesses]);
+            } catch (\Exception $e) {
+                return 'Error: ' . $e->getMessage() . '<br><br>Stack: <pre>' . $e->getTraceAsString() . '</pre>';
+            }
+        });
+    });
+
+    // Registration Routes
+    Route::get('register', [App\Http\Controllers\Auth\RegisterController::class, 'showRegistrationForm'])->name('register');
+    Route::post('register', [App\Http\Controllers\Auth\RegisterController::class, 'register']);
+
+    // Password Reset Routes
+    Route::get('password/reset', [App\Http\Controllers\Auth\ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
+    Route::post('password/email', [App\Http\Controllers\Auth\ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
+    Route::get('password/reset/{token}', [App\Http\Controllers\Auth\ResetPasswordController::class, 'showResetForm'])->name('password.reset');
+    Route::post('password/reset', [App\Http\Controllers\Auth\ResetPasswordController::class, 'reset'])->name('password.update');
+
+    Route::get('/business/register', [BusinessController::class, 'getRegister'])->name('business.getRegister');
+    Route::post('/business/register', [BusinessController::class, 'postRegister'])->name('business.postRegister');
+    Route::post('/business/register/check-username', [BusinessController::class, 'postCheckUsername'])->name('business.postCheckUsername');
+    Route::post('/business/register/check-email', [BusinessController::class, 'postCheckEmail'])->name('business.postCheckEmail');
+
+    Route::get('/invoice/{token}', [SellPosController::class, 'showInvoice'])
+        ->name('show_invoice');
+    Route::get('/quote/{token}', [SellPosController::class, 'showInvoice'])
+        ->name('show_quote');
+
+    Route::get('/pay/{token}', [SellPosController::class, 'invoicePayment'])
+        ->name('invoice_payment');
+    Route::post('/confirm-payment/{id}', [SellPosController::class, 'confirmPayment'])
+        ->name('confirm_payment');
+});
+
+//Routes for authenticated users only
+Route::middleware(['setData', 'auth', 'SetSessionData', 'language', 'timezone', 'AdminSidebarMenu', 'CheckUserLogin', 'CheckBusinessSelection'])->group(function () {
+    
+    Route::get('pos/payment/{id}', [SellPosController::class, 'edit'])->name('edit-pos-payment');
+    Route::get('service-staff-availability', [SellPosController::class, 'showServiceStaffAvailibility']);
+    Route::get('pause-resume-service-staff-timer/{user_id}', [SellPosController::class, 'pauseResumeServiceStaffTimer']);
+    Route::get('mark-as-available/{user_id}', [SellPosController::class, 'markAsAvailable']);
+
+    Route::resource('purchase-requisition', PurchaseRequisitionController::class)->except(['edit', 'update']);
+    Route::post('/get-requisition-products', [PurchaseRequisitionController::class, 'getRequisitionProducts'])->name('get-requisition-products');
+    Route::get('get-purchase-requisitions/{location_id}', [PurchaseRequisitionController::class, 'getPurchaseRequisitions']);
+    Route::get('get-purchase-requisition-lines/{purchase_requisition_id}', [PurchaseRequisitionController::class, 'getPurchaseRequisitionLines']);
+
+    Route::get('/sign-in-as-user/{id}', [ManageUserController::class, 'signInAsUser'])->name('sign-in-as-user');
+
+    Route::get('/home', [HomeController::class, 'index'])->name('home');
+    Route::get('/home/get-totals', [HomeController::class, 'getTotals']);
+    Route::get('/home/product-stock-alert', [HomeController::class, 'getProductStockAlert']);
+    Route::get('/home/purchase-payment-dues', [HomeController::class, 'getPurchasePaymentDues']);
+    Route::get('/home/sales-payment-dues', [HomeController::class, 'getSalesPaymentDues']);
+    Route::post('/home/switch-location', [HomeController::class, 'switchLocation']);
+    Route::post('/attach-medias-to-model', [HomeController::class, 'attachMediasToGivenModel'])->name('attach.medias.to.model');
+    Route::get('/calendar', [HomeController::class, 'getCalendar'])->name('calendar');
+
+    Route::post('/test-email', [BusinessController::class, 'testEmailConfiguration']);
+    Route::post('/test-sms', [BusinessController::class, 'testSmsConfiguration']);
+    Route::get('/business/settings', [BusinessController::class, 'getBusinessSettings'])->name('business.getBusinessSettings');
+    Route::post('/business/update', [BusinessController::class, 'postBusinessSettings'])->name('business.postBusinessSettings');
+    Route::get('/user/profile', [UserController::class, 'getProfile'])->name('user.getProfile');
+    Route::post('/user/update', [UserController::class, 'updateProfile'])->name('user.updateProfile');
+    Route::post('/user/update-password', [UserController::class, 'updatePassword'])->name('user.updatePassword');
+
+    Route::resource('brands', BrandController::class);
+
+    Route::resource('payment-account', AccountController::class);
+
+    Route::resource('tax-rates', VoucherController::class);
+    Route::get('vouchers/active', [VoucherController::class, 'getActiveVouchers'])->name('vouchers.active');
+
+    Route::resource('units', UnitController::class);
+
+    Route::resource('ledger-discount', LedgerDiscountController::class)->only('edit', 'destroy', 'store', 'update');
+
+    Route::post('check-mobile', [ContactController::class, 'checkMobile']);
+    Route::get('/get-contact-due/{contact_id}', [ContactController::class, 'getContactDue']);
+    Route::get('/contacts/payments/{contact_id}', [ContactController::class, 'getContactPayments']);
+    Route::get('/contacts/map', [ContactController::class, 'contactMap']);
+    Route::get('/contacts/update-status/{id}', [ContactController::class, 'updateStatus']);
+    Route::get('/contacts/stock-report/{supplier_id}', [ContactController::class, 'getSupplierStockReport']);
+    Route::get('/contacts/ledger', [ContactController::class, 'getLedger']);
+    Route::post('/contacts/send-ledger', [ContactController::class, 'sendLedger']);
+    Route::get('/contacts/import', [ContactController::class, 'getImportContacts'])->name('contacts.import');
+    Route::post('/contacts/import', [ContactController::class, 'postImportContacts']);
+    Route::post('/contacts/check-contacts-id', [ContactController::class, 'checkContactId']);
+
+    Route::post('/contacts/check-tax-number', [ContactController::class, 'checkTaxNumber']);
+    
+    Route::get('/contacts/customers', [ContactController::class, 'getCustomers']);
+    Route::get('/contacts/{id}/related-customers', [ContactController::class, 'getRelatedCustomers']);
+    Route::post('/contacts/{id}/store-related-customer', [ContactController::class, 'storeRelatedCustomer']);
+    Route::delete('/contacts/{id}/delete-related-customer', [ContactController::class, 'deleteRelatedCustomer']);
+    Route::get('/contacts/{id}/data', [ContactController::class, 'getContactData']);
+    Route::post('/contacts/bulk-delete', [ContactController::class, 'bulkDelete']);
+    Route::resource('contacts', ContactController::class);
+
+
+    Route::get('taxonomies-ajax-index-page', [TaxonomyController::class, 'getTaxonomyIndexPage']);
+    Route::resource('taxonomies', TaxonomyController::class);
+
+    Route::resource('variation-templates', VariationTemplateController::class);
+
+    Route::get('/products/download-excel', [ProductController::class, 'downloadExcel']);
+
+    Route::get('/products/stock-history/{id}', [ProductController::class, 'productStockHistory']);
+    Route::get('/delete-media/{media_id}', [ProductController::class, 'deleteMedia']);
+    Route::post('/products/mass-deactivate', [ProductController::class, 'massDeactivate']);
+    Route::get('/products/activate/{id}', [ProductController::class, 'activate']);
+    Route::get('/products/view-product-group-price/{id}', [ProductController::class, 'viewGroupPrice']);
+    Route::get('/products/add-selling-prices/{id}', [ProductController::class, 'addSellingPrices']);
+    Route::post('/products/save-selling-prices', [ProductController::class, 'saveSellingPrices']);
+    Route::post('/products/mass-delete', [ProductController::class, 'massDestroy']);
+    Route::get('/products/view/{id}', [ProductController::class, 'view']);
+    Route::get('/products/list', [ProductController::class, 'getProducts']);
+    Route::get('/products/list-no-variation', [ProductController::class, 'getProductsWithoutVariations']);
+    Route::post('/products/bulk-edit', [ProductController::class, 'bulkEdit']);
+    Route::post('/products/bulk-update', [ProductController::class, 'bulkUpdate']);
+    Route::post('/products/bulk-update-location', [ProductController::class, 'updateProductLocation']);
+    Route::get('/products/get-product-to-edit/{product_id}', [ProductController::class, 'getProductToEdit']);
+
+    Route::post('/products/get_sub_categories', [ProductController::class, 'getSubCategories']);
+    Route::get('/products/get_sub_units', [ProductController::class, 'getSubUnits']);
+    Route::post('/products/product_form_part', [ProductController::class, 'getProductVariationFormPart']);
+    Route::post('/products/get_product_variation_row', [ProductController::class, 'getProductVariationRow']);
+    Route::post('/products/get_variation_template', [ProductController::class, 'getVariationTemplate']);
+    Route::get('/products/get_variation_value_row', [ProductController::class, 'getVariationValueRow']);
+    Route::post('/products/check_product_sku', [ProductController::class, 'checkProductSku']);
+    Route::post('/products/check_product_name', [ProductController::class, 'checkProductName']);
+    Route::post('/products/validate_variation_skus', [ProductController::class, 'validateVaritionSkus']); //validates multiple skus at once
+    Route::get('/products/quick_add', [ProductController::class, 'quickAdd']);
+    Route::post('/products/save_quick_product', [ProductController::class, 'saveQuickProduct']);
+    Route::get('/products/get-combo-product-entry-row', [ProductController::class, 'getComboProductEntryRow']);
+    Route::post('/products/toggle-woocommerce-sync', [ProductController::class, 'toggleWooCommerceSync']);
+
+    Route::resource('products', ProductController::class);
+    Route::get('/toggle-subscription/{id}', [SellPosController::class, 'toggleRecurringInvoices']);
+    Route::post('/sells/pos/get-types-of-service-details', [SellPosController::class, 'getTypesOfServiceDetails']);
+    Route::get('/sells/subscriptions', [SellPosController::class, 'listSubscriptions']);
+    Route::get('/sells/duplicate/{id}', [SellController::class, 'duplicateSell']);
+    Route::get('/sells/drafts', [SellController::class, 'getDrafts']);
+    Route::get('/sells/convert-to-draft/{id}', [SellPosController::class, 'convertToInvoice']);
+    Route::get('/sells/convert-to-proforma/{id}', [SellPosController::class, 'convertToProforma']);
+    Route::get('/sells/quotations', [SellController::class, 'getQuotations']);
+    Route::get('/sells/draft-dt', [SellController::class, 'getDraftDatables']);
+    Route::get('/sells/sales-report', [SellController::class, 'salesReport']);
+    Route::get('/sells/bulk-print-invoices', [SellController::class, 'bulkPrintInvoices']);
+    Route::post('/sells/bulk-print-selected', [SellController::class, 'bulkPrintSelected']);
+    Route::post('/sells/bulk-delete', [SellController::class, 'bulkDelete']);
+    
+    // Temporary voucher test route
+    Route::get('/test-voucher-usage/{code}', function($code) {
+        try {
+            $voucher = \App\Voucher::where('code', $code)->first();
+            if (!$voucher) {
+                return response()->json(['error' => 'Voucher not found']);
+            }
+            
+            $before = $voucher->used_count;
+            $voucher->increment('used_count');
+            $after = $voucher->fresh()->used_count;
+            
+            return response()->json([
+                'success' => true,
+                'voucher_code' => $code,
+                'usage_limit' => $voucher->usage_limit,
+                'used_count_before' => $before,
+                'used_count_after' => $after,
+                'is_valid' => $voucher->fresh()->isValid(100),
+                'message' => "Voucher usage incremented from {$before} to {$after}"
+            ]);
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()]);
+        }
+    });
+
+    // Quick voucher fix route
+    Route::get('/fix-vouchers-now', function() {
+        try {
+            // Fix 1: Activate all vouchers
+            $activated = \App\Voucher::where('is_active', '!=', 1)->update(['is_active' => 1]);
+            
+            // Fix 2: Remove expired dates
+            $expiryFixed = \App\Voucher::where('expires_at', '<', now())->update(['expires_at' => null]);
+            
+            // Fix 3: Reset usage counts for testing
+            $usageReset = \App\Voucher::whereNotNull('usage_limit')
+                                    ->whereRaw('used_count >= usage_limit')
+                                    ->update(['used_count' => 0]);
+            
+            // Fix 4: Fix business_id
+            $businessIdFixed = \App\Voucher::where(function($query) {
+                $query->whereNull('business_id')->orWhere('business_id', 0);
+            })->update(['business_id' => 1]);
+            
+            // Get current status
+            $vouchers = \App\Voucher::all();
+            $validCount = $vouchers->filter(function($voucher) {
+                return $voucher->isValid(100);
+            })->count();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Vouchers fixed successfully!',
+                'fixes_applied' => [
+                    'activated' => $activated,
+                    'expiry_fixed' => $expiryFixed,
+                    'usage_reset' => $usageReset,
+                    'business_id_fixed' => $businessIdFixed
+                ],
+                'total_vouchers' => $vouchers->count(),
+                'valid_vouchers' => $validCount,
+                'vouchers' => $vouchers->map(function($voucher) {
+                    return [
+                        'code' => $voucher->code,
+                        'name' => $voucher->name,
+                        'is_active' => $voucher->is_active,
+                        'used_count' => $voucher->used_count,
+                        'usage_limit' => $voucher->usage_limit,
+                        'expires_at' => $voucher->expires_at,
+                        'is_valid' => $voucher->isValid(100)
+                    ];
+                })
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ]);
+        }
+    });
+
+    // Debug voucher API route
+    Route::get('/debug-vouchers', function() {
+        try {
+            $business_id = session('user.business_id', 1);
+            
+            // Get all vouchers
+            $allVouchers = \App\Voucher::all();
+            
+            // Get vouchers for this business
+            $businessVouchers = \App\Voucher::where('business_id', $business_id)->get();
+            
+            // Step by step filtering like the API does
+            $step1 = \App\Voucher::where('business_id', $business_id)->get();
+            $step2 = \App\Voucher::where('business_id', $business_id)->where('is_active', 1)->get();
+            $step3 = \App\Voucher::where('business_id', $business_id)
+                        ->where('is_active', 1)
+                        ->where(function($query) {
+                            $query->whereNull('expires_at')
+                                  ->orWhere('expires_at', '>', now());
+                        })->get();
+            $step4 = \App\Voucher::where('business_id', $business_id)
+                        ->where('is_active', 1)
+                        ->where(function($query) {
+                            $query->whereNull('expires_at')
+                                  ->orWhere('expires_at', '>', now());
+                        })
+                        ->where(function($query) {
+                            $query->whereNull('usage_limit')
+                                  ->orWhereRaw('used_count < usage_limit');
+                        })->get();
+            
+            // Test the final filter
+            $finalVouchers = $step4->filter(function($voucher) {
+                return $voucher->is_active && 
+                       (!$voucher->expires_at || $voucher->expires_at->isFuture()) &&
+                       (!$voucher->usage_limit || $voucher->used_count < $voucher->usage_limit);
+            });
+            
+            return response()->json([
+                'debug_info' => [
+                    'session_business_id' => $business_id,
+                    'current_time' => now()->toDateTimeString(),
+                    'all_vouchers_count' => $allVouchers->count(),
+                    'business_vouchers_count' => $businessVouchers->count(),
+                ],
+                'filtering_steps' => [
+                    'step1_business_id' => $step1->count(),
+                    'step2_active' => $step2->count(),
+                    'step3_not_expired' => $step3->count(),
+                    'step4_usage_limit' => $step4->count(),
+                    'final_valid' => $finalVouchers->count()
+                ],
+                'all_vouchers' => $allVouchers->map(function($voucher) {
+                    return [
+                        'id' => $voucher->id,
+                        'business_id' => $voucher->business_id,
+                        'code' => $voucher->code,
+                        'name' => $voucher->name,
+                        'is_active' => $voucher->is_active,
+                        'expires_at' => $voucher->expires_at,
+                        'used_count' => $voucher->used_count,
+                        'usage_limit' => $voucher->usage_limit,
+                        'min_amount' => $voucher->min_amount,
+                        'is_valid_100' => $voucher->isValid(100),
+                        'is_valid_0' => $voucher->isValid(0),
+                        'basic_checks' => [
+                            'is_active' => $voucher->is_active,
+                            'not_expired' => !$voucher->expires_at || $voucher->expires_at->isFuture(),
+                            'usage_ok' => !$voucher->usage_limit || $voucher->used_count < $voucher->usage_limit,
+                            'min_amount_ok_for_100' => !$voucher->min_amount || 100 >= $voucher->min_amount,
+                            'min_amount_ok_for_0' => !$voucher->min_amount || 0 >= $voucher->min_amount,
+                        ]
+                    ];
+                }),
+                'step4_vouchers' => $step4->map(function($voucher) {
+                    return [
+                        'code' => $voucher->code,
+                        'is_active' => $voucher->is_active,
+                        'expires_at' => $voucher->expires_at,
+                        'used_count' => $voucher->used_count,
+                        'usage_limit' => $voucher->usage_limit,
+                        'min_amount' => $voucher->min_amount
+                    ];
+                })
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+        }
+    });
+
+    // Check voucher usage tracking
+    Route::get('/check-voucher-usage', function() {
+        try {
+            $vouchers = \App\Voucher::all();
+            
+            // Check recent transactions with voucher data
+            $recentTransactions = \Illuminate\Support\Facades\DB::table('transactions')
+                ->where('additional_notes', 'like', '%Voucher:%')
+                ->orderBy('created_at', 'desc')
+                ->limit(10)
+                ->get(['id', 'contact_id', 'final_total', 'additional_notes', 'created_at']);
+            
+            return response()->json([
+                'vouchers' => $vouchers->map(function($voucher) {
+                    return [
+                        'id' => $voucher->id,
+                        'code' => $voucher->code,
+                        'name' => $voucher->name,
+                        'used_count' => $voucher->used_count,
+                        'usage_limit' => $voucher->usage_limit,
+                        'is_valid' => $voucher->isValid(100),
+                        'remaining' => $voucher->usage_limit ? ($voucher->usage_limit - $voucher->used_count) : 'unlimited'
+                    ];
+                }),
+                'recent_transactions_with_vouchers' => $recentTransactions,
+                'debug_info' => [
+                    'total_vouchers' => $vouchers->count(),
+                    'transactions_with_vouchers' => $recentTransactions->count(),
+                    'current_time' => now()->toDateTimeString()
+                ]
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'error' => $e->getMessage()
+            ]);
+        }
+    });
+
+    // Check Laravel logs
+    Route::get('/check-logs', function() {
+        try {
+            // Test if logging works
+            \Log::info('TEST LOG ENTRY - Checking if logging works');
+            
+            $logFile = storage_path('logs/laravel.log');
+            if (!file_exists($logFile)) {
+                return response()->json(['error' => 'Log file not found at: ' . $logFile]);
+            }
+            
+            // Get last 50 lines of the log file
+            $lines = file($logFile);
+            $lastLines = array_slice($lines, -50);
+            
+            // Filter for voucher-related logs
+            $voucherLogs = array_filter($lastLines, function($line) {
+                return stripos($line, 'voucher') !== false || 
+                       stripos($line, 'Checking voucher data') !== false ||
+                       stripos($line, 'Voucher conditions') !== false ||
+                       stripos($line, 'POS STORE REQUEST DEBUG') !== false ||
+                       stripos($line, 'TEST LOG ENTRY') !== false;
+            });
+            
+            return response()->json([
+                'log_file_exists' => file_exists($logFile),
+                'log_file_path' => $logFile,
+                'log_file_size' => file_exists($logFile) ? filesize($logFile) : 0,
+                'voucher_logs' => array_values($voucherLogs),
+                'total_log_lines' => count($lines),
+                'last_10_lines' => array_slice($lastLines, -10),
+                'test_logged' => 'Check if TEST LOG ENTRY appears above'
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+        }
+    });
+
+    // Test if store method is being called
+    Route::get('/test-store-call', function() {
+        try {
+            $debugFile = storage_path('logs/debug_store_called.log');
+            
+            if (!file_exists($debugFile)) {
+                return response()->json([
+                    'store_called' => false,
+                    'debug_file_path' => $debugFile,
+                    'message' => 'Store method has not been called yet'
+                ]);
+            }
+            
+            $content = file_get_contents($debugFile);
+            $lines = explode("\n", trim($content));
+            
+            return response()->json([
+                'store_called' => true,
+                'debug_file_path' => $debugFile,
+                'call_count' => count(array_filter($lines)),
+                'recent_calls' => array_slice($lines, -10),
+                'last_call' => end($lines)
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'error' => $e->getMessage()
+            ]);
+        }
+    });
+    Route::resource('sells', SellController::class)->except(['show']);
+    Route::get('/sells/copy-quotation/{id}', [SellPosController::class, 'copyQuotation']);
+
+    Route::post('/import-purchase-products', [PurchaseController::class, 'importPurchaseProducts']);
+    Route::post('/purchases/update-status', [PurchaseController::class, 'updateStatus']);
+    Route::get('/purchases/get_products', [PurchaseController::class, 'getProducts']);
+    Route::get('/purchases/get_suppliers', [PurchaseController::class, 'getSuppliers']);
+    Route::post('/purchases/get_purchase_entry_row', [PurchaseController::class, 'getPurchaseEntryRow']);
+    Route::post('/purchases/check_ref_number', [PurchaseController::class, 'checkRefNumber']);
+    Route::resource('purchases', PurchaseController::class)->except(['show']);
+
+    Route::get('/toggle-subscription/{id}', [SellPosController::class, 'toggleRecurringInvoices']);
+    Route::post('/sells/pos/get-types-of-service-details', [SellPosController::class, 'getTypesOfServiceDetails']);
+    Route::get('/sells/subscriptions', [SellPosController::class, 'listSubscriptions']);
+    Route::get('/sells/duplicate/{id}', [SellController::class, 'duplicateSell']);
+    Route::get('/sells/drafts', [SellController::class, 'getDrafts']);
+    Route::get('/sells/convert-to-draft/{id}', [SellPosController::class, 'convertToInvoice']);
+    Route::get('/sells/convert-to-proforma/{id}', [SellPosController::class, 'convertToProforma']);
+    Route::get('/sells/quotations', [SellController::class, 'getQuotations']);
+    Route::get('/sells/draft-dt', [SellController::class, 'getDraftDatables']);
+    Route::resource('sells', SellController::class)->except(['show']);
+
+    Route::get('/import-sales', [ImportSalesController::class, 'index']);
+    Route::post('/import-sales/preview', [ImportSalesController::class, 'preview']);
+    Route::post('/import-sales', [ImportSalesController::class, 'import']);
+    Route::get('/revert-sale-import/{batch}', [ImportSalesController::class, 'revertSaleImport']);
+
+    Route::get('/sells/pos/get_product_row/{variation_id}/{location_id}', [SellPosController::class, 'getProductRow']);
+    Route::post('/sells/pos/get_payment_row', [SellPosController::class, 'getPaymentRow']);
+    Route::post('/sells/pos/get-reward-details', [SellPosController::class, 'getRewardDetails']);
+    Route::get('/sells/pos/get-recent-transactions', [SellPosController::class, 'getRecentTransactions']);
+    Route::get('/sells/pos/get-product-suggestion', [SellPosController::class, 'getProductSuggestion']);
+    Route::get('/sells/pos/get-featured-products/{location_id}', [SellPosController::class, 'getFeaturedProducts']);
+    Route::get('/reset-mapping', [SellController::class, 'resetMapping']);
+    // pos display screen route
+    Route::get('/customer-display', [SellPosController::class, 'posDisplay'])->name('pos_display');
+
+    Route::get('/pos/variations/bulk', [\App\Http\Controllers\ProductController::class, 'getVariationDetailsBulk']);
+    // end pos display screen route
+    Route::resource('pos', SellPosController::class);
+
+    Route::resource('roles', RoleController::class);
+
+    Route::resource('users', ManageUserController::class);
+
+    Route::resource('group-taxes', GroupTaxController::class);
+
+    Route::get('/barcodes/set_default/{id}', [BarcodeController::class, 'setDefault']);
+    Route::resource('barcodes', BarcodeController::class);
+
+    //Invoice schemes..
+    Route::get('/invoice-schemes/set_default/{id}', [InvoiceSchemeController::class, 'setDefault']);
+    Route::resource('invoice-schemes', InvoiceSchemeController::class);
+
+    //Print Labels
+    Route::get('/labels/show', [LabelsController::class, 'show']);
+    Route::get('/labels/add-product-row', [LabelsController::class, 'addProductRow']);
+    Route::get('/labels/preview', [LabelsController::class, 'preview']);
+
+    //Reports...
+    Route::get('/reports/gst-purchase-report', [ReportController::class, 'gstPurchaseReport']);
+    Route::get('/reports/gst-sales-report', [ReportController::class, 'gstSalesReport']);
+    Route::get('/reports/get-stock-by-sell-price', [ReportController::class, 'getStockBySellingPrice']);
+    Route::get('/reports/purchase-report', [ReportController::class, 'purchaseReport']);
+    Route::get('/reports/sale-report', [ReportController::class, 'saleReport']);
+    Route::get('/reports/service-staff-report', [ReportController::class, 'getServiceStaffReport']);
+    Route::get('/reports/service-staff-line-orders', [ReportController::class, 'serviceStaffLineOrders']);
+    Route::get('/reports/table-report', [ReportController::class, 'getTableReport']);
+    Route::get('/reports/profit-loss', [ReportController::class, 'getProfitLoss']);
+    Route::get('/reports/get-opening-stock', [ReportController::class, 'getOpeningStock']);
+    Route::get('/reports/purchase-sell', [ReportController::class, 'getPurchaseSell']);
+    Route::get('/reports/customer-supplier', [ReportController::class, 'getCustomerSuppliers']);
+    Route::get('/reports/stock-report', [ReportController::class, 'getStockReport']);
+    Route::get('/reports/stock-details', [ReportController::class, 'getStockDetails']);
+    Route::get('/reports/tax-report', [ReportController::class, 'getTaxReport']);
+    Route::get('/reports/tax-details', [ReportController::class, 'getTaxDetails']);
+    Route::get('/reports/trending-products', [ReportController::class, 'getTrendingProducts']);
+    Route::get('/reports/expense-report', [ReportController::class, 'getExpenseReport']);
+    Route::get('/reports/stock-adjustment-report', [ReportController::class, 'getStockAdjustmentReport']);
+    Route::get('/reports/register-report', [ReportController::class, 'getRegisterReport']);
+    Route::get('/reports/sales-representative-report', [ReportController::class, 'getSalesRepresentativeReport']);
+    Route::get('/reports/sales-representative-total-expense', [ReportController::class, 'getSalesRepresentativeTotalExpense']);
+    Route::get('/reports/sales-representative-total-sell', [ReportController::class, 'getSalesRepresentativeTotalSell']);
+    Route::get('/reports/sales-representative-total-commission', [ReportController::class, 'getSalesRepresentativeTotalCommission']);
+    Route::get('/reports/stock-expiry', [ReportController::class, 'getStockExpiryReport']);
+    Route::get('/reports/stock-expiry-edit-modal/{purchase_line_id}', [ReportController::class, 'getStockExpiryReportEditModal']);
+    Route::post('/reports/stock-expiry-update', [ReportController::class, 'updateStockExpiryReport'])->name('updateStockExpiryReport');
+    Route::get('/reports/customer-group', [ReportController::class, 'getCustomerGroup']);
+    Route::get('/reports/product-purchase-report', [ReportController::class, 'getproductPurchaseReport']);
+    Route::get('/reports/product-sell-grouped-by', [ReportController::class, 'productSellReportBy']);
+    Route::get('/reports/product-sell-report', [ReportController::class, 'getproductSellReport']);
+    Route::get('/reports/product-sell-report-with-purchase', [ReportController::class, 'getproductSellReportWithPurchase']);
+    Route::get('/reports/product-sell-grouped-report', [ReportController::class, 'getproductSellGroupedReport']);
+    Route::get('/reports/lot-report', [ReportController::class, 'getLotReport']);
+    Route::get('/reports/purchase-payment-report', [ReportController::class, 'purchasePaymentReport']);
+    Route::get('/reports/sell-payment-report', [ReportController::class, 'sellPaymentReport']);
+    Route::get('/reports/product-stock-details', [ReportController::class, 'productStockDetails']);
+    Route::get('/reports/adjust-product-stock', [ReportController::class, 'adjustProductStock']);
+    Route::get('/reports/get-profit/{by?}', [ReportController::class, 'getProfit']);
+    Route::get('/reports/items-report', [ReportController::class, 'itemsReport']);
+    Route::get('/reports/get-stock-value', [ReportController::class, 'getStockValue']);
+
+    Route::get('business-location/activate-deactivate/{location_id}', [BusinessLocationController::class, 'activateDeactivateLocation']);
+
+    //Business Location Settings...
+    Route::prefix('business-location/{location_id}')->name('location.')->group(function () {
+        Route::get('settings', [LocationSettingsController::class, 'index'])->name('settings');
+        Route::post('settings', [LocationSettingsController::class, 'updateSettings'])->name('settings_update');
+    });
+
+    //Business Locations...
+    Route::post('business-location/check-location-id', [BusinessLocationController::class, 'checkLocationId']);
+    Route::resource('business-location', BusinessLocationController::class);
+
+    //Invoice layouts..
+    Route::resource('invoice-layouts', InvoiceLayoutController::class);
+
+    Route::post('get-expense-sub-categories', [ExpenseCategoryController::class, 'getSubCategories']);
+
+    //Expense Categories...
+    Route::resource('expense-categories', ExpenseCategoryController::class);
+
+    //Expenses...
+    Route::resource('expenses', ExpenseController::class);
+    Route::get('import-expense', [ExpenseController::class, 'importExpense']);
+    Route::post('store-import-expense', [ExpenseController::class, 'storeExpenseImport']);
+
+    //Transaction payments...
+    // Route::get('/payments/opening-balance/{contact_id}', 'TransactionPaymentController@getOpeningBalancePayments');
+    Route::get('/payments/show-child-payments/{payment_id}', [TransactionPaymentController::class, 'showChildPayments']);
+    Route::get('/payments/view-payment/{payment_id}', [TransactionPaymentController::class, 'viewPayment']);
+    Route::get('/payments/add_payment/{transaction_id}', [TransactionPaymentController::class, 'addPayment']);
+    Route::get('/payments/pay-contact-due/{contact_id}', [TransactionPaymentController::class, 'getPayContactDue']);
+    Route::post('/payments/pay-contact-due', [TransactionPaymentController::class, 'postPayContactDue']);
+    Route::resource('payments', TransactionPaymentController::class);
+
+    //Printers...
+    Route::resource('printers', PrinterController::class);
+
+    Route::get('/stock-adjustments/remove-expired-stock/{purchase_line_id}', [StockAdjustmentController::class, 'removeExpiredStock']);
+    Route::post('/stock-adjustments/get_product_row', [StockAdjustmentController::class, 'getProductRow']);
+    Route::resource('stock-adjustments', StockAdjustmentController::class);
+
+    Route::get('/cash-register/register-details', [CashRegisterController::class, 'getRegisterDetails']);
+    Route::get('/cash-register/close-register/{id?}', [CashRegisterController::class, 'getCloseRegister']);
+    Route::post('/cash-register/close-register', [CashRegisterController::class, 'postCloseRegister']);
+    Route::resource('cash-register', CashRegisterController::class);
+
+    //Import products
+    Route::get('/import-products', [ImportProductsController::class, 'index']);
+    Route::post('/import-products/store', [ImportProductsController::class, 'store']);
+
+    //Sales Commission Agent
+    Route::resource('sales-commission-agents', SalesCommissionAgentController::class);
+
+    //Stock Transfer
+    Route::get('stock-transfers/print/{id}', [StockTransferController::class, 'printInvoice']);
+    Route::post('stock-transfers/update-status/{id}', [StockTransferController::class, 'updateStatus']);
+    Route::resource('stock-transfers', StockTransferController::class);
+
+    Route::get('/opening-stock/add/{product_id}', [OpeningStockController::class, 'add']);
+    Route::post('/opening-stock/save', [OpeningStockController::class, 'save']);
+
+    //Customer Groups
+    Route::resource('customer-group', CustomerGroupController::class);
+
+    //Import opening stock
+    Route::get('/import-opening-stock', [ImportOpeningStockController::class, 'index']);
+    Route::post('/import-opening-stock/store', [ImportOpeningStockController::class, 'store']);
+
+    //Sell return
+    Route::get('validate-invoice-to-return/{invoice_no}', [SellReturnController::class, 'validateInvoiceToReturn']);
+    // service staff replacement
+    Route::get('validate-invoice-to-service-staff-replacement/{invoice_no}', [SellPosController::class, 'validateInvoiceToServiceStaffReplacement']);
+    Route::put('change-service-staff/{id}', [SellPosController::class, 'change_service_staff'])->name('change_service_staff');
+
+    Route::resource('sell-return', SellReturnController::class);
+    Route::get('sell-return/get-product-row', [SellReturnController::class, 'getProductRow']);
+    Route::get('/sell-return/print/{id}', [SellReturnController::class, 'printInvoice']);
+    Route::get('/sell-return/add/{id}', [SellReturnController::class, 'add']);
+
+    //Backup
+    Route::get('backup/download/{file_name}', [BackUpController::class, 'download']);
+    Route::get('backup/{id}/delete', [BackUpController::class, 'delete'])->name('delete_backup');
+    Route::resource('backup', BackUpController::class)->only('index', 'create', 'store');
+
+    Route::get('selling-price-group/activate-deactivate/{id}', [SellingPriceGroupController::class, 'activateDeactivate']);
+    Route::get('update-product-price', [SellingPriceGroupController::class, 'updateProductPrice'])->name('update-product-price');
+    Route::get('export-product-price', [SellingPriceGroupController::class, 'export']);
+    Route::post('import-product-price', [SellingPriceGroupController::class, 'import']);
+
+    Route::resource('selling-price-group', SellingPriceGroupController::class);
+
+    Route::resource('notification-templates', NotificationTemplateController::class)->only(['index', 'store']);
+    Route::get('notification/get-template/{transaction_id}/{template_for}', [NotificationController::class, 'getTemplate']);
+    Route::post('notification/send', [NotificationController::class, 'send']);
+
+    Route::post('/purchase-return/update', [CombinedPurchaseReturnController::class, 'update']);
+    Route::get('/purchase-return/edit/{id}', [CombinedPurchaseReturnController::class, 'edit']);
+    Route::post('/purchase-return/save', [CombinedPurchaseReturnController::class, 'save']);
+    Route::post('/purchase-return/get_product_row', [CombinedPurchaseReturnController::class, 'getProductRow']);
+    Route::get('/purchase-return/create', [CombinedPurchaseReturnController::class, 'create']);
+    Route::get('/purchase-return/add/{id}', [PurchaseReturnController::class, 'add']);
+    Route::resource('/purchase-return', PurchaseReturnController::class)->except('create');
+
+    Route::get('/discount/activate/{id}', [DiscountController::class, 'activate']);
+    Route::post('/discount/mass-deactivate', [DiscountController::class, 'massDeactivate']);
+    Route::resource('discount', DiscountController::class);
+
+    Route::prefix('account')->group(function () {
+        Route::resource('/account', AccountController::class);
+        Route::get('/fund-transfer/{id}', [AccountController::class, 'getFundTransfer']);
+        Route::post('/fund-transfer', [AccountController::class, 'postFundTransfer']);
+        Route::get('/deposit/{id}', [AccountController::class, 'getDeposit']);
+        Route::post('/deposit', [AccountController::class, 'postDeposit']);
+        Route::get('/close/{id}', [AccountController::class, 'close']);
+        Route::get('/activate/{id}', [AccountController::class, 'activate']);
+        Route::get('/delete-account-transaction/{id}', [AccountController::class, 'destroyAccountTransaction']);
+        Route::get('/edit-account-transaction/{id}', [AccountController::class, 'editAccountTransaction']);
+        Route::post('/update-account-transaction/{id}', [AccountController::class, 'updateAccountTransaction']);
+        Route::get('/get-account-balance/{id}', [AccountController::class, 'getAccountBalance']);
+        Route::get('/balance-sheet', [AccountReportsController::class, 'balanceSheet']);
+        Route::get('/trial-balance', [AccountReportsController::class, 'trialBalance']);
+        Route::get('/payment-account-report', [AccountReportsController::class, 'paymentAccountReport']);
+        Route::get('/link-account/{id}', [AccountReportsController::class, 'getLinkAccount']);
+        Route::post('/link-account', [AccountReportsController::class, 'postLinkAccount']);
+        Route::get('/cash-flow', [AccountController::class, 'cashFlow']);
+    });
+
+    Route::resource('account-types', AccountTypeController::class);
+
+    //Restaurant module
+    Route::prefix('modules')->group(function () {
+        Route::resource('tables', Restaurant\TableController::class);
+        Route::resource('modifiers', Restaurant\ModifierSetsController::class);
+
+        //Map modifier to products
+        Route::get('/product-modifiers/{id}/edit', [Restaurant\ProductModifierSetController::class, 'edit']);
+        Route::post('/product-modifiers/{id}/update', [Restaurant\ProductModifierSetController::class, 'update']);
+        Route::get('/product-modifiers/product-row/{product_id}', [Restaurant\ProductModifierSetController::class, 'product_row']);
+
+        Route::get('/add-selected-modifiers', [Restaurant\ProductModifierSetController::class, 'add_selected_modifiers']);
+
+        Route::get('/kitchen', [Restaurant\KitchenController::class, 'index']);
+        Route::get('/kitchen/mark-as-cooked/{id}', [Restaurant\KitchenController::class, 'markAsCooked']);
+        Route::post('/refresh-orders-list', [Restaurant\KitchenController::class, 'refreshOrdersList']);
+        Route::post('/refresh-line-orders-list', [Restaurant\KitchenController::class, 'refreshLineOrdersList']);
+
+        Route::get('/orders', [Restaurant\OrderController::class, 'index']);
+        Route::get('/orders/mark-as-served/{id}', [Restaurant\OrderController::class, 'markAsServed']);
+        Route::get('/data/get-pos-details', [Restaurant\DataController::class, 'getPosDetails']);
+        Route::get('/data/check-staff-pin', [Restaurant\DataController::class, 'checkStaffPin']);
+        Route::get('/orders/mark-line-order-as-served/{id}', [Restaurant\OrderController::class, 'markLineOrderAsServed']);
+        Route::get('/print-line-order', [Restaurant\OrderController::class, 'printLineOrder']);
+    });
+
+    Route::get('bookings/get-todays-bookings', [Restaurant\BookingController::class, 'getTodaysBookings']);
+    Route::resource('bookings', Restaurant\BookingController::class);
+
+    Route::resource('types-of-service', TypesOfServiceController::class);
+    Route::get('sells/edit-shipping/{id}', [SellController::class, 'editShipping']);
+    Route::put('sells/update-shipping/{id}', [SellController::class, 'updateShipping']);
+    Route::get('sells/quick-order-status/{id}', [SellController::class, 'quickOrderStatus'])->name('sells.quick-order-status');
+    Route::put('sells/update-order-status/{id}', [SellController::class, 'updateOrderStatus']);
+    Route::get('shipments', [SellController::class, 'shipments']);
+
+    Route::post('upload-module', [Install\ModulesController::class, 'uploadModule']);
+    Route::delete('manage-modules/destroy/{module_name}', [Install\ModulesController::class, 'destroy']);
+    Route::resource('manage-modules', Install\ModulesController::class)
+        ->only(['index', 'update']);
+    Route::get('regenerate', [Install\ModulesController::class, 'regenerate']);
+
+    Route::resource('warranties', WarrantyController::class);
+
+    Route::resource('dashboard-configurator', DashboardConfiguratorController::class)
+    ->only(['edit', 'update']);
+
+    Route::get('view-media/{model_id}', [SellController::class, 'viewMedia']);
+
+    //common controller for document & note
+    Route::get('get-document-note-page', [DocumentAndNoteController::class, 'getDocAndNoteIndexPage']);
+    Route::post('post-document-upload', [DocumentAndNoteController::class, 'postMedia']);
+    Route::resource('note-documents', DocumentAndNoteController::class);
+    Route::resource('purchase-order', PurchaseOrderController::class);
+    Route::get('get-purchase-orders/{contact_id}', [PurchaseOrderController::class, 'getPurchaseOrders']);
+    Route::get('get-purchase-order-lines/{purchase_order_id}', [PurchaseController::class, 'getPurchaseOrderLines']);
+    Route::get('edit-purchase-orders/{id}/status', [PurchaseOrderController::class, 'getEditPurchaseOrderStatus']);
+    Route::put('update-purchase-orders/{id}/status', [PurchaseOrderController::class, 'postEditPurchaseOrderStatus']);
+    Route::resource('sales-order', SalesOrderController::class)->only(['index']);
+    Route::get('get-sales-orders/{customer_id}', [SalesOrderController::class, 'getSalesOrders']);
+    Route::get('get-sales-order-lines', [SellPosController::class, 'getSalesOrderLines']);
+    Route::get('edit-sales-orders/{id}/status', [SalesOrderController::class, 'getEditSalesOrderStatus']);
+    Route::put('update-sales-orders/{id}/status', [SalesOrderController::class, 'postEditSalesOrderStatus']);
+    Route::get('reports/activity-log', [ReportController::class, 'activityLog']);
+    Route::get('user-location/{latlng}', [HomeController::class, 'getUserLocation']);
+});
+
+// Route::middleware(['EcomApi'])->prefix('api/ecom')->group(function () {
+//     Route::get('products/{id?}', [ProductController::class, 'getProductsApi']);
+//     Route::get('categories', [CategoryController::class, 'getCategoriesApi']);
+//     Route::get('brands', [BrandController::class, 'getBrandsApi']);
+//     Route::post('customers', [ContactController::class, 'postCustomersApi']);
+//     Route::get('settings', [BusinessController::class, 'getEcomSettings']);
+//     Route::get('variations', [ProductController::class, 'getVariationsApi']);
+//     Route::post('orders', [SellPosController::class, 'placeOrdersApi']);
+// });
+
+//common route
+Route::middleware(['auth'])->group(function () {
+    Route::get('/logout', [App\Http\Controllers\Auth\LoginController::class, 'logout']);
+});
+
+Route::middleware(['setData', 'auth', 'SetSessionData', 'language', 'timezone'])->group(function () {
+    Route::get('/load-more-notifications', [HomeController::class, 'loadMoreNotifications']);
+    Route::get('/get-total-unread', [HomeController::class, 'getTotalUnreadNotifications']);
+    Route::get('/purchases/print/{id}', [PurchaseController::class, 'printInvoice']);
+    Route::get('/purchases/{id}', [PurchaseController::class, 'show']);
+    Route::get('/download-purchase-order/{id}/pdf', [PurchaseOrderController::class, 'downloadPdf'])->name('purchaseOrder.downloadPdf');
+    Route::get('/sells/{id}', [SellController::class, 'show']);
+    Route::get('/sells/{transaction_id}/print', [SellPosController::class, 'printInvoice'])->name('sell.printInvoice');
+    Route::get('/download-sells/{transaction_id}/pdf', [SellPosController::class, 'downloadPdf'])->name('sell.downloadPdf');
+    Route::get('/download-quotation/{id}/pdf', [SellPosController::class, 'downloadQuotationPdf'])
+        ->name('quotation.downloadPdf');
+    Route::get('/download-packing-list/{id}/pdf', [SellPosController::class, 'downloadPackingListPdf'])
+        ->name('packing.downloadPdf');
+    Route::get('/sells/invoice-url/{id}', [SellPosController::class, 'showInvoiceUrl']);
+    Route::get('/show-notification/{id}', [HomeController::class, 'showNotification']);
+    Route::post('/sell/check-invoice-number', [SellController::class, 'checkInvoiceNumber']);
+});
+
+Route::get('/test-manual-voucher-increment', function() {
+    try {
+        // Find the voucher with usage limit 1
+        $voucher = \App\Voucher::where('code', '2')->first();
+        
+        if (!$voucher) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Voucher with code "2" not found!'
+            ]);
+        }
+        
+        $beforeIncrement = [
+            'code' => $voucher->code,
+            'used_count' => $voucher->used_count,
+            'usage_limit' => $voucher->usage_limit,
+            'remaining' => $voucher->usage_limit ? ($voucher->usage_limit - $voucher->used_count) : 'unlimited'
+        ];
+        
+        // Manually increment the usage
+        $voucher->increment('used_count');
+        
+        // Refresh the voucher to get updated data
+        $voucher->refresh();
+        
+        $afterIncrement = [
+            'code' => $voucher->code,
+            'used_count' => $voucher->used_count,
+            'usage_limit' => $voucher->usage_limit,
+            'remaining' => $voucher->usage_limit ? ($voucher->usage_limit - $voucher->used_count) : 'unlimited'
+        ];
+        
+        // Check if voucher is still valid
+        $isValid = $voucher->isValid(100); // Test with 100 as amount
+        
+        // Test the vouchers API to see if this voucher still appears
+        $activeVouchers = \App\Voucher::where('business_id', $voucher->business_id)
+            ->where('is_active', 1)
+            ->where(function($query) {
+                $query->whereNull('expires_at')
+                      ->orWhere('expires_at', '>', now());
+            })
+            ->where(function($query) {
+                $query->whereNull('usage_limit')
+                      ->orWhereRaw('used_count < usage_limit');
+            })
+            ->get();
+        
+        return response()->json([
+            'success' => true,
+            'before_increment' => $beforeIncrement,
+            'after_increment' => $afterIncrement,
+            'is_valid' => $isValid,
+            'active_vouchers_count' => $activeVouchers->count(),
+            'voucher_in_active_list' => $activeVouchers->where('code', '2')->count() > 0,
+            'reached_limit' => $voucher->used_count >= $voucher->usage_limit,
+            'message' => $voucher->used_count >= $voucher->usage_limit ? 
+                'SUCCESS: Voucher has reached its usage limit!' : 
+                'Voucher still has remaining uses'
+        ]);
+        
+    } catch (Exception $e) {
+        return response()->json([
+            'success' => false,
+            'error' => $e->getMessage()
+        ]);
+    }
+});
+
+Route::get('/check-store-debug', function() {
+    $debugFile = storage_path('logs/debug_store_called.log');
+    $voucherDebugFile = storage_path('logs/voucher_debug.log');
+    $voucherInputDebugFile = storage_path('logs/voucher_input_debug.log');
+    $logFile = storage_path('logs/laravel.log');
+    
+    $response = [
+        'debug_file_exists' => file_exists($debugFile),
+        'voucher_debug_file_exists' => file_exists($voucherDebugFile),
+        'voucher_input_debug_file_exists' => file_exists($voucherInputDebugFile),
+        'log_file_exists' => file_exists($logFile),
+        'debug_file_content' => file_exists($debugFile) ? file_get_contents($debugFile) : 'File does not exist',
+        'voucher_debug_content' => file_exists($voucherDebugFile) ? file_get_contents($voucherDebugFile) : 'File does not exist',
+        'voucher_input_debug_content' => file_exists($voucherInputDebugFile) ? file_get_contents($voucherInputDebugFile) : 'File does not exist',
+        'log_file_size' => file_exists($logFile) ? filesize($logFile) : 0,
+        'timestamp' => now()->toDateTimeString()
+    ];
+    
+    // Parse voucher debug entries
+    if (file_exists($voucherDebugFile)) {
+        $voucherLines = explode("\n", trim(file_get_contents($voucherDebugFile)));
+        $response['voucher_debug_entries'] = array_map(function($line) {
+            return json_decode($line, true);
+        }, array_filter($voucherLines));
+        $response['recent_voucher_entries'] = array_slice($response['voucher_debug_entries'], -5);
+    }
+    
+    // Parse voucher input debug entries
+    if (file_exists($voucherInputDebugFile)) {
+        $voucherInputLines = explode("\n", trim(file_get_contents($voucherInputDebugFile)));
+        $response['voucher_input_debug_entries'] = array_map(function($line) {
+            return json_decode($line, true);
+        }, array_filter($voucherInputLines));
+        $response['recent_voucher_input_entries'] = array_slice($response['voucher_input_debug_entries'], -5);
+    }
+    
+    if (file_exists($logFile) && filesize($logFile) > 0) {
+        $logContent = file_get_contents($logFile);
+        $lines = explode("\n", $logContent);
+        $response['recent_log_lines'] = array_slice($lines, -20);
+        
+        // Look for voucher-related logs
+        $voucherLogs = array_filter($lines, function($line) {
+            return stripos($line, 'voucher') !== false || 
+                   stripos($line, 'POS STORE REQUEST') !== false ||
+                   stripos($line, 'SELLPOSCONTROLLER') !== false;
+        });
+        $response['voucher_logs'] = array_values($voucherLogs);
+    }
+    
+    return response()->json($response);
+});

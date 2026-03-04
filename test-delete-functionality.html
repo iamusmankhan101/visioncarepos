@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Delete Functionality</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <meta name="csrf-token" content="test-token">
+</head>
+<body>
+    <div class="container" style="margin-top: 50px;">
+        <h2>Test Delete Button Functionality</h2>
+        
+        <!-- Test Modal -->
+        <div class="modal fade" id="test_modal" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title">Test Related Customers</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div id="test_customers_list">
+                            <!-- Will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <button type="button" class="btn btn-primary" onclick="showTestModal()">Show Test Modal</button>
+        
+        <div style="margin-top: 20px;">
+            <h3>Test Contact Edit Page Delete</h3>
+            <div style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                <h5>Test Customer</h5>
+                <button type="button" 
+                       class="btn btn-sm btn-danger delete-related-customer" 
+                       data-contact-id="123"
+                       data-contact-name="Test Customer">
+                    <i class="fa fa-trash"></i> Delete
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Test data
+        var testCustomers = [
+            {id: 1, name: 'John Doe', contact_id: 'C001', mobile: '1234567890', is_current: false},
+            {id: 2, name: 'Jane Smith', contact_id: 'C002', mobile: '0987654321', is_current: true}
+        ];
+
+        function showTestModal() {
+            var html = '';
+            testCustomers.forEach(function(customer) {
+                var isCurrentBadge = customer.is_current ? '<span class="label label-primary" style="margin-left: 10px;">Currently Selected</span>' : '';
+                var borderColor = customer.is_current ? '#48b2ee' : '#ddd';
+                var bgColor = customer.is_current ? '#f0f8ff' : 'white';
+                
+                html += '<div class="related-customer-item" style="border: 2px solid ' + borderColor + '; border-radius: 8px; padding: 15px; margin-bottom: 15px; background-color: ' + bgColor + ';" data-customer-id="' + customer.id + '">';
+                html += '  <div class="row">';
+                html += '    <div class="col-md-10">';
+                html += '      <h5 style="margin-top: 0; color: #48b2ee;">';
+                html += '        <i class="fa fa-user"></i> ' + customer.name + isCurrentBadge;
+                html += '      </h5>';
+                html += '      <p><strong>Contact ID:</strong> ' + customer.contact_id + '</p>';
+                html += '      <p><strong>Mobile:</strong> ' + customer.mobile + '</p>';
+                html += '    </div>';
+                html += '    <div class="col-md-2" style="text-align: right;">';
+                html += '      <button type="button" class="btn btn-sm btn-danger delete-customer-btn" data-customer-id="' + customer.id + '" data-customer-name="' + customer.name + '">';
+                html += '        <i class="fa fa-trash"></i> Delete';
+                html += '      </button>';
+                html += '    </div>';
+                html += '  </div>';
+                html += '</div>';
+            });
+            
+            $('#test_customers_list').html(html);
+            $('#test_modal').modal('show');
+        }
+
+        // Event handlers (same as in the actual code)
+        $(document).on('click', '.delete-customer-btn', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            console.log('POS Delete button clicked!');
+            var customerId = $(this).data('customer-id');
+            var customerName = $(this).data('customer-name');
+            
+            console.log('Customer ID:', customerId);
+            console.log('Customer Name:', customerName);
+            
+            if (confirm('Are you sure you want to delete customer "' + customerName + '"?')) {
+                alert('Would delete customer: ' + customerName + ' (ID: ' + customerId + ')');
+                
+                // Remove from UI for testing
+                $('[data-customer-id="' + customerId + '"]').fadeOut(300, function() {
+                    $(this).remove();
+                });
+            }
+        });
+
+        $(document).on('click', '.delete-related-customer', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            console.log('Contact Edit Delete button clicked!');
+            var contactId = $(this).data('contact-id');
+            var contactName = $(this).data('contact-name');
+            
+            console.log('Contact ID:', contactId);
+            console.log('Contact Name:', contactName);
+            
+            if (confirm('Are you sure you want to delete customer "' + contactName + '"?')) {
+                alert('Would delete customer: ' + contactName + ' (ID: ' + contactId + ')');
+            }
+        });
+
+        $(document).ready(function() {
+            console.log('Test page loaded');
+            console.log('jQuery version:', $.fn.jquery);
+            console.log('CSRF token:', $('meta[name="csrf-token"]').attr('content'));
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Anti-iCheck Blue Tick Test</title>
+    <link rel="stylesheet" href="css/anti-icheck-blue-tick.css">
+    <link rel="stylesheet" href="css/force-checkboxes.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; }
+        .checkbox-group { margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>Anti-iCheck Blue Tick Test</h1>
+    
+    <div class="test-section">
+        <h3>Test 1: Basic Checkboxes</h3>
+        <div class="checkbox-group">
+            <input type="checkbox" id="test1" checked> <label for="test1">Checked checkbox (should be blue)</label>
+        </div>
+        <div class="checkbox-group">
+            <input type="checkbox" id="test2"> <label for="test2">Unchecked checkbox (should be white with blue border)</label>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Test 2: Form Checkboxes</h3>
+        <form>
+            <div class="form-group">
+                <input type="checkbox" id="form1" checked> <label for="form1">Form checkbox checked</label>
+            </div>
+            <div class="form-group">
+                <input type="checkbox" id="form2"> <label for="form2">Form checkbox unchecked</label>
+            </div>
+        </form>
+    </div>
+    
+    <div class="test-section">
+        <h3>Test 3: iCheck Class Checkboxes (should be converted)</h3>
+        <div class="checkbox-group">
+            <input type="checkbox" class="icheckbox_square-blue" id="icheck1" checked> <label for="icheck1">iCheck checkbox checked</label>
+        </div>
+        <div class="checkbox-group">
+            <input type="checkbox" class="icheckbox_square-blue" id="icheck2"> <label for="icheck2">iCheck checkbox unchecked</label>
+        </div>
+    </div>
+    
+    <button onclick="testCheckboxes()">Test Checkbox States</button>
+    <div id="results"></div>
+    
+    <script src="js/anti-icheck-blue-tick.js"></script>
+    <script>
+        function testCheckboxes() {
+            var results = [];
+            var checkboxes = document.querySelectorAll("input[type=checkbox]");
+            checkboxes.forEach(function(cb, index) {
+                results.push("Checkbox " + (index + 1) + ": " + (cb.checked ? "CHECKED" : "UNCHECKED") + 
+                           " - Background: " + getComputedStyle(cb).backgroundColor);
+            });
+            document.getElementById("results").innerHTML = "<h4>Results:</h4>" + results.join("<br>");
+        }
+        
+        // Test after page loads
+        window.addEventListener("load", function() {
+            setTimeout(function() {
+                console.log("Page fully loaded - checking checkbox states");
+                testCheckboxes();
+            }, 500);
+        });
+    </script>
+</body>
+</html>

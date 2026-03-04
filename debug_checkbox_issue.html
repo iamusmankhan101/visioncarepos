@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkbox Debug Tool</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .debug-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; }
+        .success { color: green; }
+        .error { color: red; }
+        .warning { color: orange; }
+        .checkbox-test { margin: 10px 0; }
+        .log { background: #f5f5f5; padding: 10px; margin: 10px 0; font-family: monospace; }
+    </style>
+</head>
+<body>
+    <h1>Checkbox Debug Tool</h1>
+    <p>This tool helps diagnose checkbox issues in the user management interface.</p>
+
+    <div class="debug-section">
+        <h2>1. Asset Loading Test</h2>
+        <div id="asset-test">
+            <p>Testing if required assets are loaded...</p>
+        </div>
+    </div>
+
+    <div class="debug-section">
+        <h2>2. iCheck Plugin Test</h2>
+        <div id="icheck-test">
+            <p>Testing iCheck plugin availability...</p>
+        </div>
+    </div>
+
+    <div class="debug-section">
+        <h2>3. Checkbox Rendering Test</h2>
+        <div class="checkbox-test">
+            <label>
+                <input type="checkbox" class="input-icheck" id="test-checkbox-1"> Test Checkbox 1
+            </label>
+        </div>
+        <div class="checkbox-test">
+            <label>
+                <input type="checkbox" class="input-icheck" id="test-checkbox-2" checked> Test Checkbox 2 (Checked)
+            </label>
+        </div>
+        <div class="checkbox-test">
+            <label>
+                <input type="radio" class="input-icheck" name="test-radio" id="test-radio-1" value="1"> Test Radio 1
+            </label>
+        </div>
+        <div class="checkbox-test">
+            <label>
+                <input type="radio" class="input-icheck" name="test-radio" id="test-radio-2" value="2"> Test Radio 2
+            </label>
+        </div>
+    </div>
+
+    <div class="debug-section">
+        <h2>4. Manual Initialization Test</h2>
+        <button onclick="manualInit()">Initialize iCheck Manually</button>
+        <button onclick="destroyICheck()">Destroy iCheck</button>
+        <button onclick="reinitializeICheck()">Re-initialize iCheck</button>
+    </div>
+
+    <div class="debug-section">
+        <h2>5. Debug Log</h2>
+        <div id="debug-log" class="log"></div>
+        <button onclick="clearLog()">Clear Log</button>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        let debugLog = [];
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${type.toUpperCase()}: ${message}`;
+            debugLog.push(logEntry);
+            
+            const logDiv = document.getElementById('debug-log');
+            const p = document.createElement('p');
+            p.textContent = logEntry;
+            p.className = type;
+            logDiv.appendChild(p);
+            
+            console.log(logEntry);
+        }
+
+        function clearLog() {
+            debugLog = [];
+            document.getElementById('debug-log').innerHTML = '';
+        }
+
+        function testAssets() {
+            log('Testing asset loading...');
+            
+            // Test jQuery
+            if (typeof jQuery !== 'undefined') {
+                log('✅ jQuery is loaded (version: ' + jQuery.fn.jquery + ')', 'success');
+            } else {
+                log('❌ jQuery is not loaded', 'error');
+                return;
+            }
+
+            // Test CSS
+            const testElement = $('<div class="icheckbox_square-blue"></div>').appendTo('body');
+            const hasCSS = testElement.css('background-image') !== 'none';
+            testElement.remove();
+            
+            if (hasCSS) {
+                log('✅ iCheck CSS is loaded', 'success');
+            } else {
+                log('❌ iCheck CSS is not loaded or not working', 'error');
+            }
+
+            document.getElementById('asset-test').innerHTML = '<p class="' + (hasCSS ? 'success' : 'error') + '">Asset test completed. Check log for details.</p>';
+        }
+
+        function testICheckPlugin() {
+            log('Testing iCheck plugin...');
+            
+            if (typeof $.fn.iCheck !== 'undefined') {
+                log('✅ iCheck plugin is available', 'success');
+                
+                // Test if we can create an iCheck instance
+                try {
+                    const testInput = $('<input type="checkbox" class="test-icheck">').appendTo('body');
+                    testInput.iCheck({
+                        checkboxClass: 'icheckbox_square-blue',
+                        radioClass: 'iradio_square-blue'
+                    });
+                    
+                    if (testInput.parent().hasClass('icheckbox_square-blue')) {
+                        log('✅ iCheck initialization works', 'success');
+                    } else {
+                        log('❌ iCheck initialization failed', 'error');
+                    }
+                    
+                    testInput.parent().remove();
+                } catch (error) {
+                    log('❌ iCheck initialization error: ' + error.message, 'error');
+                }
+            } else {
+                log('❌ iCheck plugin is not available', 'error');
+            }
+
+            const isAvailable = typeof $.fn.iCheck !== 'undefined';
+            document.getElementById('icheck-test').innerHTML = '<p class="' + (isAvailable ? 'success' : 'error') + '">iCheck test completed. Check log for details.</p>';
+        }
+
+        function manualInit() {
+            log('Manual iCheck initialization...');
+            
+            if (typeof $.fn.iCheck === 'undefined') {
+                log('❌ iCheck plugin not available for manual initialization', 'error');
+                return;
+            }
+
+            $('.input-icheck').each(function() {
+                const $this = $(this);
+                const id = $this.attr('id') || 'unnamed';
+                
+                try {
+                    if (!$this.parent().hasClass('icheckbox_square-blue') && !$this.parent().hasClass('iradio_square-blue')) {
+                        $this.iCheck({
+                            checkboxClass: 'icheckbox_square-blue',
+                            radioClass: 'iradio_square-blue'
+                        });
+                        log('✅ Initialized iCheck for: ' + id, 'success');
+                    } else {
+                        log('⚠️ iCheck already initialized for: ' + id, 'warning');
+                    }
+                } catch (error) {
+                    log('❌ Failed to initialize iCheck for ' + id + ': ' + error.message, 'error');
+                }
+            });
+        }
+
+        function destroyICheck() {
+            log('Destroying iCheck instances...');
+            
+            $('.input-icheck').each(function() {
+                const $this = $(this);
+                const id = $this.attr('id') || 'unnamed';
+                
+                try {
+                    if ($this.parent().hasClass('icheckbox_square-blue') || $this.parent().hasClass('iradio_square-blue')) {
+                        $this.iCheck('destroy');
+                        log('✅ Destroyed iCheck for: ' + id, 'success');
+                    } else {
+                        log('⚠️ No iCheck instance found for: ' + id, 'warning');
+                    }
+                } catch (error) {
+                    log('❌ Failed to destroy iCheck for ' + id + ': ' + error.message, 'error');
+                }
+            });
+        }
+
+        function reinitializeICheck() {
+            log('Re-initializing iCheck...');
+            destroyICheck();
+            setTimeout(manualInit, 100);
+        }
+
+        // Run tests when page loads
+        $(document).ready(function() {
+            log('Page loaded, starting tests...');
+            
+            setTimeout(function() {
+                testAssets();
+                testICheckPlugin();
+                
+                // Try to initialize test checkboxes
+                setTimeout(manualInit, 500);
+            }, 100);
+        });
+    </script>
+</body>
+</html>

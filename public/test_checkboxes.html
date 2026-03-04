@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkbox Test</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px; 
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            max-width: 600px;
+        }
+        .checkbox-group {
+            margin: 15px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .success { color: green; }
+        .error { color: red; }
+        .warning { color: orange; }
+        
+        /* Force checkboxes to be visible */
+        .input-icheck {
+            display: inline-block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            width: 18px !important;
+            height: 18px !important;
+            margin-right: 8px !important;
+            vertical-align: middle !important;
+        }
+        
+        .input-icheck + label {
+            cursor: pointer !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Checkbox Visibility Test</h1>
+        <p>This page tests if checkboxes with the <code>input-icheck</code> class are visible.</p>
+        
+        <div class="checkbox-group">
+            <h3>Test Checkboxes</h3>
+            
+            <div style="margin: 10px 0;">
+                <label>
+                    <input type="checkbox" class="input-icheck" id="test1" name="test1"> 
+                    Test Checkbox 1 (Should be visible)
+                </label>
+            </div>
+            
+            <div style="margin: 10px 0;">
+                <label>
+                    <input type="checkbox" class="input-icheck" id="test2" name="test2" checked> 
+                    Test Checkbox 2 (Should be visible and checked)
+                </label>
+            </div>
+            
+            <div style="margin: 10px 0;">
+                <label>
+                    <input type="radio" class="input-icheck" id="radio1" name="test-radio" value="1"> 
+                    Test Radio 1
+                </label>
+            </div>
+            
+            <div style="margin: 10px 0;">
+                <label>
+                    <input type="radio" class="input-icheck" id="radio2" name="test-radio" value="2"> 
+                    Test Radio 2
+                </label>
+            </div>
+        </div>
+        
+        <div class="checkbox-group">
+            <h3>Location Permission Simulation</h3>
+            
+            <div style="margin: 10px 0;">
+                <label>
+                    <input type="checkbox" class="input-icheck" id="access_all" name="access_all_locations" checked> 
+                    All Locations
+                </label>
+            </div>
+            
+            <div style="margin: 10px 0;">
+                <label>
+                    <input type="checkbox" class="input-icheck" id="location1" name="location_permissions[]" value="1"> 
+                    Vision Care (BL0001)
+                </label>
+            </div>
+            
+            <div style="margin: 10px 0;">
+                <label>
+                    <input type="checkbox" class="input-icheck" id="location2" name="location_permissions[]" value="2"> 
+                    Test Location (1)
+                </label>
+            </div>
+        </div>
+        
+        <div class="checkbox-group">
+            <h3>User Settings Simulation</h3>
+            
+            <div style="margin: 10px 0;">
+                <label>
+                    <input type="checkbox" class="input-icheck" id="is_active" name="is_active" checked> 
+                    Status (Active)
+                </label>
+            </div>
+            
+            <div style="margin: 10px 0;">
+                <label>
+                    <input type="checkbox" class="input-icheck" id="allow_login" name="allow_login" checked> 
+                    Allow Login
+                </label>
+            </div>
+            
+            <div style="margin: 10px 0;">
+                <label>
+                    <input type="checkbox" class="input-icheck" id="service_pin" name="is_enable_service_staff_pin"> 
+                    Enable Service Staff PIN
+                </label>
+            </div>
+        </div>
+        
+        <div id="test-results" style="margin-top: 20px; padding: 15px; background: #f9f9f9; border-radius: 4px;">
+            <h3>Test Results</h3>
+            <div id="results-content">Running tests...</div>
+        </div>
+        
+        <div style="margin-top: 20px;">
+            <button onclick="runTests()" style="padding: 10px 20px; background: #007cba; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                Run Tests Again
+            </button>
+            <button onclick="toggleCheckboxes()" style="padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; margin-left: 10px;">
+                Toggle All Checkboxes
+            </button>
+        </div>
+    </div>
+
+    <script>
+        function runTests() {
+            const results = document.getElementById('results-content');
+            let html = '';
+            
+            // Test 1: Count visible checkboxes
+            const checkboxes = document.querySelectorAll('.input-icheck');
+            html += `<p><strong>Test 1:</strong> Found ${checkboxes.length} checkboxes with input-icheck class</p>`;
+            
+            // Test 2: Check visibility
+            let visibleCount = 0;
+            checkboxes.forEach((checkbox, index) => {
+                const style = window.getComputedStyle(checkbox);
+                const isVisible = style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0';
+                
+                if (isVisible) {
+                    visibleCount++;
+                    html += `<p class="success">✅ Checkbox ${index + 1} (${checkbox.name || checkbox.id}) is visible</p>`;
+                } else {
+                    html += `<p class="error">❌ Checkbox ${index + 1} (${checkbox.name || checkbox.id}) is hidden</p>`;
+                }
+            });
+            
+            // Test 3: Functionality test
+            html += `<p><strong>Test 3:</strong> ${visibleCount}/${checkboxes.length} checkboxes are visible</p>`;
+            
+            if (visibleCount === checkboxes.length) {
+                html += `<p class="success"><strong>✅ SUCCESS: All checkboxes are visible!</strong></p>`;
+            } else {
+                html += `<p class="error"><strong>❌ FAILURE: Some checkboxes are hidden</strong></p>`;
+            }
+            
+            // Test 4: Click functionality
+            html += `<p><strong>Test 4:</strong> Click functionality test</p>`;
+            checkboxes.forEach((checkbox) => {
+                checkbox.addEventListener('change', function() {
+                    console.log('Checkbox changed:', this.name || this.id, 'checked:', this.checked);
+                });
+            });
+            html += `<p class="success">✅ Event listeners attached to all checkboxes</p>`;
+            
+            results.innerHTML = html;
+        }
+        
+        function toggleCheckboxes() {
+            const checkboxes = document.querySelectorAll('.input-icheck[type="checkbox"]');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = !checkbox.checked;
+            });
+        }
+        
+        // Run tests when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Page loaded, running checkbox tests...');
+            setTimeout(runTests, 100);
+        });
+    </script>
+</body>
+</html>

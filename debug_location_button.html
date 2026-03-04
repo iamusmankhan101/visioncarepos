@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Location Button</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <style>
+        .debug-section {
+            margin: 20px;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .test-button {
+            padding: 10px 15px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .btn-success { background-color: #28a745; color: white; }
+        .btn-warning { background-color: #ff6b35; color: white; }
+        .btn-info { background-color: #17a2b8; color: white; }
+    </style>
+</head>
+<body>
+    <div class="debug-section">
+        <h2>Location Button Debug Test</h2>
+        <p>This page tests the location button functionality outside of the POS environment.</p>
+        
+        <h3>Test Buttons:</h3>
+        <button class="test-button btn-success" id="test-location-1">
+            <i class="fas fa-map-marker-alt"></i> Add Location (Green)
+        </button>
+        
+        <button class="test-button btn-warning" id="test-location-2">
+            <i class="fas fa-map-marker-alt"></i> Add Location (Orange)
+        </button>
+        
+        <button class="test-button btn-info" id="test-location-3">
+            <i class="fas fa-plus"></i> Test Modal
+        </button>
+        
+        <h3>Debug Info:</h3>
+        <div id="debug-output"></div>
+        
+        <h3>Instructions:</h3>
+        <ol>
+            <li>Click any button above to test modal functionality</li>
+            <li>Check browser console for errors</li>
+            <li>Verify that buttons are clickable and responsive</li>
+            <li>Test the same styling in your POS interface</li>
+        </ol>
+    </div>
+
+    <!-- Test Modal -->
+    <div class="modal fade location_add_modal" tabindex="-1" role="dialog" style="display: none;">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Add Business Location</h4>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p>This is a test modal. In the real POS, this would load the business location creation form.</p>
+                    <form id="test-form">
+                        <div class="form-group">
+                            <label>Location Name:</label>
+                            <input type="text" class="form-control" name="name" placeholder="Enter location name">
+                        </div>
+                        <div class="form-group">
+                            <label>Address:</label>
+                            <textarea class="form-control" name="address" placeholder="Enter address"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="save-location">Save Location</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            $('#debug-output').html('<p>✓ jQuery loaded successfully</p>');
+            
+            // Test button clicks
+            $('.test-button').click(function() {
+                var buttonText = $(this).text().trim();
+                $('#debug-output').append('<p>✓ Button clicked: ' + buttonText + '</p>');
+                
+                // Show modal
+                $('.location_add_modal').show();
+                $('#debug-output').append('<p>✓ Modal should be visible now</p>');
+            });
+            
+            // Close modal
+            $('.close, [data-dismiss="modal"]').click(function() {
+                $('.location_add_modal').hide();
+                $('#debug-output').append('<p>✓ Modal closed</p>');
+            });
+            
+            // Test save
+            $('#save-location').click(function() {
+                $('#debug-output').append('<p>✓ Save button clicked - would submit form in real app</p>');
+                $('.location_add_modal').hide();
+            });
+            
+            $('#debug-output').append('<p>✓ All event handlers attached</p>');
+        });
+    </script>
+</body>
+</html>

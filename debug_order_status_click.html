@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Order Status Click</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h3>Debug Order Status Click</h3>
+    
+    <!-- Test button similar to what's generated -->
+    <button type="button" class="btn btn-link p-0 quick-order-status-btn" 
+            data-href="https://pos.digitrot.com/sells/quick-order-status/5146" 
+            data-transaction-id="5146" 
+            data-current-status="ordered" 
+            title="Click to change order status" 
+            style="border:none;background:none;">
+        <span class="label bg-yellow">Ordered</span>
+    </button>
+    
+    <div id="debug-log" style="margin-top: 20px; padding: 10px; background: #f5f5f5; border: 1px solid #ddd;">
+        <h4>Debug Log:</h4>
+        <div id="log-content"></div>
+    </div>
+
+    <script>
+        function log(message) {
+            $('#log-content').append('<div>' + new Date().toLocaleTimeString() + ': ' + message + '</div>');
+        }
+        
+        $(document).ready(function() {
+            log('Page loaded, jQuery ready');
+            
+            // Handle quick order status button clicks
+            $(document).on('click', '.quick-order-status-btn', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                var url = $(this).data('href');
+                log('Button clicked, URL: ' + url);
+                
+                if (!url) {
+                    log('ERROR: No URL found');
+                    return false;
+                }
+                
+                // Test the URL
+                $.ajax({
+                    url: url,
+                    method: 'GET',
+                    beforeSend: function() {
+                        log('Sending AJAX request...');
+                    },
+                    success: function(result) {
+                        log('SUCCESS: Modal content received');
+                        log('Content length: ' + result.length + ' characters');
+                        // Show first 200 characters of response
+                        log('Content preview: ' + result.substring(0, 200) + '...');
+                    },
+                    error: function(xhr, status, error) {
+                        log('ERROR: ' + status + ' - ' + error);
+                        log('Response: ' + xhr.responseText);
+                        log('Status Code: ' + xhr.status);
+                    }
+                });
+                
+                return false;
+            });
+        });
+    </script>
+</body>
+</html>

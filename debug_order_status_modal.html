@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Order Status Modal</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/js/bootstrap.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h2>Debug Order Status Modal</h2>
+        
+        <div class="alert alert-info">
+            <strong>Instructions:</strong>
+            <ol>
+                <li>Open your browser's developer tools (F12)</li>
+                <li>Go to the Console tab</li>
+                <li>Click the "Test Order Status Button" below</li>
+                <li>Check if the AJAX request is made and if there are any errors</li>
+            </ol>
+        </div>
+        
+        <!-- Simulate the order status button -->
+        <div class="panel panel-default">
+            <div class="panel-header">
+                <h4>Simulated Order Status Button</h4>
+            </div>
+            <div class="panel-body">
+                <p>This simulates the order status button from your sales table:</p>
+                <button type="button" 
+                        class="btn btn-link p-0 quick-order-status-btn" 
+                        data-href="/sells/quick-order-status/1" 
+                        data-transaction-id="1" 
+                        data-current-status="ordered" 
+                        title="Click to change order status" 
+                        style="border:none;background:none;cursor:pointer;">
+                    <span class="label bg-yellow">Ordered</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Modal container -->
+        <div class="modal fade view_modal" tabindex="-1" role="dialog" aria-labelledby="gridSystemModalLabel">
+        </div>
+        
+        <!-- Debug info -->
+        <div class="panel panel-default">
+            <div class="panel-header">
+                <h4>Debug Information</h4>
+            </div>
+            <div class="panel-body">
+                <div id="debug-info">
+                    <p>Click the button above to see debug information here...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    $(document).ready(function() {
+        console.log('🔍 Debug script loaded');
+        console.log('jQuery version:', $.fn.jquery);
+        console.log('Bootstrap loaded:', typeof $.fn.modal !== 'undefined');
+        
+        // Add debug info
+        $('#debug-info').html(`
+            <strong>Environment Check:</strong><br>
+            ✅ jQuery loaded: ${typeof $ !== 'undefined'}<br>
+            ✅ Bootstrap modal loaded: ${typeof $.fn.modal !== 'undefined'}<br>
+            ✅ Modal container exists: ${$('.view_modal').length > 0}<br>
+            ✅ Order status button exists: ${$('.quick-order-status-btn').length > 0}<br>
+        `);
+        
+        // Attach the same click handler as in your sales page
+        $('.quick-order-status-btn').off('click').on('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            var url = $(this).data('href');
+            var transactionId = $(this).data('transaction-id');
+            
+            console.log('🎯 Order status button clicked');
+            console.log('URL:', url);
+            console.log('Transaction ID:', transactionId);
+            
+            $('#debug-info').append('<br><strong>Button clicked!</strong><br>');
+            $('#debug-info').append('URL: ' + url + '<br>');
+            $('#debug-info').append('Transaction ID: ' + transactionId + '<br>');
+            
+            if (!url) {
+                console.error('❌ No URL found for order status button');
+                $('#debug-info').append('<span style="color:red;">❌ No URL found</span><br>');
+                return false;
+            }
+            
+            // Disable button to prevent double clicks
+            $(this).prop('disabled', true);
+            var button = $(this);
+            
+            $('#debug-info').append('Making AJAX request...<br>');
+            
+            $.ajax({
+                url: url,
+                method: 'GET',
+                beforeSend: function() {
+                    console.log('📡 Loading order status modal...');
+                    $('#debug-info').append('📡 AJAX request started<br>');
+                },
+                success: function(result) {
+                    console.log('✅ Modal loaded successfully');
+                    console.log('Response:', result);
+                    $('#debug-info').append('<span style="color:green;">✅ AJAX success</span><br>');
+                    $('#debug-info').append('Response length: ' + (result ? result.length : 0) + ' characters<br>');
+                    
+                    if (result && result.length > 0) {
+                        $('.view_modal').html(result).modal('show');
+                        $('#debug-info').append('✅ Modal should be visible now<br>');
+                    } else {
+                        $('#debug-info').append('<span style="color:red;">❌ Empty response</span><br>');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('❌ Error loading order status modal:', xhr.responseText);
+                    $('#debug-info').append('<span style="color:red;">❌ AJAX error: ' + error + '</span><br>');
+                    $('#debug-info').append('Status: ' + xhr.status + '<br>');
+                    $('#debug-info').append('Response: ' + xhr.responseText + '<br>');
+                },
+                complete: function() {
+                    // Re-enable button
+                    button.prop('disabled', false);
+                    $('#debug-info').append('🏁 AJAX request completed<br>');
+                }
+            });
+            
+            return false;
+        });
+        
+        console.log('🎯 Event handlers attached');
+    });
+    </script>
+</body>
+</html>

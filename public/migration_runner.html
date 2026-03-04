@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Condition Field Migration Runner</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .btn {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .btn:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        .output {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 20px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success {
+            color: #28a745;
+        }
+        .error {
+            color: #dc3545;
+        }
+        .warning {
+            color: #ffc107;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Condition Field Migration Runner</h1>
+        <p>This tool will add the missing <code>condition</code> column to the <code>users</code> table to fix the sales commission agent DataTables error.</p>
+        
+        <div>
+            <button class="btn" onclick="runMigration()">Run Migration</button>
+            <button class="btn" onclick="testConditionField()">Test Condition Field</button>
+            <button class="btn" onclick="clearOutput()">Clear Output</button>
+        </div>
+        
+        <div id="output" class="output" style="display: none;"></div>
+    </div>
+
+    <script>
+        function showOutput() {
+            document.getElementById('output').style.display = 'block';
+        }
+        
+        function appendOutput(text, className = '') {
+            const output = document.getElementById('output');
+            const span = document.createElement('span');
+            span.textContent = text + '\n';
+            if (className) {
+                span.className = className;
+            }
+            output.appendChild(span);
+            output.scrollTop = output.scrollHeight;
+        }
+        
+        function clearOutput() {
+            const output = document.getElementById('output');
+            output.innerHTML = '';
+            output.style.display = 'none';
+        }
+        
+        function runMigration() {
+            showOutput();
+            appendOutput('=== RUNNING CONDITION FIELD MIGRATION ===', 'success');
+            appendOutput('Starting migration process...');
+            
+            fetch('run_migration.php')
+                .then(response => response.text())
+                .then(data => {
+                    appendOutput(data);
+                    if (data.includes('✓') && !data.includes('ERROR')) {
+                        appendOutput('\n=== MIGRATION COMPLETED SUCCESSFULLY ===', 'success');
+                        appendOutput('You can now use the sales commission agent forms!', 'success');
+                    } else if (data.includes('ERROR')) {
+                        appendOutput('\n=== MIGRATION FAILED ===', 'error');
+                        appendOutput('Please check the error details above.', 'error');
+                    }
+                })
+                .catch(error => {
+                    appendOutput('Error running migration: ' + error.message, 'error');
+                });
+        }
+        
+        function testConditionField() {
+            showOutput();
+            appendOutput('=== TESTING CONDITION FIELD ===', 'success');
+            appendOutput('Testing if the condition field is working...');
+            
+            // Simple test query
+            fetch('run_migration.php')
+                .then(response => response.text())
+                .then(data => {
+                    if (data.includes('Condition column already exists')) {
+                        appendOutput('✓ Condition field test passed!', 'success');
+                        appendOutput('The sales commission agent page should now work correctly.', 'success');
+                    } else {
+                        appendOutput('⚠ Condition field may not be properly configured.', 'warning');
+                        appendOutput('Try running the migration first.', 'warning');
+                    }
+                })
+                .catch(error => {
+                    appendOutput('Error testing condition field: ' + error.message, 'error');
+                });
+        }
+    </script>
+</body>
+</html>
