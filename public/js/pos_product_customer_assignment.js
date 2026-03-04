@@ -87,6 +87,11 @@
                 console.error('❌ Error fetching related customers:', error);
                 // Fallback to just adding the selected customer
                 updateSelectedCustomers();
+                
+                // If it's a 500 error, might be database issue
+                if (xhr.status === 500) {
+                    console.warn('⚠️ Server error - database column might not exist yet. Run migration first.');
+                }
             }
         });
     }
