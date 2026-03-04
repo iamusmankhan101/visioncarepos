@@ -469,6 +469,113 @@
     });
     // Pending Shimpmets
     $(document).ready(function(){
+        // Global debug flag for shipping status modal
+        window.debugShippingModal = true;
+        
+        // Ensure modal container exists globally
+        if ($('.view_modal').length === 0) {
+            $('body').append('<div class="modal fade view_modal" tabindex="-1" role="dialog" aria-labelledby="gridSystemModalLabel"></div>');
+            console.log('✅ Global modal container created');
+        }
+        
+        // Global fallback event handler for shipping status buttons
+        $(document).on('click', '.quick-order-status-btn', function(e) {
+            if (window.debugShippingModal) {
+                console.log('🌐 Global fallback handler triggered for shipping status button');
+            }
+            
+            // Check if this event was already handled by table-specific handler
+            if ($(this).data('handled')) {
+                return;
+            }
+            
+            e.preventDefault();
+            e.stopPropagation();
+            
+            var url = $(this).data('href');
+            var button = $(this);
+            
+            if (!url) {
+                console.error('❌ Global handler: No URL found in data-href attribute');
+                if (typeof toastr !== 'undefined') {
+                    toastr.error('Error: No URL found for modal');
+                }
+                return;
+            }
+            
+            console.log('🌐 Global handler processing URL:', url);
+            
+            button.prop('disabled', true).data('handled', true);
+            
+            if (typeof toastr !== 'undefined') {
+                toastr.info('Loading order status modal...');
+            }
+            
+            $.ajax({
+                url: url,
+                method: 'GET',
+                success: function(result) {
+                    console.log('✅ Global handler: Modal content received');
+                    $('.view_modal').html(result).modal({ 
+                        backdrop: 'static', 
+                        keyboard: false, 
+                        show: true 
+                    });
+                    
+                    // Handle form submission
+                    $('.view_modal').find('#quick_order_status_form').on('submit', function(e) {
+                        e.preventDefault();
+                        var formUrl = $(this).attr('action');
+                        var formData = $(this).serialize();
+                        
+                        $.ajax({
+                            url: formUrl,
+                            method: 'PUT',
+                            data: formData,
+                            headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+                            success: function(response) {
+                                if (typeof toastr !== 'undefined') {
+                                    toastr.success('Order status updated successfully');
+                                }
+                                $('.view_modal').modal('hide');
+                                
+                                // Handle WhatsApp link if provided
+                                if (response.whatsapp_link) {
+                                    window.open(response.whatsapp_link, '_blank');
+                                    if (typeof toastr !== 'undefined') {
+                                        toastr.success('WhatsApp opened automatically.');
+                                    }
+                                }
+                                
+                                // Reload any DataTable that might contain this data
+                                if (typeof pending_shipments_table !== 'undefined') {
+                                    pending_shipments_table.ajax.reload(null, false);
+                                }
+                                if ($.fn.DataTable && $.fn.DataTable.isDataTable('#pending_shipments_table')) {
+                                    $('#pending_shipments_table').DataTable().ajax.reload(null, false);
+                                }
+                            },
+                            error: function(xhr) { 
+                                console.error('❌ Global handler: Error updating order status:', xhr);
+                                if (typeof toastr !== 'undefined') {
+                                    toastr.error('Error updating order status'); 
+                                }
+                            }
+                        });
+                    });
+                },
+                error: function(xhr) {
+                    console.error('❌ Global handler: Error loading modal:', xhr);
+                    if (typeof toastr !== 'undefined') {
+                        toastr.error('Error loading order status modal');
+                    }
+                },
+                complete: function() { 
+                    button.prop('disabled', false).removeData('handled');
+                }
+            });
+        });
+        
         if ($('#pending_shipments_table').length) {
             var pending_shipments_table = $('#pending_shipments_table').DataTable({
                 processing: true,
@@ -502,22 +609,63 @@
                         $('body').append('<div class="modal fade view_modal" tabindex="-1" role="dialog" aria-labelledby="gridSystemModalLabel"></div>');
                     }
 
+                    // Debug: Log button count and details
+                    var buttonCount = $('#pending_shipments_table .quick-order-status-btn').length;
+                    console.log('📊 Found', buttonCount, 'order status buttons in pending shipments table');
+                    
+                    // Log details of first button for debugging
+                    if (buttonCount > 0) {
+                        var firstButton = $('#pending_shipments_table .quick-order-status-btn').first();
+                        console.log('🔍 First button details:', {
+                            href: firstButton.data('href'),
+                            transactionId: firstButton.data('transaction-id'),
+                            currentStatus: firstButton.data('current-status'),
+                            hasClass: firstButton.hasClass('quick-order-status-btn')
+                        });
+                    }
+
                     // Handle order status click in POS Pending Shipments
                     $('#pending_shipments_table').off('click', '.quick-order-status-btn').on('click', '.quick-order-status-btn', function(e) {
                         e.preventDefault();
                         e.stopPropagation();
                         
+                        // Mark as handled to prevent global handler from processing
+                        $(this).data('handled', true);
+                        
+                        console.log('🖱️ Table-specific handler: Order status button clicked!');
+                        
                         var url = $(this).data('href');
                         var button = $(this);
+                        
+                        console.log('📍 Modal URL:', url);
+                        
+                        if (!url) {
+                            console.error('❌ No URL found in data-href attribute');
+                            if (typeof toastr !== 'undefined') {
+                                toastr.error('Error: No URL found for modal');
+                            }
+                            return;
+                        }
+                        
                         button.prop('disabled', true);
                         
-                        if (typeof toastr !== 'undefined') toastr.info('Loading order status modal...');
+                        if (typeof toastr !== 'undefined') {
+                            toastr.info('Loading order status modal...');
+                        }
                         
                         $.ajax({
                             url: url,
                             method: 'GET',
+                            beforeSend: function() {
+                                console.log('📡 Sending AJAX request to:', url);
+                            },
                             success: function(result) {
-                                $('.view_modal').html(result).modal({ backdrop: 'static', keyboard: false, show: true });
+                                console.log('✅ Modal content received');
+                                $('.view_modal').html(result).modal({ 
+                                    backdrop: 'static', 
+                                    keyboard: false, 
+                                    show: true 
+                                });
                                 
                                 // Handle form submission
                                 $('.view_modal').find('#quick_order_status_form').on('submit', function(e) {
@@ -525,12 +673,15 @@
                                     var formUrl = $(this).attr('action');
                                     var formData = $(this).serialize();
                                     
+                                    console.log('📝 Submitting form to:', formUrl);
+                                    
                                     $.ajax({
                                         url: formUrl,
                                         method: 'PUT',
                                         data: formData,
                                         headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
                                         success: function(response) {
+                                            console.log('✅ Order status updated successfully');
                                             if (typeof toastr !== 'undefined') {
                                                 toastr.success('Order status updated successfully');
                                             }
@@ -552,6 +703,7 @@
                                             }
                                         },
                                         error: function(xhr) { 
+                                            console.error('❌ Error updating order status:', xhr);
                                             if (typeof toastr !== 'undefined') {
                                                 toastr.error('Error updating order status'); 
                                             }
@@ -560,11 +712,14 @@
                                 });
                             },
                             error: function(xhr) {
+                                console.error('❌ Error loading modal:', xhr);
                                 if (typeof toastr !== 'undefined') {
                                     toastr.error('Error loading order status modal');
                                 }
                             },
-                            complete: function() { button.prop('disabled', false); }
+                            complete: function() { 
+                                button.prop('disabled', false).removeData('handled');
+                            }
                         });
                     });
                 }

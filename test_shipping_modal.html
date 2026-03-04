@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="test-token">
+    <title>Test Shipping Status Modal</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/js/bootstrap.min.js"></script>
+    
+    <!-- Toastr for notifications -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+</head>
+<body>
+    <div class="container" style="margin-top: 50px;">
+        <h2>🧪 Shipping Status Modal Test</h2>
+        <hr>
+        
+        <div class="alert alert-info">
+            <strong>Instructions:</strong>
+            <ol>
+                <li>This page simulates the shipping status button from your POS system</li>
+                <li>Click the "Test Status" button below</li>
+                <li>Check browser console (F12) for debug messages</li>
+                <li>The button should trigger the same JavaScript as in your POS system</li>
+            </ol>
+        </div>
+        
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h4>Simulated Pending Shipments Table</h4>
+            </div>
+            <div class="panel-body">
+                <table class="table table-bordered" id="test_pending_shipments_table">
+                    <thead>
+                        <tr>
+                            <th>Action</th>
+                            <th>Date</th>
+                            <th>Invoice No</th>
+                            <th>Customer</th>
+                            <th>Shipping Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <button class="btn btn-sm btn-primary">View</button>
+                            </td>
+                            <td>2024-03-04</td>
+                            <td>INV-001</td>
+                            <td>Test Customer</td>
+                            <td>
+                                <!-- This simulates the shipping status button -->
+                                <button type="button" 
+                                        class="btn btn-link p-0 quick-order-status-btn" 
+                                        data-href="/sells/quick-order-status/1" 
+                                        data-transaction-id="1" 
+                                        data-current-status="ordered" 
+                                        title="Click to change order status" 
+                                        style="border:none;background:none;cursor:pointer;">
+                                    <span class="label label-warning">Test Status</span>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h4>Debug Information</h4>
+            </div>
+            <div class="panel-body">
+                <div id="debug-info"></div>
+                <button id="manual-test-btn" class="btn btn-info">Manual Test AJAX Call</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal container (same as in POS system) -->
+    <div class="modal fade view_modal" tabindex="-1" role="dialog" aria-labelledby="gridSystemModalLabel"></div>
+
+    <script>
+    $(document).ready(function() {
+        console.log('🧪 Test page loaded');
+        
+        // Display debug information
+        var debugInfo = '';
+        debugInfo += '✅ jQuery loaded: ' + (typeof $ !== 'undefined') + '<br>';
+        debugInfo += '✅ Bootstrap modal loaded: ' + (typeof $.fn.modal !== 'undefined') + '<br>';
+        debugInfo += '✅ Modal container exists: ' + ($('.view_modal').length > 0) + '<br>';
+        debugInfo += '✅ Order status button exists: ' + $('.quick-order-status-btn').length + '<br>';
+        debugInfo += '✅ Toastr loaded: ' + (typeof toastr !== 'undefined') + '<br>';
+        debugInfo += '✅ CSRF token: ' + $('meta[name=csrf-token]').attr('content') + '<br>';
+        $('#debug-info').html(debugInfo);
+        
+        // Manual test button
+        $('#manual-test-btn').on('click', function() {
+            var testUrl = $('.quick-order-status-btn').data('href');
+            if (testUrl) {
+                console.log('🧪 Manual test - URL:', testUrl);
+                toastr.info('Manual test: Would call ' + testUrl);
+            } else {
+                console.error('❌ No URL found in button data-href');
+                toastr.error('No URL found in button');
+            }
+        });
+        
+        // Order status button handler (same as in sales page)
+        $(document).on('click', '.quick-order-status-btn', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            console.log('🖱️ Test: Order status button clicked!');
+            toastr.success('Button click detected!');
+            
+            var url = $(this).data('href');
+            var button = $(this);
+            
+            console.log('📍 Test URL:', url);
+            
+            if (!url) {
+                console.error('❌ No URL found in data-href attribute');
+                toastr.error('Error: No URL found for modal');
+                return;
+            }
+            
+            // For testing, we'll just show what would happen
+            toastr.info('Would load modal from: ' + url);
+            
+            // Simulate modal content
+            var mockModalContent = `
+                <div class="modal-dialog modal-sm" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">
+                                <span>&times;</span>
+                            </button>
+                            <h4 class="modal-title">🧪 Test Modal</h4>
+                        </div>
+                        <div class="modal-body">
+                            <p><strong>This is a test modal!</strong></p>
+                            <p>URL: ${url}</p>
+                            <p>Transaction ID: ${$(this).data('transaction-id')}</p>
+                            <p>Current Status: ${$(this).data('current-status')}</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            $('.view_modal').html(mockModalContent).modal('show');
+            
+            console.log('✅ Test modal displayed successfully');
+            toastr.success('Test modal opened!');
+        });
+        
+        console.log('✅ Test page initialization complete');
+    });
+    </script>
+</body>
+</html>
