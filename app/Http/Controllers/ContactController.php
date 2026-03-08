@@ -647,6 +647,14 @@ class ContactController extends Controller
                 $input['dob'] = $this->commonUtil->uf_date($input['dob']);
             }
 
+            // Handle prescription_source - add it to shipping_custom_field_details
+            if ($request->has('prescription_source')) {
+                if (!isset($input['shipping_custom_field_details'])) {
+                    $input['shipping_custom_field_details'] = [];
+                }
+                $input['shipping_custom_field_details']['prescription_source'] = $request->input('prescription_source');
+            }
+
             $input['business_id'] = $business_id;
             $input['created_by'] = $request->session()->get('user.id');
 
@@ -1116,6 +1124,14 @@ class ContactController extends Controller
 
                 if (! empty($input['dob'])) {
                     $input['dob'] = $this->commonUtil->uf_date($input['dob']);
+                }
+
+                // Handle prescription_source - add it to shipping_custom_field_details
+                if ($request->has('prescription_source')) {
+                    if (!isset($input['shipping_custom_field_details'])) {
+                        $input['shipping_custom_field_details'] = [];
+                    }
+                    $input['shipping_custom_field_details']['prescription_source'] = $request->input('prescription_source');
                 }
 
                 $input['credit_limit'] = $request->input('credit_limit') != '' ? $this->commonUtil->num_uf($request->input('credit_limit')) : null;
@@ -2527,6 +2543,13 @@ class ContactController extends Controller
                     if ($request->has($field)) {
                         $input[$field] = $request->input($field);
                     }
+                }
+                
+                // Handle prescription_source for related customer
+                if ($request->has('related_prescription_source')) {
+                    $input['shipping_custom_field_details'] = [
+                        'prescription_source' => $request->input('related_prescription_source')
+                    ];
                 }
                 
                 // Create the related customer

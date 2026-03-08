@@ -246,6 +246,32 @@
           <i class="fa fa-eye"></i> Lens Prescription
         </h4>
       </div>
+      
+      <!-- Prescription Source Selection -->
+      <div class="col-md-12" style="margin-bottom: 15px;">
+        <div class="form-group">
+          <label style="font-weight: 600; color: #333;">
+            <i class="fa fa-file-medical"></i> Prescription Source:
+          </label>
+          <div style="margin-top: 8px;">
+            <label class="radio-inline" style="margin-right: 20px;">
+              <input type="radio" name="prescription_source" value="vision_care" 
+                @if(!empty($contact->shipping_custom_field_details['prescription_source']) && $contact->shipping_custom_field_details['prescription_source'] == 'vision_care') checked @endif>
+              <span style="color: #48b2ee; font-weight: 500;">
+                <i class="fa fa-check-circle"></i> Prescription by Vision Care
+              </span>
+            </label>
+            <label class="radio-inline">
+              <input type="radio" name="prescription_source" value="not_vision_care"
+                @if(!empty($contact->shipping_custom_field_details['prescription_source']) && $contact->shipping_custom_field_details['prescription_source'] == 'not_vision_care') checked @endif>
+              <span style="color: #666; font-weight: 500;">
+                <i class="fa fa-times-circle"></i> Prescription not by Vision Care
+              </span>
+            </label>
+          </div>
+        </div>
+      </div>
+      
       @php
         $custom_labels = json_decode(session('business.custom_labels'), true);
       @endphp
@@ -399,6 +425,29 @@
               <h4 style="color: #48b2ee;">
                 <i class="fa fa-eye"></i> Lens Prescription
               </h4>
+            </div>
+            
+            <!-- Prescription Source Selection for Related Customer -->
+            <div class="col-md-12" style="margin-bottom: 15px;">
+              <div class="form-group">
+                <label style="font-weight: 600; color: #333;">
+                  <i class="fa fa-file-medical"></i> Prescription Source:
+                </label>
+                <div style="margin-top: 8px;">
+                  <label class="radio-inline" style="margin-right: 20px;">
+                    <input type="radio" name="related_prescription_source" value="vision_care">
+                    <span style="color: #48b2ee; font-weight: 500;">
+                      <i class="fa fa-check-circle"></i> Prescription by Vision Care
+                    </span>
+                  </label>
+                  <label class="radio-inline">
+                    <input type="radio" name="related_prescription_source" value="not_vision_care">
+                    <span style="color: #666; font-weight: 500;">
+                      <i class="fa fa-times-circle"></i> Prescription not by Vision Care
+                    </span>
+                  </label>
+                </div>
+              </div>
             </div>
             
             <div class="col-md-12">
@@ -986,6 +1035,7 @@ $(document).on('click', '#save-related-customer', function(e) {
         custom_field10: $('input[name="related_custom_field10"]').val(),
         'shipping_custom_field_details[shipping_custom_field_1]': $('input[name="related_shipping_custom_field_1"]').val(),
         'shipping_custom_field_details[shipping_custom_field_2]': $('input[name="related_shipping_custom_field_2"]').val(),
+        related_prescription_source: $('input[name="related_prescription_source"]:checked').val(),
         customer_group_id_link: $('#customer_group_id_link').val(),
         _token: $('meta[name="csrf-token"]').attr('content')
     };
