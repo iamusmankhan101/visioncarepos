@@ -15,6 +15,9 @@
     // Store related customers cache
     var relatedCustomersCache = {};
     
+    // Track the last selected customer in any product row for "sticky" behavior
+    var lastSelectedAssignmentCustomerId = null;
+    
     /**
      * Initialize product-customer assignment functionality
      */
@@ -24,10 +27,22 @@
         // Listen for customer selection changes
         $(document).on('change', '#customer_id', function() {
             var customerId = $(this).val();
+            // Reset sticky selection when main customer changes
+            lastSelectedAssignmentCustomerId = null;
+            
             if (customerId) {
                 fetchAndAddRelatedCustomers(customerId);
             } else {
                 updateSelectedCustomers();
+            }
+        });
+
+        // Listen for changes in product row customer assignments to make it "sticky"
+        $(document).on('change', '.product_customer_assignment', function() {
+            var val = $(this).val();
+            if (val) {
+                lastSelectedAssignmentCustomerId = val;
+                console.log('📌 Sticky customer updated to:', val);
             }
         });
         
@@ -188,8 +203,29 @@
         
         // Auto-select primary customer if multiple customers but no assignment
         if (window.posSelectedCustomers.length > 1 && !currentValue) {
+            // Priority 1: Use sticky selection if available
+            if (lastSelectedAssignmentCustomerId) {
+                var exists = window.posSelectedCustomers.some(function(c) {
+                    return c.id == lastSelectedAssignmentCustomerId;
+                });
+                if (exists) {
+                    $dropdown.val(lastSelectedAssignmentCustomerId);
+                    return;
+                }
+            }
+
+            // Priority 2: Use current customer (selected in main dropdown)
+            var currentCustomer = window.posSelectedCustomers.find(function(c) {
+                return c.is_current;
+            });
+            if (currentCustomer) {
+                $dropdown.val(currentCustomer.id);
+                return;
+            }
+
+            // Priority 3: Use primary customer
             var primaryCustomer = window.posSelectedCustomers.find(function(c) {
-                return c.is_primary || c.is_current;
+                return c.is_primary;
             });
             if (primaryCustomer) {
                 $dropdown.val(primaryCustomer.id);
