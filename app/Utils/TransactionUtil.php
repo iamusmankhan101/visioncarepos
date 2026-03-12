@@ -2198,6 +2198,7 @@ class TransactionUtil extends Util
                     $assigned_customer = \App\Contact::find($line->assigned_customer_id);
                     if ($assigned_customer) {
                         $line_array['assigned_customer_name'] = $assigned_customer->name;
+                        $line_array['assigned_customer_id'] = $assigned_customer->id;
                     }
                 }
             } catch (\Exception $e) {

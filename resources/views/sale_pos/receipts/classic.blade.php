@@ -386,6 +386,21 @@ window.addEventListener('afterprint', function() {
 				@if(!empty($receipt_details->multiple_customers_data))
 					<span class="label label-primary" style="margin-left: 10px; font-size: 10px;">Primary</span>
 				@endif
+
+				{{-- Products assigned to this customer --}}
+				@php
+					$assigned_products = [];
+					foreach($receipt_details->lines as $line) {
+						if (empty($line['assigned_customer_id']) || $line['assigned_customer_id'] == $contact->id) {
+							$assigned_products[] = $line['name'];
+						}
+					}
+				@endphp
+				@if(!empty($assigned_products))
+					<span style="margin-left: 15px; font-size: 12px; color: #000; font-weight: normal;">
+						(Product: {{ implode(', ', $assigned_products) }})
+					</span>
+				@endif
 			</h4>
 		@endif
 		<table width="100%" style="border-collapse: collapse;">
@@ -461,6 +476,21 @@ window.addEventListener('afterprint', function() {
 					<i class="fa fa-eye"></i> Prescription - {{ $additional_customer['name'] }}
 					@if($additional_customer['contact_id'])
 						(ID: {{ $additional_customer['contact_id'] }})
+					@endif
+					
+					{{-- Products assigned to this customer --}}
+					@php
+						$assigned_products = [];
+						foreach($receipt_details->lines as $line) {
+							if (!empty($line['assigned_customer_id']) && $line['assigned_customer_id'] == $additional_customer['id']) {
+								$assigned_products[] = $line['name'];
+							}
+						}
+					@endphp
+					@if(!empty($assigned_products))
+						<span style="margin-left: 15px; font-size: 12px; color: #000; font-weight: normal;">
+							(Product: {{ implode(', ', $assigned_products) }})
+						</span>
 					@endif
 				</h4>
 				<table width="100%" style="border-collapse: collapse;">
@@ -570,14 +600,6 @@ window.addEventListener('afterprint', function() {
                             {{$line['name']}} {{$line['product_variation']}} {{$line['variation']}} 
                             @if(!empty($line['sub_sku'])), {{$line['sub_sku']}} @endif @if(!empty($line['brand'])), {{$line['brand']}} @endif @if(!empty($line['cat_code'])), {{$line['cat_code']}}@endif
                             @if(!empty($line['product_custom_fields'])), {{$line['product_custom_fields']}} @endif
-                            
-                            {{-- Display assigned customer name if available --}}
-                            @if(!empty($line['assigned_customer_name']))
-                            <br>
-                            <small style="color: #2196F3; font-weight: bold;">
-                            	<i class="fa fa-user"></i> For: {{$line['assigned_customer_name']}}
-                            </small>
-                            @endif
                             
                             @if(!empty($line['product_description']))
                             	<small>
