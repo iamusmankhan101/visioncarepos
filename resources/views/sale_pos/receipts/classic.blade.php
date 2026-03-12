@@ -188,14 +188,6 @@ window.addEventListener('afterprint', function() {
 			</p>
 		@endif
 
-		<!-- Additional customer info if needed -->
-		@if(!empty($receipt_details->additional_customers))
-			<p style="width: 100% !important">
-				<span style="font-size: 0.9em; color: #666;">
-					<i>(Also for: {{ $receipt_details->additional_customers }})</i>
-				</span>
-			</p>
-		@endif
 	</div>
 	
 	<div class="col-xs-12">
@@ -380,12 +372,6 @@ window.addEventListener('afterprint', function() {
 		@if($contact)
 			<h4 style="margin-bottom: 5px; color: #48b2ee; font-size: 14px;">
 				<i class="fa fa-eye"></i> Prescription - {{ $contact->name }}
-				@if($contact->contact_id)
-					(ID: {{ $contact->contact_id }})
-				@endif
-				@if(!empty($receipt_details->multiple_customers_data))
-					<span class="label label-primary" style="margin-left: 10px; font-size: 10px;">Primary</span>
-				@endif
 
 				{{-- Products assigned to this customer --}}
 				@php
@@ -474,9 +460,6 @@ window.addEventListener('afterprint', function() {
 			<div class="col-xs-12">
 				<h4 style="margin-bottom: 5px; color: #48b2ee; font-size: 14px;">
 					<i class="fa fa-eye"></i> Prescription - {{ $additional_customer['name'] }}
-					@if($additional_customer['contact_id'])
-						(ID: {{ $additional_customer['contact_id'] }})
-					@endif
 					
 					{{-- Products assigned to this customer --}}
 					@php
