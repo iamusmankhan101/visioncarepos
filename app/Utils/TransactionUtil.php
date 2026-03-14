@@ -466,7 +466,7 @@ class TransactionUtil extends Util
             //Combo product lines.
             //$products_value = array_values($products);
             foreach ($lines_formatted as $key => $value) {
-                if (! empty($products_modified_combo[$key]['product_type']) && $products_modified_combo[$key]['product_type'] == 'combo') {
+                if (! empty($products_modified_combo[$key]['product_type']) && $products_modified_combo[$key]['product_type'] == 'combo' && ! empty($products_modified_combo[$key]['combo'])) {
                     $combo_lines = array_merge($combo_lines, $this->__makeLinesForComboProduct($products_modified_combo[$key]['combo'], $value));
                 }
 
