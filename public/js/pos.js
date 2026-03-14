@@ -1612,10 +1612,18 @@ $(document).ready(function() {
 
     $(document).on('click', '.add_new_customer', function() {
         $('#customer_id').select2('close');
-        var name = $(this).data('name');
-        $('.contact_modal')
-            .find('input#name')
-            .val(name);
+        
+        // If the entered text is mostly numbers (at least 7 digits, allowing some spaces/dashes), it's likely a phone number
+        var isPhoneNumber = /^[0-9\-\+\s]{7,}$/.test(name);
+        
+        if (isPhoneNumber) {
+            $('.contact_modal').find('input#mobile').val(name);
+            $('.contact_modal').find('input#name').val('');
+        } else {
+            $('.contact_modal').find('input#name').val(name);
+            $('.contact_modal').find('input#mobile').val('');
+        }
+        
         $('.contact_modal')
             .find('select#contact_type')
             .val('customer')
