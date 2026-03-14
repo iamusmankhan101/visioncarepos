@@ -1610,6 +1610,14 @@ $(document).ready(function() {
         pos_total_row();
     });
 
+    // Capture the search text from select2 before it closes
+    $(document).on('keyup', '.select2-search__field', function() {
+        var select2_obj = $('#customer_id').data('select2');
+        if (select2_obj && select2_obj.dropdown.$search && $(this).is(select2_obj.dropdown.$search)) {
+            $('button.add_new_customer.bg-white').data('name', $(this).val());
+        }
+    });
+
     $(document).on('click', '.add_new_customer', function() {
         var name = $(this).data('name');
         var select2_obj = $('#customer_id').data('select2');
@@ -1627,9 +1635,9 @@ $(document).ready(function() {
         
         if (isPhoneNumber) {
             $('.contact_modal').find('input#mobile').val(name);
-            $('.contact_modal').find('input#name').val('');
+            $('.contact_modal').find('input#first_name').val('');
         } else {
-            $('.contact_modal').find('input#name').val(name);
+            $('.contact_modal').find('input#first_name').val(name);
             $('.contact_modal').find('input#mobile').val('');
         }
         
