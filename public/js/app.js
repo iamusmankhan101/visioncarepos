@@ -2833,6 +2833,60 @@ $(document).on('shown.bs.modal', '.contact_modal', function (e) {
         autoclose: true,
         endDate: 'today',
     });
+
+    // Autocomplete for mobile field
+    var $mobileInput = $(this).find('input#mobile');
+    if ($mobileInput.length && !$mobileInput.data('ui-autocomplete')) {
+        $mobileInput.autocomplete({
+            source: function(request, response) {
+                $.ajax({
+                    url: '/contacts/customers',
+                    dataType: 'json',
+                    data: {
+                        q: request.term
+                    },
+                    success: function(data) {
+                        response($.map(data, function(item) {
+                            return {
+                                label: item.mobile + (item.name ? ' - ' + item.name : ''),
+                                value: item.mobile,
+                                data: item
+                            };
+                        }));
+                    }
+                });
+            },
+            minLength: 3,
+            select: function(event, ui) {
+                var customer = ui.item.data;
+                var $modal = $(this).closest('.contact_modal');
+                
+                // Populate fields
+                if (customer.name) {
+                    // Check if name has spaces to split into first and last name
+                    var nameParts = customer.name.split(' ');
+                    $modal.find('input#first_name').val(nameParts[0]);
+                    if (nameParts.length > 1) {
+                        $modal.find('input#last_name').val(nameParts.slice(1).join(' '));
+                    }
+                }
+                
+                if (customer.email) $modal.find('input#email').val(customer.email);
+                if (customer.landline) $modal.find('input#landline').val(customer.landline);
+                if (customer.alternate_number) $modal.find('input#alternate_number').val(customer.alternate_number);
+                if (customer.dob) $modal.find('input#dob').val(customer.dob);
+                
+                // Try to set customer group if exists
+                if (customer.customer_group_id && $modal.find('select#customer_group_id').length) {
+                    $modal.find('select#customer_group_id').val(customer.customer_group_id).trigger('change');
+                }
+            }
+        }).autocomplete("instance")._renderItem = function(ul, item) {
+            return $("<li>")
+                .append("<div><strong>" + item.data.mobile + "</strong><br><small>" + (item.data.name || 'No Name') + "</small></div>")
+                .appendTo(ul);
+        };
+    }
 });
 
 $(document).on('change', '#sms_service', function (e) {
