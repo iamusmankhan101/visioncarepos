@@ -1611,6 +1611,15 @@ $(document).ready(function() {
     });
 
     $(document).on('click', '.add_new_customer', function() {
+        var name = $(this).data('name');
+        var select2_obj = $('#customer_id').data('select2');
+        if (!name && select2_obj && select2_obj.dropdown.$search) {
+            name = select2_obj.dropdown.$search.val();
+        }
+        if (!name) {
+            name = '';
+        }
+
         $('#customer_id').select2('close');
         
         // If the entered text is mostly numbers (at least 7 digits, allowing some spaces/dashes), it's likely a phone number
