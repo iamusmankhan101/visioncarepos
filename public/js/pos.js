@@ -1614,12 +1614,17 @@ $(document).ready(function() {
     $(document).on('keyup', '.select2-search__field', function() {
         var select2_obj = $('#customer_id').data('select2');
         if (select2_obj && select2_obj.dropdown.$search && $(this).is(select2_obj.dropdown.$search)) {
-            $('button.add_new_customer.bg-white').data('name', $(this).val());
+            window.__customer_search_term = $(this).val();
         }
     });
 
     $(document).on('click', '.add_new_customer', function() {
         var name = $(this).data('name');
+        
+        if (!name && window.__customer_search_term) {
+             name = window.__customer_search_term;
+        }
+
         var select2_obj = $('#customer_id').data('select2');
         if (!name && select2_obj && select2_obj.dropdown.$search) {
             name = select2_obj.dropdown.$search.val();
@@ -1627,19 +1632,13 @@ $(document).ready(function() {
         if (!name) {
             name = '';
         }
+        
+        name = String(name).trim();
 
         $('#customer_id').select2('close');
         
         // If the entered text is mostly numbers (at least 7 digits, allowing some spaces/dashes), it's likely a phone number
         var isPhoneNumber = /^[0-9\-\+\s]{7,}$/.test(name);
-        
-        if (isPhoneNumber) {
-            $('.contact_modal').find('input#mobile').val(name);
-            $('.contact_modal').find('input#first_name').val('');
-        } else {
-            $('.contact_modal').find('input#first_name').val(name);
-            $('.contact_modal').find('input#mobile').val('');
-        }
         
         $('.contact_modal')
             .find('select#contact_type')
@@ -1647,6 +1646,17 @@ $(document).ready(function() {
             .closest('div.contact_type_div')
             .addClass('hide');
         $('.contact_modal').modal('show');
+        
+        // Use setTimeout to ensure the modal and its fields are fully initialized
+        setTimeout(function() {
+            if (isPhoneNumber) {
+                $('.contact_modal').find('input#mobile').val(name);
+                $('.contact_modal').find('input#first_name').val('');
+            } else {
+                $('.contact_modal').find('input#first_name').val(name);
+                $('.contact_modal').find('input#mobile').val('');
+            }
+        }, 500);
     });
     $('form#quick_add_contact')
         .submit(function(e) {
