@@ -1743,16 +1743,9 @@ class ProductUtil extends Util
         // 🔐 Escape `name`, `variation`, `sub_sku`
         $data->transform(function ($item) {
             $item->name = e($item->name);
-            $item->sub_sku = e($item->sub_sku);
-            
-            // Add SKU to name for display
-            $item->name .= ' (' . $item->sub_sku . ')';
-
-            if (!empty($item->product_custom_field1)) {
-                $item->name .= ' | Note: ' . e($item->product_custom_field1);
-            }
-            
             $item->variation = e($item->variation);
+            $item->sub_sku = e($item->sub_sku);
+            $item->product_custom_field1 = e($item->product_custom_field1);
             return $item;
         });
 

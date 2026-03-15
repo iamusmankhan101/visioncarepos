@@ -298,15 +298,25 @@ $(document).ready(function() {
                         function(data) {
                             var products = data.products || data;
                             $.each(products, function(i, item) {
-                                // Name is already pre-formatted on backend: Name (SKU) | Note: note
-                                // We just need to ensure the value (for input) is clean
-                                var parts = item.name.split(' | Note: ');
-                                item.actual_name_with_sku = parts[0];
-                                item.internal_notes = parts[1] || '';
+                                // Backend now returns clean raw fields
+                                var name = item.name;
+                                var sku = item.sub_sku;
+                                var product_note = item.product_custom_field1 || '';
+                                var contact_note = item.contact_note || '';
+                                
+                                // Combine notes if both exist
+                                var combined_note = product_note;
+                                if (contact_note) {
+                                    combined_note += (combined_note ? ' ' : '') + contact_note;
+                                }
 
-                                // Set clean value for input (no notes)
-                                item.value = item.actual_name_with_sku;
-                                item.label = item.name;
+                                item.actual_name = name;
+                                item.sku_display = sku;
+                                item.internal_notes = combined_note;
+
+                                // Value for input is Name (SKU)
+                                item.value = name + ' (' + sku + ')';
+                                item.label = name + ' (' + sku + ')' + (combined_note ? ' | Note: ' + combined_note : '');
                             });
                             response(products);
                         }
@@ -360,10 +370,9 @@ $(document).ready(function() {
             })
             .autocomplete('instance')._renderItem = function(ul, item) {
                 
-                var display_name = item.name;
-                var parts = display_name.split(' | Note: ');
-                var main_part = parts[0];
-                var note_part = parts[1] || '';
+                var name = item.actual_name || item.name;
+                var sku = item.sku_display || item.sub_sku;
+                var notes = item.internal_notes || '';
 
                 var is_overselling_allowed = false;
                 if($('input#is_overselling_allowed').length) {
@@ -381,9 +390,14 @@ $(document).ready(function() {
                     var is_draft=true;
                 }
 
-                var string = '<div>' + main_part;
-                if (note_part) {
-                    string += ' | <span style="font-weight: bold; color: #d9534f;">Note: ' + note_part + '</span>';
+                var string = '<div>' + name;
+                if (item.type == 'variable') {
+                    string += '-' + item.variation;
+                }
+                string += ' (' + sku + ')';
+
+                if (notes) {
+                    string += ' | <span style="font-weight: bold; color: #d9534f;">Note: ' + notes + '</span>';
                 }
 
                 if (item.enable_stock == 1 && item.qty_available <= 0 && !is_overselling_allowed && !for_so && !is_draft) {
