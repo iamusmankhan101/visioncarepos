@@ -1096,6 +1096,83 @@
         });
         
         console.log('✅ Delivery Modal Fix initialization completed');
+        
+        // EMERGENCY FIX: Direct interception using MutationObserver and event monitoring
+        console.log('🚨 EMERGENCY: Setting up direct AJAX monitoring...');
+        
+        // Monitor for the specific log message that appears right before AJAX
+        var originalConsoleLog = console.log;
+        console.log = function() {
+            var message = arguments[0];
+            
+            // Check if this is the "ABOUT TO MAKE AJAX CALL" message
+            if (typeof message === 'string' && message.includes('ABOUT TO MAKE AJAX CALL')) {
+                console.log('🚨 DETECTED: About to make AJAX call - intercepting NOW!');
+                
+                var sessionKey = 'delivery_modal_shown_' + new Date().toDateString();
+                if (!sessionStorage.getItem(sessionKey)) {
+                    console.log('🛑 EMERGENCY INTERCEPTION: Showing delivery modal');
+                    
+                    // Show delivery modal immediately
+                    pos_show_delivery_modal_enhanced(function() {
+                        console.log('✅ EMERGENCY: Delivery modal completed');
+                        sessionStorage.setItem(sessionKey, 'true');
+                        
+                        // Set delivery date in the form
+                        var deliveryDate = $('#pos_delivery_date').val();
+                        if (deliveryDate) {
+                            console.log('✅ EMERGENCY: Delivery date set in form:', deliveryDate);
+                        }
+                    });
+                    
+                    // Don't call the original console.log for this message to avoid confusion
+                    return;
+                }
+            }
+            
+            // Call original console.log for all other messages
+            return originalConsoleLog.apply(console, arguments);
+        };
+        
+        // Alternative: Monitor for form submission events
+        $(document).on('submit', '#pos-form', function(e) {
+            console.log('🎯 FORM SUBMISSION DETECTED');
+            
+            var sessionKey = 'delivery_modal_shown_' + new Date().toDateString();
+            if (!sessionStorage.getItem(sessionKey)) {
+                console.log('🛑 FORM SUBMISSION INTERCEPTION: Showing delivery modal');
+                e.preventDefault();
+                e.stopPropagation();
+                
+                var form = $(this);
+                
+                pos_show_delivery_modal_enhanced(function() {
+                    console.log('✅ FORM SUBMISSION: Delivery modal completed, submitting form');
+                    sessionStorage.setItem(sessionKey, 'true');
+                    
+                    // Submit the form after modal
+                    form.off('submit').submit();
+                });
+                
+                return false;
+            }
+        });
+        
+        // Monitor for any AJAX activity using ajaxSend event
+        $(document).ajaxSend(function(event, xhr, settings) {
+            console.log('🔍 AJAX SEND DETECTED:', settings.url, settings.type);
+            
+            if (settings.url && settings.url.includes('/pos') && settings.type === 'POST') {
+                console.log('🎯 POS AJAX DETECTED via ajaxSend');
+                
+                var sessionKey = 'delivery_modal_shown_' + new Date().toDateString();
+                if (!sessionStorage.getItem(sessionKey)) {
+                    console.log('🛑 AJAX SEND INTERCEPTION: Should show delivery modal');
+                    // Note: Can't prevent AJAX here as it's already being sent
+                    // But we can log that we detected it
+                }
+            }
+        });
     });
     
     // Global function for manual testing
