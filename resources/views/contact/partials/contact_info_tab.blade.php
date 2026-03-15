@@ -1,14 +1,15 @@
 <span id="view_contact_page"></span>
 <div class="row">
     <div class="col-md-12">
-        <div class="col-sm-3">
+        <div class="col-sm-4">
             @include('contact.contact_basic_info')
         </div>
-        <div class="col-sm-3 mt-56">
+        <div class="col-sm-8">
             @include('contact.contact_more_info')
         </div>
         @if( $contact->type != 'customer')
-            <div class="col-sm-3 mt-56">
+            <div class="clearfix"></div>
+            <div class="col-sm-4">
                 @include('contact.contact_tax_info')
             </div>
         @endif
