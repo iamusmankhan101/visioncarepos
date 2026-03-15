@@ -189,13 +189,13 @@ window.addEventListener('afterprint', function() {
 		@endif
 
 		<!-- Additional customer info if needed -->
-		@if(!empty($receipt_details->additional_customers))
 			<p style="width: 100% !important">
 				<span style="font-size: 0.9em; color: #666;">
-					<i>(Also for: {{ $receipt_details->additional_customers }})</i>
+					@if(!empty($receipt_details->additional_customers))
+						<i>(Also for: {{ $receipt_details->additional_customers }})</i>
+					@endif
 				</span>
 			</p>
-		@endif
 	</div>
 	
 	<div class="col-xs-12">

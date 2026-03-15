@@ -370,16 +370,9 @@ window.addEventListener('afterprint', function() {
 @endphp
 
 {{-- Main Customer Prescription --}}
-@php
-	$primary_assigned_products = [];
-	foreach($receipt_details->lines as $line) {
-		if (empty($line['assigned_customer_id']) || $line['assigned_customer_id'] == $contact->id) {
-			$primary_assigned_products[] = $line['name'];
-		}
-	}
-@endphp
 
-@if($contact && !empty($primary_assigned_products))
+
+@if($contact)
 <div class="row" style="color: #000000 !important; margin-top: 5px;">
 	<div class="col-xs-12">
 		<h4 style="margin-bottom: 5px; color: #48b2ee; font-size: 14px;">
@@ -483,17 +476,7 @@ window.addEventListener('afterprint', function() {
 {{-- Additional Customers' Prescriptions --}}
 @if(!empty($receipt_details->multiple_customers_data))
 	@foreach($receipt_details->multiple_customers_data as $additional_customer)
-		{{-- Check if additional customer has assigned products --}}
-		@php
-			$assigned_products = [];
-			foreach($receipt_details->lines as $line) {
-				if (!empty($line['assigned_customer_id']) && $line['assigned_customer_id'] == $additional_customer['id']) {
-					$assigned_products[] = $line['name'];
-				}
-			}
-		@endphp
 
-		@if(!empty($assigned_products))
 		<div class="row" style="color: #000000 !important; margin-top: 8px; border-top: 1px solid #ddd; padding-top: 5px;">
 			<div class="col-xs-12">
 				<h4 style="margin-bottom: 5px; color: #48b2ee; font-size: 14px;">
@@ -592,7 +575,7 @@ window.addEventListener('afterprint', function() {
 				</table>
 			</div>
 		</div>
-		@endif
+		</div>
 	@endforeach
 @endif
 
