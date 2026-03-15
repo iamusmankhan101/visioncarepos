@@ -39,23 +39,23 @@
                     <span aria-hidden="true" style="color: white;">&times;</span>
                 </button>
                 <h4 class="modal-title">
-                    <i class="fa fa-truck"></i> Set Delivery Date &amp; Time
+                    <i class="fa fa-truck"></i> @lang('lang_v1.delivery_date') &amp; Time
                 </h4>
             </div>
             <div class="modal-body">
                 <p style="color: #6c757d; margin-bottom: 15px;">
-                    <i class="fa fa-info-circle"></i> Set the expected delivery date and time. Defaults to <strong>1 day after today</strong>.
+                    <i class="fa fa-info-circle"></i> Set the expected delivery date and time. Defaults to <strong>1 day after today at 10:00 AM</strong>.
                 </p>
                 <div class="form-group">
-                    <label for="delivery_date_input"><strong>Delivery Date:</strong></label>
-                    <div class="input-group">
+                    <label for="delivery_date_input"><strong>@lang('lang_v1.delivery_date'):</strong></label>
+                    <div class="input-group date" id="delivery_date_picker">
                         <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
                         <input type="text" class="form-control" id="delivery_date_input" placeholder="Select delivery date" readonly>
                     </div>
                 </div>
                 <div class="form-group">
                     <label for="delivery_time_input"><strong>Delivery Time:</strong></label>
-                    <div class="input-group">
+                    <div class="input-group date" id="delivery_time_picker">
                         <span class="input-group-addon"><i class="fa fa-clock-o"></i></span>
                         <input type="text" class="form-control" id="delivery_time_input" placeholder="Select delivery time" readonly>
                     </div>

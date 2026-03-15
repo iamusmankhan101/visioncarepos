@@ -1050,11 +1050,6 @@ $(document).ready(function() {
             }
             
             // DELIVERY MODAL: Show before submitting AJAX
-            var _tomorrow = new Date();
-            _tomorrow.setDate(_tomorrow.getDate() + 1);
-            var _pad = function(n) { return n < 10 ? '0' + n : '' + n; };
-            var defaultDate = _tomorrow.getFullYear() + '-' + _pad(_tomorrow.getMonth() + 1) + '-' + _pad(_tomorrow.getDate());
-
             function doExpressCheckoutAjax(finalData) {
                 var url = pos_form_obj.attr('action');
                 $.ajax({
@@ -1091,9 +1086,32 @@ $(document).ready(function() {
                 });
             }
 
-            // Set default values - change to native date/time inputs
-            $('#delivery_date_input').attr('type', 'date').removeAttr('readonly').val(defaultDate);
-            $('#delivery_time_input').attr('type', 'time').removeAttr('readonly').val('10:00');
+            // Set default values - initialize Bootstrap datetimepicker
+            var _tomorrow = new Date();
+            _tomorrow.setDate(_tomorrow.getDate() + 1);
+
+            // Initialize date picker (date only)
+            if ($('#delivery_date_picker').data('DateTimePicker')) {
+                $('#delivery_date_picker').data('DateTimePicker').destroy();
+            }
+            $('#delivery_date_picker').datetimepicker({
+                format: moment_date_format,
+                ignoreReadonly: true,
+                allowInputToggle: true,
+                minDate: moment()
+            });
+            $('#delivery_date_picker').data('DateTimePicker').date(moment(_tomorrow));
+
+            // Initialize time picker (time only)
+            if ($('#delivery_time_picker').data('DateTimePicker')) {
+                $('#delivery_time_picker').data('DateTimePicker').destroy();
+            }
+            $('#delivery_time_picker').datetimepicker({
+                format: moment_time_format,
+                ignoreReadonly: true,
+                allowInputToggle: true
+            });
+            $('#delivery_time_picker').data('DateTimePicker').date(moment('10:00', 'HH:mm'));
 
             // Remove old handlers to avoid duplicates
             $('#confirm_delivery_date').off('click.express');
@@ -1101,10 +1119,21 @@ $(document).ready(function() {
             $('#delivery_date_modal').off('hidden.bs.modal.express');
 
             $('#confirm_delivery_date').on('click.express', function() {
-                var deliveryDate = $('#delivery_date_input').val();
-                var deliveryTime = $('#delivery_time_input').val();
-                var fullDeliveryDate = deliveryDate + (deliveryTime ? ' ' + deliveryTime : '');
-                // Update delivery_date in data
+                var datePicker = $('#delivery_date_picker').data('DateTimePicker');
+                var timePicker = $('#delivery_time_picker').data('DateTimePicker');
+                var dateVal = datePicker ? datePicker.date() : null;
+                var timeVal = timePicker ? timePicker.date() : null;
+
+                if (!dateVal) {
+                    toastr.warning('Please select a delivery date.');
+                    return;
+                }
+
+                // Build ISO datetime string for the controller (Y-m-d H:i:s)
+                var dateStr = dateVal.format('YYYY-MM-DD');
+                var timeStr = timeVal ? timeVal.format('HH:mm') : '10:00';
+                var fullDeliveryDate = dateStr + ' ' + timeStr + ':00';
+
                 data = data.replace(/delivery_date=[^&]*/g, 'delivery_date=' + encodeURIComponent(fullDeliveryDate));
                 $('#delivery_date_modal').modal('hide');
                 doExpressCheckoutAjax(data);
@@ -4972,14 +5001,32 @@ $(document).on('submit', '#business_location_add_form', function(e) {
  * Show the delivery date modal, then invoke callback after confirm or skip.
  */
 function pos_show_delivery_modal(onDone) {
-    // Default: tomorrow
-    var tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    var pad = function(n) { return n < 10 ? '0' + n : n; };
-    var defaultDate = tomorrow.getFullYear() + '-' + pad(tomorrow.getMonth() + 1) + '-' + pad(tomorrow.getDate());
-    var defaultTime = '10:00';
-    $('#delivery_date_input').attr('type', 'date').val(defaultDate);
-    $('#delivery_time_input').attr('type', 'time').val(defaultTime);
+    // Default: tomorrow at 10:00
+    var tomorrow = moment().add(1, 'days');
+
+    // Init date picker
+    if ($('#delivery_date_picker').data('DateTimePicker')) {
+        $('#delivery_date_picker').data('DateTimePicker').destroy();
+    }
+    $('#delivery_date_picker').datetimepicker({
+        format: moment_date_format,
+        ignoreReadonly: true,
+        allowInputToggle: true,
+        minDate: moment()
+    });
+    $('#delivery_date_picker').data('DateTimePicker').date(tomorrow);
+
+    // Init time picker
+    if ($('#delivery_time_picker').data('DateTimePicker')) {
+        $('#delivery_time_picker').data('DateTimePicker').destroy();
+    }
+    $('#delivery_time_picker').datetimepicker({
+        format: moment_time_format,
+        ignoreReadonly: true,
+        allowInputToggle: true
+    });
+    $('#delivery_time_picker').data('DateTimePicker').date(moment('10:00', 'HH:mm'));
+
     $('#delivery_date_modal').modal({ backdrop: 'static', keyboard: false });
     $('#delivery_date_modal').modal('show');
     $('#confirm_delivery_date').off('click.delivery');
@@ -4991,10 +5038,14 @@ function pos_show_delivery_modal(onDone) {
         });
     }
     $('#confirm_delivery_date').on('click.delivery', function() {
-        var date = $('#delivery_date_input').val();
-        var time = $('#delivery_time_input').val() || '00:00';
-        if (!date) { toastr.warning('Please enter a delivery date.'); return; }
-        $('#pos_delivery_date').val(date + ' ' + time + ':00');
+        var datePicker = $('#delivery_date_picker').data('DateTimePicker');
+        var timePicker = $('#delivery_time_picker').data('DateTimePicker');
+        var dateVal = datePicker ? datePicker.date() : null;
+        var timeVal = timePicker ? timePicker.date() : null;
+        if (!dateVal) { toastr.warning('Please select a delivery date.'); return; }
+        var dateStr = dateVal.format('YYYY-MM-DD');
+        var timeStr = timeVal ? timeVal.format('HH:mm') : '10:00';
+        $('#pos_delivery_date').val(dateStr + ' ' + timeStr + ':00');
         closeAndProceed();
     });
     $('#skip_delivery_date').on('click.delivery', function() {

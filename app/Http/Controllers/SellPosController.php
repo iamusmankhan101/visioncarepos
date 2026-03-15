@@ -659,7 +659,17 @@ class SellPosController extends Controller
 
                 // Save delivery date if provided
                 if (!empty($request->input('delivery_date'))) {
-                    $input['delivery_date'] = $this->productUtil->uf_date($request->input('delivery_date'), true);
+                    try {
+                        // Try parsing as ISO format first (from our delivery modal: Y-m-d H:i)
+                        $rawDate = $request->input('delivery_date');
+                        if (preg_match('/^\d{4}-\d{2}-\d{2}/', $rawDate)) {
+                            $input['delivery_date'] = \Carbon::parse($rawDate)->format('Y-m-d H:i:s');
+                        } else {
+                            $input['delivery_date'] = $this->productUtil->uf_date($rawDate, true);
+                        }
+                    } catch (\Exception $e) {
+                        $input['delivery_date'] = null;
+                    }
                 } else {
                     $input['delivery_date'] = null;
                 }
