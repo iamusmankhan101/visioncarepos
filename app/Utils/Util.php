@@ -1281,31 +1281,53 @@ class Util
      */
     public function getContactDue($contact_id, $business_id = null)
     {
-        // aad type sell_return for to calculate total_sell_return 
-        $query = Contact::where('contacts.id', $contact_id)
-            ->join('transactions AS t', 'contacts.id', '=', 't.contact_id')
-            ->whereIn('t.type', ['sell', 'opening_balance', 'purchase', 'sell_return'])
-            ->select(
-                DB::raw("SUM(IF(t.status = 'final' AND t.type = 'sell', final_total, 0)) as total_invoice"),
-                DB::raw("SUM(IF(t.type = 'purchase', final_total, 0)) as total_purchase"),
-                DB::raw("SUM(IF(t.status = 'final' AND t.type = 'sell', (SELECT SUM(IF(is_return = 1,-1*amount,amount)) FROM transaction_payments WHERE transaction_payments.transaction_id=t.id), 0)) as total_paid"),
-                DB::raw("SUM(IF(t.type = 'purchase', (SELECT SUM(amount) FROM transaction_payments WHERE transaction_payments.transaction_id=t.id), 0)) as purchase_paid"),
-                DB::raw("SUM(IF(t.type = 'sell_return', (SELECT SUM(amount) FROM transaction_payments WHERE transaction_payments.transaction_id=t.id), 0)) as sell_return_paid"),
-                DB::raw("SUM(IF(t.type = 'opening_balance', final_total, 0)) as opening_balance"),
-                DB::raw("SUM(IF(t.type = 'sell_return', final_total, 0)) as total_sell_return"),
-                DB::raw("SUM(IF(t.type = 'opening_balance', (SELECT SUM(amount) FROM transaction_payments WHERE transaction_payments.transaction_id=t.id), 0)) as opening_balance_paid")
-            );
-        if (! empty($business_id)) {
-            $query->where('contacts.business_id', $business_id);
+        $transactions_totals = DB::table('transactions')
+            ->where('contact_id', $contact_id)
+            ->whereIn('type', ['sell', 'opening_balance', 'purchase', 'sell_return']);
+        
+        if (!empty($business_id)) {
+            $transactions_totals->where('business_id', $business_id);
         }
 
-        $contact_payments = $query->first();
+        $transactions_totals = $transactions_totals->select(
+                DB::raw("SUM(IF(status = 'final' AND type = 'sell', final_total, 0)) as total_invoice"),
+                DB::raw("SUM(IF(type = 'purchase', final_total, 0)) as total_purchase"),
+                DB::raw("SUM(IF(type = 'opening_balance', final_total, 0)) as opening_balance"),
+                DB::raw("SUM(IF(type = 'sell_return', final_total, 0)) as total_sell_return")
+            )
+            ->first();
 
-        // + $contact_payments->sell_return_paid add this in due because after paymnet for sell return not calculated 
+        $transaction_ids = DB::table('transactions')
+            ->where('contact_id', $contact_id)
+            ->whereIn('type', ['sell', 'opening_balance', 'purchase', 'sell_return']);
+        
+        if (!empty($business_id)) {
+            $transaction_ids->where('business_id', $business_id);
+        }
 
-        $due = $contact_payments->total_invoice + $contact_payments->total_purchase - $contact_payments->total_paid - $contact_payments->purchase_paid + $contact_payments->opening_balance - $contact_payments->opening_balance_paid - $contact_payments->total_sell_return + $contact_payments->sell_return_paid;
+        $transaction_ids = $transaction_ids->pluck('id');
 
-        return $due;
+        $payments_totals = DB::table('transaction_payments')
+            ->join('transactions as t', 't.id', '=', 'transaction_payments.transaction_id')
+            ->whereIn('transaction_id', $transaction_ids)
+            ->select(
+                DB::raw("SUM(IF(t.status = 'final' AND t.type = 'sell', IF(is_return = 1,-1*amount,amount), 0)) as total_paid"),
+                DB::raw("SUM(IF(t.type = 'purchase', amount, 0)) as purchase_paid"),
+                DB::raw("SUM(IF(t.type = 'sell_return', amount, 0)) as sell_return_paid"),
+                DB::raw("SUM(IF(t.type = 'opening_balance', amount, 0)) as opening_balance_paid")
+            )
+            ->first();
+
+        $due = ($transactions_totals->total_invoice ?? 0) 
+             + ($transactions_totals->total_purchase ?? 0) 
+             - ($payments_totals->total_paid ?? 0) 
+             - ($payments_totals->purchase_paid ?? 0) 
+             + ($transactions_totals->opening_balance ?? 0) 
+             - ($payments_totals->opening_balance_paid ?? 0) 
+             - ($transactions_totals->total_sell_return ?? 0) 
+             + ($payments_totals->sell_return_paid ?? 0);
+
+        return (float) $due;
     }
 
     public function getDays()

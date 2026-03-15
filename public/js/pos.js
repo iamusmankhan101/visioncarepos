@@ -120,7 +120,7 @@ $(document).ready(function() {
         ajax: {
             url: '/contacts/customers',
             dataType: 'json',
-            delay: 250,
+            delay: 500,
             data: function(params) {
                 return {
                     q: params.term, // search term
@@ -166,7 +166,7 @@ $(document).ready(function() {
 
             return  template;
         },
-        minimumInputLength: 1,
+        minimumInputLength: 2,
         language: {
             inputTooShort: function (args) {
                 return LANG.please_enter + args.minimum + LANG.or_more_characters;

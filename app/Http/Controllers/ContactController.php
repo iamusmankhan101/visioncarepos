@@ -987,23 +987,17 @@ class ContactController extends Controller
             $is_current_primary = false;
             
             if (!empty($contact->mobile)) {
-                $phone_related_contacts = Contact::where('business_id', $business_id)
+                $all_phone_contacts = Contact::where('business_id', $business_id)
                     ->where('mobile', $contact->mobile)
-                    ->where('id', '!=', $id) // Exclude current contact
                     ->where('mobile', '!=', '')
                     ->whereNotNull('mobile')
                     ->where('contact_status', 'active') // Only active contacts
                     ->orderBy('id', 'asc') // Order by ID to identify primary customer
                     ->get();
                 
-                // Get the primary customer ID (lowest ID among all customers with same phone)
-                $all_phone_contacts = Contact::where('business_id', $business_id)
-                    ->where('mobile', $contact->mobile)
-                    ->where('mobile', '!=', '')
-                    ->whereNotNull('mobile')
-                    ->where('contact_status', 'active') // Only active contacts
-                    ->orderBy('id', 'asc')
-                    ->get();
+                $phone_related_contacts = $all_phone_contacts->reject(function ($c) use ($id) {
+                    return $c->id == $id;
+                });
                 
                 $primary_customer_id = $all_phone_contacts->min('id');
                 $is_current_primary = $contact->id == $primary_customer_id;
@@ -1477,51 +1471,71 @@ class ContactController extends Controller
     {
         if (request()->ajax()) {
             $term = request()->input('q', '');
-
             $business_id = request()->session()->get('user.business_id');
-            $user_id = request()->session()->get('user.id');
 
-            $contacts = Contact::where('contacts.business_id', $business_id)
+            $contacts_query = Contact::where('contacts.business_id', $business_id)
                             ->leftjoin('customer_groups as cg', 'cg.id', '=', 'contacts.customer_group_id')
                             ->active();
 
             if (! request()->has('all_contact')) {
-                $contacts->onlyCustomers();
+                $contacts_query->onlyCustomers();
             }
 
             if (! empty($term)) {
-                $contacts->where(function ($query) use ($term, $business_id) {
-                    $query->where('contacts.name', 'like', '%'.$term.'%')
-                            ->orWhere('supplier_business_name', 'like', '%'.$term.'%')
-                            ->orWhere('mobile', 'like', '%'.$term.'%')
-                            ->orWhere('contacts.contact_id', 'like', '%'.$term.'%')
-                            // Include primary customers of related groups
-                            ->orWhereIn('contacts.id', function($subQuery) use ($term, $business_id) {
-                                $subQuery->select(DB::raw('MIN(c2.id)'))
-                                    ->from('contacts as c2')
-                                    ->where('c2.business_id', $business_id)
-                                    ->whereNotNull('c2.mobile')
-                                    ->where('c2.mobile', '!=', '')
-                                    ->whereIn('c2.mobile', function($mobileQuery) use ($term, $business_id) {
-                                        $mobileQuery->select('c3.mobile')
-                                            ->from('contacts as c3')
-                                            ->where('c3.business_id', $business_id)
-                                            ->where(function($nameQuery) use ($term) {
-                                                $nameQuery->where('c3.name', 'like', '%'.$term.'%')
-                                                    ->orWhere('c3.supplier_business_name', 'like', '%'.$term.'%')
-                                                    ->orWhere('c3.mobile', 'like', '%'.$term.'%')
-                                                    ->orWhere('c3.contact_id', 'like', '%'.$term.'%');
-                                            });
-                                    })
-                                    ->groupBy('c2.mobile');
-                            });
+                $contacts_query->where(function ($query) use ($term, $business_id) {
+                    $query->where('contacts.name', 'like', '%' . $term . '%')
+                        ->orWhere('contacts.supplier_business_name', 'like', '%' . $term . '%')
+                        ->orWhere('contacts.mobile', 'like', '%' . $term . '%')
+                        ->orWhere('contacts.contact_id', 'like', '%' . $term . '%');
+
+                    // Include primary members of groups where any member matches the search term
+                    // Optimization: Get matching mobiles first, then find their primary IDs
+                    $matching_mobiles = DB::table('contacts')
+                        ->where('business_id', $business_id)
+                        ->whereNotNull('mobile')
+                        ->where('mobile', '!=', '')
+                        ->where(function ($search) use ($term) {
+                            $search->where('name', 'like', '%' . $term . '%')
+                                ->orWhere('supplier_business_name', 'like', '%' . $term . '%')
+                                ->orWhere('mobile', 'like', '%' . $term . '%')
+                                ->orWhere('contact_id', 'like', '%' . $term . '%');
+                        })
+                        ->pluck('mobile')
+                        ->unique()
+                        ->toArray();
+
+                    if (!empty($matching_mobiles)) {
+                        $primary_ids = DB::table('contacts')
+                            ->select(DB::raw('MIN(id)'))
+                            ->where('business_id', $business_id)
+                            ->whereIn('mobile', $matching_mobiles)
+                            ->groupBy('mobile')
+                            ->pluck('MIN(id)') // Fixed pluck for raw expression
+                            ->toArray();
+                        
+                        // Handle case where MIN(id) might be returned with a different key name depending on DB driver
+                        if (empty($primary_ids)) {
+                            // Try again with a simple select if pluck failed to find the column
+                            $primary_ids = DB::table('contacts')
+                                ->select(DB::raw('MIN(id) as pid'))
+                                ->where('business_id', $business_id)
+                                ->whereIn('mobile', $matching_mobiles)
+                                ->groupBy('mobile')
+                                ->pluck('pid')
+                                ->toArray();
+                        }
+
+                        if (!empty($primary_ids)) {
+                            $query->orWhereIn('contacts.id', $primary_ids);
+                        }
+                    }
                 });
             }
 
-            $contacts->select(
+            $contacts_query->select(
                 'contacts.id',
                 DB::raw("IF(contacts.contact_id IS NULL OR contacts.contact_id='', contacts.name, CONCAT(contacts.name, ' (', contacts.contact_id, ')')) AS text"),
-                'mobile',
+                'contacts.mobile',
                 'address_line_1',
                 'address_line_2',
                 'city',
@@ -1543,103 +1557,45 @@ class ContactController extends Controller
                 'export_custom_field_3',
                 'export_custom_field_4',
                 'export_custom_field_5',
-                'export_custom_field_6',
-                DB::raw("(SELECT COUNT(*) - 1 FROM contacts c2 WHERE c2.mobile = contacts.mobile AND c2.business_id = contacts.business_id AND c2.mobile IS NOT NULL AND c2.mobile != '') as has_related_customers"),
-                DB::raw("(SELECT MIN(c2.id) FROM contacts c2 WHERE c2.mobile = contacts.mobile AND c2.business_id = contacts.business_id AND c2.mobile IS NOT NULL AND c2.mobile != '') as phone_group_primary_id")
+                'export_custom_field_6'
             );
 
             if (request()->session()->get('business.enable_rp') == 1) {
-                $contacts->addSelect('total_rp');
-            }
-            $contacts = $contacts->get();
-            
-            // Debug: Check if we have the primary customer in results
-            $primaryCustomers = $contacts->filter(function($contact) {
-                return $contact->has_related_customers > 0 && $contact->id == $contact->phone_group_primary_id;
-            });
-            
-            if ($primaryCustomers->count() > 0) {
-                \Log::info('Primary customers found in results:', $primaryCustomers->pluck('text', 'id')->toArray());
-            } else {
-                \Log::info('No primary customers in current results. Sample data:', [
-                    'term' => request()->input('q', ''),
-                    'total_results' => $contacts->count(),
-                    'sample_phone_group_ids' => $contacts->take(3)->pluck('phone_group_primary_id', 'id')->toArray()
-                ]);
-                
-                // Temporary: Force include customer ID 9 if searching for "0305" and it's not already included
-                $term = request()->input('q', '');
-                if (strpos($term, '0305') !== false) {
-                    $primaryCustomer = Contact::where('contacts.business_id', $business_id)
-                        ->leftjoin('customer_groups as cg', 'cg.id', '=', 'contacts.customer_group_id')
-                        ->where('contacts.id', 9)
-                        ->select(
-                            'contacts.id',
-                            DB::raw("IF(contacts.contact_id IS NULL OR contacts.contact_id='', contacts.name, CONCAT(contacts.name, ' (', contacts.contact_id, ')')) AS text"),
-                            'mobile',
-                            'address_line_1',
-                            'address_line_2',
-                            'city',
-                            'state',
-                            'country',
-                            'zip_code',
-                            'shipping_address',
-                            'pay_term_number',
-                            'pay_term_type',
-                            'balance',
-                            'supplier_business_name',
-                            'cg.amount as discount_percent',
-                            'cg.price_calculation_type',
-                            'cg.selling_price_group_id',
-                            'shipping_custom_field_details',
-                            'is_export',
-                            'export_custom_field_1',
-                            'export_custom_field_2',
-                            'export_custom_field_3',
-                            'export_custom_field_4',
-                            'export_custom_field_5',
-                            'export_custom_field_6',
-                            DB::raw("(SELECT COUNT(*) - 1 FROM contacts c2 WHERE c2.mobile = contacts.mobile AND c2.business_id = contacts.business_id AND c2.mobile IS NOT NULL AND c2.mobile != '' AND c2.mobile != '') as has_related_customers"),
-                            DB::raw("(SELECT MIN(c2.id) FROM contacts c2 WHERE c2.mobile = contacts.mobile AND c2.business_id = contacts.business_id AND c2.mobile IS NOT NULL AND c2.mobile != '') as phone_group_primary_id")
-                        )
-                        ->first();
-                    
-                    if ($primaryCustomer && !$contacts->contains('id', 9)) {
-                        $contacts->prepend($primaryCustomer);
-                        \Log::info('Force added primary customer ID 9:', ['name' => $primaryCustomer->text, 'mobile' => $primaryCustomer->mobile]);
-                    }
-                }
-            }
-            
-            // Fix primary customer logic for ALL phone numbers with multiple customers
-            // Group contacts by mobile number
-            $phoneGroups = $contacts->groupBy('mobile');
-            
-            foreach ($phoneGroups as $mobile => $phoneGroupContacts) {
-                // Skip if mobile is empty or only one customer
-                if (empty($mobile) || $phoneGroupContacts->count() <= 1) {
-                    continue;
-                }
-                
-                // Find the actual lowest ID in this phone group
-                $actualPrimaryId = $phoneGroupContacts->min('id');
-                
-                // Set all contacts in this phone group to have the correct primary ID
-                foreach ($contacts as $contact) {
-                    if ($contact->mobile == $mobile) {
-                        $contact->phone_group_primary_id = $actualPrimaryId;
-                        \Log::info('Updated primary ID for customer:', [
-                            'mobile' => $mobile,
-                            'id' => $contact->id, 
-                            'name' => $contact->text, 
-                            'primary_id' => $actualPrimaryId,
-                            'is_primary' => ($contact->id == $actualPrimaryId)
-                        ]);
-                    }
-                }
+                $contacts_query->addSelect('total_rp');
             }
 
-            return json_encode($contacts);
+            $contacts = $contacts_query->get();
+
+            // --- OPTIMIZATION: Fetch group info ONLY for the results we found ---
+            $mobiles = $contacts->pluck('mobile')->filter()->unique()->toArray();
+            
+            if (!empty($mobiles)) {
+                $group_info = DB::table('contacts')
+                    ->select('mobile', 
+                        DB::raw('COUNT(*) - 1 as has_related_customers'), 
+                        DB::raw('MIN(id) as phone_group_primary_id')
+                    )
+                    ->where('business_id', $business_id)
+                    ->whereIn('mobile', $mobiles)
+                    ->groupBy('mobile')
+                    ->get()
+                    ->keyBy('mobile');
+
+                $contacts->transform(function($contact) use ($group_info) {
+                    $info = $group_info->get($contact->mobile);
+                    $contact->has_related_customers = $info ? $info->has_related_customers : 0;
+                    $contact->phone_group_primary_id = $info ? $info->phone_group_primary_id : $contact->id;
+                    return $contact;
+                });
+            } else {
+                $contacts->transform(function($contact) {
+                    $contact->has_related_customers = 0;
+                    $contact->phone_group_primary_id = $contact->id;
+                    return $contact;
+                });
+            }
+
+            return $contacts;
         }
     }
 

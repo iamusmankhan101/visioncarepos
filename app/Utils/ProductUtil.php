@@ -1736,6 +1736,7 @@ class ProductUtil extends Util
 
         $data = $query->groupBy('variations.id')
              ->orderBy('VLD.qty_available', 'desc')
+             ->limit(20)
              ->get();
 
         // 🔐 Escape `name`, `variation`, `sub_sku`
