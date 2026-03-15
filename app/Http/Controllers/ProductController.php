@@ -1272,9 +1272,9 @@ class ProductController extends Controller
             }
 
             if (!empty($contact_note)) {
-                $result->each(function($v) use ($contact_note) {
-                    $v->setAttribute('contact_note', $contact_note);
-                });
+                foreach ($result as $v) {
+                    $v->contact_note = $contact_note;
+                }
             }
 
             // If only one result and location_id is provided (POS context), auto-fetch the product row
@@ -1293,7 +1293,7 @@ class ProductController extends Controller
                 ]);
             }
 
-            return response()->json($result);
+            return json_encode($result);
         }
     }
     /**
