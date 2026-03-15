@@ -1273,25 +1273,11 @@ class ProductController extends Controller
 
             if (!empty($contact_note)) {
                 foreach ($result as $v) {
-                    $v->contact_note = $contact_note;
+                    $v->name .= ' ||| [Note: ' . $contact_note . ']';
+                    $v->setAttribute('contact_note', $contact_note);
                 }
             }
 
-            // If only one result and location_id is provided (POS context), auto-fetch the product row
-            if (count($result) == 1 && !empty($location_id) && request()->get('auto_add_single', false)) {
-                
-                $variation_id = $result[0]->variation_id;
-                        
-                $row_data = $this->productUtil->getPosProductRow($variation_id, $location_id);
-                
-                // Add variation_id to row_data for duplicate checking
-                $row_data['variation_id'] = $variation_id;
-                
-                return json_encode([
-                    'auto_add' => true,
-                    'row_data' => $row_data
-                ]);
-            }
 
             return json_encode($result);
         }
