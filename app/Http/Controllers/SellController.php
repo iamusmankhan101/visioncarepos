@@ -1084,8 +1084,8 @@ class SellController extends Controller
                           ->where('transaction_id', $transaction_id)
                           ->delete();
 
-                        // 5. Delete activities
-                        DB::table('activities')
+                        // 5. Delete activity logs
+                        DB::table('activity_log')
                           ->where('subject_type', 'App\\Transaction')
                           ->where('subject_id', $transaction_id)
                           ->delete();

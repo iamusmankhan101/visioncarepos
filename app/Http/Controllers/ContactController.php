@@ -1521,7 +1521,7 @@ class ContactController extends Controller
                       ->delete();
 
                     // Delete activities
-                    DB::table('activities')
+                    DB::table('activity_log')
                       ->where('subject_type', 'App\\Contact')
                       ->where('subject_id', $contact_id)
                       ->delete();
