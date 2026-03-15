@@ -894,6 +894,29 @@
             });
         });
         
+        // CRITICAL FIX: Intercept Express Checkout
+        var originalProcessExpressCheckout = window.processExpressCheckout;
+        window.processExpressCheckout = function(pay_method) {
+            console.log('🚨 EXPRESS CHECKOUT INTERCEPTED for delivery modal!');
+            console.log('Payment method:', pay_method);
+            
+            // Check if delivery modal was already shown for this session
+            var sessionKey = 'delivery_modal_shown_' + new Date().toDateString();
+            if (sessionStorage.getItem(sessionKey)) {
+                console.log('✅ Delivery modal already shown today, proceeding with express checkout');
+                return originalProcessExpressCheckout.call(this, pay_method);
+            }
+            
+            // Show delivery modal first, then proceed with express checkout
+            pos_show_delivery_modal_enhanced(function() {
+                console.log('✅ Delivery modal completed, proceeding with express checkout');
+                // Mark as shown for today
+                sessionStorage.setItem(sessionKey, 'true');
+                // Call original express checkout function
+                originalProcessExpressCheckout.call(window, pay_method);
+            });
+        };
+        
         // Alternative trigger for finalize sale button
         $(document).on('click', '#pos-save, .finalize-sale, [data-target="#modal_payment"]', function(e) {
             console.log('🎯 Finalize sale button clicked');
