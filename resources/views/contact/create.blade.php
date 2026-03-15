@@ -263,7 +263,7 @@
                     {!! Form::select('contact_status', ['active' => __('lang_v1.active'), 'inactive' => __('lang_v1.inactive')], 'active', ['class' => 'form-control']); !!}
                 </div>
             </div>
-            <div class="clearfix customer_fields"></div>
+            <div class="clearfix"></div>
             <div class="col-md-4 business" style="display: none;">
                 <div class="form-group">
                     {!! Form::label('supplier_business_name', __('business.business_name') . ':') !!}
@@ -430,7 +430,8 @@
             </div>
 
             <div id="more_div" class="hide">
-                {!! Form::hidden('position', null, ['id' => 'position']); !!}
+                <div class="row">
+                    {!! Form::hidden('position', null, ['id' => 'position']); !!}
                 <div class="col-md-12"><hr/></div>
                 
                 <!-- Relationship Field for Linked Customers -->

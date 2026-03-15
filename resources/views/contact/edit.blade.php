@@ -163,9 +163,9 @@
                     <span class="input-group-addon">
                         <i class="fa fa-envelope"></i>
                     </span>
-                    {!! Form::email('email', $contact->email, ['class' => 'form-control','placeholder' => __('business.email')]); !!}
-                </div>
+                {!! Form::email('email', $contact->email, ['class' => 'form-control','placeholder' => __('business.email')]); !!}
             </div>
+        </div>
         <div class="col-md-3">
             <div class="form-group">
                 {!! Form::label('contact_status', __('lang_v1.status') . ':') !!}
@@ -242,8 +242,8 @@
         </div>
         
         <div id="more_div" class="hide">
-
-            <div class="col-md-12"><hr/></div>
+            <div class="row">
+                <div class="col-md-12"><hr/></div>
         
       <div class="clearfix"></div>
       <div class="col-md-12">
@@ -761,9 +761,11 @@
                 @endforeach
             </div>
         @endif
+            </div>
+        </div>
     </div>
 </div>
-    </div>
+</div>
 
     <div class="modal-footer">
       <button type="submit" class="tw-dw-btn tw-dw-btn-primary tw-text-white">@lang( 'messages.update' )</button>
