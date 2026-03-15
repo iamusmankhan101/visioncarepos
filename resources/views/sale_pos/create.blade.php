@@ -894,7 +894,9 @@
             });
         });
         
-        // CRITICAL FIX: Intercept Express Checkout
+        // CRITICAL FIX: Intercept Express Checkout - Multiple Approaches
+        
+        // Approach 1: Override processExpressCheckout function
         var originalProcessExpressCheckout = window.processExpressCheckout;
         window.processExpressCheckout = function(pay_method) {
             console.log('🚨 EXPRESS CHECKOUT INTERCEPTED for delivery modal!');
@@ -904,7 +906,10 @@
             var sessionKey = 'delivery_modal_shown_' + new Date().toDateString();
             if (sessionStorage.getItem(sessionKey)) {
                 console.log('✅ Delivery modal already shown today, proceeding with express checkout');
-                return originalProcessExpressCheckout.call(this, pay_method);
+                if (originalProcessExpressCheckout) {
+                    return originalProcessExpressCheckout.call(this, pay_method);
+                }
+                return;
             }
             
             // Show delivery modal first, then proceed with express checkout
@@ -913,8 +918,85 @@
                 // Mark as shown for today
                 sessionStorage.setItem(sessionKey, 'true');
                 // Call original express checkout function
-                originalProcessExpressCheckout.call(window, pay_method);
+                if (originalProcessExpressCheckout) {
+                    originalProcessExpressCheckout.call(window, pay_method);
+                }
             });
+        };
+        
+        // Approach 2: Intercept express checkout buttons directly
+        $(document).on('click', '.express-finalize-btn, [onclick*="processExpressCheckout"], .btn-express', function(e) {
+            console.log('🎯 Express checkout button clicked directly!');
+            
+            var sessionKey = 'delivery_modal_shown_' + new Date().toDateString();
+            if (sessionStorage.getItem(sessionKey)) {
+                console.log('✅ Delivery modal already shown today, allowing express checkout');
+                return; // Let the original handler proceed
+            }
+            
+            // Stop the original event
+            e.preventDefault();
+            e.stopPropagation();
+            
+            var originalHandler = this.onclick;
+            var clickedButton = $(this);
+            
+            console.log('🛑 Intercepting express checkout button to show delivery modal first');
+            
+            // Show delivery modal first
+            pos_show_delivery_modal_enhanced(function() {
+                console.log('✅ Delivery modal completed, executing original express checkout');
+                sessionStorage.setItem(sessionKey, 'true');
+                
+                // Execute the original onclick handler
+                if (originalHandler) {
+                    originalHandler.call(clickedButton[0]);
+                } else {
+                    // Try to trigger the click again
+                    clickedButton.off('click').trigger('click');
+                }
+            });
+        });
+        
+        // Approach 3: Monitor for AJAX calls and intercept before they happen
+        var originalAjax = $.ajax;
+        $.ajax = function(options) {
+            // Check if this is a POS submission
+            if (options.url && (options.url.includes('/pos') || options.url.includes('sale_pos')) && 
+                options.type === 'POST' && options.data && options.data.includes('contact_id')) {
+                
+                console.log('🔍 AJAX POS submission detected');
+                
+                var sessionKey = 'delivery_modal_shown_' + new Date().toDateString();
+                if (!sessionStorage.getItem(sessionKey)) {
+                    console.log('🛑 Intercepting AJAX POS submission for delivery modal');
+                    
+                    // Show delivery modal first, then make the AJAX call
+                    pos_show_delivery_modal_enhanced(function() {
+                        console.log('✅ Delivery modal completed, proceeding with AJAX submission');
+                        sessionStorage.setItem(sessionKey, 'true');
+                        
+                        // Add delivery date to the data if it was set
+                        var deliveryDate = $('#pos_delivery_date').val();
+                        if (deliveryDate && options.data) {
+                            if (typeof options.data === 'string') {
+                                options.data += '&delivery_date=' + encodeURIComponent(deliveryDate);
+                            } else if (typeof options.data === 'object') {
+                                options.data.delivery_date = deliveryDate;
+                            }
+                            console.log('✅ Added delivery date to AJAX data:', deliveryDate);
+                        }
+                        
+                        // Make the original AJAX call
+                        originalAjax.call($, options);
+                    });
+                    
+                    return; // Don't make the original call yet
+                }
+            }
+            
+            // For all other AJAX calls, proceed normally
+            return originalAjax.call($, options);
         };
         
         // Alternative trigger for finalize sale button
