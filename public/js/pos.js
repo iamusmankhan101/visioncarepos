@@ -298,12 +298,12 @@ $(document).ready(function() {
                         function(data) {
                             var products = data.products || data;
                             $.each(products, function(i, item) {
-                                // Split name by first pipe or previous delimiter
-                                var parts = item.name.split(/ \| | ###NOTE### | \|\|\| /);
+                                // Split name by various delimiters used in the past
+                                var parts = item.name.split(/ \|NOTE\| | \| | ###NOTE### | \|\|\| /);
                                 item.actual_name = parts[0];
                                 item.internal_notes = parts.slice(1).join(' ');
 
-                                // Set clean value for input (no notes)
+                                // Set clean value for input (no notes or brackets)
                                 item.value = item.actual_name;
                                 if (item.type == 'variable') {
                                     item.value += '-' + item.variation;
@@ -365,11 +365,16 @@ $(document).ready(function() {
                 var name = item.actual_name || item.name;
                 var backend_notes = item.internal_notes || '';
                 
-                // If notes still in name (fallback)
-                if (!backend_notes && name.match(/ \| | ###NOTE### | \|\|\| /)) {
-                    var parts = name.split(/ \| | ###NOTE### | \|\|\| /);
+                // If notes still in name (fallback catch)
+                if (!backend_notes && name.match(/ \|NOTE\| | \| | ###NOTE### | \|\|\| /)) {
+                    var parts = name.split(/ \|NOTE\| | \| | ###NOTE### | \|\|\| /);
                     name = parts[0];
                     backend_notes = parts.slice(1).join(' ');
+                }
+
+                // Clean up brackets from backend_notes if they exist
+                if (backend_notes) {
+                    backend_notes = backend_notes.replace(/^\[Note: /, '').replace(/\]$/, '');
                 }
 
                 var is_overselling_allowed = false;
@@ -400,7 +405,7 @@ $(document).ready(function() {
                     string += ' (' + item.sub_sku + ')';
                     
                     if (backend_notes) {
-                        string += ' <span style="font-weight: bold; color: #d9534f;">' + backend_notes + '</span>';
+                        string += ' | <span style="font-weight: bold; color: #d9534f;">Note: ' + backend_notes + '</span>';
                     }
 
                     string +=
@@ -422,7 +427,7 @@ $(document).ready(function() {
                     string += ' (' + item.sub_sku + ')';
     
                     if (backend_notes) {
-                        string += ' <span style="font-weight: bold; color: #d9534f;">' + backend_notes + '</span>';
+                        string += ' | <span style="font-weight: bold; color: #d9534f;">Note: ' + backend_notes + '</span>';
                     }
     
                     string += '<br> Price: ' + __currency_trans_from_en(selling_price, false, false, __currency_precision, true);
