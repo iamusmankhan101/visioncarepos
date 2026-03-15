@@ -254,6 +254,18 @@ if (typeof tinymce !== 'undefined') {
             }
         });
    
+        // Automatically add +92 to Select2 search fields if a number is typed
+        $(document).on('input', '.select2-search__field', function() {
+            var val = $(this).val();
+            // If starts with a digit and not already prefixed with +92
+            if (/^\d/.test(val) && !val.startsWith('+92')) {
+                if (val.startsWith('0')) {
+                    $(this).val('+92' + val.substring(1));
+                } else {
+                    $(this).val('+92' + val);
+                }
+            }
+        });
     });
 </script>
 

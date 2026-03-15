@@ -1590,6 +1590,10 @@ class ContactController extends Controller
                         ->orWhere('contacts.mobile', 'like', '%' . $term . '%')
                         ->orWhere('contacts.contact_id', 'like', '%' . $term . '%');
 
+                    if (is_numeric($term) && strpos($term, '+92') !== 0) {
+                        $query->orWhere('contacts.mobile', 'like', '+92%' . $term . '%');
+                    }
+
                     // Include primary members of groups where any member matches the search term
                     // Optimization: Get matching mobiles first, then find their primary IDs
                     $matching_mobiles = DB::table('contacts')
@@ -1601,6 +1605,10 @@ class ContactController extends Controller
                                 ->orWhere('supplier_business_name', 'like', '%' . $term . '%')
                                 ->orWhere('mobile', 'like', '%' . $term . '%')
                                 ->orWhere('contact_id', 'like', '%' . $term . '%');
+                            
+                            if (is_numeric($term) && strpos($term, '+92') !== 0) {
+                                $search->orWhere('mobile', 'like', '+92%' . $term . '%');
+                            }
                         })
                         ->pluck('mobile')
                         ->unique()

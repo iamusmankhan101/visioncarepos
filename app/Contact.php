@@ -162,9 +162,12 @@ class Contact extends Authenticatable
 
         if ($append_id) {
             $query->select(
-                DB::raw("IF(contacts.contact_id IS NULL OR contacts.contact_id='', name, CONCAT(name, ' - ', COALESCE(supplier_business_name, ''), '(', contacts.contact_id, ')')) AS supplier"),
+                DB::raw("IF(contacts.contact_id IS NULL OR contacts.contact_id='', 
+                    CONCAT(name, ' (', COALESCE(mobile, ''), ')'), 
+                    CONCAT(name, ' - ', COALESCE(supplier_business_name, ''), ' (', contacts.contact_id, ') - ', COALESCE(mobile, ''))
+                ) AS supplier"),
                 'contacts.id'
-                    );
+            );
         } else {
             $query->select(
                 'contacts.id',
