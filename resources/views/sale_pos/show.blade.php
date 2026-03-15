@@ -8,7 +8,11 @@
 <div class="modal-body">
     <div class="row">
       <div class="col-xs-12">
-          <p class="pull-right"><b>@lang('messages.date'):</b> {{ @format_date($sell->transaction_date) }}</p>
+          <p class="pull-right"><b>@lang('messages.date'):</b> {{ @format_date($sell->transaction_date) }}
+          @if(!empty($sell->delivery_date))
+            <br><b>Delivery Date:</b> {{ @format_date($sell->delivery_date) }}
+          @endif
+          </p>
       </div>
     </div>
     <div class="row">
