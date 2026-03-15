@@ -107,6 +107,17 @@
 			</div>
 		@endif
 
+		<!-- Delivery Date-->
+		@if(!empty($receipt_details->delivery_date))
+			<div class="text-right font-23 ">
+				<span class="pull-left">
+					Delivery Date:
+				</span>
+
+				{{$receipt_details->delivery_date}}
+			</div>
+		@endif
+
 		@if(!empty($receipt_details->due_date_label))
 			<div class="text-right font-23 ">
 				<span class="pull-left">

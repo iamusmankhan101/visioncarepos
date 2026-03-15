@@ -158,6 +158,9 @@ window.addEventListener('afterprint', function() {
 			<!-- Right column: Date -->
 			<div style="display: inline-block; vertical-align: top; width: 35%; text-align: right;">
 				<b>{{$receipt_details->date_label}}</b> {{$receipt_details->invoice_date}}
+				@if(!empty($receipt_details->delivery_date))
+					<br><b>Delivery Date:</b> {{$receipt_details->delivery_date}}
+				@endif
 			</div>
 		</div>
 
