@@ -32,7 +32,7 @@
       </h4>
     </div>
 
-    <div class="modal-body">
+    <div class="modal-body" style="padding-left: 30px; padding-right: 30px;">
 
       <div class="row">
 

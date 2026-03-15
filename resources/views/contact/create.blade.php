@@ -209,7 +209,7 @@
     </div>
     @endif
 
-    <div class="@if(!$is_inline) modal-body @endif">
+    <div class="@if(!$is_inline) modal-body @endif" style="padding-left: 30px; padding-right: 30px;">
         <div class="row">            
             <div class="col-md-4 contact_type_div">
                 <div class="form-group">
