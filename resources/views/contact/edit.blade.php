@@ -859,12 +859,6 @@ $(document).on('click', '.edit-related-customer', function(e) {
                     var $moreDiv = $newModal.find('#more_div');
                     if ($moreDiv.length > 0) {
                         $moreDiv.removeClass('hide').show();
-                        
-                        // Also click the More Information button if it exists
-                        var $moreBtn = $newModal.find('button:contains("More Information")');
-                        if ($moreBtn.length > 0 && $moreBtn.attr('aria-expanded') !== 'true') {
-                            $moreBtn.click();
-                        }
                     }
                     
                     // Focus on first input

@@ -628,9 +628,6 @@ $(document).ready(function () {
             }
         });
 
-        $('.more_btn').click(function () {
-            $($(this).data('target')).toggleClass('hide');
-        });
         $('div.lead_additional_div').hide();
 
         if ($('select#contact_type').val() == 'customer') {
@@ -717,6 +714,10 @@ $(document).ready(function () {
             });
 
         $('#contact_add_form').trigger('contactFormvalidationAdded');
+    });
+
+    $(document).on('click', '.more_btn', function () {
+        $($(this).data('target')).toggleClass('hide');
     });
 
     function checkTaxNumberAndSubmit(form) {
