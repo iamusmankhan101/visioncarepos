@@ -149,7 +149,7 @@
         <div class="col-sm-12">
             <div class="form-group">
                 {!! Form::label('product_custom_field1', 'Internal Note' . ':') !!}
-                {!! Form::textarea('product_custom_field1', !empty($duplicate_product->product_custom_field1) ? $duplicate_product->product_custom_field1 : null, ['class' => 'form-control', 'rows' => 3]); !!}
+                {!! Form::textarea('product_custom_field1', !empty($duplicate_product->product_custom_field1) ? $duplicate_product->product_custom_field1 : null, ['class' => 'form-control', 'rows' => 3, 'id' => 'product_internal_note']); !!}
             </div>
         </div>
         <div class="clearfix"></div>
@@ -160,7 +160,7 @@
                         {!! Form::label('product_description', __('lang_v1.product_description') . ':') !!}
                     </div> 
                 </div>
-                {!! Form::textarea('product_description', !empty($duplicate_product->product_description) ? $duplicate_product->product_description : null, ['class' => 'form-control']); !!}
+                {!! Form::textarea('product_description', !empty($duplicate_product->product_description) ? $duplicate_product->product_description : null, ['class' => 'form-control', 'id' => 'product_description']); !!}
             </div>
         </div>
         <div class="col-sm-4">

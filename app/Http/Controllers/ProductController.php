@@ -1273,7 +1273,7 @@ class ProductController extends Controller
 
             if (!empty($contact_note)) {
                 foreach ($result as $v) {
-                    $v->name = $v->name . ' [ Note: ' . $contact_note . ' ]';
+                    $v->contact_note = $contact_note;
                 }
             }
 

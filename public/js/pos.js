@@ -414,7 +414,16 @@ $(document).ready(function() {
                 string +=
                     ' (' +
                     item.sub_sku +
-                    ')' +
+                    ')';
+                
+                if (item.product_custom_field1) {
+                    string += ' [Note: ' + item.product_custom_field1 + ']';
+                }
+                if (item.contact_note) {
+                    string += ' [Note: ' + item.contact_note + ']';
+                }
+
+                string +=
                     '<br> Price: ' +
                     __currency_trans_from_en(selling_price, false, false, __currency_precision, true) +
                     ' (Out of stock) </li>';
@@ -430,7 +439,16 @@ $(document).ready(function() {
                     selling_price = item.variation_group_price;
                 }
 
-                string += ' (' + item.sub_sku + ')' + '<br> Price: ' + __currency_trans_from_en(selling_price, false, false, __currency_precision, true);
+                string += ' (' + item.sub_sku + ')';
+
+                if (item.product_custom_field1) {
+                    string += ' [Note: ' + item.product_custom_field1 + ']';
+                }
+                if (item.contact_note) {
+                    string += ' [Note: ' + item.contact_note + ']';
+                }
+
+                string += '<br> Price: ' + __currency_trans_from_en(selling_price, false, false, __currency_precision, true);
                 if (item.enable_stock == 1) {
                     var qty_available = __currency_trans_from_en(item.qty_available, false, false, __currency_precision, true);
                     string += ' - ' + qty_available + item.unit;
