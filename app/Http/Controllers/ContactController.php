@@ -1516,7 +1516,7 @@ class ContactController extends Controller
                     // Delete related records first
                     // Delete contact relationships
                     DB::table('contact_relationships')
-                      ->where('primary_contact_id', $contact_id)
+                      ->where('contact_id', $contact_id)
                       ->orWhere('related_contact_id', $contact_id)
                       ->delete();
 
