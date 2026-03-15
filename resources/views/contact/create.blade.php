@@ -257,6 +257,12 @@
                   </div>
                 </div>
             </div>
+            <div class="col-md-4">
+                <div class="form-group">
+                    {!! Form::label('contact_status', __('lang_v1.status') . ':') !!}
+                    {!! Form::select('contact_status', ['active' => __('lang_v1.active'), 'inactive' => __('lang_v1.inactive')], 'active', ['class' => 'form-control']); !!}
+                </div>
+            </div>
             <div class="clearfix customer_fields"></div>
             <div class="col-md-4 business" style="display: none;">
                 <div class="form-group">
@@ -756,7 +762,7 @@
           var $separator = $('<div class="col-md-12"><hr style="border-top: 2px solid #48b2ee; margin: 30px 0 20px 0;"/><h4 style="color: #48b2ee; margin-bottom: 10px;"><i class="fa fa-user-plus"></i> Related Customer #' + (customerFormCount + 1) + '</h4><p style="color: #6c757d; font-size: 13px;"><i class="fa fa-link"></i> This customer will be linked to the primary customer</p></div>');
           
           // Create relationship section with name field
-          var relationshipHtml = '<div class="col-md-6">' +
+          var relationshipHtml = '<div class="col-md-4">' +
             '<div class="form-group">' +
             '<label for="relationship_type_' + customerFormCount + '">Relationship:</label>' +
             '<div class="input-group">' +
@@ -774,13 +780,22 @@
             '</div>' +
             '</div>' +
             '</div>' +
-            '<div class="col-md-6">' +
+            '<div class="col-md-4">' +
             '<div class="form-group">' +
             '<label for="first_name_' + customerFormCount + '">Name:*</label>' +
             '<div class="input-group">' +
             '<span class="input-group-addon"><i class="fa fa-user"></i></span>' +
             '<input type="text" name="customers[' + customerFormCount + '][first_name]" class="form-control" id="first_name_' + customerFormCount + '" placeholder="Enter customer name" required>' +
             '</div>' +
+            '</div>' +
+            '</div>' +
+            '<div class="col-md-4">' +
+            '<div class="form-group">' +
+            '<label for="contact_status_' + customerFormCount + '">{{ __('lang_v1.status') }}:</label>' +
+            '<select name="customers[' + customerFormCount + '][contact_status]" class="form-control" id="contact_status_' + customerFormCount + '">' +
+            '<option value="active">{{ __('lang_v1.active') }}</option>' +
+            '<option value="inactive">{{ __('lang_v1.inactive') }}</option>' +
+            '</select>' +
             '</div>' +
             '</div>' +
             '<div class="col-md-12">' +

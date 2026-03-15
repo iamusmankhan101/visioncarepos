@@ -166,7 +166,13 @@
                     {!! Form::email('email', $contact->email, ['class' => 'form-control','placeholder' => __('business.email')]); !!}
                 </div>
             </div>
+        <div class="col-md-3">
+            <div class="form-group">
+                {!! Form::label('contact_status', __('lang_v1.status') . ':') !!}
+                {!! Form::select('contact_status', ['active' => __('lang_v1.active'), 'inactive' => __('lang_v1.inactive')], $contact->contact_status, ['class' => 'form-control']); !!}
+            </div>
         </div>
+        <div class="clearfix"></div>
 
         <div class="col-sm-4">
             <div class="form-group individual" @if($contact->contact_type == 'business') style="display: none;"  @endif>
