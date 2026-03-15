@@ -298,12 +298,12 @@ $(document).ready(function() {
                         function(data) {
                             var products = data.products || data;
                             $.each(products, function(i, item) {
-                                // Split name by various delimiters used in the past
-                                var parts = item.name.split(/ \|NOTE\| | \| | ###NOTE### | \|\|\| /);
+                                // Split name by the new robust delimiter
+                                var parts = item.name.split('###NOTE###');
                                 item.actual_name = parts[0];
                                 item.internal_notes = parts.slice(1).join(' ');
 
-                                // Set clean value for input (no notes or brackets)
+                                // Set clean value for input (no notes)
                                 item.value = item.actual_name;
                                 if (item.type == 'variable') {
                                     item.value += '-' + item.variation;
@@ -365,17 +365,15 @@ $(document).ready(function() {
                 var name = item.actual_name || item.name;
                 var backend_notes = item.internal_notes || '';
                 
-                // If notes still in name (fallback catch)
-                if (!backend_notes && name.match(/ \|NOTE\| | \| | ###NOTE### | \|\|\| /)) {
-                    var parts = name.split(/ \|NOTE\| | \| | ###NOTE### | \|\|\| /);
+                // Fallback check if it wasn't split correctly in callback
+                if (!backend_notes && name.includes('###NOTE###')) {
+                    var parts = name.split('###NOTE###');
                     name = parts[0];
                     backend_notes = parts.slice(1).join(' ');
                 }
 
-                // Clean up brackets from backend_notes if they exist
-                if (backend_notes) {
-                    backend_notes = backend_notes.replace(/^\[Note: /, '').replace(/\]$/, '');
-                }
+                // Clean any legacy delimiters if they still exist in name or notes
+                name = name.split(/ \|NOTE\| | \|\|\| | ###NOTE### /)[0];
 
                 var is_overselling_allowed = false;
                 if($('input#is_overselling_allowed').length) {
