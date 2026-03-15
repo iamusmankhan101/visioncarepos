@@ -927,8 +927,68 @@ class ContactController extends Controller
            ->latest()
            ->get();
 
+        // Load related customers based on phone number (phone-based relationships)
+        $related_customers = [];
+        $is_current_primary = false;
+        
+        if (!empty($contact->mobile)) {
+            $all_phone_contacts = Contact::where('business_id', $business_id)
+                ->where('mobile', $contact->mobile)
+                ->where('mobile', '!=', '')
+                ->whereNotNull('mobile')
+                ->where('contact_status', 'active') // Only active contacts
+                ->orderBy('id', 'asc') // Order by ID to identify primary customer
+                ->get();
+            
+            $phone_related_contacts = $all_phone_contacts->reject(function ($c) use ($id) {
+                return $c->id == $id;
+            });
+            
+            foreach ($phone_related_contacts as $rel_contact) {
+                $related_customers[] = [
+                    'id' => $rel_contact->id,
+                    'name' => $rel_contact->name,
+                    'contact_id' => $rel_contact->contact_id,
+                    'mobile' => $rel_contact->mobile,
+                    'email' => $rel_contact->email,
+                    'relationship_type' => $rel_contact->shipping_custom_field_details['relationship'] ?? 'Relative',
+                    'prescription' => [
+                        'right_eye' => [
+                            'distance' => [
+                                'sph' => $rel_contact->custom_field1,
+                                'cyl' => $rel_contact->custom_field2,
+                                'axis' => $rel_contact->custom_field3,
+                            ],
+                            'near' => [
+                                'sph' => $rel_contact->custom_field4,
+                                'cyl' => $rel_contact->custom_field5,
+                                'axis' => $rel_contact->custom_field6,
+                            ]
+                        ],
+                        'left_eye' => [
+                            'distance' => [
+                                'sph' => $rel_contact->custom_field7,
+                                'cyl' => $rel_contact->custom_field8,
+                                'axis' => $rel_contact->custom_field9,
+                            ],
+                            'near' => [
+                                'sph' => $rel_contact->custom_field10,
+                                'cyl' => $rel_contact->shipping_custom_field_details['shipping_custom_field_1'] ?? '',
+                                'axis' => $rel_contact->shipping_custom_field_details['shipping_custom_field_2'] ?? '',
+                            ]
+                        ]
+                    ]
+                ];
+            }
+            
+            // Check if current is primary
+            if ($all_phone_contacts->count() > 0 && $all_phone_contacts->first()->id == $id) {
+                $is_current_primary = true;
+            }
+        }
+
         return view('contact.show')
-             ->with(compact('contact', 'reward_enabled', 'contact_dropdown', 'business_locations', 'view_type', 'contact_view_tabs', 'activities'));
+             ->with(compact('contact', 'reward_enabled', 'contact_dropdown', 'business_locations', 'view_type', 'contact_view_tabs', 'activities', 'related_customers', 'is_current_primary'));
     }
 
     /**
