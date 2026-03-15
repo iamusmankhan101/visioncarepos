@@ -948,7 +948,7 @@ class ContactController extends Controller
         //get contact view type : ledger, notes etc.
         $view_type = request()->get('view');
         if (is_null($view_type)) {
-            $view_type = 'ledger';
+            $view_type = in_array($contact->type, ['customer', 'both']) ? 'sales' : 'ledger';
         }
 
         $contact_view_tabs = $this->moduleUtil->getModuleData('get_contact_view_tabs');
