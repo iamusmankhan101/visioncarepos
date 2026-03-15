@@ -960,16 +960,21 @@
         
         // Approach 3: Monitor for AJAX calls and intercept before they happen
         var originalAjax = $.ajax;
+        var deliveryModalShown = false;
+        
         $.ajax = function(options) {
             // Check if this is a POS submission
-            if (options.url && (options.url.includes('/pos') || options.url.includes('sale_pos')) && 
-                options.type === 'POST' && options.data && options.data.includes('contact_id')) {
+            if (options.url && (options.url.includes('/pos') || options.url.endsWith('/pos')) && 
+                options.type === 'POST' && options.data) {
                 
                 console.log('🔍 AJAX POS submission detected');
+                console.log('🔍 URL:', options.url);
+                console.log('🔍 Data preview:', typeof options.data === 'string' ? options.data.substring(0, 200) : options.data);
                 
                 var sessionKey = 'delivery_modal_shown_' + new Date().toDateString();
-                if (!sessionStorage.getItem(sessionKey)) {
+                if (!sessionStorage.getItem(sessionKey) && !deliveryModalShown) {
                     console.log('🛑 Intercepting AJAX POS submission for delivery modal');
+                    deliveryModalShown = true;
                     
                     // Show delivery modal first, then make the AJAX call
                     pos_show_delivery_modal_enhanced(function() {
@@ -980,18 +985,30 @@
                         var deliveryDate = $('#pos_delivery_date').val();
                         if (deliveryDate && options.data) {
                             if (typeof options.data === 'string') {
-                                options.data += '&delivery_date=' + encodeURIComponent(deliveryDate);
+                                // Replace empty delivery_date= with the actual value
+                                if (options.data.includes('delivery_date=&')) {
+                                    options.data = options.data.replace('delivery_date=&', 'delivery_date=' + encodeURIComponent(deliveryDate) + '&');
+                                } else if (options.data.includes('delivery_date=')) {
+                                    options.data = options.data.replace(/delivery_date=[^&]*/, 'delivery_date=' + encodeURIComponent(deliveryDate));
+                                } else {
+                                    options.data += '&delivery_date=' + encodeURIComponent(deliveryDate);
+                                }
                             } else if (typeof options.data === 'object') {
                                 options.data.delivery_date = deliveryDate;
                             }
                             console.log('✅ Added delivery date to AJAX data:', deliveryDate);
                         }
                         
+                        // Reset flag for next transaction
+                        deliveryModalShown = false;
+                        
                         // Make the original AJAX call
                         originalAjax.call($, options);
                     });
                     
                     return; // Don't make the original call yet
+                } else {
+                    console.log('✅ Delivery modal already shown or bypassed, proceeding with AJAX');
                 }
             }
             
