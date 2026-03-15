@@ -958,27 +958,91 @@
             });
         });
         
-        // Approach 3: Monitor for AJAX calls and intercept before they happen
+        // Approach 3: Monitor for AJAX calls and intercept at XMLHttpRequest level
         var originalAjax = $.ajax;
+        var originalXHROpen = XMLHttpRequest.prototype.open;
+        var originalXHRSend = XMLHttpRequest.prototype.send;
         var deliveryModalShown = false;
         
+        // Override XMLHttpRequest to catch all AJAX calls
+        XMLHttpRequest.prototype.open = function(method, url, async, user, password) {
+            this._method = method;
+            this._url = url;
+            return originalXHROpen.apply(this, arguments);
+        };
+        
+        XMLHttpRequest.prototype.send = function(data) {
+            var xhr = this;
+            
+            // Check if this is a POS submission
+            if (this._method === 'POST' && this._url && 
+                (this._url.includes('/pos') || this._url.endsWith('/pos')) && 
+                data && data.includes('contact_id')) {
+                
+                console.log('🔍 XMLHttpRequest POS submission detected');
+                console.log('🔍 Method:', this._method);
+                console.log('🔍 URL:', this._url);
+                console.log('🔍 Data preview:', data ? data.substring(0, 200) : 'No data');
+                
+                var sessionKey = 'delivery_modal_shown_' + new Date().toDateString();
+                if (!sessionStorage.getItem(sessionKey) && !deliveryModalShown) {
+                    console.log('🛑 Intercepting XMLHttpRequest POS submission for delivery modal');
+                    deliveryModalShown = true;
+                    
+                    // Show delivery modal first, then make the AJAX call
+                    pos_show_delivery_modal_enhanced(function() {
+                        console.log('✅ Delivery modal completed, proceeding with XMLHttpRequest submission');
+                        sessionStorage.setItem(sessionKey, 'true');
+                        
+                        // Add delivery date to the data if it was set
+                        var deliveryDate = $('#pos_delivery_date').val();
+                        if (deliveryDate && data) {
+                            // Replace empty delivery_date= with the actual value
+                            if (data.includes('delivery_date=&')) {
+                                data = data.replace('delivery_date=&', 'delivery_date=' + encodeURIComponent(deliveryDate) + '&');
+                            } else if (data.includes('delivery_date=')) {
+                                data = data.replace(/delivery_date=[^&]*/, 'delivery_date=' + encodeURIComponent(deliveryDate));
+                            } else {
+                                data += '&delivery_date=' + encodeURIComponent(deliveryDate);
+                            }
+                            console.log('✅ Added delivery date to XMLHttpRequest data:', deliveryDate);
+                        }
+                        
+                        // Reset flag for next transaction
+                        deliveryModalShown = false;
+                        
+                        // Make the original XMLHttpRequest call
+                        originalXHRSend.call(xhr, data);
+                    });
+                    
+                    return; // Don't make the original call yet
+                } else {
+                    console.log('✅ Delivery modal already shown or bypassed, proceeding with XMLHttpRequest');
+                }
+            }
+            
+            // For all other requests, proceed normally
+            return originalXHRSend.apply(this, arguments);
+        };
+        
+        // Also keep the jQuery AJAX override as backup
         $.ajax = function(options) {
             // Check if this is a POS submission
             if (options.url && (options.url.includes('/pos') || options.url.endsWith('/pos')) && 
                 options.type === 'POST' && options.data) {
                 
-                console.log('🔍 AJAX POS submission detected');
+                console.log('🔍 jQuery AJAX POS submission detected');
                 console.log('🔍 URL:', options.url);
                 console.log('🔍 Data preview:', typeof options.data === 'string' ? options.data.substring(0, 200) : options.data);
                 
                 var sessionKey = 'delivery_modal_shown_' + new Date().toDateString();
                 if (!sessionStorage.getItem(sessionKey) && !deliveryModalShown) {
-                    console.log('🛑 Intercepting AJAX POS submission for delivery modal');
+                    console.log('🛑 Intercepting jQuery AJAX POS submission for delivery modal');
                     deliveryModalShown = true;
                     
                     // Show delivery modal first, then make the AJAX call
                     pos_show_delivery_modal_enhanced(function() {
-                        console.log('✅ Delivery modal completed, proceeding with AJAX submission');
+                        console.log('✅ Delivery modal completed, proceeding with jQuery AJAX submission');
                         sessionStorage.setItem(sessionKey, 'true');
                         
                         // Add delivery date to the data if it was set
@@ -996,7 +1060,7 @@
                             } else if (typeof options.data === 'object') {
                                 options.data.delivery_date = deliveryDate;
                             }
-                            console.log('✅ Added delivery date to AJAX data:', deliveryDate);
+                            console.log('✅ Added delivery date to jQuery AJAX data:', deliveryDate);
                         }
                         
                         // Reset flag for next transaction
@@ -1008,7 +1072,7 @@
                     
                     return; // Don't make the original call yet
                 } else {
-                    console.log('✅ Delivery modal already shown or bypassed, proceeding with AJAX');
+                    console.log('✅ Delivery modal already shown or bypassed, proceeding with jQuery AJAX');
                 }
             }
             
