@@ -296,12 +296,29 @@ $(document).ready(function() {
                             is_draft: is_draft
                         },
                         function(data) {
+                            var products = data.products || data;
+                            $.each(products, function(i, item) {
+                                // Split name early to set actual name and notes
+                                var name_parts = item.name.split(' ###NOTE### ');
+                                item.actual_name = name_parts[0];
+                                item.notes = name_parts.slice(1).join(' ');
+                                
+                                // Set value for the input field (no notes)
+                                item.value = item.actual_name;
+                                if (item.type == 'variable') {
+                                    item.value += '-' + item.variation;
+                                }
+                                
+                                // Set label for standard matching
+                                item.label = item.name;
+                            });
                             // Normal autocomplete response
-                            response(data.products || data);
+                            response(products);
                         }
                     );
                 },
                 minLength: 2,
+                autoFocus: false,
                 response: function(event, ui) {
                     if (ui.content.length == 0) {
                         toastr.error(LANG.no_products_found);
@@ -345,9 +362,8 @@ $(document).ready(function() {
             })
             .autocomplete('instance')._renderItem = function(ul, item) {
                 
-                var name_parts = item.name.split(' ||| ');
-                var name = name_parts[0];
-                var backend_notes = name_parts.length > 1 ? name_parts.slice(1).join(' ') : '';
+                var name = item.actual_name || item.name;
+                var backend_notes = item.notes || '';
                 
                 var is_overselling_allowed = false;
                 if($('input#is_overselling_allowed').length) {
@@ -381,13 +397,6 @@ $(document).ready(function() {
                     
                     if (backend_notes) {
                         string += ' ' + backend_notes;
-                    } else {
-                        if (item.product_custom_field1) {
-                            string += ' [Note: ' + item.product_custom_field1 + ']';
-                        }
-                        if (item.contact_note) {
-                            string += ' [Note: ' + item.contact_note + ']';
-                        }
                     }
 
                     string +=
@@ -410,13 +419,6 @@ $(document).ready(function() {
     
                     if (backend_notes) {
                         string += ' ' + backend_notes;
-                    } else {
-                        if (item.product_custom_field1) {
-                            string += ' [Note: ' + item.product_custom_field1 + ']';
-                        }
-                        if (item.contact_note) {
-                            string += ' [Note: ' + item.contact_note + ']';
-                        }
                     }
     
                     string += '<br> Price: ' + __currency_trans_from_en(selling_price, false, false, __currency_precision, true);
