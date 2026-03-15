@@ -286,7 +286,7 @@ $(document).ready(function() {
                             term: request.term,
                             not_for_selling: 0,
                             search_fields: search_fields,
-                            auto_add_single: true,
+                            auto_add_single: false,
                             product_row: $('input#product_row_count').val(),
                             customer_id: customer_id,
                             is_direct_sell: is_direct_sell,
@@ -321,6 +321,8 @@ $(document).ready(function() {
                         return;
                     }
                     
+                    // Auto-select single result disabled as per user request
+                    /*
                     if (ui.content.length == 1) {
                         ui.item = ui.content[0];
 
@@ -340,7 +342,7 @@ $(document).ready(function() {
                                 ._trigger('select', 'autocompleteselect', ui);
                             $(this).autocomplete('close');
                         }
-                    } else if (ui.content.length == 0) {
+                    } else */ if (ui.content.length == 0) {
                         toastr.error(LANG.no_products_found);
                         if (!$('#__is_mobile').length) {
                             $('input#search_product').select();
