@@ -249,11 +249,13 @@ class ContactController extends Controller
                 @endif
             ')
             ->editColumn('name', function ($row) {
+                $url = action([\App\Http\Controllers\ContactController::class, 'show'], [$row->id]);
                 if ($row->contact_status == 'inactive') {
-                    return e($row->name).' <small class="label pull-right bg-red no-print">'.__('lang_v1.inactive').'</small>';
+                    $name = e($row->name).' <small class="label pull-right bg-red no-print">'.__('lang_v1.inactive').'</small>';
                 } else {
-                    return e($row->name);
+                    $name = e($row->name);
                 }
+                return '<a href="' . $url . '" style="color:#337ab7;">' . $name . '</a>';
             })
             ->editColumn('created_at', '{{@format_date($created_at)}}')
             ->removeColumn('opening_balance_paid')
@@ -499,6 +501,9 @@ class ContactController extends Controller
                 if (! empty($row->converted_by)) {
                     $name .= '<span class="label bg-info label-round no-print" data-toggle="tooltip" title="Converted from leads"><i class="fas fa-sync-alt"></i></span>';
                 }
+
+                $url = action([\App\Http\Controllers\ContactController::class, 'show'], [$row->id]);
+                $name = '<a href="' . $url . '" style="color:#337ab7;">' . $name . '</a>';
 
                 return $name;
             })
