@@ -1685,5 +1685,6 @@ return [
     'achieved' => 'Achieved',
     'pending' => 'Pending',
     'target_not_met' => 'Target Not Met',
+    'contact_note' => 'Internal Note',
 
 ];
