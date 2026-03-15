@@ -1273,7 +1273,13 @@ class ProductController extends Controller
 
             if (!empty($contact_note)) {
                 foreach ($result as $v) {
-                    $v->name .= '###NOTE###' . $contact_note;
+                    // Check if note already exists (from filterProduct)
+                    if (!str_contains($v->name, ' | Note: ')) {
+                        $v->name .= ' | Note: ' . $contact_note;
+                    } else {
+                        // Append to existing note
+                        $v->name .= ' ' . $contact_note;
+                    }
                     $v->setAttribute('contact_note', $contact_note);
                 }
             }

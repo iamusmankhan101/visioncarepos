@@ -298,17 +298,15 @@ $(document).ready(function() {
                         function(data) {
                             var products = data.products || data;
                             $.each(products, function(i, item) {
-                                // Split name by the new robust delimiter
-                                var parts = item.name.split('###NOTE###');
-                                item.actual_name = parts[0];
-                                item.internal_notes = parts.slice(1).join(' ');
+                                // Name is already pre-formatted on backend: Name (SKU) | Note: note
+                                // We just need to ensure the value (for input) is clean
+                                var parts = item.name.split(' | Note: ');
+                                item.actual_name_with_sku = parts[0];
+                                item.internal_notes = parts[1] || '';
 
                                 // Set clean value for input (no notes)
-                                item.value = item.actual_name;
-                                if (item.type == 'variable') {
-                                    item.value += '-' + item.variation;
-                                }
-                                item.label = item.actual_name;
+                                item.value = item.actual_name_with_sku;
+                                item.label = item.name;
                             });
                             response(products);
                         }
@@ -362,18 +360,10 @@ $(document).ready(function() {
             })
             .autocomplete('instance')._renderItem = function(ul, item) {
                 
-                var name = item.actual_name || item.name;
-                var backend_notes = item.internal_notes || '';
-                
-                // Fallback check if it wasn't split correctly in callback
-                if (!backend_notes && name.includes('###NOTE###')) {
-                    var parts = name.split('###NOTE###');
-                    name = parts[0];
-                    backend_notes = parts.slice(1).join(' ');
-                }
-
-                // Clean any legacy delimiters if they still exist in name or notes
-                name = name.split(/ \|NOTE\| | \|\|\| | ###NOTE### /)[0];
+                var display_name = item.name;
+                var parts = display_name.split(' | Note: ');
+                var main_part = parts[0];
+                var note_part = parts[1] || '';
 
                 var is_overselling_allowed = false;
                 if($('input#is_overselling_allowed').length) {
@@ -391,53 +381,23 @@ $(document).ready(function() {
                     var is_draft=true;
                 }
 
-                if (item.enable_stock == 1 && item.qty_available <= 0 && !is_overselling_allowed && !for_so && !is_draft) {
-                    var string = '<li class="ui-state-disabled">' + name;
-                    if (item.type == 'variable') {
-                        string += '-' + item.variation;
-                    }
-                    var selling_price = item.selling_price;
-                    if (item.variation_group_price) {
-                        selling_price = item.variation_group_price;
-                    }
-                    string += ' (' + item.sub_sku + ')';
-                    
-                    if (backend_notes) {
-                        string += ' | <span style="font-weight: bold; color: #d9534f;">Note: ' + backend_notes + '</span>';
-                    }
+                var string = '<div>' + main_part;
+                if (note_part) {
+                    string += ' | <span style="font-weight: bold; color: #d9534f;">Note: ' + note_part + '</span>';
+                }
 
-                    string +=
-                        '<br> Price: ' +
-                        __currency_trans_from_en(selling_price, false, false, __currency_precision, true) +
-                        ' (Out of stock) </li>';
-                    return $(string).appendTo(ul);
+                if (item.enable_stock == 1 && item.qty_available <= 0 && !is_overselling_allowed && !for_so && !is_draft) {
+                    string += '<br> Price: ' + __currency_trans_from_en(item.selling_price, false, false, __currency_precision, true) + ' (Out of stock)';
+                    return $('<li class="ui-state-disabled">').append(string).appendTo(ul);
                 } else {
-                    var string = '<div>' + name;
-                    if (item.type == 'variable') {
-                        string += '-' + item.variation;
-                    }
-    
-                    var selling_price = item.selling_price;
-                    if (item.variation_group_price) {
-                        selling_price = item.variation_group_price;
-                    }
-    
-                    string += ' (' + item.sub_sku + ')';
-    
-                    if (backend_notes) {
-                        string += ' | <span style="font-weight: bold; color: #d9534f;">Note: ' + backend_notes + '</span>';
-                    }
-    
-                    string += '<br> Price: ' + __currency_trans_from_en(selling_price, false, false, __currency_precision, true);
+                    string += '<br> Price: ' + __currency_trans_from_en(item.selling_price, false, false, __currency_precision, true);
                     if (item.enable_stock == 1) {
                         var qty_available = __currency_trans_from_en(item.qty_available, false, false, __currency_precision, true);
                         string += ' - ' + qty_available + item.unit;
                     }
                     string += '</div>';
     
-                    return $('<li>')
-                        .append(string)
-                        .appendTo(ul);
+                    return $('<li>').append(string).appendTo(ul);
                 }
         };
     }
