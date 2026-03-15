@@ -1744,7 +1744,7 @@ class ProductUtil extends Util
         $data->transform(function ($item) {
             $item->name = e($item->name);
             if (!empty($item->product_custom_field1)) {
-                $item->name .= ' ###NOTE### [Note: ' . e($item->product_custom_field1) . ']';
+                $item->name .= ' | [Note: ' . e($item->product_custom_field1) . ']';
             }
             $item->variation = e($item->variation);
             $item->sub_sku = e($item->sub_sku);

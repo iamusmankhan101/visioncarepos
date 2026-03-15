@@ -298,26 +298,23 @@ $(document).ready(function() {
                         function(data) {
                             var products = data.products || data;
                             $.each(products, function(i, item) {
-                                // Split name early to set actual name and notes
-                                var name_parts = item.name.split(' ###NOTE### ');
-                                item.actual_name = name_parts[0];
-                                item.notes = name_parts.slice(1).join(' ');
-                                
-                                // Set value for the input field (no notes)
+                                // Split name by first pipe or previous delimiter
+                                var parts = item.name.split(/ \| | ###NOTE### | \|\|\| /);
+                                item.actual_name = parts[0];
+                                item.internal_notes = parts.slice(1).join(' ');
+
+                                // Set clean value for input (no notes)
                                 item.value = item.actual_name;
                                 if (item.type == 'variable') {
                                     item.value += '-' + item.variation;
                                 }
-                                
-                                // Set label for standard matching
-                                item.label = item.name;
+                                item.label = item.actual_name;
                             });
-                            // Normal autocomplete response
                             response(products);
                         }
                     );
                 },
-                minLength: 2,
+                minLength: 1,
                 autoFocus: false,
                 response: function(event, ui) {
                     if (ui.content.length == 0) {
@@ -325,6 +322,9 @@ $(document).ready(function() {
                         if (!$('#__is_mobile').length) {
                             $('input#search_product').select();
                         }
+                    } else if (ui.content.length == 1) {
+                        // Force menu to show for single result
+                        $(this).autocomplete('instance').menu.element.show();
                     }
                 },
                 focus: function(event, ui) {
@@ -363,8 +363,15 @@ $(document).ready(function() {
             .autocomplete('instance')._renderItem = function(ul, item) {
                 
                 var name = item.actual_name || item.name;
-                var backend_notes = item.notes || '';
+                var backend_notes = item.internal_notes || '';
                 
+                // If notes still in name (fallback)
+                if (!backend_notes && name.match(/ \| | ###NOTE### | \|\|\| /)) {
+                    var parts = name.split(/ \| | ###NOTE### | \|\|\| /);
+                    name = parts[0];
+                    backend_notes = parts.slice(1).join(' ');
+                }
+
                 var is_overselling_allowed = false;
                 if($('input#is_overselling_allowed').length) {
                     is_overselling_allowed = true;
@@ -390,13 +397,10 @@ $(document).ready(function() {
                     if (item.variation_group_price) {
                         selling_price = item.variation_group_price;
                     }
-                    string +=
-                        ' (' +
-                        item.sub_sku +
-                        ')';
+                    string += ' (' + item.sub_sku + ')';
                     
                     if (backend_notes) {
-                        string += ' ' + backend_notes;
+                        string += ' <span style="font-weight: bold; color: #d9534f;">' + backend_notes + '</span>';
                     }
 
                     string +=
@@ -418,7 +422,7 @@ $(document).ready(function() {
                     string += ' (' + item.sub_sku + ')';
     
                     if (backend_notes) {
-                        string += ' ' + backend_notes;
+                        string += ' <span style="font-weight: bold; color: #d9534f;">' + backend_notes + '</span>';
                     }
     
                     string += '<br> Price: ' + __currency_trans_from_en(selling_price, false, false, __currency_precision, true);
