@@ -146,6 +146,13 @@
         @endforeach
         @endif
         <div class="clearfix"></div>
+        <div class="col-sm-12">
+            <div class="form-group">
+                {!! Form::label('product_custom_field1', 'Internal Note' . ':') !!}
+                {!! Form::textarea('product_custom_field1', !empty($duplicate_product->product_custom_field1) ? $duplicate_product->product_custom_field1 : null, ['class' => 'form-control', 'rows' => 3]); !!}
+            </div>
+        </div>
+        <div class="clearfix"></div>
         <div class="col-sm-8 mb-5">
             <div class="form-group">
                 <div class="row">

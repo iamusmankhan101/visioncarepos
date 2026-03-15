@@ -150,6 +150,13 @@
                 @endforeach
             @endif
             <div class="clearfix"></div>
+            <div class="col-sm-12">
+              <div class="form-group">
+                {!! Form::label('product_custom_field1', 'Internal Note' . ':') !!}
+                  {!! Form::textarea('product_custom_field1', $product->product_custom_field1, ['class' => 'form-control', 'rows' => 3]); !!}
+              </div>
+            </div>
+            <div class="clearfix"></div>
             <div class="col-sm-8">
               <div class="form-group">
                 {!! Form::label('product_description', __('lang_v1.product_description') . ':') !!}

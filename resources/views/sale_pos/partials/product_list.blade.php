@@ -22,6 +22,9 @@
 			@if($product->type == 'variable')
 				- {{$product->variation}}
 			@endif
+			@if(!empty($product->product_custom_field1))
+				<br><span class="text-info" style="font-size: 80%;">[ Note: {{$product->product_custom_field1}} ]</span>
+			@endif
 			</small>
 
 			<small class="text-muted">
