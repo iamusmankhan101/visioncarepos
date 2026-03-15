@@ -12,6 +12,17 @@
         <div class="col-md-4 col-xs-12 mt-15 pull-right">
             {!! Form::select('contact_id', $contact_dropdown, $contact->id , ['class' => 'form-control select2', 'id' => 'contact_id']); !!}
         </div>
+        <div class="col-md-4 col-xs-12 mt-15">
+            @if(auth()->user()->can('supplier.update') || auth()->user()->can('customer.update'))
+                <button type="button" id="toggle_contact_status"
+                    class="btn {{ $contact->contact_status == 'active' ? 'btn-warning' : 'btn-success' }}"
+                    data-contact-id="{{ $contact->id }}"
+                    data-current-status="{{ $contact->contact_status }}">
+                    <i class="fa {{ $contact->contact_status == 'active' ? 'fa-ban' : 'fa-check' }}"></i>
+                    {{ $contact->contact_status == 'active' ? __('lang_v1.deactivate') : __('lang_v1.activate') }}
+                </button>
+            @endif
+        </div>
     </div>
     <div class="hide print_table_part">
         <style type="text/css">
@@ -591,6 +602,35 @@ $(document).on('click', '#print_ledger_pdf', function() {
 
         $('#purchases-link').on('click', function(e) {
             purchase_table.ajax.reload();
+        });
+
+        // Activate / Deactivate contact
+        $('#toggle_contact_status').on('click', function() {
+            var btn = $(this);
+            var contactId = btn.data('contact-id');
+            $.ajax({
+                url: '/contacts/update-status/' + contactId,
+                method: 'GET',
+                dataType: 'json',
+                success: function(result) {
+                    if (result.success) {
+                        toastr.success(result.msg);
+                        // Toggle button appearance
+                        var isNowActive = btn.data('current-status') === 'inactive';
+                        btn.data('current-status', isNowActive ? 'active' : 'inactive');
+                        if (isNowActive) {
+                            btn.removeClass('btn-success').addClass('btn-warning')
+                               .html('<i class="fa fa-ban"></i> @lang("lang_v1.deactivate")');
+                        } else {
+                            btn.removeClass('btn-warning').addClass('btn-success')
+                               .html('<i class="fa fa-check"></i> @lang("lang_v1.activate")');
+                        }
+                    }
+                },
+                error: function() {
+                    toastr.error('@lang("messages.something_went_wrong")');
+                }
+            });
         });
     });
 </script>
