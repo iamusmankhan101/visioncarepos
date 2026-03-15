@@ -1049,11 +1049,77 @@ $(document).ready(function() {
                 console.log('❌ FINAL: No voucher data to force (missing or zero)');
             }
             
-            console.log('🚨 ABOUT TO MAKE AJAX CALL - This should appear in console');
-            var url = pos_form_obj.attr('action');
-            console.log('🚨 AJAX URL:', url);
-            console.log('🚨 AJAX DATA LENGTH:', data.length);
-            $.ajax({
+            // DELIVERY MODAL: Show before submitting AJAX
+            var _tomorrow = new Date();
+            _tomorrow.setDate(_tomorrow.getDate() + 1);
+            var _pad = function(n) { return n < 10 ? '0' + n : '' + n; };
+            var defaultDate = _tomorrow.getFullYear() + '-' + _pad(_tomorrow.getMonth() + 1) + '-' + _pad(_tomorrow.getDate());
+
+            function doExpressCheckoutAjax(finalData) {
+                var url = pos_form_obj.attr('action');
+                $.ajax({
+                    method: 'POST',
+                    url: url,
+                    data: finalData,
+                    dataType: 'json',
+                    success: function(result) {
+                        if (result.success == 1) {
+                            var selectedCustomers = window.selectedCustomersForInvoice || JSON.parse(sessionStorage.getItem('selectedCustomersForInvoice') || 'null');
+                            var hasMultipleCustomers = selectedCustomers && selectedCustomers.ids && selectedCustomers.ids.length > 1;
+                            if (result.whatsapp_link || (result.whatsapp_links && result.whatsapp_links.length > 0)) {
+                                if (hasMultipleCustomers && result.whatsapp_links && result.whatsapp_links.length > 0) {
+                                    result.whatsapp_links.forEach(function(link, index) {
+                                        setTimeout(function() { window.open(link, '_blank'); }, index * 2000);
+                                    });
+                                } else if (result.whatsapp_link) {
+                                    window.open(result.whatsapp_link, '_blank');
+                                }
+                            }
+                            toastr.success(result.msg);
+                            reset_pos_form();
+                            if (result.receipt.is_enabled) { pos_print(result.receipt); }
+                            enable_pos_form_actions();
+                        } else {
+                            toastr.error(result.msg);
+                            enable_pos_form_actions();
+                        }
+                    },
+                    error: function(xhr) {
+                        toastr.error('An error occurred while processing the sale');
+                        enable_pos_form_actions();
+                    }
+                });
+            }
+
+            // Set default values - change to native date/time inputs
+            $('#delivery_date_input').attr('type', 'date').removeAttr('readonly').val(defaultDate);
+            $('#delivery_time_input').attr('type', 'time').removeAttr('readonly').val('10:00');
+
+            // Remove old handlers to avoid duplicates
+            $('#confirm_delivery_date').off('click.express');
+            $('#skip_delivery_date').off('click.express');
+            $('#delivery_date_modal').off('hidden.bs.modal.express');
+
+            $('#confirm_delivery_date').on('click.express', function() {
+                var deliveryDate = $('#delivery_date_input').val();
+                var deliveryTime = $('#delivery_time_input').val();
+                var fullDeliveryDate = deliveryDate + (deliveryTime ? ' ' + deliveryTime : '');
+                // Update delivery_date in data
+                data = data.replace(/delivery_date=[^&]*/g, 'delivery_date=' + encodeURIComponent(fullDeliveryDate));
+                $('#delivery_date_modal').modal('hide');
+                doExpressCheckoutAjax(data);
+            });
+
+            $('#skip_delivery_date').on('click.express', function() {
+                $('#delivery_date_modal').modal('hide');
+                doExpressCheckoutAjax(data);
+            });
+
+            $('#delivery_date_modal').modal({ backdrop: 'static', keyboard: false });
+            $('#delivery_date_modal').modal('show');
+
+            // Legacy path kept below but now unreachable - actual AJAX moved above
+            if (false) { $.ajax({
                 method: 'POST',
                 url: url,
                 data: data,
@@ -1107,7 +1173,7 @@ $(document).ready(function() {
                     toastr.error('An error occurred while processing the sale');
                     enable_pos_form_actions();
                 }
-            });
+            }); } // end if(false)
         }
     }
 
