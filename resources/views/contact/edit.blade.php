@@ -199,6 +199,7 @@
                   {!! Form::select('crm_source', $sources, $contact->crm_source , ['class' => 'form-control', 'id' => 'crm_source','placeholder' => __('messages.please_select')]); !!}
               </div>
           </div>
+        </div>
         <div class="col-md-4 lead_additional_div">
           <div class="form-group">
               {!! Form::label('crm_life_stage', __('lang_v1.life_stage') . ':' ) !!}
@@ -209,6 +210,7 @@
                   {!! Form::select('crm_life_stage', $life_stages, $contact->crm_life_stage , ['class' => 'form-control', 'id' => 'crm_life_stage','placeholder' => __('messages.please_select')]); !!}
               </div>
           </div>
+        </div>
         <div class="col-md-6 lead_additional_div">
           <div class="form-group">
               {!! Form::label('user_id', __('lang_v1.assigned_to') . ':*' ) !!}
