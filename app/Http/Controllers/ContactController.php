@@ -1562,7 +1562,10 @@ class ContactController extends Controller
                 $contacts_query->onlyCustomers();
             }
 
-            if (! empty($term)) {
+            // Direct ID lookup (used by POS pre-selection)
+            if (request()->filled('id') && is_numeric(request()->input('id'))) {
+                $contacts_query->where('contacts.id', request()->input('id'));
+            } elseif (! empty($term)) {
                 $contacts_query->where(function ($query) use ($term, $business_id) {
                     $query->where('contacts.name', 'like', '%' . $term . '%')
                         ->orWhere('contacts.supplier_business_name', 'like', '%' . $term . '%')

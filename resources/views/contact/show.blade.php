@@ -13,6 +13,11 @@
             {!! Form::select('contact_id', $contact_dropdown, $contact->id , ['class' => 'form-control select2', 'id' => 'contact_id']); !!}
         </div>
         <div class="col-md-4 col-xs-12 mt-15">
+            @if(in_array($contact->type, ['both', 'customer']) && auth()->user()->can('sell.create'))
+                <a href="{{ url('pos/create') }}?customer_id={{ $contact->id }}" class="btn btn-primary" style="margin-right: 5px;">
+                    <i class="fa fa-shopping-cart"></i> @lang('sale.pos_sale')
+                </a>
+            @endif
             @if(auth()->user()->can('supplier.update') || auth()->user()->can('customer.update'))
                 <button type="button" id="toggle_contact_status"
                     class="btn {{ $contact->contact_status == 'active' ? 'btn-warning' : 'btn-success' }}"
@@ -69,6 +74,8 @@
                     <li class="
                             @if(!empty($view_type) &&  $view_type == 'ledger')
                                 active
+                            @elseif(empty($view_type) && !in_array($contact->type, ['both', 'customer']))
+                                active
                             @else
                                 ''
                             @endif">
@@ -95,6 +102,8 @@
                     @if(in_array($contact->type, ['both', 'customer']))
                         <li class="
                             @if(!empty($view_type) &&  $view_type == 'sales')
+                                active
+                            @elseif(empty($view_type))
                                 active
                             @else
                                 ''
@@ -169,6 +178,8 @@
                     <div class="tab-pane
                                 @if(!empty($view_type) &&  $view_type == 'ledger')
                                     active
+                                @elseif(empty($view_type) && !in_array($contact->type, ['both', 'customer']))
+                                    active
                                 @else
                                     ''
                                 @endif"
@@ -207,6 +218,8 @@
                     @if(in_array($contact->type, ['both', 'customer']))
                         <div class="tab-pane 
                             @if(!empty($view_type) &&  $view_type == 'sales')
+                                active
+                            @elseif(empty($view_type))
                                 active
                             @else
                                 ''

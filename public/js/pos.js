@@ -227,6 +227,27 @@ $(document).ready(function() {
 
     if ($('#search_product').length) {
         //Add Product
+        // Auto-select customer from URL query param ?customer_id=X
+        (function() {
+            var urlParams = new URLSearchParams(window.location.search);
+            var preselectedCustomerId = urlParams.get('customer_id');
+            if (preselectedCustomerId) {
+                $.ajax({
+                    url: '/contacts/customers',
+                    dataType: 'json',
+                    data: { id: preselectedCustomerId },
+                    success: function(data) {
+                        if (data && data.length > 0) {
+                            var match = data[0];
+                            var option = new Option(match.text, match.id, true, true);
+                            $('select#customer_id').append(option).trigger('change');
+                            $('select#customer_id').trigger({ type: 'select2:select', params: { data: match } });
+                        }
+                    }
+                });
+            }
+        })();
+
         $('#search_product')
             .autocomplete({
                 delay: 1000,
