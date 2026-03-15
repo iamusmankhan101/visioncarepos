@@ -4481,10 +4481,12 @@ $(document).on('click', '#confirm_customer_selection', function(e) {
             window.relatedCustomerCallback = null;
         }, 300);
     } else {
-        console.log('No callback, showing payment modal');
-        // Show payment modal after a short delay (for multiple pay)
+        console.log('No callback, showing delivery date modal');
+        // Show delivery date modal first, then payment modal
         setTimeout(function() {
-            $('#modal_payment').modal('show');
+            pos_show_delivery_modal(function() {
+                $('#modal_payment').modal('show');
+            });
         }, 300);
     }
 });
@@ -4894,5 +4896,56 @@ $(document).on('submit', '#business_location_add_form', function(e) {
                 toastr.error('An error occurred. Please check your permissions and try again.');
             }
         }
+    });
+});
+// ============================================================
+// DELIVERY DATE MODAL
+// ============================================================
+
+/**
+ * Show the delivery date modal, then invoke callback after confirm or skip.
+ */
+function pos_show_delivery_modal(onDone) {
+    // Default: tomorrow
+    var tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    var pad = function(n) { return n < 10 ? '0' + n : n; };
+    var defaultDate = tomorrow.getFullYear() + '-' + pad(tomorrow.getMonth() + 1) + '-' + pad(tomorrow.getDate());
+    var defaultTime = '10:00';
+    $('#delivery_date_input').attr('type', 'date').val(defaultDate);
+    $('#delivery_time_input').attr('type', 'time').val(defaultTime);
+    $('#delivery_date_modal').modal({ backdrop: 'static', keyboard: false });
+    $('#delivery_date_modal').modal('show');
+    $('#confirm_delivery_date').off('click.delivery');
+    $('#skip_delivery_date').off('click.delivery');
+    function closeAndProceed() {
+        $('#delivery_date_modal').modal('hide');
+        $('#delivery_date_modal').one('hidden.bs.modal', function() {
+            if (typeof onDone === 'function') onDone();
+        });
+    }
+    $('#confirm_delivery_date').on('click.delivery', function() {
+        var date = $('#delivery_date_input').val();
+        var time = $('#delivery_time_input').val() || '00:00';
+        if (!date) { toastr.warning('Please enter a delivery date.'); return; }
+        $('#pos_delivery_date').val(date + ' ' + time + ':00');
+        closeAndProceed();
+    });
+    $('#skip_delivery_date').on('click.delivery', function() {
+        $('#pos_delivery_date').val('');
+        closeAndProceed();
+    });
+}
+
+// Intercept #modal_payment show event so delivery modal always appears first
+$(document).on('show.bs.modal', '#modal_payment', function(e) {
+    if ($('#delivery_date_modal').hasClass('in') || $(this).data('delivery-confirmed')) {
+        $(this).removeData('delivery-confirmed');
+        return;
+    }
+    e.preventDefault();
+    pos_show_delivery_modal(function() {
+        $('#modal_payment').data('delivery-confirmed', true);
+        $('#modal_payment').modal('show');
     });
 });

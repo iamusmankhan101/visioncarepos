@@ -657,6 +657,13 @@ class SellPosController extends Controller
                 
                 \Log::info('Final shipping_status value before transaction creation', ['status' => $input['shipping_status']]);
 
+                // Save delivery date if provided
+                if (!empty($request->input('delivery_date'))) {
+                    $input['delivery_date'] = $this->productUtil->uf_date($request->input('delivery_date'), true);
+                } else {
+                    $input['delivery_date'] = null;
+                }
+
                 $transaction = $this->transactionUtil->createSellTransaction($business_id, $input, $invoice_total, $user_id);
 
                 // DEBUG: Verify the transaction was created with correct shipping_status

@@ -64,6 +64,7 @@
 	@endif
 	<input type="hidden" name="pay_term_number" id="pay_term_number" value="{{$walk_in_customer['pay_term_number'] ?? ''}}">
 	<input type="hidden" name="pay_term_type" id="pay_term_type" value="{{$walk_in_customer['pay_term_type'] ?? ''}}">
+	<input type="hidden" name="delivery_date" id="pos_delivery_date" value="">
 	
 	@if(!empty($commission_agent))
 		@php

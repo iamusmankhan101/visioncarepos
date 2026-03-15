@@ -30,6 +30,50 @@
     </div>
 </div>
 
+<!-- Delivery Date Modal -->
+<div class="modal fade" tabindex="-1" role="dialog" id="delivery_date_modal">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: #5cb85c; color: white;">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true" style="color: white;">&times;</span>
+                </button>
+                <h4 class="modal-title">
+                    <i class="fa fa-truck"></i> Set Delivery Date &amp; Time
+                </h4>
+            </div>
+            <div class="modal-body">
+                <p style="color: #6c757d; margin-bottom: 15px;">
+                    <i class="fa fa-info-circle"></i> Set the expected delivery date and time. Defaults to <strong>1 day after today</strong>.
+                </p>
+                <div class="form-group">
+                    <label for="delivery_date_input"><strong>Delivery Date:</strong></label>
+                    <div class="input-group">
+                        <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+                        <input type="text" class="form-control" id="delivery_date_input" placeholder="Select delivery date" readonly>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="delivery_time_input"><strong>Delivery Time:</strong></label>
+                    <div class="input-group">
+                        <span class="input-group-addon"><i class="fa fa-clock-o"></i></span>
+                        <input type="text" class="form-control" id="delivery_time_input" placeholder="Select delivery time" readonly>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" id="skip_delivery_date">
+                    <i class="fa fa-forward"></i> Skip
+                </button>
+                <button type="button" class="btn btn-success" id="confirm_delivery_date">
+                    <i class="fa fa-check"></i> Confirm Delivery Date
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 <div class="modal fade" tabindex="-1" role="dialog" id="modal_payment">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
