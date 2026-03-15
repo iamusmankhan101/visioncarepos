@@ -276,6 +276,15 @@ class ContactController extends Controller
                     ->orWhereRaw("CONCAT(COALESCE(address_line_1, ''), ', ', COALESCE(address_line_2, ''), ', ', COALESCE(city, ''), ', ', COALESCE(state, ''), ', ', COALESCE(country, '') ) like ?", ["%{$keyword}%"]);
                 });
             })
+            ->filterColumn('mobile', function ($query, $keyword) {
+                if (is_numeric($keyword) && !str_starts_with($keyword, '+92')) {
+                    $prefix_keyword = '+92' . $keyword;
+                    $query->where('contacts.mobile', 'like', "%{$keyword}%")
+                        ->orWhere('contacts.mobile', 'like', "%{$prefix_keyword}%");
+                } else {
+                    $query->where('contacts.mobile', 'like', "%{$keyword}%");
+                }
+            })
             ->rawColumns(['action', 'opening_balance', 'pay_term', 'due', 'return_due', 'name', 'balance'])
             ->make(true);
     }
@@ -530,6 +539,15 @@ class ContactController extends Controller
                     ->orWhere('zip_code', 'like', "%{$keyword}%")
                     ->orWhereRaw("CONCAT(COALESCE(address_line_1, ''), ', ', COALESCE(address_line_2, ''), ', ', COALESCE(city, ''), ', ', COALESCE(state, ''), ', ', COALESCE(country, '') ) like ?", ["%{$keyword}%"]);
                 });
+            })
+            ->filterColumn('mobile', function ($query, $keyword) {
+                if (is_numeric($keyword) && !str_starts_with($keyword, '+92')) {
+                    $prefix_keyword = '+92' . $keyword;
+                    $query->where('contacts.mobile', 'like', "%{$keyword}%")
+                        ->orWhere('contacts.mobile', 'like', "%{$prefix_keyword}%");
+                } else {
+                    $query->where('contacts.mobile', 'like', "%{$keyword}%");
+                }
             });
         $reward_enabled = (request()->session()->get('business.enable_rp') == 1) ? true : false;
         if (! $reward_enabled) {

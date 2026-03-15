@@ -239,9 +239,20 @@ if (typeof tinymce !== 'undefined') {
         $('.dt-buttons.btn-group').find('a.btn').removeClass('btn-default');
         $('.dt-buttons.btn-group').find('a.btn').removeClass('btn');
         
-        // $('.date_range').on('show.daterangepicker', function (ev, picker) {
-        //     $(picker.container).insertAfter($(this));
-        // });
+        // Global phone number prefixing logic (+92)
+        $(document).on('focus', 'input[name="mobile"], input[name="alternate_number"], input[name="contact_number"], input[name="alt_number"], input[name="family_number"], input[name="landline"]', function() {
+            var val = $(this).val().trim();
+            if (val === '') {
+                $(this).val('+92');
+            }
+        });
+
+        $(document).on('blur', 'input[name="mobile"], input[name="alternate_number"], input[name="contact_number"], input[name="alt_number"], input[name="family_number"], input[name="landline"]', function() {
+            var val = $(this).val().trim();
+            if (val === '+92') {
+                $(this).val('');
+            }
+        });
    
     });
 </script>
