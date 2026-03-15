@@ -1262,6 +1262,21 @@ class ProductController extends Controller
 
             $result = $this->productUtil->filterProduct($business_id, $search_term, $location_id, $not_for_selling, $price_group_id, $product_types, $search_fields, $check_qty);
 
+            $customer_id = request()->input('customer_id', null);
+            $contact_note = null;
+            if (!empty($customer_id)) {
+                $contact = \App\Contact::find($customer_id);
+                if (!empty($contact->shipping_custom_field_details['contact_note'])) {
+                    $contact_note = $contact->shipping_custom_field_details['contact_note'];
+                }
+            }
+
+            if (!empty($contact_note)) {
+                foreach ($result as $v) {
+                    $v->name = $v->name . ' [ Note: ' . $contact_note . ' ]';
+                }
+            }
+
             // If only one result and location_id is provided (POS context), auto-fetch the product row
             if (count($result) == 1 && !empty($location_id) && request()->get('auto_add_single', false)) {
                 

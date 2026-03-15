@@ -238,6 +238,14 @@
           </div>
         @endif
 
+        <div class="clearfix"></div>
+        <div class="col-md-12">
+            <div class="form-group">
+                {!! Form::label('contact_note', 'Internal Note:') !!}
+                {!! Form::textarea('contact_note', !empty($contact->shipping_custom_field_details['contact_note']) ? $contact->shipping_custom_field_details['contact_note'] : null, ['class' => 'form-control', 'placeholder' => 'Internal Note', 'rows' => 3]); !!}
+            </div>
+        </div>
+
         <div class="col-md-12">
             <button type="button" class="tw-dw-btn tw-dw-btn-primary tw-text-white center-block more_btn" data-target="#more_div">@lang('lang_v1.more_info') <i class="fa fa-chevron-down"></i></button>
         </div>

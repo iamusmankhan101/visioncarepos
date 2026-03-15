@@ -2508,6 +2508,22 @@ class SellPosController extends Controller
                 ->orderBy('p.name', 'asc')
                 ->paginate(50);
 
+            $customer_id = $request->get('customer_id');
+            $contact_note = null;
+            if (!empty($customer_id)) {
+                $contact = \App\Contact::find($customer_id);
+                if (!empty($contact->shipping_custom_field_details['contact_note'])) {
+                    $contact_note = $contact->shipping_custom_field_details['contact_note'];
+                }
+            }
+
+            if (!empty($contact_note)) {
+                $products->getCollection()->transform(function ($v) use ($contact_note) {
+                    $v->name = $v->name . ' [ Note: ' . $contact_note . ' ]';
+                    return $v;
+                });
+            }
+
             $price_groups = SellingPriceGroup::where('business_id', $business_id)->active()->pluck('name', 'id');
 
             $allowed_group_prices = [];

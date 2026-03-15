@@ -417,6 +417,12 @@
             @endif
 
             <div class="clearfix"></div>
+            <div class="col-md-12">
+                <div class="form-group">
+                    {!! Form::label('contact_note', __('lang_v1.contact_note') . ':') !!}
+                    {!! Form::textarea('contact_note', null, ['class' => 'form-control', 'placeholder' => __('lang_v1.contact_note'), 'rows' => 3]); !!}
+                </div>
+            </div>
         </div>
         
         <!-- Hidden field to link related customers -->

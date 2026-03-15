@@ -655,6 +655,14 @@ class ContactController extends Controller
                 $input['shipping_custom_field_details']['prescription_source'] = $request->input('prescription_source');
             }
 
+            // Handle contact_note - add it to shipping_custom_field_details
+            if ($request->has('contact_note')) {
+                if (!isset($input['shipping_custom_field_details'])) {
+                    $input['shipping_custom_field_details'] = [];
+                }
+                $input['shipping_custom_field_details']['contact_note'] = $request->input('contact_note');
+            }
+
             $input['business_id'] = $business_id;
             $input['created_by'] = $request->session()->get('user.id');
 
@@ -1186,6 +1194,14 @@ class ContactController extends Controller
                         $input['shipping_custom_field_details'] = [];
                     }
                     $input['shipping_custom_field_details']['prescription_source'] = $request->input('prescription_source');
+                }
+
+                // Handle contact_note - add it to shipping_custom_field_details
+                if ($request->has('contact_note')) {
+                    if (!isset($input['shipping_custom_field_details'])) {
+                        $input['shipping_custom_field_details'] = [];
+                    }
+                    $input['shipping_custom_field_details']['contact_note'] = $request->input('contact_note');
                 }
 
                 $input['credit_limit'] = $request->input('credit_limit') != '' ? $this->commonUtil->num_uf($request->input('credit_limit')) : null;

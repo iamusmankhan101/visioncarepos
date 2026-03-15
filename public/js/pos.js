@@ -2343,7 +2343,8 @@ function get_product_suggestion_list(category_id, brand_id, location_id, url = n
             location_id: location_id,
             page: page,
             is_enabled_stock: is_enabled_stock,
-            repair_model_id: repair_model_id
+            repair_model_id: repair_model_id,
+            customer_id: $('select#customer_id').val()
         },
         dataType: 'html',
         success: function(result) {
