@@ -1100,6 +1100,10 @@
         // EMERGENCY FIX: Direct interception using MutationObserver and event monitoring
         console.log('🚨 EMERGENCY: Setting up direct AJAX monitoring...');
         
+        // Flag to track if we're currently showing the delivery modal
+        var isShowingDeliveryModal = false;
+        var pendingAjaxCall = null;
+        
         // Monitor for the specific log message that appears right before AJAX
         var originalConsoleLog = console.log;
         console.log = function() {
@@ -1110,18 +1114,27 @@
                 console.log('🚨 DETECTED: About to make AJAX call - intercepting NOW!');
                 
                 var sessionKey = 'delivery_modal_shown_' + new Date().toDateString();
-                if (!sessionStorage.getItem(sessionKey)) {
+                if (!sessionStorage.getItem(sessionKey) && !isShowingDeliveryModal) {
                     console.log('🛑 EMERGENCY INTERCEPTION: Showing delivery modal');
+                    isShowingDeliveryModal = true;
                     
                     // Show delivery modal immediately
                     pos_show_delivery_modal_enhanced(function() {
                         console.log('✅ EMERGENCY: Delivery modal completed');
                         sessionStorage.setItem(sessionKey, 'true');
+                        isShowingDeliveryModal = false;
                         
                         // Set delivery date in the form
                         var deliveryDate = $('#pos_delivery_date').val();
                         if (deliveryDate) {
                             console.log('✅ EMERGENCY: Delivery date set in form:', deliveryDate);
+                        }
+                        
+                        // If there's a pending AJAX call, execute it now
+                        if (pendingAjaxCall) {
+                            console.log('✅ EMERGENCY: Executing pending AJAX call');
+                            pendingAjaxCall();
+                            pendingAjaxCall = null;
                         }
                     });
                     
@@ -1133,6 +1146,52 @@
             // Call original console.log for all other messages
             return originalConsoleLog.apply(console, arguments);
         };
+        
+        // Intercept AJAX at the ajaxBeforeSend level to actually stop it
+        var ajaxIntercepted = false;
+        $(document).ajaxBeforeSend(function(event, xhr, settings) {
+            console.log('🔍 AJAX BEFORE SEND:', settings.url, settings.type);
+            
+            if (settings.url && settings.url.includes('/pos') && settings.type === 'POST' && !ajaxIntercepted) {
+                console.log('🎯 POS AJAX DETECTED via ajaxBeforeSend');
+                
+                var sessionKey = 'delivery_modal_shown_' + new Date().toDateString();
+                if (!sessionStorage.getItem(sessionKey) && !isShowingDeliveryModal) {
+                    console.log('🛑 AJAX BEFORE SEND INTERCEPTION: Stopping AJAX and showing delivery modal');
+                    ajaxIntercepted = true;
+                    isShowingDeliveryModal = true;
+                    
+                    // Abort this AJAX call
+                    xhr.abort();
+                    
+                    // Show delivery modal first
+                    pos_show_delivery_modal_enhanced(function() {
+                        console.log('✅ AJAX BEFORE SEND: Delivery modal completed, retrying AJAX');
+                        sessionStorage.setItem(sessionKey, 'true');
+                        isShowingDeliveryModal = false;
+                        ajaxIntercepted = false;
+                        
+                        // Update the delivery date in the data
+                        var deliveryDate = $('#pos_delivery_date').val();
+                        if (deliveryDate && settings.data) {
+                            if (typeof settings.data === 'string') {
+                                if (settings.data.includes('delivery_date=&')) {
+                                    settings.data = settings.data.replace('delivery_date=&', 'delivery_date=' + encodeURIComponent(deliveryDate) + '&');
+                                } else if (settings.data.includes('delivery_date=')) {
+                                    settings.data = settings.data.replace(/delivery_date=[^&]*/, 'delivery_date=' + encodeURIComponent(deliveryDate));
+                                }
+                            }
+                            console.log('✅ AJAX BEFORE SEND: Updated delivery date in data:', deliveryDate);
+                        }
+                        
+                        // Retry the AJAX call with updated data
+                        $.ajax(settings);
+                    });
+                    
+                    return false; // Prevent the original AJAX call
+                }
+            }
+        });
         
         // Alternative: Monitor for form submission events
         $(document).on('submit', '#pos-form', function(e) {
