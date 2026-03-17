@@ -5026,27 +5026,49 @@ function pos_show_delivery_modal(onDone) {
     var tomorrow = moment().add(1, 'days');
 
     // Init date picker
+    var existingDate = null;
     if ($('#delivery_date_picker').data('DateTimePicker')) {
+        existingDate = $('#delivery_date_picker').data('DateTimePicker').date();
         $('#delivery_date_picker').data('DateTimePicker').destroy();
+    } else if ($('#delivery_date_picker input').val() || $('#delivery_date_picker').val()) {
+        // Fallback for pre-filled inputs
+        existingDate = moment($('#delivery_date_picker input').val() || $('#delivery_date_picker').val(), moment_date_format);
     }
+    
     $('#delivery_date_picker').datetimepicker({
         format: moment_date_format,
         ignoreReadonly: true,
         allowInputToggle: true,
         minDate: moment()
     });
-    $('#delivery_date_picker').data('DateTimePicker').date(tomorrow);
+    
+    if (existingDate && existingDate.isValid()) {
+        $('#delivery_date_picker').data('DateTimePicker').date(existingDate);
+    } else {
+        $('#delivery_date_picker').data('DateTimePicker').date(tomorrow);
+    }
 
     // Init time picker
+    var existingTime = null;
     if ($('#delivery_time_picker').data('DateTimePicker')) {
+        existingTime = $('#delivery_time_picker').data('DateTimePicker').date();
         $('#delivery_time_picker').data('DateTimePicker').destroy();
+    } else if ($('#delivery_time_picker input').val() || $('#delivery_time_picker').val()) {
+        // Fallback for pre-filled inputs
+        existingTime = moment($('#delivery_time_picker input').val() || $('#delivery_time_picker').val(), moment_time_format);
     }
+    
     $('#delivery_time_picker').datetimepicker({
         format: moment_time_format,
         ignoreReadonly: true,
         allowInputToggle: true
     });
-    $('#delivery_time_picker').data('DateTimePicker').date(moment('10:00', 'HH:mm'));
+    
+    if (existingTime && existingTime.isValid()) {
+        $('#delivery_time_picker').data('DateTimePicker').date(existingTime);
+    } else {
+        $('#delivery_time_picker').data('DateTimePicker').date(moment('10:00', 'HH:mm'));
+    }
 
     $('#delivery_date_modal').modal({ backdrop: 'static', keyboard: false });
     $('#delivery_date_modal').modal('show');
