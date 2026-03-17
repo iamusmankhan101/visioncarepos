@@ -1135,9 +1135,13 @@ $(document).ready(function() {
             $('#delivery_time_picker').data('DateTimePicker').date(moment('10:00', 'HH:mm'));
 
             // Remove old handlers to avoid duplicates
-            $('#confirm_delivery_date').off('click.express');
-            $('#skip_delivery_date').off('click.express');
+            var is_proceeding = false;
             $('#delivery_date_modal').off('hidden.bs.modal.express');
+            $('#delivery_date_modal').on('hidden.bs.modal.express', function() {
+                if (!is_proceeding) {
+                    enable_pos_form_actions();
+                }
+            });
 
             $('#confirm_delivery_date').on('click.express', function() {
                 var datePicker = $('#delivery_date_picker').data('DateTimePicker');
@@ -1156,11 +1160,13 @@ $(document).ready(function() {
                 var fullDeliveryDate = dateStr + ' ' + timeStr + ':00';
 
                 data = data.replace(/delivery_date=[^&]*/g, 'delivery_date=' + encodeURIComponent(fullDeliveryDate));
+                is_proceeding = true;
                 $('#delivery_date_modal').modal('hide');
                 doExpressCheckoutAjax(data);
             });
 
             $('#skip_delivery_date').on('click.express', function() {
+                is_proceeding = true;
                 $('#delivery_date_modal').modal('hide');
                 doExpressCheckoutAjax(data);
             });
@@ -5072,6 +5078,15 @@ function pos_show_delivery_modal(onDone) {
 
     $('#delivery_date_modal').modal({ backdrop: 'static', keyboard: false });
     $('#delivery_date_modal').modal('show');
+    
+    var is_confirmed = false;
+    $('#delivery_date_modal').off('hidden.bs.modal.safety');
+    $('#delivery_date_modal').on('hidden.bs.modal.safety', function() {
+        if (!is_confirmed) {
+            enable_pos_form_actions();
+        }
+    });
+
     $('#confirm_delivery_date').off('click.delivery');
     $('#skip_delivery_date').off('click.delivery');
     function closeAndProceed() {
@@ -5089,10 +5104,12 @@ function pos_show_delivery_modal(onDone) {
         var dateStr = dateVal.format('YYYY-MM-DD');
         var timeStr = timeVal ? timeVal.format('HH:mm') : '10:00';
         $('#pos_delivery_date').val(dateStr + ' ' + timeStr + ':00');
+        is_confirmed = true;
         closeAndProceed();
     });
     $('#skip_delivery_date').on('click.delivery', function() {
         $('#pos_delivery_date').val('');
+        is_confirmed = true;
         closeAndProceed();
     });
 }
