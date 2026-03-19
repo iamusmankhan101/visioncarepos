@@ -828,6 +828,15 @@ $(document).ready(function() {
         var customerId = $('#customer_id').val();
         console.log('Customer ID for express checkout:', customerId);
         
+        // REFINEMENT: If we already have selected customers for this sale, skip the AJAX check
+        if (window.selectedCustomersForInvoice && 
+            window.selectedCustomersForInvoice.ids && 
+            window.selectedCustomersForInvoice.ids.length > 0) {
+            console.log('Using previously selected customers, skipping AJAX check');
+            processExpressCheckout($button, pay_method);
+            return false;
+        }
+
         if (customerId && customerId != '' && pay_method != 'credit_sale') {
             $.ajax({
                 url: '/contacts/' + customerId + '/related-customers',
@@ -3354,6 +3363,10 @@ function updateRedeemedAmount(argument) {
 }
 
 $(document).on('change', 'select#customer_id', function(){
+    // Clear selection for previous customer
+    window.selectedCustomersForInvoice = null;
+    sessionStorage.removeItem('selectedCustomersForInvoice');
+    
     var default_customer_id = $('#default_customer_id').val();
     if ($(this).val() == default_customer_id) {
         //Disable reward points for walkin customers
@@ -4982,17 +4995,19 @@ function pos_show_delivery_modal(onDone) {
     var existingDate = null;
     if ($('#delivery_date_picker').data('DateTimePicker')) {
         existingDate = $('#delivery_date_picker').data('DateTimePicker').date();
-        $('#delivery_date_picker').data('DateTimePicker').destroy();
+        // Don't destroy if it already exists, just update if needed
     } else if ($('#delivery_date_input').val()) {
         existingDate = moment($('#delivery_date_input').val(), moment_date_format);
     }
     
-    $('#delivery_date_picker').datetimepicker({
-        format: moment_date_format,
-        ignoreReadonly: true,
-        allowInputToggle: true,
-        minDate: moment()
-    });
+    if (!$('#delivery_date_picker').data('DateTimePicker')) {
+        $('#delivery_date_picker').datetimepicker({
+            format: moment_date_format,
+            ignoreReadonly: true,
+            allowInputToggle: true,
+            minDate: moment()
+        });
+    }
     
     if (existingDate && existingDate.isValid()) {
         $('#delivery_date_picker').data('DateTimePicker').date(existingDate);
@@ -5004,16 +5019,17 @@ function pos_show_delivery_modal(onDone) {
     var existingTime = null;
     if ($('#delivery_time_picker').data('DateTimePicker')) {
         existingTime = $('#delivery_time_picker').data('DateTimePicker').date();
-        $('#delivery_time_picker').data('DateTimePicker').destroy();
     } else if ($('#delivery_time_input').val()) {
         existingTime = moment($('#delivery_time_input').val(), moment_time_format);
     }
     
-    $('#delivery_time_picker').datetimepicker({
-        format: moment_time_format,
-        ignoreReadonly: true,
-        allowInputToggle: true
-    });
+    if (!$('#delivery_time_picker').data('DateTimePicker')) {
+        $('#delivery_time_picker').datetimepicker({
+            format: moment_time_format,
+            ignoreReadonly: true,
+            allowInputToggle: true
+        });
+    }
     
     if (existingTime && existingTime.isValid()) {
         $('#delivery_time_picker').data('DateTimePicker').date(existingTime);
