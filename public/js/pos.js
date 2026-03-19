@@ -1143,6 +1143,12 @@ $(document).ready(function() {
                 }
             });
 
+            // Add explicit listener for the 'x' close button
+            $('#delivery_date_modal .close').off('click.express').on('click.express', function() {
+                is_proceeding = false;
+                enable_pos_form_actions();
+            });
+
             $('#confirm_delivery_date').on('click.express', function() {
                 var datePicker = $('#delivery_date_picker').data('DateTimePicker');
                 var timePicker = $('#delivery_time_picker').data('DateTimePicker');
@@ -5085,6 +5091,12 @@ function pos_show_delivery_modal(onDone) {
         if (!is_confirmed) {
             enable_pos_form_actions();
         }
+    });
+
+    // Add explicit listener for the 'x' close button
+    $('#delivery_date_modal .close').off('click.delivery').on('click.delivery', function() {
+        is_confirmed = false;
+        enable_pos_form_actions();
     });
 
     $('#confirm_delivery_date').off('click.delivery');
