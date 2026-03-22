@@ -169,8 +169,16 @@
       </div>
         <div class="col-md-3">
             <div class="form-group">
-                {!! Form::label('contact_status', __('lang_v1.status') . ':') !!}
-                {!! Form::select('contact_status', ['active' => __('lang_v1.active'), 'inactive' => __('lang_v1.inactive')], $contact->contact_status, ['class' => 'form-control']); !!}
+                {!! Form::label('contact_status_label', __('lang_v1.status') . ':') !!}
+                <div>
+                    <input type="hidden" name="contact_status" id="contact_status_hidden" value="{{ $contact->contact_status }}">
+                    <button type="button" id="contact_status_toggle"
+                        class="btn btn-sm {{ $contact->contact_status === 'active' ? 'btn-success' : 'btn-danger' }}"
+                        onclick="toggleContactStatus(this)">
+                        <i class="fa {{ $contact->contact_status === 'active' ? 'fa-check-circle' : 'fa-times-circle' }}"></i>
+                        <span>{{ $contact->contact_status === 'active' ? __('lang_v1.active') : __('lang_v1.inactive') }}</span>
+                    </button>
+                </div>
             </div>
         </div>
         <div class="clearfix"></div>
@@ -1169,4 +1177,21 @@ $(document).on('click', '.delete-related-customer', function(e) {
         });
     }
 });
+
+function toggleContactStatus(btn) {
+    var $btn = $(btn);
+    var current = $('#contact_status_hidden').val();
+    var isActive = current === 'active';
+    var newStatus = isActive ? 'inactive' : 'active';
+
+    $('#contact_status_hidden').val(newStatus);
+
+    if (newStatus === 'active') {
+        $btn.removeClass('btn-danger').addClass('btn-success');
+        $btn.html('<i class="fa fa-check-circle"></i> <span>{{ __("lang_v1.active") }}</span>');
+    } else {
+        $btn.removeClass('btn-success').addClass('btn-danger');
+        $btn.html('<i class="fa fa-times-circle"></i> <span>{{ __("lang_v1.inactive") }}</span>');
+    }
+}
 </script>
