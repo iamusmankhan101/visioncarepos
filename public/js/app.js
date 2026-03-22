@@ -510,12 +510,17 @@ $(document).ready(function () {
         ]);
     }
 
+    // Temporarily disable fixedHeader global default for contact_table
+    var _origFixedHeader = $.fn.dataTable.defaults.fixedHeader;
+    $.fn.dataTable.defaults.fixedHeader = false;
     contact_table = $('#contact_table').DataTable({
         processing: true,
         serverSide: true,
         fixedHeader: false,
         initComplete: function() {
-            // FixedHeader global default can hide the original thead — force it visible
+            // Restore global default
+            $.fn.dataTable.defaults.fixedHeader = _origFixedHeader;
+            // Force thead visible just in case
             $('#contact_table thead').show().css('visibility', 'visible');
         },
         "ajax": {
