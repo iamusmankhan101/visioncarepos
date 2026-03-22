@@ -1100,6 +1100,7 @@ class ContactController extends Controller
                         'contact_id' => $rc->contact_id,
                         'mobile' => $rc->mobile,
                         'email' => $rc->email,
+                        'contact_status' => $rc->contact_status ?? 'active',
                         'relationship_type' => 'family', // Default to family for phone-based relationships
                         'is_primary' => $rc->id == $primary_customer_id,
                         'prescription' => [

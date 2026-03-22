@@ -672,6 +672,13 @@
                                             Secondary
                                         </span>
                                     @endif
+                                    @php $relStatus = $related['contact_status'] ?? 'active'; @endphp
+                                    <span class="label {{ $relStatus === 'active' ? 'label-success' : 'label-danger' }} related-status-badge" 
+                                          id="related-status-badge-{{ $related['id'] }}"
+                                          style="margin-left: 10px;">
+                                        <i class="fa {{ $relStatus === 'active' ? 'fa-check-circle' : 'fa-times-circle' }}"></i>
+                                        {{ $relStatus === 'active' ? __('lang_v1.active') : __('lang_v1.inactive') }}
+                                    </span>
                                 </h5>
                             </div>
                         </div>
@@ -708,6 +715,16 @@
                                    data-contact-name="{{ $related['name'] }}"
                                    style="margin-top: 15px; margin-left: 5px;">
                                     <i class="fa fa-trash"></i> Delete
+                                </button>
+                                @php $relStatus = $related['contact_status'] ?? 'active'; @endphp
+                                <button type="button"
+                                   class="btn btn-sm {{ $relStatus === 'active' ? 'btn-warning' : 'btn-success' }} toggle-related-status"
+                                   id="toggle-related-btn-{{ $related['id'] }}"
+                                   data-contact-id="{{ $related['id'] }}"
+                                   data-status="{{ $relStatus }}"
+                                   style="margin-top: 15px; margin-left: 5px;">
+                                    <i class="fa {{ $relStatus === 'active' ? 'fa-ban' : 'fa-check' }}"></i>
+                                    {{ $relStatus === 'active' ? __('lang_v1.deactivate') : __('lang_v1.activate') }}
                                 </button>
                             </div>
                         </div>
@@ -1194,4 +1211,57 @@ function toggleContactStatus(btn) {
         $btn.html('<i class="fa fa-times-circle"></i> <span>{{ __("lang_v1.inactive") }}</span>');
     }
 }
+
+// Handle activate/deactivate for related customers
+$(document).on('click', '.toggle-related-status', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    var $btn = $(this);
+    var contactId = $btn.data('contact-id');
+    var currentStatus = $btn.data('status');
+
+    $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i>');
+
+    $.ajax({
+        url: '/contacts/update-status/' + contactId,
+        type: 'GET',
+        data: { _token: $('meta[name="csrf-token"]').attr('content') },
+        success: function(response) {
+            if (response.success) {
+                var newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+                $btn.data('status', newStatus);
+
+                var $badge = $('#related-status-badge-' + contactId);
+
+                if (newStatus === 'active') {
+                    $btn.removeClass('btn-warning').addClass('btn-success');
+                    $btn.html('<i class="fa fa-check"></i> {{ __("lang_v1.activate") }}');
+                    $badge.removeClass('label-danger').addClass('label-success');
+                    $badge.html('<i class="fa fa-check-circle"></i> {{ __("lang_v1.active") }}');
+                } else {
+                    $btn.removeClass('btn-success').addClass('btn-warning');
+                    $btn.html('<i class="fa fa-ban"></i> {{ __("lang_v1.deactivate") }}');
+                    $badge.removeClass('label-success').addClass('label-danger');
+                    $badge.html('<i class="fa fa-times-circle"></i> {{ __("lang_v1.inactive") }}');
+                }
+
+                $btn.prop('disabled', false);
+
+                if (typeof toastr !== 'undefined') {
+                    toastr.success(response.msg || 'Status updated successfully');
+                }
+            }
+        },
+        error: function() {
+            $btn.prop('disabled', false);
+            var label = currentStatus === 'active' ? '{{ __("lang_v1.deactivate") }}' : '{{ __("lang_v1.activate") }}';
+            var icon = currentStatus === 'active' ? 'fa-ban' : 'fa-check';
+            $btn.html('<i class="fa ' + icon + '"></i> ' + label);
+            if (typeof toastr !== 'undefined') {
+                toastr.error('Failed to update status');
+            }
+        }
+    });
+});
 </script>
