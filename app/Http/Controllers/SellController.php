@@ -2733,9 +2733,23 @@ class SellController extends Controller
             });
         }
 
-        // Customer filter
+        // Customer filter - show all sales for contacts sharing the same phone number
         if (! empty(request()->customer_id)) {
-            $query->where('contacts.id', request()->customer_id);
+            $customer_id = request()->customer_id;
+            $business_id_filter = request()->session()->get('user.business_id');
+            $contact_mobile = \App\Contact::where('business_id', $business_id_filter)
+                ->where('id', $customer_id)
+                ->value('mobile');
+
+            if (!empty($contact_mobile)) {
+                $related_ids = \App\Contact::where('business_id', $business_id_filter)
+                    ->where('mobile', $contact_mobile)
+                    ->pluck('id')
+                    ->toArray();
+                $query->whereIn('contacts.id', $related_ids);
+            } else {
+                $query->where('contacts.id', $customer_id);
+            }
         }
 
         // Date range
