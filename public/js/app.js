@@ -514,9 +514,7 @@ $(document).ready(function () {
         processing: true,
         serverSide: true,
         fixedHeader: false,
-        scrollY: "75vh",
         scrollX: true,
-        scrollCollapse: true,
         "ajax": {
             "url": "/contacts",
             "data": function (d) {
