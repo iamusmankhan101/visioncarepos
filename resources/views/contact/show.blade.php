@@ -648,4 +648,100 @@ $(document).on('click', '#print_ledger_pdf', function() {
     });
 </script>
 @include('sale_pos.partials.subscriptions_table_javascript', ['contact_id' => $contact->id])
+
+<script type="text/javascript">
+$(document).ready(function() {
+    // Add Related Customer - show/hide form
+    $(document).on('click', '#show-add-related-form-btn', function() {
+        $('#show-add-related-form').slideDown();
+        $(this).hide();
+    });
+
+    $(document).on('click', '#cancel-add-related-form-btn', function() {
+        $('#show-add-related-form').slideUp();
+        $('#show-add-related-form-btn').show();
+    });
+
+    $(document).on('click', '#save-show-related-customer', function() {
+        var $btn = $(this);
+        var contactId = $btn.data('contact-id');
+        var name = $('#show_related_first_name').val().trim();
+
+        if (!name) {
+            alert('Please enter a customer name.');
+            $('#show_related_first_name').focus();
+            return;
+        }
+
+        $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Saving...');
+
+        var data = {
+            _token: $('meta[name="csrf-token"]').attr('content'),
+            related_first_name: name,
+            related_relationship_type: $('#show_related_relationship_type').val(),
+            related_email: $('#show_related_email').val(),
+            related_prescription_source: $('input[name="show_related_prescription_source"]:checked').val() || '',
+            custom_field1: $('#show_rc_cf1').val(),
+            custom_field2: $('#show_rc_cf2').val(),
+            custom_field3: $('#show_rc_cf3').val(),
+            custom_field4: $('#show_rc_cf4').val(),
+            custom_field5: $('#show_rc_cf5').val(),
+            custom_field6: $('#show_rc_cf6').val(),
+            custom_field7: $('#show_rc_cf7').val(),
+            custom_field8: $('#show_rc_cf8').val(),
+            custom_field9: $('#show_rc_cf9').val(),
+            custom_field10: $('#show_rc_cf10').val(),
+            related_shipping_custom_field_1: $('#show_rc_scf1').val(),
+            related_shipping_custom_field_2: $('#show_rc_scf2').val(),
+        };
+
+        $.ajax({
+            url: '/contacts/' + contactId + '/store-related-customer',
+            method: 'POST',
+            data: data,
+            success: function(response) {
+                if (response.success) {
+                    if (typeof toastr !== 'undefined') {
+                        toastr.success(response.msg || 'Related customer added successfully');
+                    }
+
+                    var relName = response.data.name;
+                    var relId = response.data.id;
+                    var relContactId = response.data.contact_id;
+                    var relType = $('#show_related_relationship_type').val() || 'relative';
+                    var relTypeLabel = relType.charAt(0).toUpperCase() + relType.slice(1);
+
+                    var card = '<div style="background-color:#fff; padding:10px; border-radius:5px; margin-bottom:10px; border-left:3px solid #48b2ee; position:relative;">' +
+                        '<strong>' + relName + '</strong>' +
+                        '<span class="label label-info" style="margin-left:5px;">' + relTypeLabel + '</span>' +
+                        '<a href="/contacts/' + relId + '" class="btn btn-xs btn-default pull-right" title="View Full Details"><i class="fa fa-eye"></i></a>' +
+                        '<br><small class="text-muted">Contact ID: ' + relContactId + '</small>' +
+                        '</div>';
+
+                    // Update both instances of the list (print + visible)
+                    $('#no-related-customers-msg').remove();
+                    $('#related-customers-list').append(card);
+
+                    // Reset form
+                    $('#show_related_first_name, #show_related_email').val('');
+                    $('#show_related_relationship_type').val('');
+                    $('input[name="show_related_prescription_source"]').prop('checked', false);
+                    $('#show-add-related-form').find('input[type="text"], input[type="email"]').val('');
+                    $('#show-add-related-form').slideUp();
+                    $('#show-add-related-form-btn').show();
+                } else {
+                    alert('Error: ' + (response.msg || 'Unknown error'));
+                }
+                $btn.prop('disabled', false).html('<i class="fa fa-save"></i> Save Related Customer');
+            },
+            error: function(xhr) {
+                var msg = 'Failed to save related customer';
+                if (xhr.responseJSON && xhr.responseJSON.msg) msg = xhr.responseJSON.msg;
+                alert(msg);
+                $btn.prop('disabled', false).html('<i class="fa fa-save"></i> Save Related Customer');
+            }
+        });
+    });
+});
+</script>
 @endsection
