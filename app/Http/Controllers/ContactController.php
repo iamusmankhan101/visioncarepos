@@ -2618,6 +2618,14 @@ class ContactController extends Controller
                         'prescription_source' => $request->input('related_prescription_source')
                     ];
                 }
+
+                // Handle relationship type
+                if ($request->has('related_relationship_type') && !empty($request->input('related_relationship_type'))) {
+                    if (!isset($input['shipping_custom_field_details'])) {
+                        $input['shipping_custom_field_details'] = [];
+                    }
+                    $input['shipping_custom_field_details']['relationship'] = $request->input('related_relationship_type');
+                }
                 
                 // Create the related customer
                 $contact = $this->contactUtil->createNewContact($input);
