@@ -517,19 +517,6 @@ $(document).ready(function () {
         scrollY: "75vh",
         scrollX: true,
         scrollCollapse: true,
-        // Prevent header duplication
-        initComplete: function () {
-            // Remove any duplicate headers created by scrollX/scrollY
-            $('.dataTables_scrollHead').remove();
-
-            // Ensure original header is visible
-            $('#contact_table thead').show();
-        },
-        drawCallback: function () {
-            // Remove duplicate headers on each redraw
-            $('.dataTables_scrollHead').remove();
-            $('#contact_table thead').show();
-        },
         "ajax": {
             "url": "/contacts",
             "data": function (d) {
