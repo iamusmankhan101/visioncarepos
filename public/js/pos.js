@@ -418,22 +418,26 @@ $(document).ready(function() {
                 }
                 nameStr += ' (' + sku + ')';
 
+                // Top row: name on left, note on right
+                var topRow = '<div style="display:flex; justify-content:space-between; align-items:baseline; width:100%;">';
+                topRow += '<span>' + nameStr + '</span>';
                 if (notes) {
-                    string += '<span style="float:right; color:#b0b0b0; font-size:0.85em; margin-left:12px; white-space:nowrap;">' + notes + '</span>' + nameStr;
-                } else {
-                    string += nameStr;
+                    topRow += '<span style="color:#b0b0b0; font-size:0.85em; margin-left:12px; white-space:nowrap; flex-shrink:0;">' + notes + '</span>';
                 }
+                topRow += '</div>';
+                string += topRow;
 
                 if (item.enable_stock == 1 && item.qty_available <= 0 && !is_overselling_allowed && !for_so && !is_draft) {
-                    string += '<br> Price: ' + __currency_trans_from_en(item.selling_price, false, false, __currency_precision, true) + ' (Out of stock)';
+                    string += '<div> Price: ' + __currency_trans_from_en(item.selling_price, false, false, __currency_precision, true) + ' (Out of stock)</div>';
                     string += '</div>';
                     return $('<li class="ui-state-disabled">').append(string).appendTo(ul);
                 } else {
-                    string += '<br> Price: ' + __currency_trans_from_en(item.selling_price, false, false, __currency_precision, true);
+                    string += '<div> Price: ' + __currency_trans_from_en(item.selling_price, false, false, __currency_precision, true);
                     if (item.enable_stock == 1) {
                         var qty_available = __currency_trans_from_en(item.qty_available, false, false, __currency_precision, true);
                         string += ' - ' + qty_available + item.unit;
                     }
+                    string += '</div>';
                     string += '</div>';
     
                     return $('<li>').append(string).appendTo(ul);

@@ -514,6 +514,10 @@ $(document).ready(function () {
         processing: true,
         serverSide: true,
         fixedHeader: false,
+        initComplete: function() {
+            // FixedHeader global default can hide the original thead — force it visible
+            $('#contact_table thead').show().css('visibility', 'visible');
+        },
         "ajax": {
             "url": "/contacts",
             "data": function (d) {
@@ -579,6 +583,11 @@ $(document).ready(function () {
             $('.footer_contact_due').html(__currency_trans_from_en(total_due));
             $('.footer_contact_return_due').html(__currency_trans_from_en(total_return_due));
         }
+    });
+
+    // Keep thead visible after every draw (FixedHeader global default can hide it)
+    contact_table.on('draw.dt', function() {
+        $('#contact_table thead').show().css('visibility', 'visible');
     });
 
     $(document).on('ifChanged', '#has_sell_due, #has_sell_return, \
