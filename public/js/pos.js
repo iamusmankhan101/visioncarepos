@@ -419,10 +419,7 @@ $(document).ready(function() {
                 nameStr += ' (' + sku + ')';
 
                 if (notes) {
-                    string += '<div style="display:flex; justify-content:space-between; align-items:baseline;">' +
-                        '<span>' + nameStr + '</span>' +
-                        '<span style="color:#b0b0b0; font-size:0.85em; margin-left:12px; white-space:nowrap;">' + notes + '</span>' +
-                        '</div>';
+                    string += '<span style="float:right; color:#b0b0b0; font-size:0.85em; margin-left:12px; white-space:nowrap;">' + notes + '</span>' + nameStr;
                 } else {
                     string += nameStr;
                 }
