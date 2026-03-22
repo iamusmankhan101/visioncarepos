@@ -418,7 +418,10 @@ $(document).ready(function() {
                 string += ' (' + sku + ')';
 
                 if (notes) {
-                    string += ' | <span style="font-weight: bold; color: #d9534f;">Note: ' + notes + '</span>';
+                    string = '<span style="display:flex; justify-content:space-between; align-items:baseline; width:100%;">' +
+                        '<span>' + string + '</span>' +
+                        '<span style="color:#b0b0b0; font-size:0.85em; margin-left:12px; white-space:nowrap;">' + notes + '</span>' +
+                        '</span>';
                 }
 
                 if (item.enable_stock == 1 && item.qty_available <= 0 && !is_overselling_allowed && !for_so && !is_draft) {
