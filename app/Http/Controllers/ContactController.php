@@ -502,9 +502,9 @@ class ContactController extends Controller
                 @endif
             ')
             ->editColumn('name', function ($row) {
-                $name = e($row->name);
+                $name = e($row->contact_name_col ?? $row->name);
                 if ($row->contact_status == 'inactive') {
-                    $name = e($row->name).' <small class="label pull-right bg-red no-print">'.__('lang_v1.inactive').'</small>';
+                    $name = e($row->contact_name_col ?? $row->name).' <small class="label pull-right bg-red no-print">'.__('lang_v1.inactive').'</small>';
                 }
 
                 if (! empty($row->converted_by)) {
