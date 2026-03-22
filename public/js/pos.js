@@ -411,21 +411,25 @@ $(document).ready(function() {
                     var is_draft=true;
                 }
 
-                var string = '<div>' + name;
+                var string = '<div>';
+                var nameStr = name;
                 if (item.type == 'variable') {
-                    string += '-' + item.variation;
+                    nameStr += '-' + item.variation;
                 }
-                string += ' (' + sku + ')';
+                nameStr += ' (' + sku + ')';
 
                 if (notes) {
-                    string = '<span style="display:flex; justify-content:space-between; align-items:baseline; width:100%;">' +
-                        '<span>' + string + '</span>' +
+                    string += '<div style="display:flex; justify-content:space-between; align-items:baseline;">' +
+                        '<span>' + nameStr + '</span>' +
                         '<span style="color:#b0b0b0; font-size:0.85em; margin-left:12px; white-space:nowrap;">' + notes + '</span>' +
-                        '</span>';
+                        '</div>';
+                } else {
+                    string += nameStr;
                 }
 
                 if (item.enable_stock == 1 && item.qty_available <= 0 && !is_overselling_allowed && !for_so && !is_draft) {
                     string += '<br> Price: ' + __currency_trans_from_en(item.selling_price, false, false, __currency_precision, true) + ' (Out of stock)';
+                    string += '</div>';
                     return $('<li class="ui-state-disabled">').append(string).appendTo(ul);
                 } else {
                     string += '<br> Price: ' + __currency_trans_from_en(item.selling_price, false, false, __currency_precision, true);
