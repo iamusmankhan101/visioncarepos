@@ -651,25 +651,30 @@ $(document).on('click', '#print_ledger_pdf', function() {
 
 <script type="text/javascript">
 $(document).ready(function() {
-    // Add Related Customer - show/hide form
-    $(document).on('click', '#show-add-related-form-btn', function() {
-        $('#show-add-related-form').slideDown();
+    // Toggle add form — scoped to the clicked button's .rc-section container
+    $(document).on('click', '.rc-show-form-btn', function() {
+        var $section = $(this).closest('.rc-section');
+        $section.find('.rc-add-form').slideDown();
+        $section.find('.rc-add-form').data('trigger-btn', $(this));
         $(this).hide();
     });
 
-    $(document).on('click', '#cancel-add-related-form-btn', function() {
-        $('#show-add-related-form').slideUp();
-        $('#show-add-related-form-btn').show();
+    $(document).on('click', '.rc-cancel-btn', function() {
+        var $section = $(this).closest('.rc-section');
+        $section.find('.rc-add-form').slideUp();
+        $section.find('.rc-show-form-btn').show();
     });
 
-    $(document).on('click', '#save-show-related-customer', function() {
+    $(document).on('click', '.rc-save-btn', function() {
         var $btn = $(this);
+        var $section = $btn.closest('.rc-section');
+        var $form = $btn.closest('.rc-add-form');
         var contactId = $btn.data('contact-id');
-        var name = $('#show_related_first_name').val().trim();
+        var name = $form.find('.rc-name').val().trim();
 
         if (!name) {
             alert('Please enter a customer name.');
-            $('#show_related_first_name').focus();
+            $form.find('.rc-name').focus();
             return;
         }
 
@@ -678,21 +683,21 @@ $(document).ready(function() {
         var data = {
             _token: $('meta[name="csrf-token"]').attr('content'),
             related_first_name: name,
-            related_relationship_type: $('#show_related_relationship_type').val(),
-            related_email: $('#show_related_email').val(),
-            related_prescription_source: $('input[name="show_related_prescription_source"]:checked').val() || '',
-            custom_field1: $('#show_rc_cf1').val(),
-            custom_field2: $('#show_rc_cf2').val(),
-            custom_field3: $('#show_rc_cf3').val(),
-            custom_field4: $('#show_rc_cf4').val(),
-            custom_field5: $('#show_rc_cf5').val(),
-            custom_field6: $('#show_rc_cf6').val(),
-            custom_field7: $('#show_rc_cf7').val(),
-            custom_field8: $('#show_rc_cf8').val(),
-            custom_field9: $('#show_rc_cf9').val(),
-            custom_field10: $('#show_rc_cf10').val(),
-            related_shipping_custom_field_1: $('#show_rc_scf1').val(),
-            related_shipping_custom_field_2: $('#show_rc_scf2').val(),
+            related_relationship_type: $form.find('.rc-relationship').val(),
+            related_email: $form.find('.rc-email').val(),
+            related_prescription_source: $form.find('.rc-prx-source:checked').val() || '',
+            custom_field1:  $form.find('.rc-cf1').val(),
+            custom_field2:  $form.find('.rc-cf2').val(),
+            custom_field3:  $form.find('.rc-cf3').val(),
+            custom_field4:  $form.find('.rc-cf4').val(),
+            custom_field5:  $form.find('.rc-cf5').val(),
+            custom_field6:  $form.find('.rc-cf6').val(),
+            custom_field7:  $form.find('.rc-cf7').val(),
+            custom_field8:  $form.find('.rc-cf8').val(),
+            custom_field9:  $form.find('.rc-cf9').val(),
+            custom_field10: $form.find('.rc-cf10').val(),
+            related_shipping_custom_field_1: $form.find('.rc-scf1').val(),
+            related_shipping_custom_field_2: $form.find('.rc-scf2').val(),
         };
 
         $.ajax({
@@ -705,30 +710,24 @@ $(document).ready(function() {
                         toastr.success(response.msg || 'Related customer added successfully');
                     }
 
-                    var relName = response.data.name;
-                    var relId = response.data.id;
-                    var relContactId = response.data.contact_id;
-                    var relType = $('#show_related_relationship_type').val() || 'relative';
-                    var relTypeLabel = relType.charAt(0).toUpperCase() + relType.slice(1);
-
-                    var card = '<div style="background-color:#fff; padding:10px; border-radius:5px; margin-bottom:10px; border-left:3px solid #48b2ee; position:relative;">' +
-                        '<strong>' + relName + '</strong>' +
-                        '<span class="label label-info" style="margin-left:5px;">' + relTypeLabel + '</span>' +
-                        '<a href="/contacts/' + relId + '" class="btn btn-xs btn-default pull-right" title="View Full Details"><i class="fa fa-eye"></i></a>' +
-                        '<br><small class="text-muted">Contact ID: ' + relContactId + '</small>' +
+                    var relType = $form.find('.rc-relationship').val() || 'relative';
+                    var card = '<div style="background-color:#fff; padding:10px; border-radius:5px; margin-bottom:10px; border-left:3px solid #48b2ee;">' +
+                        '<strong>' + response.data.name + '</strong>' +
+                        '<span class="label label-info" style="margin-left:5px;">' + relType.charAt(0).toUpperCase() + relType.slice(1) + '</span>' +
+                        '<a href="/contacts/' + response.data.id + '" class="btn btn-xs btn-default pull-right" title="View Full Details"><i class="fa fa-eye"></i></a>' +
+                        '<br><small class="text-muted">Contact ID: ' + response.data.contact_id + '</small>' +
                         '</div>';
 
-                    // Update both instances of the list (print + visible)
-                    $('#no-related-customers-msg').remove();
-                    $('#related-customers-list').append(card);
+                    // Update both visible instances
+                    $('.rc-empty-msg').remove();
+                    $('.rc-list').append(card);
 
-                    // Reset form
-                    $('#show_related_first_name, #show_related_email').val('');
-                    $('#show_related_relationship_type').val('');
-                    $('input[name="show_related_prescription_source"]').prop('checked', false);
-                    $('#show-add-related-form').find('input[type="text"], input[type="email"]').val('');
-                    $('#show-add-related-form').slideUp();
-                    $('#show-add-related-form-btn').show();
+                    // Reset this form
+                    $form.find('input[type="text"], input[type="email"]').val('');
+                    $form.find('.rc-relationship').val('');
+                    $form.find('.rc-prx-source').prop('checked', false);
+                    $form.slideUp();
+                    $section.find('.rc-show-form-btn').show();
                 } else {
                     alert('Error: ' + (response.msg || 'Unknown error'));
                 }
