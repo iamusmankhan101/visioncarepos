@@ -6,9 +6,17 @@
 @if (!empty($api_key))
     @section('css')
         @include('contact.partials.google_map_styles')
+        <style>
+            #contact_table { width: 100% !important; }
+            .table-responsive { overflow-x: auto; }
+        </style>
     @endsection
 @else
     @section('css')
+        <style>
+            #contact_table { width: 100% !important; }
+            .table-responsive { overflow-x: auto; }
+        </style>
     @endsection
 @endif
 @section('content')
