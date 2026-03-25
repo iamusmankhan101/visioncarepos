@@ -1,4 +1,8 @@
 <!-- Voucher Modal -->
+<style>
+#posVoucherModal.in { display: block !important; }
+#posVoucherModal { z-index: 99999 !important; }
+</style>
 <div class="modal fade" id="posVoucherModal" tabindex="-1" role="dialog" aria-labelledby="posVoucherModalLabel">
     <div class="modal-dialog" role="document">
         <div class="modal-content">

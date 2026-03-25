@@ -237,6 +237,12 @@
 
     <script>
     $(document).ready(function() {
+        // Move voucher modal to body level to avoid any CSS containment issues
+        var $voucherModal = $('#posVoucherModal');
+        if ($voucherModal.length && !$voucherModal.parent().is('body')) {
+            $voucherModal.appendTo('body');
+        }
+
         // Reset modal when closed
         $('#posVoucherModal').on('hidden.bs.modal', function() {
             $('#voucher_select').val('');
@@ -248,7 +254,16 @@
         // Add clear voucher functionality
         $(document).on('click', '#pos-edit-voucher', function() {
             // Open the voucher modal
-            $('#posVoucherModal').modal('show');
+            var $modal = $('#posVoucherModal');
+            // Ensure modal is at body level
+            if (!$modal.parent().is('body')) {
+                $modal.appendTo('body');
+            }
+            $modal.modal({
+                backdrop: true,
+                keyboard: true,
+                show: true
+            });
 
             // If voucher is already applied, pre-select it in dropdown
             var current_voucher = $('#voucher_code').val();
