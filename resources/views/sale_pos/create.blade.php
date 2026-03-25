@@ -237,116 +237,6 @@
 
     <script>
     $(document).ready(function() {
-        // Voucher functionality
-        $('#validate_voucher').click(function() {
-            var selectedVoucher = $('#voucher_select').val();
-            if (!selectedVoucher) {
-                toastr.error('Please select a voucher first');
-                return;
-            }
-            
-            // Since voucher is already validated when selected from dropdown,
-            // just show success message
-            toastr.success('Voucher is valid and ready to apply');
-        });
-        
-        // Apply voucher
-        $('#apply_voucher').click(function() {
-            var selectedVoucher = $('#voucher_select').val();
-            var discount_type = $('#voucher_discount_type').val();
-            var discount_value = parseFloat($('#voucher_discount_value').val()) || 0;
-            
-            if (!selectedVoucher || discount_value <= 0) {
-                toastr.error('Please select a voucher first');
-                return;
-            }
-            
-            // Parse the selected voucher data to get the code
-            var voucher_code = '';
-            try {
-                var voucherData = JSON.parse(selectedVoucher);
-                voucher_code = voucherData.code;
-            } catch (e) {
-                toastr.error('Invalid voucher selection');
-                return;
-            }
-            
-            // Calculate the actual discount amount
-            var subtotal = get_subtotal(); // Use the same function as POS calculations
-            var discount_amount = 0;
-            
-            console.log('Voucher Debug:', {
-                subtotal: subtotal,
-                discount_type: discount_type,
-                discount_value: discount_value,
-                voucher_code: voucher_code
-            });
-            
-            if (discount_type === 'percentage') {
-                discount_amount = (subtotal * discount_value) / 100;
-            } else {
-                discount_amount = discount_value;
-            }
-            
-            console.log('Calculated discount_amount:', discount_amount);
-            
-            // Set the voucher values - store the actual discount amount, not the input value
-            $('#voucher_code').val(voucher_code);
-            $('#voucher_discount_amount').val(discount_amount);
-            
-            console.log('Stored values:', {
-                voucher_code: $('#voucher_code').val(),
-                voucher_discount_amount: $('#voucher_discount_amount').val()
-            });
-            
-            // Debug: Check if the form will submit these values
-            console.log('Form will submit these voucher values:', {
-                voucher_code_field_exists: $('#voucher_code').length > 0,
-                voucher_discount_amount_field_exists: $('#voucher_discount_amount').length > 0,
-                voucher_code_value: $('#voucher_code').val(),
-                voucher_discount_amount_value: $('#voucher_discount_amount').val()
-            });
-            
-            // Update the display
-            $('#voucher_discount').text(__currency_trans_from_en(discount_amount, true));
-            
-            // Recalculate totals
-            pos_total_row();
-            
-            // Close modal
-            $('#posVoucherModal').modal('hide');
-            
-            toastr.success('@lang("lang_v1.voucher_applied_successfully")');
-        });
-        
-        // Clear voucher
-        $('#clear_voucher').click(function() {
-            $('#voucher_code').val('');
-            $('#voucher_discount_amount').val('0');
-            $('#voucher_discount').text('0');
-            
-            // Reset modal fields
-            $('#voucher_code_input').val('');
-            $('#voucher_discount_value').val('0');
-            $('#voucher_status').html('');
-            
-            // Recalculate totals
-            pos_total_row();
-            
-            // Close modal
-            $('#posVoucherModal').modal('hide');
-            
-            toastr.info('@lang("lang_v1.voucher_cleared")');
-        });
-        
-        // Debug: Check if voucher fields exist on page load
-        console.log('Voucher fields check on page load:', {
-            voucher_code_field_exists: $('#voucher_code').length > 0,
-            voucher_discount_amount_field_exists: $('#voucher_discount_amount').length > 0,
-            voucher_code_field_html: $('#voucher_code').length > 0 ? $('#voucher_code')[0].outerHTML : 'NOT FOUND',
-            voucher_discount_amount_field_html: $('#voucher_discount_amount').length > 0 ? $('#voucher_discount_amount')[0].outerHTML : 'NOT FOUND'
-        });
-        
         // Reset modal when closed
         $('#posVoucherModal').on('hidden.bs.modal', function() {
             $('#voucher_select').val('');
@@ -357,7 +247,10 @@
         
         // Add clear voucher functionality
         $(document).on('click', '#pos-edit-voucher', function() {
-            // If voucher is already applied, show option to clear it
+            // Open the voucher modal
+            $('#posVoucherModal').modal('show');
+
+            // If voucher is already applied, pre-select it in dropdown
             var current_voucher = $('#voucher_code').val();
             if (current_voucher) {
                 // Try to find and select the current voucher in dropdown
@@ -390,11 +283,7 @@
             toastr.info('Voucher cleared');
         };
         
-        // Voucher dropdown functionality
-        // Load active vouchers when modal is opened
-        $(document).on('show.bs.modal', '#posVoucherModal', function() {
-            loadActiveVouchers();
-        });
+        // Voucher dropdown functionality - handled in voucher_modal.blade.php
         
         // Handle voucher selection from dropdown
         $(document).on('change', '#voucher_select', function() {

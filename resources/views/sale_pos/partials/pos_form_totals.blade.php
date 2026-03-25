@@ -43,7 +43,7 @@
 				<td class="@if(isset($pos_settings['disable_order_tax']) && $pos_settings['disable_order_tax'] != 0) hide @endif">
 					<span class="tw-text-base md:tw-text-lg tw-font-semibold">
 						<b class="tw-text-base md:tw-text-lg tw-font-bold">@lang('lang_v1.voucher')(-): @show_tooltip(__('tooltip.voucher_discount'))</b>
-						<i class="fas fa-edit cursor-pointer" title="@lang('lang_v1.apply_voucher')" aria-hidden="true" data-toggle="modal" data-target="#posVoucherModal" id="pos-edit-voucher" ></i> 
+						<i class="fas fa-edit cursor-pointer" title="@lang('lang_v1.apply_voucher')" id="pos-edit-voucher" style="cursor:pointer;"></i> 
 						<span class="tw-text-base md:tw-text-lg tw-font-semibold" id="voucher_discount">
 							@if(empty($edit))
 								0
