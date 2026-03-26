@@ -379,13 +379,17 @@ $(document).ready(function() {
                     }
 
                     if (ui.item.enable_stock != 1 || ui.item.qty_available > 0 || is_overselling_allowed || for_so || is_draft) {
-                        $(this).val('');
+                        var $input = $(this);
+                        $input.val('');
+                        setTimeout(function() { $input.val('').focus(); }, 10);
 
                         //Pre select lot number only if the searched term is same as the lot number
                         var purchase_line_id = ui.item.purchase_line_id && searched_term == ui.item.lot_number ? ui.item.purchase_line_id : null;
                         pos_product_row(ui.item.variation_id, purchase_line_id);
                     } else {
-                        $(this).val('');
+                        var $input = $(this);
+                        $input.val('');
+                        setTimeout(function() { $input.val(''); }, 10);
                         alert(LANG.out_of_stock);
                     }
                     return false;
@@ -2471,9 +2475,8 @@ function pos_insert_product_row(result) {
     __currency_convert_recursively(this_row);
 
     if (!$('#__is_mobile').length) {
-        $('input#search_product')
-            .focus()
-            .select();
+        $('input#search_product').val('').focus();
+        setTimeout(function() { $('input#search_product').val('').focus(); }, 10);
     }
 
     //Used in restaurant module
@@ -2534,9 +2537,8 @@ function pos_add_product_row_from_data(result) {
                         round_row_to_iraqi_dinnar($(this));
                         
                         if (!$('#__is_mobile').length) {
-                            $('input#search_product')
-                                .focus()
-                                .select();
+                            $('input#search_product').val('').focus();
+                            setTimeout(function() { $('input#search_product').val('').focus(); }, 10);
                         }
                     }
             });
@@ -2549,9 +2551,8 @@ function pos_add_product_row_from_data(result) {
     } else {
         toastr.error(result.msg);
         if (!$('#__is_mobile').length) {
-            $('input#search_product')
-                .focus()
-                .select();
+            $('input#search_product').val('').focus();
+            setTimeout(function() { $('input#search_product').val('').focus(); }, 10);
         }
     }
 }
@@ -2604,9 +2605,7 @@ function pos_product_row(variation_id = null, purchase_line_id = null, weighing_
                     round_row_to_iraqi_dinnar($(this));
 
                     if (!$('#__is_mobile').length) {
-                        $('input#search_product')
-                            .focus()
-                            .select();
+                        $('input#search_product').val('').focus();
                     }
                 }
         });
@@ -2688,9 +2687,8 @@ function pos_product_row(variation_id = null, purchase_line_id = null, weighing_
                 } else {
                     toastr.error(result.msg);
                     if (!$('#__is_mobile').length) {
-                        $('input#search_product')
-                            .focus()
-                            .select();
+                        $('input#search_product').val('').focus();
+                        setTimeout(function() { $('input#search_product').val('').focus(); }, 10);
                     }
                 }
             },
@@ -3835,9 +3833,7 @@ $("#sales_order_ids").on("select2:select", function (e) {
             
             } else {
                 toastr.error(result.msg);
-                $('input#search_product')
-                    .focus()
-                    .select();
+                $('input#search_product').val('').focus();
             }
         },
     });
