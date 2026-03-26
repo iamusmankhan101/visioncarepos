@@ -379,14 +379,16 @@ $(document).ready(function() {
                     }
 
                     if (ui.item.enable_stock != 1 || ui.item.qty_available > 0 || is_overselling_allowed || for_so || is_draft) {
-                        $(this).val(null);
+                        $(this).val('');
 
                         //Pre select lot number only if the searched term is same as the lot number
                         var purchase_line_id = ui.item.purchase_line_id && searched_term == ui.item.lot_number ? ui.item.purchase_line_id : null;
                         pos_product_row(ui.item.variation_id, purchase_line_id);
                     } else {
+                        $(this).val('');
                         alert(LANG.out_of_stock);
                     }
+                    return false;
                 },
             })
             .autocomplete('instance')._renderItem = function(ul, item) {
