@@ -387,38 +387,6 @@ window.addEventListener('afterprint', function() {
 					<span class="label label-primary" style="margin-left: 10px; font-size: 10px;">Primary</span>
 				@endif
 			</h4>
-
-			{{-- Product table for main customer --}}
-			<table style="width: 100%; margin-bottom: 10px; border-collapse: collapse;">
-				<thead>
-					<tr style="border-bottom: 1px solid #eee;">
-						<th style="padding: 4px 0; text-align: left; width: 50%; font-size: 13px; color: #000;">Product</th>
-						<th style="padding: 4px 0; text-align: right; width: 17%; font-size: 13px; color: #000;">Quantity</th>
-						<th style="padding: 4px 0; text-align: right; width: 17%; font-size: 13px; color: #000;">Unit Price</th>
-						<th style="padding: 4px 0; text-align: right; width: 16%; font-size: 13px; color: #000;">Subtotal</th>
-					</tr>
-				</thead>
-				<tbody>
-					@foreach($receipt_details->lines as $line)
-						@if(empty($line['assigned_customer_id']) || $line['assigned_customer_id'] == $contact->id)
-						<tr>
-							<td style="padding: 4px 0; font-size: 13px; color: #000;">
-								{{$line['name']}} {{$line['product_variation']}} {{$line['variation']}}
-							</td>
-							<td style="padding: 4px 0; font-size: 13px; color: #000; text-align: right;">
-								{{$line['quantity']}} {{$line['units']}}
-							</td>
-							<td style="padding: 4px 0; font-size: 13px; color: #000; text-align: right;">
-								{{$line['unit_price_inc_tax']}}
-							</td>
-							<td style="padding: 4px 0; font-size: 13px; color: #000; text-align: right;">
-								{{$line['line_total']}}
-							</td>
-						</tr>
-						@endif
-					@endforeach
-				</tbody>
-			</table>
 		@endif
 		<table width="100%" style="border-collapse: collapse;">
 			<tr>
@@ -481,6 +449,40 @@ window.addEventListener('afterprint', function() {
 				</td>
 			</tr>
 		</table>
+
+		@if($contact)
+		{{-- Product table below eye chart --}}
+		<table style="width: 100%; margin-top: 8px; border-collapse: collapse;">
+			<thead>
+				<tr style="border-bottom: 1px solid #eee;">
+					<th style="padding: 4px 0; text-align: left; width: 50%; font-size: 13px; color: #000;">Product</th>
+					<th style="padding: 4px 0; text-align: right; width: 17%; font-size: 13px; color: #000;">Quantity</th>
+					<th style="padding: 4px 0; text-align: right; width: 17%; font-size: 13px; color: #000;">Unit Price</th>
+					<th style="padding: 4px 0; text-align: right; width: 16%; font-size: 13px; color: #000;">Subtotal</th>
+				</tr>
+			</thead>
+			<tbody>
+				@foreach($receipt_details->lines as $line)
+					@if(empty($line['assigned_customer_id']) || $line['assigned_customer_id'] == $contact->id)
+					<tr>
+						<td style="padding: 4px 0; font-size: 13px; color: #000;">
+							{{$line['name']}} {{$line['product_variation']}} {{$line['variation']}}
+						</td>
+						<td style="padding: 4px 0; font-size: 13px; color: #000; text-align: right;">
+							{{$line['quantity']}} {{$line['units']}}
+						</td>
+						<td style="padding: 4px 0; font-size: 13px; color: #000; text-align: right;">
+							{{$line['unit_price_inc_tax']}}
+						</td>
+						<td style="padding: 4px 0; font-size: 13px; color: #000; text-align: right;">
+							{{$line['line_total']}}
+						</td>
+					</tr>
+					@endif
+				@endforeach
+			</tbody>
+		</table>
+		@endif
 	</div>
 </div>
 
@@ -495,38 +497,6 @@ window.addEventListener('afterprint', function() {
 						(ID: {{ $additional_customer['contact_id'] }})
 					@endif
 				</h4>
-
-				{{-- Product table for additional customer --}}
-				<table style="width: 100%; margin-bottom: 10px; border-collapse: collapse;">
-					<thead>
-						<tr style="border-bottom: 1px solid #eee;">
-							<th style="padding: 4px 0; text-align: left; width: 50%; font-size: 13px; color: #000;">Product</th>
-							<th style="padding: 4px 0; text-align: right; width: 17%; font-size: 13px; color: #000;">Quantity</th>
-							<th style="padding: 4px 0; text-align: right; width: 17%; font-size: 13px; color: #000;">Unit Price</th>
-							<th style="padding: 4px 0; text-align: right; width: 16%; font-size: 13px; color: #000;">Subtotal</th>
-						</tr>
-					</thead>
-					<tbody>
-						@foreach($receipt_details->lines as $line)
-							@if(!empty($line['assigned_customer_id']) && $line['assigned_customer_id'] == $additional_customer['id'])
-							<tr>
-								<td style="padding: 4px 0; font-size: 13px; color: #000;">
-									{{$line['name']}} {{$line['product_variation']}} {{$line['variation']}}
-								</td>
-								<td style="padding: 4px 0; font-size: 13px; color: #000; text-align: right;">
-									{{$line['quantity']}} {{$line['units']}}
-								</td>
-								<td style="padding: 4px 0; font-size: 13px; color: #000; text-align: right;">
-									{{$line['unit_price_inc_tax']}}
-								</td>
-								<td style="padding: 4px 0; font-size: 13px; color: #000; text-align: right;">
-									{{$line['line_total']}}
-								</td>
-							</tr>
-							@endif
-						@endforeach
-					</tbody>
-				</table>
 				<table width="100%" style="border-collapse: collapse;">
 					<tr>
 						<!-- RIGHT EYE TABLE -->
@@ -587,6 +557,38 @@ window.addEventListener('afterprint', function() {
 							</table>
 						</td>
 					</tr>
+				</table>
+
+				{{-- Product table below eye chart --}}
+				<table style="width: 100%; margin-top: 8px; border-collapse: collapse;">
+					<thead>
+						<tr style="border-bottom: 1px solid #eee;">
+							<th style="padding: 4px 0; text-align: left; width: 50%; font-size: 13px; color: #000;">Product</th>
+							<th style="padding: 4px 0; text-align: right; width: 17%; font-size: 13px; color: #000;">Quantity</th>
+							<th style="padding: 4px 0; text-align: right; width: 17%; font-size: 13px; color: #000;">Unit Price</th>
+							<th style="padding: 4px 0; text-align: right; width: 16%; font-size: 13px; color: #000;">Subtotal</th>
+						</tr>
+					</thead>
+					<tbody>
+						@foreach($receipt_details->lines as $line)
+							@if(!empty($line['assigned_customer_id']) && $line['assigned_customer_id'] == $additional_customer['id'])
+							<tr>
+								<td style="padding: 4px 0; font-size: 13px; color: #000;">
+									{{$line['name']}} {{$line['product_variation']}} {{$line['variation']}}
+								</td>
+								<td style="padding: 4px 0; font-size: 13px; color: #000; text-align: right;">
+									{{$line['quantity']}} {{$line['units']}}
+								</td>
+								<td style="padding: 4px 0; font-size: 13px; color: #000; text-align: right;">
+									{{$line['unit_price_inc_tax']}}
+								</td>
+								<td style="padding: 4px 0; font-size: 13px; color: #000; text-align: right;">
+									{{$line['line_total']}}
+								</td>
+							</tr>
+							@endif
+						@endforeach
+					</tbody>
 				</table>
 			</div>
 		</div>
