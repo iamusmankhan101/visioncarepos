@@ -51,6 +51,15 @@ $(document).on('click', '.close-register-btn', function(e) {
 });
 
 $(document).ready(function() {
+    // REDUNDANT ALERT: Ensure search_product is ALWAYS cleared after any autocomplete selection
+    $(document).on('autocompleteselect', '#search_product', function(event, ui) {
+        var $input = $(this);
+        $input.val('');
+        setTimeout(function() {
+            $input.val('').blur().focus();
+        }, 150);
+    });
+
     customer_set = false;
     //Prevent enter key function except texarea
     $('form').on('keyup keypress', function(e) {
@@ -336,11 +345,11 @@ $(document).ready(function() {
                                 item.internal_notes = combined_note;
 
                                 // Value for input is Name (SKU)
-                                item.value = name + ' (' + sku + ')';
-                                item.label = name + ' (' + sku + ')' + (combined_note ? ' | Note: ' + combined_note : '');
-                            });
-                            response(products);
-                        }
+                                 item.value = '';
+                                 item.label = name + ' (' + sku + ')' + (combined_note ? ' | Note: ' + combined_note : '');
+                             });
+                             response(products);
+                         }
                     );
                 },
                 minLength: 1,
@@ -357,11 +366,10 @@ $(document).ready(function() {
                     }
                 },
                 focus: function(event, ui) {
-                    if (ui.item.qty_available <= 0) {
-                        return false;
-                    }
+                    return false;
                 },
                 select: function(event, ui) {
+                    event.preventDefault();
                     var searched_term = $(this).val();
                     var is_overselling_allowed = false;
                     if($('input#is_overselling_allowed').length) {
@@ -381,7 +389,9 @@ $(document).ready(function() {
                     if (ui.item.enable_stock != 1 || ui.item.qty_available > 0 || is_overselling_allowed || for_so || is_draft) {
                         var $input = $(this);
                         $input.val('');
-                        setTimeout(function() { $input.val('').focus(); }, 10);
+                        setTimeout(function() { 
+                            $input.val('').blur().focus(); 
+                        }, 100);
 
                         //Pre select lot number only if the searched term is same as the lot number
                         var purchase_line_id = ui.item.purchase_line_id && searched_term == ui.item.lot_number ? ui.item.purchase_line_id : null;
@@ -389,7 +399,9 @@ $(document).ready(function() {
                     } else {
                         var $input = $(this);
                         $input.val('');
-                        setTimeout(function() { $input.val(''); }, 10);
+                        setTimeout(function() { 
+                            $input.val(''); 
+                        }, 50);
                         alert(LANG.out_of_stock);
                     }
                     return false;
@@ -2476,7 +2488,7 @@ function pos_insert_product_row(result) {
 
     if (!$('#__is_mobile').length) {
         $('input#search_product').val('').focus();
-        setTimeout(function() { $('input#search_product').val('').focus(); }, 10);
+        setTimeout(function() { $('input#search_product').val('').blur().focus(); }, 100);
     }
 
     //Used in restaurant module
@@ -2538,7 +2550,7 @@ function pos_add_product_row_from_data(result) {
                         
                         if (!$('#__is_mobile').length) {
                             $('input#search_product').val('').focus();
-                            setTimeout(function() { $('input#search_product').val('').focus(); }, 10);
+                            setTimeout(function() { $('input#search_product').val('').blur().focus(); }, 100);
                         }
                     }
             });
@@ -2552,7 +2564,7 @@ function pos_add_product_row_from_data(result) {
         toastr.error(result.msg);
         if (!$('#__is_mobile').length) {
             $('input#search_product').val('').focus();
-            setTimeout(function() { $('input#search_product').val('').focus(); }, 10);
+            setTimeout(function() { $('input#search_product').val('').blur().focus(); }, 100);
         }
     }
 }
@@ -2688,7 +2700,7 @@ function pos_product_row(variation_id = null, purchase_line_id = null, weighing_
                     toastr.error(result.msg);
                     if (!$('#__is_mobile').length) {
                         $('input#search_product').val('').focus();
-                        setTimeout(function() { $('input#search_product').val('').focus(); }, 10);
+                        setTimeout(function() { $('input#search_product').val('').blur().focus(); }, 100);
                     }
                 }
             },
