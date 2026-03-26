@@ -1,3 +1,4 @@
+<style>#recent_transactions_modal.in { display: block !important; } #recent_transactions_modal { z-index: 99999 !important; }</style>
 <div class="modal fade no-print" id="recent_transactions_modal" tabindex="-1" role="dialog" aria-labelledby="modalTitle">
 	<div class="modal-dialog modal-lg" role="document">
 		<div class="modal-content">

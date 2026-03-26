@@ -157,7 +157,7 @@
                 @if (!isset($pos_settings['hide_recent_trans']) || $pos_settings['hide_recent_trans'] == 0)
                     <button type="button"
                         class="tw-font-bold tw-bg-[#646EE4] hover:tw-bg-[#414aac] tw-rounded-full tw-text-white tw-w-full md:tw-w-fit tw-px-5 tw-h-11 tw-cursor-pointer tw-text-xs md:tw-text-sm"
-                        data-toggle="modal" data-target="#recent_transactions_modal" id="recent-transactions"> <i
+                        id="recent-transactions"> <i
                             class="fas fa-clock"></i> @lang('lang_v1.recent_transactions')</button>
                 @endif
             </div>

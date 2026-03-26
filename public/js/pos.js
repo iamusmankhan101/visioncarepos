@@ -3586,6 +3586,16 @@ $(document).on('shown.bs.tab', 'a[href="#tab_draft"]', function () {
     get_recent_transactions('draft', $('div#tab_draft'));
 });
 
+// Explicit click handler for recent transactions button
+$(document).on('click', '#recent-transactions', function(e) {
+    e.preventDefault();
+    var $modal = $('#recent_transactions_modal');
+    if (!$modal.parent().is('body')) {
+        $modal.appendTo('body');
+    }
+    $modal.modal({ backdrop: true, keyboard: true, show: true });
+});
+
 function disable_pos_form_actions(){
     if (!window.navigator.onLine) {
         return false;
