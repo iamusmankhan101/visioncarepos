@@ -59,7 +59,6 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                 <button type="button" class="btn btn-primary" id="validate_voucher">Validate</button>
-                <button type="button" class="btn btn-success" id="apply_voucher">Apply</button>
                 <button type="button" class="btn btn-warning" id="clear_voucher">Clear</button>
             </div>
         </div>
@@ -238,9 +237,9 @@
                 }
             }
             
-            // Apply voucher
-            $('#apply_voucher').off('click').on('click', function() {
-                console.log('Apply voucher button clicked!');
+            // Validate & Apply voucher
+            $('#validate_voucher').off('click').on('click', function() {
+                console.log('Validate/Apply voucher button clicked!');
                 
                 var selectedValue = $('#voucher_select').val();
                 console.log('Selected voucher value:', selectedValue);
@@ -270,13 +269,6 @@
                             
                             alert('This voucher has reached its usage limit and cannot be used anymore.');
                             return;
-                        }
-                        
-                        if (remaining <= 2) {
-                            var confirmMessage = 'This voucher only has ' + remaining + ' use(s) remaining. Do you want to continue?';
-                            if (!confirm(confirmMessage)) {
-                                return;
-                            }
                         }
                     }
                     
@@ -330,30 +322,18 @@
                     voucherCodeField.val(voucherData.code);
                     voucherAmountField.val(discount_amount);
                     
-                    console.log('✅ Set form fields:', {
-                        voucher_code: voucherCodeField.val(),
-                        voucher_discount_amount: voucherAmountField.val()
-                    });
-                    
                     // Store in localStorage for form submission recovery
                     localStorage.setItem('applied_voucher_code', voucherData.code);
                     localStorage.setItem('applied_voucher_amount', discount_amount);
-                    console.log('✅ Stored in localStorage');
                     
                     // Update display
                     if ($('#voucher_discount').length > 0) {
                         $('#voucher_discount').text(discount_amount);
-                        console.log('✅ Updated voucher_discount display to:', discount_amount);
-                    } else {
-                        console.error('❌ voucher_discount display element not found');
                     }
                     
                     // Update totals if function exists
                     if (typeof pos_total_row === 'function') {
                         pos_total_row();
-                        console.log('✅ Called pos_total_row()');
-                    } else {
-                        console.log('⚠️ pos_total_row function not available');
                     }
                     
                     $('#posVoucherModal').modal('hide');
@@ -363,31 +343,6 @@
                     } else {
                         alert('Voucher applied successfully');
                     }
-                    
-                    // Verify fields are set correctly
-                    setTimeout(function() {
-                        var verification = {
-                            code_field_exists: $('#voucher_code').length > 0,
-                            amount_field_exists: $('#voucher_discount_amount').length > 0,
-                            code_value: $('#voucher_code').val(),
-                            amount_value: $('#voucher_discount_amount').val(),
-                            in_form_serialize: false
-                        };
-                        
-                        // Check if values are in form serialization
-                        var formData = $('form#add_pos_sell_form, form#edit_pos_sell_form').serialize();
-                        verification.in_form_serialize = formData.includes('voucher_code=' + voucherData.code) && 
-                                                       formData.includes('voucher_discount_amount=' + discount_amount);
-                        
-                        console.log('Verification after apply:', verification);
-                        
-                        if (!verification.in_form_serialize) {
-                            console.error('❌ CRITICAL: Voucher data not found in form serialization!');
-                            console.log('Form data preview:', formData.substring(0, 200) + '...');
-                        } else {
-                            console.log('✅ SUCCESS: Voucher data confirmed in form serialization');
-                        }
-                    }, 100);
                     
                 } catch (e) {
                     console.error('Error applying voucher:', e);
@@ -419,20 +374,7 @@
                 }
             });
             
-            // Validate voucher
-            $('#validate_voucher').click(function() {
-                var selectedValue = $('#voucher_select').val();
-                if (!selectedValue) {
-                    alert('Please select a voucher');
-                    return;
-                }
-                
-                if (typeof toastr !== 'undefined') {
-                    toastr.success('Voucher is valid');
-                } else {
-                    alert('Voucher is valid');
-                }
-            });
+
             
             // Make functions global for debugging
             window.loadActiveVouchers = loadActiveVouchers;
