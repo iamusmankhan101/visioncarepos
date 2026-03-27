@@ -352,6 +352,32 @@
     };
     
     /**
+     * Synchronize customer assignments from the Related Customers modal
+     * Filters the currently cached related customers to only match the selected IDs
+     */
+    window.syncRelatedCustomersAssignment = function(selectedCustomerIds) {
+        if (!selectedCustomerIds || !Array.isArray(selectedCustomerIds) || selectedCustomerIds.length === 0) return;
+        
+        var mainCustomerId = $('#customer_id').val();
+        var allCachedCustomers = relatedCustomersCache[mainCustomerId];
+        
+        if (!allCachedCustomers) {
+            console.warn('⚠️ No cached customers found for synchronization.');
+            return;
+        }
+
+        // Filter cached customers based on selected IDs
+        var filteredCustomers = allCachedCustomers.filter(function(customer) {
+            // Selected IDs might be strings, so use non-strict equality
+            return selectedCustomerIds.includes(customer.id.toString());
+        });
+
+        // Add the filtered customers back to selection, updating the dropdowns
+        addCustomersToSelection(filteredCustomers);
+        console.log('🔄 Synchronized row-level assignemnts with:', filteredCustomers);
+    };
+    
+    /**
      * Refresh related customers for current selection
      */
     window.refreshRelatedCustomers = function() {

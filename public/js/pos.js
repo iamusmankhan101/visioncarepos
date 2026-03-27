@@ -4549,6 +4549,11 @@ $(document).on('click', '#confirm_customer_selection', function(e) {
     console.log('Stored customers globally:', window.selectedCustomersForInvoice);
     console.log('Stored in sessionStorage:', sessionStorage.getItem('selectedCustomersForInvoice'));
     
+    // Synchronize row-level assignments with the selected customers
+    if (typeof window.syncRelatedCustomersAssignment === 'function') {
+        window.syncRelatedCustomersAssignment(selectedCustomers);
+    }
+    
     // Store all selected customer IDs and names
     $('#pos-form').find('input[name="multiple_customer_ids"]').remove();
     $('#pos-form').find('input[name="multiple_customer_names"]').remove();
