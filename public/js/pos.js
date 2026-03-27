@@ -4309,15 +4309,30 @@ function showRelatedCustomersModal(customers, callback) {
     $('#related_customers_modal').off();
     
     var html = '';
+    
+    // Check if we have previously selected customers stored globally
+    var previouslySelectedIds = [];
+    if (window.selectedCustomersForInvoice && window.selectedCustomersForInvoice.ids) {
+        previouslySelectedIds = window.selectedCustomersForInvoice.ids.map(String);
+    }
+    
     customers.forEach(function(customer, index) {
         // Calculate is_primary based on whether this customer's ID matches the phone_group_primary_id
         customer.is_primary = (customer.id == customer.phone_group_primary_id);
         
-        var isCurrentBadge = customer.is_current ? '<span class="label label-primary" style="margin-left: 10px;">Currently Selected</span>' : '';
+        // Determine if customer should be checked:
+        // 1. If it's the currently selected customer (default behavior)
+        // 2. OR if it's in the previouslySelectedIds array (meaning user opened modal before and selected it)
+        var shouldBeChecked = customer.is_current;
+        if (previouslySelectedIds.length > 0) {
+             shouldBeChecked = previouslySelectedIds.includes(String(customer.id));
+        }
+
+        var isCurrentBadge = customer.is_current ? '<span class="label label-primary" style="margin-left: 10px;">Main Customer</span>' : '';
         var isPrimaryBadge = customer.is_primary ? '<span class="label label-success" style="margin-left: 10px;">Primary</span>' : '<span class="label label-warning" style="margin-left: 10px;">Secondary</span>';
-        var isChecked = customer.is_current ? 'checked="checked"' : '';
-        var borderColor = customer.is_current ? '#48b2ee' : '#ddd';
-        var bgColor = customer.is_current ? '#f0f8ff' : 'white';
+        var isChecked = shouldBeChecked ? 'checked="checked"' : '';
+        var borderColor = shouldBeChecked ? '#48b2ee' : '#ddd';
+        var bgColor = shouldBeChecked ? '#f0f8ff' : 'white';
         
         html += '<div class="related-customer-item" style="border: 2px solid ' + borderColor + '; border-radius: 8px; padding: 15px; margin-bottom: 15px; transition: all 0.3s; background-color: ' + bgColor + ';" data-customer-id="' + customer.id + '">';
         html += '  <div class="row">';
