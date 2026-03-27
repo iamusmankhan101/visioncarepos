@@ -854,11 +854,12 @@ $(document).ready(function() {
         var customerId = $('#customer_id').val();
         console.log('Customer ID for express checkout:', customerId);
         
-        // REFINEMENT: If we already have selected customers for this sale, skip the AJAX check
+        // REFINEMENT: If we already have selected customers for this sale AND the user has explicitly confirmed the modal, skip the AJAX check
         if (window.selectedCustomersForInvoice && 
             window.selectedCustomersForInvoice.ids && 
-            window.selectedCustomersForInvoice.ids.length > 0) {
-            console.log('Using previously selected customers, skipping AJAX check');
+            window.selectedCustomersForInvoice.ids.length > 0 &&
+            window.hasConfirmedRelatedCustomersModal) {
+            console.log('Using previously confirmed customers, skipping AJAX check');
             processExpressCheckout($button, pay_method);
             return false;
         }
@@ -4560,6 +4561,9 @@ $(document).on('click', '#confirm_customer_selection', function(e) {
     
     // Also store in sessionStorage for persistence
     sessionStorage.setItem('selectedCustomersForInvoice', JSON.stringify(window.selectedCustomersForInvoice));
+    
+    // Set a flag to indicate the user has explicitly confirmed the modal
+    window.hasConfirmedRelatedCustomersModal = true;
     
     console.log('Stored customers globally:', window.selectedCustomersForInvoice);
     console.log('Stored in sessionStorage:', sessionStorage.getItem('selectedCustomersForInvoice'));
