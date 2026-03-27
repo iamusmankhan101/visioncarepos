@@ -77,6 +77,7 @@
         
         $(document).ready(function() {
             console.log('Voucher modal initializing...');
+            window.vouchersData = {}; // Global storage for voucher data to avoid JSON/HTML issues
             
             // Load vouchers when modal is opened
             $('#posVoucherModal').on('show.bs.modal', function() {
@@ -94,11 +95,10 @@
             $('#voucher_select').change(function() {
                 var selectedValue = $(this).val();
                 if (selectedValue) {
-                    try {
-                        var voucherData = JSON.parse(selectedValue);
+                    var voucherData = window.vouchersData[selectedValue];
+                    if (voucherData) {
                         showVoucherDetails(voucherData);
-                    } catch (e) {
-                        console.error('Error parsing voucher data:', e);
+                    } else {
                         hideVoucherDetails();
                     }
                 } else {
@@ -119,15 +119,19 @@
                             select.empty().append('<option value="">Please Select</option>');
                             
                             if (response.vouchers && response.vouchers.length > 0) {
+                                window.vouchersData = {}; // Clear previous data
                                 $.each(response.vouchers, function(index, voucher) {
-                                    var voucherJson = JSON.stringify(voucher);
+                                    // Store voucher data in global object using code as key
+                                    window.vouchersData[voucher.code] = voucher;
+                                    
                                     var displayText = voucher.name + ' (' + voucher.code + ')';
                                     if (voucher.discount_type === 'percentage') {
                                         displayText += ' - ' + voucher.discount_value + '%';
                                     } else {
                                         displayText += ' - ' + voucher.discount_value;
                                     }
-                                    select.append('<option value="' + voucherJson + '">' + displayText + '</option>');
+                                    
+                                    $('<option>').val(voucher.code).text(displayText).appendTo(select);
                                 });
                                 
                                 console.log('✅ Loaded ' + response.vouchers.length + ' vouchers successfully');
@@ -251,8 +255,13 @@
                 }
                 
                 try {
-                    var voucherData = JSON.parse(selectedValue);
-                    console.log('Parsed voucher data:', voucherData);
+                    var voucherData = window.vouchersData[selectedValue];
+                    
+                    if (!voucherData) {
+                        throw new Error('Voucher data not found for selection: ' + selectedValue);
+                    }
+                    
+                    console.log('Found voucher data:', voucherData);
                     
                     // CRITICAL: Check if voucher has reached usage limit
                     if (voucherData.usage_limit) {
