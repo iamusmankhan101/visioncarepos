@@ -30,6 +30,7 @@ return [
     'product' => 'Product',
     'products' => 'Products',
     'unit_price' => 'Unit Price',
+    'customer' => 'Customer',
     'qty' => 'Quantity',
     'subtotal' => 'Subtotal',
     'pos_sale_added' => 'Sale added successfully',
