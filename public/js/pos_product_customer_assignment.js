@@ -37,16 +37,19 @@
             }
         });
 
-        // Listen for changes in product row customer assignments to make it "sticky"
+        // Listen for changes in product row customer assignments to make it "sticky" and sync with modal
         $(document).on('change', '.product_customer_assignment', function() {
             var val = $(this).val();
             if (val) {
                 lastSelectedAssignmentCustomerId = val;
                 console.log('📌 Sticky customer updated to:', val);
             }
+            // Sync this manual change back to the modal's internal memory
+            updateGlobalSelectedCustomers();
         });
         
         // Listen for product row additions
+
         $(document).on('DOMNodeInserted', '#pos_table tbody', function(e) {
             if ($(e.target).is('tr.product_row')) {
                 populateCustomerDropdownForRow($(e.target));
@@ -376,6 +379,52 @@
         addCustomersToSelection(filteredCustomers);
         console.log('🔄 Synchronized row-level assignemnts with:', filteredCustomers);
     };
+    
+    /**
+     * Update the global selected customers object (used by pos.js) based on current row assignments
+     */
+    function updateGlobalSelectedCustomers() {
+        var selectedIds = [];
+        var selectedNames = [];
+        
+        // Always include the main selected customer
+        var mainCustomerId = $('#customer_id').val();
+        var mainCustomerName = $('#customer_id option:selected').text();
+        if (mainCustomerId) {
+            selectedIds.push(mainCustomerId);
+            selectedNames.push(mainCustomerName);
+        }
+        
+        // Iterate over all product rows and collect unique customer assignments
+        $('#pos_table tbody tr.product_row').each(function() {
+            var $dropdown = $(this).find('.product_customer_assignment');
+            var val = $dropdown.val();
+            var text = $dropdown.find('option:selected').text();
+            
+            if (val && !selectedIds.includes(val)) {
+                selectedIds.push(val);
+                selectedNames.push(text);
+            }
+        });
+        
+        // Only update if we are dealing with multiple customers (to avoid interfering with single-customer flow)
+        if (window.posSelectedCustomers.length > 1) {
+             // Update the global object exactly how pos.js does
+            window.selectedCustomersForInvoice = {
+                ids: selectedIds,
+                names: selectedNames
+            };
+            
+            sessionStorage.setItem('selectedCustomersForInvoice', JSON.stringify(window.selectedCustomersForInvoice));
+            
+            // Also update the hidden form fields just like pos.js does
+            $('#pos-form').find('input[name="selected_customers[]"]').remove();
+            selectedIds.forEach(function(customerId) {
+                $('#pos-form').append('<input type="hidden" name="selected_customers[]" value="' + customerId + '">');
+            });
+            console.log('🔄 Synced row assignments back to modal memory:', window.selectedCustomersForInvoice);
+        }
+    }
     
     /**
      * Refresh related customers for current selection
