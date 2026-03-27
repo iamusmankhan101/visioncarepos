@@ -15,7 +15,7 @@
 <link rel="stylesheet" href="{{ asset('css/force-checkboxes.css?v='.$asset_v) }}">
 
 <!-- iCheck 404 Fix -->
-<link rel="stylesheet" href="{{ asset('css/icheck-404-fix.css?v='.$asset_v) }}">>
+<link rel="stylesheet" href="{{ asset('css/icheck-404-fix.css?v='.$asset_v) }}">
 
 @if(isset($pos_layout) && $pos_layout)
 	<style type="text/css">
