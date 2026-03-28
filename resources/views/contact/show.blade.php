@@ -10,7 +10,16 @@
             <h3>@lang('contact.view_contact')</h3>
         </div>
         <div class="col-md-4 col-xs-12 mt-15 pull-right">
-            {!! Form::select('contact_id', $contact_dropdown, $contact->id , ['class' => 'form-control select2', 'id' => 'contact_id']); !!}
+            <div class="input-group">
+                {!! Form::select('contact_id', $contact_dropdown, $contact->id , ['class' => 'form-control select2', 'id' => 'contact_id']); !!}
+                <span class="input-group-btn">
+                    @can('customer.create')
+                    <button type="button" class="btn btn-success btn-flat" id="add_new_customer_btn" data-toggle="modal" data-target=".contact_modal" title="@lang('contact.add_contact')">
+                        <i class="fa fa-plus-circle fa-lg"></i>
+                    </button>
+                    @endcan
+                </span>
+            </div>
         </div>
         <div class="col-md-4 col-xs-12 mt-15">
             @if(in_array($contact->type, ['both', 'customer']) && auth()->user()->can('sell.create'))
@@ -337,6 +346,13 @@
 </div>
 @include('ledger_discount.create')
 
+<!-- Contact Create Modal -->
+@can('customer.create')
+<div class="modal fade contact_modal" tabindex="-1" role="dialog" aria-labelledby="gridSystemModalLabel">
+    @include('contact.create', ['quick_add' => true, 'selected_type' => 'customer'])
+</div>
+@endcan
+
 @stop
 @section('javascript')
 <script type="text/javascript">
@@ -399,6 +415,81 @@ $(document).ready( function(){
         if ($(this).val()) {
             window.location = "{{url('/contacts')}}/" + $(this).val();
         }
+    });
+
+    // Reinit contact_id select2 with "Add New Customer" on no results
+    $('#contact_id').select2({
+        width: '100%',
+        language: {
+            noResults: function() {
+                var searchTerm = $('#contact_id').data('select2') ?
+                    $('#contact_id').data('select2').$dropdown.find('.select2-search__field').val() : '';
+                return $('<span>No results found. <a href="#" class="add-new-customer-from-search text-success" style="font-weight:bold;"><i class="fa fa-plus-circle"></i> Add New Customer</a></span>');
+            }
+        }
+    });
+
+    // Handle "Add New Customer" click inside select2 dropdown
+    $(document).on('click', '.add-new-customer-from-search', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $('#contact_id').select2('close');
+        $('.contact_modal').modal('show');
+    });
+
+    // Handle quick add contact form submission (from contact_modal)
+    $(document).on('submit', 'form#quick_add_contact', function(e) {
+        e.preventDefault();
+        var $form = $(this);
+        var $submitBtn = $form.find('button[type="submit"]');
+        $submitBtn.prop('disabled', true);
+
+        $.ajax({
+            url: $form.attr('action'),
+            method: 'POST',
+            data: $form.serialize(),
+            dataType: 'json',
+            success: function(result) {
+                if (result.success) {
+                    // Close modal
+                    $('div.contact_modal').modal('hide');
+                    if (typeof toastr !== 'undefined') {
+                        toastr.success(result.msg || 'Customer added successfully');
+                    }
+                    // Navigate to the newly created contact
+                    if (result.data && result.data.id) {
+                        window.location = "{{url('/contacts')}}/" + result.data.id;
+                    } else {
+                        // Fallback: reload the page
+                        location.reload();
+                    }
+                } else {
+                    if (typeof toastr !== 'undefined') {
+                        toastr.error(result.msg || 'Error adding customer');
+                    }
+                    $submitBtn.prop('disabled', false);
+                }
+            },
+            error: function(xhr) {
+                var errorMsg = 'Error adding customer';
+                if (xhr.responseJSON && xhr.responseJSON.msg) {
+                    errorMsg = xhr.responseJSON.msg;
+                } else if (xhr.responseJSON && xhr.responseJSON.errors) {
+                    // Show validation errors from Laravel
+                    var errors = xhr.responseJSON.errors;
+                    errorMsg = '';
+                    for (var key in errors) {
+                        errorMsg += errors[key].join(', ') + '\n';
+                    }
+                }
+                if (typeof toastr !== 'undefined') {
+                    toastr.error(errorMsg);
+                } else {
+                    alert(errorMsg);
+                }
+                $submitBtn.prop('disabled', false);
+            }
+        });
     });
 
     $('a[href="#sales_tab"]').on('shown.bs.tab', function (e) {
