@@ -3045,6 +3045,13 @@ function reset_pos_form(){
     // Set global_is_clear_local_storage to true to clear local storage
     global_is_clear_local_storage = true;
     saveFormDataToLocalStorage();
+
+    // Refresh POS screen after sale completion/reset (except on edit page)
+    if ($('form#edit_pos_sell_form').length == 0) {
+        setTimeout(function() {
+            window.location.reload();
+        }, 1500);
+    }
 }
 
 function set_default_customer() {
