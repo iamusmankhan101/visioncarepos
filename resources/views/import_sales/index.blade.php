@@ -33,7 +33,8 @@
                         <div class="col-sm-8">
                             <div class="form-group">
                                 {!! Form::label('name', __( 'product.file_to_import' ) . ':') !!}
-                                {!! Form::file('sales', ['required' => 'required']); !!}
+                                {!! Form::file('sales', ['accept' => '.xls,.xlsx,.csv', 'required' => 'required']); !!}
+                                <small class="text-muted">Supported formats: .xls, .xlsx, .csv</small>
                               </div>
                         </div>
                         <div class="col-sm-4">

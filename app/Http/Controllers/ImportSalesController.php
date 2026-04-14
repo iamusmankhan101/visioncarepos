@@ -101,7 +101,14 @@ class ImportSalesController extends Controller
         $business_id = request()->session()->get('user.business_id');
 
         if ($request->hasFile('sales')) {
-            $file_name = time().'_'.$request->sales->getClientOriginalName();
+            $file = $request->file('sales');
+            $extension = strtolower($file->getClientOriginalExtension());
+            if (! in_array($extension, ['xls', 'xlsx', 'csv'])) {
+                $output = ['success' => 0, 'msg' => 'Invalid file format. Please upload a .xls, .xlsx, or .csv file.'];
+                return redirect()->back()->with('notification', $output);
+            }
+
+            $file_name = time().'_'.$file->getClientOriginalName();
             $request->sales->storeAs('temp', $file_name);
 
             $parsed_array = $this->__parseData($file_name);
