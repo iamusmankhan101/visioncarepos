@@ -121,16 +121,25 @@ class ImportSalesController extends Controller
             //Evaluate highest matching field with the header to pre select from dropdown
             $headers = $parsed_array[0];
             $match_array = [];
+            $already_matched = [];
             foreach ($headers as $key => $value) {
                 $match_percentage = [];
                 foreach ($import_fields as $k => $v) {
                     similar_text($value, $v, $percentage);
                     $match_percentage[$k] = $percentage;
                 }
-                $max_key = array_keys($match_percentage, max($match_percentage))[0];
-
-                //If match percentage is greater than 50% then pre select the value
-                $match_array[$key] = $match_percentage[$max_key] >= 50 ? $max_key : null;
+                // Sort descending by match percentage
+                arsort($match_percentage);
+                $matched = null;
+                foreach ($match_percentage as $k => $pct) {
+                    // Only assign if >= 50% and not already used by another column
+                    if ($pct >= 50 && ! in_array($k, $already_matched)) {
+                        $matched = $k;
+                        $already_matched[] = $k;
+                        break;
+                    }
+                }
+                $match_array[$key] = $matched;
             }
 
             $business_locations = BusinessLocation::forDropdown($business_id);
