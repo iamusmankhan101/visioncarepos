@@ -1736,6 +1736,8 @@ class ProductUtil extends Util
         }
 
         $data = $query->groupBy('variations.id')
+             ->orderBy('products.name', 'asc')
+             ->orderBy('variations.sell_price_inc_tax', 'asc')
              ->orderBy('VLD.qty_available', 'desc')
              ->limit(20)
              ->get();
