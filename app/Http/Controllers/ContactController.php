@@ -1803,6 +1803,12 @@ class ContactController extends Controller
 
             if ($request->hasFile('contacts_csv')) {
                 $file = $request->file('contacts_csv');
+
+                $extension = strtolower($file->getClientOriginalExtension());
+                if (! in_array($extension, ['xls', 'xlsx', 'csv'])) {
+                    throw new \Exception('Invalid file format. Please upload a .xls, .xlsx, or .csv file.');
+                }
+
                 $parsed_array = Excel::toArray([], $file);
                 //Remove header row
                 $imported_data = array_splice($parsed_array[0], 1);
