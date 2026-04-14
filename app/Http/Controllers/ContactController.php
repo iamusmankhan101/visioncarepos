@@ -1781,6 +1781,41 @@ class ContactController extends Controller
     }
 
     /**
+     * Preview contacts before importing
+     */
+    public function previewImportContacts(Request $request)
+    {
+        if (! auth()->user()->can('supplier.create') && ! auth()->user()->can('customer.create')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        try {
+            if (! $request->hasFile('contacts_csv')) {
+                throw new \Exception('No file uploaded.');
+            }
+
+            $file = $request->file('contacts_csv');
+            $extension = strtolower($file->getClientOriginalExtension());
+            if (! in_array($extension, ['xls', 'xlsx', 'csv'])) {
+                throw new \Exception('Invalid file format. Please upload a .xls, .xlsx, or .csv file.');
+            }
+
+            $file_name = time() . '_' . $file->getClientOriginalName();
+            $file->storeAs('temp', $file_name);
+
+            $parsed_array = Excel::toArray([], $file);
+            $headers = $parsed_array[0][0] ?? [];
+            $rows = array_slice($parsed_array[0], 1, 100); // preview up to 100 rows
+
+            return view('contact.import_preview', compact('file_name', 'headers', 'rows'));
+
+        } catch (\Exception $e) {
+            $output = ['success' => 0, 'msg' => $e->getMessage()];
+            return redirect()->route('contacts.import')->with('notification', $output);
+        }
+    }
+
+    /**
      * Imports contacts
      *
      * @param  \Illuminate\Http\Request
@@ -1798,233 +1833,170 @@ class ContactController extends Controller
                 return $notAllowed;
             }
 
-            //Set maximum php execution time
             ini_set('max_execution_time', 0);
+            ini_set('memory_limit', -1);
 
+            // Support both direct upload and confirmed preview file
             if ($request->hasFile('contacts_csv')) {
                 $file = $request->file('contacts_csv');
-
                 $extension = strtolower($file->getClientOriginalExtension());
                 if (! in_array($extension, ['xls', 'xlsx', 'csv'])) {
                     throw new \Exception('Invalid file format. Please upload a .xls, .xlsx, or .csv file.');
                 }
-
                 $parsed_array = Excel::toArray([], $file);
-                //Remove header row
-                $imported_data = array_splice($parsed_array[0], 1);
-
-                $business_id = $request->session()->get('user.business_id');
-                $user_id = $request->session()->get('user.id');
-
-                $formated_data = [];
-
-                $is_valid = true;
-                $error_msg = '';
-
-                DB::beginTransaction();
-                foreach ($imported_data as $key => $value) {
-                    //Check if 27 no. of columns exists
-                    if (count($value) != 27) {
-                        $is_valid = false;
-                        $error_msg = 'Number of columns mismatch';
-                        break;
-                    }
-
-                    $row_no = $key + 1;
-                    $contact_array = [];
-
-                    //Check contact type
-                    $contact_type = '';
-                    $contact_types = [
-                        1 => 'customer',
-                        2 => 'supplier',
-                        3 => 'both',
-                    ];
-                    if (! empty($value[0])) {
-                        $contact_type = strtolower(trim($value[0]));
-                        if (in_array($contact_type, [1, 2, 3])) {
-                            $contact_array['type'] = $contact_types[$contact_type];
-                            $contact_type = $contact_types[$contact_type];
-                        } else {
-                            $is_valid = false;
-                            $error_msg = "Invalid contact type $contact_type in row no. $row_no";
-                            break;
-                        }
-                    } else {
-                        $is_valid = false;
-                        $error_msg = "Contact type is required in row no. $row_no";
-                        break;
-                    }
-
-                    $contact_array['prefix'] = $value[1];
-                    //Check contact name
-                    if (! empty($value[2])) {
-                        $contact_array['first_name'] = $value[2];
-                    } else {
-                        $is_valid = false;
-                        $error_msg = "First name is required in row no. $row_no";
-                        break;
-                    }
-                    $contact_array['middle_name'] = $value[3];
-                    $contact_array['last_name'] = $value[4];
-                    $contact_array['name'] = implode(' ', [$contact_array['prefix'], $contact_array['first_name'], $contact_array['middle_name'], $contact_array['last_name']]);
-
-                    //Check business name
-                    if (! empty(trim($value[5]))) {
-                        $contact_array['supplier_business_name'] = $value[5];
-                    }
-
-                    //Check supplier fields
-                    if (in_array($contact_type, ['supplier', 'both'])) {
-                        //Check pay term
-                        if (trim($value[9]) != '') {
-                            $contact_array['pay_term_number'] = trim($value[9]);
-                        } else {
-                            $is_valid = false;
-                            $error_msg = "Pay term is required in row no. $row_no";
-                            break;
-                        }
-
-                        //Check pay period
-                        $pay_term_type = strtolower(trim($value[10]));
-                        if (in_array($pay_term_type, ['days', 'months'])) {
-                            $contact_array['pay_term_type'] = $pay_term_type;
-                        } else {
-                            $is_valid = false;
-                            $error_msg = "Pay term period is required in row no. $row_no";
-                            break;
-                        }
-                    }
-
-                    //Check contact ID
-                    if (! empty(trim($value[6]))) {
-                        $count = Contact::where('business_id', $business_id)
-                                    ->where('contact_id', $value[6])
-                                    ->count();
-
-                        if ($count == 0) {
-                            $contact_array['contact_id'] = $value[6];
-                        } else {
-                            $is_valid = false;
-                            $error_msg = "Contact ID already exists in row no. $row_no";
-                            break;
-                        }
-                    }
-
-                    //Tax number
-                    if (! empty(trim($value[7]))) {
-                        $contact_array['tax_number'] = $value[7];
-                    }
-
-                    //Check opening balance
-                    if (! empty(trim($value[8])) && $value[8] != 0) {
-                        $contact_array['opening_balance'] = trim($value[8]);
-                    }
-
-                    //Check credit limit
-                    if (trim($value[11]) != '' && in_array($contact_type, ['customer', 'both'])) {
-                        $contact_array['credit_limit'] = trim($value[11]);
-                    }
-
-                    //Check email
-                    if (! empty(trim($value[12]))) {
-                        if (filter_var(trim($value[12]), FILTER_VALIDATE_EMAIL)) {
-                            $contact_array['email'] = $value[12];
-                        } else {
-                            $is_valid = false;
-                            $error_msg = "Invalid email id in row no. $row_no";
-                            break;
-                        }
-                    }
-
-                    //Mobile number
-                    if (! empty(trim($value[13]))) {
-                        $contact_array['mobile'] = $value[13];
-                    } else {
-                        $is_valid = false;
-                        $error_msg = "Mobile number is required in row no. $row_no";
-                        break;
-                    }
-
-                    //Alt contact number
-                    $contact_array['alternate_number'] = $value[14];
-
-                    //Landline
-                    $contact_array['landline'] = $value[15];
-
-                    //City
-                    $contact_array['city'] = $value[16];
-
-                    //State
-                    $contact_array['state'] = $value[17];
-
-                    //Country
-                    $contact_array['country'] = $value[18];
-
-                    //address_line_1
-                    $contact_array['address_line_1'] = $value[19];
-                    //address_line_2
-                    $contact_array['address_line_2'] = $value[20];
-                    $contact_array['zip_code'] = $value[21];
-                    $contact_array['dob'] = $value[22];
-
-                    //Cust fields
-                    $contact_array['custom_field1'] = $value[23];
-                    $contact_array['custom_field2'] = $value[24];
-                    $contact_array['custom_field3'] = $value[25];
-                    $contact_array['custom_field4'] = $value[26];
-
-                    $formated_data[] = $contact_array;
-                }
-                if (! $is_valid) {
-                    throw new \Exception($error_msg);
-                }
-
-                if (! empty($formated_data)) {
-                    foreach ($formated_data as $contact_data) {
-                        $ref_count = $this->transactionUtil->setAndGetReferenceCount('contacts');
-                        //Set contact id if empty
-                        if (empty($contact_data['contact_id'])) {
-                            $contact_data['contact_id'] = $this->commonUtil->generateReferenceNumber('contacts', $ref_count);
-                        }
-
-                        $opening_balance = 0;
-                        if (isset($contact_data['opening_balance'])) {
-                            $opening_balance = $contact_data['opening_balance'];
-                            unset($contact_data['opening_balance']);
-                        }
-
-                        $contact_data['business_id'] = $business_id;
-                        $contact_data['created_by'] = $user_id;
-
-                        $contact = Contact::create($contact_data);
-
-                        if (! empty($opening_balance)) {
-                            $this->transactionUtil->createOpeningBalanceTransaction($business_id, $contact->id, $opening_balance, $user_id, false);
-                        }
-
-                        $this->transactionUtil->activityLog($contact, 'imported');
-                    }
-                }
-
-                $output = ['success' => 1,
-                    'msg' => __('product.file_imported_successfully'),
-                ];
-
-                DB::commit();
+            } elseif ($request->input('file_name')) {
+                $file_path = storage_path('app/temp/' . $request->input('file_name'));
+                $parsed_array = Excel::toArray([], $file_path);
+            } else {
+                throw new \Exception('No file provided.');
             }
-        } catch (\Exception $e) {
-            DB::rollBack();
-            \Log::emergency('File:'.$e->getFile().'Line:'.$e->getLine().'Message:'.$e->getMessage());
 
-            $output = ['success' => 0,
-                'msg' => $e->getMessage(),
+            $imported_data = array_splice($parsed_array[0], 1);
+
+            $business_id = $request->session()->get('user.business_id');
+            $user_id = $request->session()->get('user.id');
+
+            $formated_data = [];
+            $contact_types = [
+                'customer' => 'customer',
+                'supplier' => 'supplier',
+                'both'     => 'both',
+                '1'        => 'customer',
+                '2'        => 'supplier',
+                '3'        => 'both',
             ];
 
+            DB::beginTransaction();
+            foreach ($imported_data as $key => $value) {
+                // Skip completely empty rows
+                if (empty(array_filter($value, fn($v) => $v !== null && $v !== ''))) {
+                    continue;
+                }
+
+                $row_no = $key + 1;
+                $contact_array = [];
+
+                // Contact type — default to 'customer' if missing/invalid
+                $contact_type = strtolower(trim($value[0] ?? ''));
+                if (isset($contact_types[$contact_type])) {
+                    $contact_array['type'] = $contact_types[$contact_type];
+                    $contact_type = $contact_types[$contact_type];
+                } else {
+                    $contact_array['type'] = 'customer';
+                    $contact_type = 'customer';
+                }
+
+                $contact_array['prefix']      = $value[1] ?? null;
+                $contact_array['first_name']  = ! empty($value[2]) ? $value[2] : ($value[5] ?? 'Unknown');
+                $contact_array['middle_name'] = $value[3] ?? null;
+                $contact_array['last_name']   = $value[4] ?? null;
+                $contact_array['name']        = trim(implode(' ', array_filter([
+                    $contact_array['prefix'],
+                    $contact_array['first_name'],
+                    $contact_array['middle_name'],
+                    $contact_array['last_name'],
+                ])));
+
+                if (! empty(trim($value[5] ?? ''))) {
+                    $contact_array['supplier_business_name'] = $value[5];
+                }
+
+                // Supplier fields — only validate if type requires it
+                if (in_array($contact_type, ['supplier', 'both'])) {
+                    if (! empty(trim($value[9] ?? ''))) {
+                        $contact_array['pay_term_number'] = trim($value[9]);
+                    }
+                    $pay_term_type = strtolower(trim($value[10] ?? ''));
+                    if (in_array($pay_term_type, ['days', 'months'])) {
+                        $contact_array['pay_term_type'] = $pay_term_type;
+                    }
+                }
+
+                // Contact ID — skip if duplicate instead of blocking
+                if (! empty(trim($value[6] ?? ''))) {
+                    $exists = Contact::where('business_id', $business_id)
+                                ->where('contact_id', $value[6])
+                                ->exists();
+                    if (! $exists) {
+                        $contact_array['contact_id'] = $value[6];
+                    }
+                }
+
+                if (! empty(trim($value[7] ?? ''))) {
+                    $contact_array['tax_number'] = $value[7];
+                }
+
+                if (! empty(trim($value[8] ?? '')) && $value[8] != 0) {
+                    $contact_array['opening_balance'] = trim($value[8]);
+                }
+
+                if (! empty(trim($value[11] ?? '')) && in_array($contact_type, ['customer', 'both'])) {
+                    $contact_array['credit_limit'] = trim($value[11]);
+                }
+
+                if (! empty(trim($value[12] ?? ''))) {
+                    if (filter_var(trim($value[12]), FILTER_VALIDATE_EMAIL)) {
+                        $contact_array['email'] = $value[12];
+                    }
+                }
+
+                // Mobile — optional now
+                if (! empty(trim($value[13] ?? ''))) {
+                    $contact_array['mobile'] = $value[13];
+                }
+
+                $contact_array['alternate_number'] = $value[14] ?? null;
+                $contact_array['landline']         = $value[15] ?? null;
+                $contact_array['city']             = $value[16] ?? null;
+                $contact_array['state']            = $value[17] ?? null;
+                $contact_array['country']          = $value[18] ?? null;
+                $contact_array['address_line_1']   = $value[19] ?? null;
+                $contact_array['address_line_2']   = $value[20] ?? null;
+                $contact_array['zip_code']         = $value[21] ?? null;
+                $contact_array['dob']              = $value[22] ?? null;
+                $contact_array['custom_field1']    = $value[23] ?? null;
+                $contact_array['custom_field2']    = $value[24] ?? null;
+                $contact_array['custom_field3']    = $value[25] ?? null;
+                $contact_array['custom_field4']    = $value[26] ?? null;
+
+                $formated_data[] = $contact_array;
+            }
+
+            foreach ($formated_data as $contact_data) {
+                $ref_count = $this->transactionUtil->setAndGetReferenceCount('contacts');
+                if (empty($contact_data['contact_id'])) {
+                    $contact_data['contact_id'] = $this->commonUtil->generateReferenceNumber('contacts', $ref_count);
+                }
+
+                $opening_balance = 0;
+                if (isset($contact_data['opening_balance'])) {
+                    $opening_balance = $contact_data['opening_balance'];
+                    unset($contact_data['opening_balance']);
+                }
+
+                $contact_data['business_id'] = $business_id;
+                $contact_data['created_by']  = $user_id;
+
+                $contact = Contact::create($contact_data);
+
+                if (! empty($opening_balance)) {
+                    $this->transactionUtil->createOpeningBalanceTransaction($business_id, $contact->id, $opening_balance, $user_id, false);
+                }
+
+                $this->transactionUtil->activityLog($contact, 'imported');
+            }
+
+            $output = ['success' => 1, 'msg' => __('product.file_imported_successfully')];
+            DB::commit();
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::emergency('File:' . $e->getFile() . 'Line:' . $e->getLine() . 'Message:' . $e->getMessage());
+            $output = ['success' => 0, 'msg' => $e->getMessage()];
             return redirect()->route('contacts.import')->with('notification', $output);
         }
-        $type = ! empty($contact->type) && $contact->type != 'both' ? $contact->type : 'supplier';
 
+        $type = ! empty($contact->type) && $contact->type != 'both' ? $contact->type : 'supplier';
         return redirect()->action([\App\Http\Controllers\ContactController::class, 'index'], ['type' => $type])->with('status', $output);
     }
 
