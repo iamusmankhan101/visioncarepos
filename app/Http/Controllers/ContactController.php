@@ -1800,12 +1800,37 @@ class ContactController extends Controller
                 throw new \Exception('Invalid file format. Please upload a .xls, .xlsx, or .csv file.');
             }
 
+            // Validate file size (max 10MB)
+            if ($file->getSize() > 10 * 1024 * 1024) {
+                throw new \Exception('File size too large. Maximum allowed size is 10MB.');
+            }
+
+            // Validate file is not corrupted by attempting to read it
+            try {
+                $test_read = Excel::toArray([], $file);
+                if (empty($test_read) || empty($test_read[0])) {
+                    throw new \Exception('File appears to be empty or corrupted.');
+                }
+            } catch (\Exception $e) {
+                if (strpos($e->getMessage(), 'zip member') !== false || 
+                    strpos($e->getMessage(), 'corrupted') !== false ||
+                    strpos($e->getMessage(), 'Invalid file format') !== false) {
+                    throw new \Exception('The uploaded file is corrupted or has an invalid format. Please try re-saving the file in Excel and uploading again.');
+                }
+                throw $e;
+            }
+
             $file_name = time() . '_' . $file->getClientOriginalName();
             $file->storeAs('temp', $file_name);
 
             $parsed_array = Excel::toArray([], $file);
             $headers = $parsed_array[0][0] ?? [];
             $rows = array_slice($parsed_array[0], 1, 100); // preview up to 100 rows
+
+            // Filter out completely empty rows
+            $rows = array_filter($rows, function($row) {
+                return !empty(array_filter($row, fn($cell) => $cell !== null && $cell !== ''));
+            });
 
             return view('contact.import_preview', compact('file_name', 'headers', 'rows'));
 
@@ -1843,10 +1868,45 @@ class ContactController extends Controller
                 if (! in_array($extension, ['xls', 'xlsx', 'csv'])) {
                     throw new \Exception('Invalid file format. Please upload a .xls, .xlsx, or .csv file.');
                 }
-                $parsed_array = Excel::toArray([], $file);
+
+                // Validate file size (max 10MB)
+                if ($file->getSize() > 10 * 1024 * 1024) {
+                    throw new \Exception('File size too large. Maximum allowed size is 10MB.');
+                }
+
+                // Validate file is not corrupted
+                try {
+                    $parsed_array = Excel::toArray([], $file);
+                    if (empty($parsed_array) || empty($parsed_array[0])) {
+                        throw new \Exception('File appears to be empty or corrupted.');
+                    }
+                } catch (\Exception $e) {
+                    if (strpos($e->getMessage(), 'zip member') !== false || 
+                        strpos($e->getMessage(), 'corrupted') !== false ||
+                        strpos($e->getMessage(), 'Invalid file format') !== false) {
+                        throw new \Exception('The uploaded file is corrupted or has an invalid format. Please try re-saving the file in Excel and uploading again.');
+                    }
+                    throw $e;
+                }
             } elseif ($request->input('file_name')) {
                 $file_path = storage_path('app/temp/' . $request->input('file_name'));
-                $parsed_array = Excel::toArray([], $file_path);
+                if (!file_exists($file_path)) {
+                    throw new \Exception('Uploaded file not found. Please upload the file again.');
+                }
+                
+                try {
+                    $parsed_array = Excel::toArray([], $file_path);
+                    if (empty($parsed_array) || empty($parsed_array[0])) {
+                        throw new \Exception('File appears to be empty or corrupted.');
+                    }
+                } catch (\Exception $e) {
+                    if (strpos($e->getMessage(), 'zip member') !== false || 
+                        strpos($e->getMessage(), 'corrupted') !== false ||
+                        strpos($e->getMessage(), 'Invalid file format') !== false) {
+                        throw new \Exception('The uploaded file is corrupted or has an invalid format. Please try re-saving the file in Excel and uploading again.');
+                    }
+                    throw $e;
+                }
             } else {
                 throw new \Exception('No file provided.');
             }
