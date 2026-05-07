@@ -38,17 +38,17 @@ class AppServiceProvider extends ServiceProvider
             mkdir($temp_dir, 0755, true);
         }
         
-        // Set PhpSpreadsheet temp directory
-        try {
-            \PhpOffice\PhpSpreadsheet\Settings::setLibXmlLoaderOptions(LIBXML_DTDLOAD | LIBXML_DTDATTR | LIBXML_NOENT);
-            \PhpOffice\PhpSpreadsheet\Settings::setTempDir($temp_dir);
-        } catch (\Exception $e) {
-            \Log::warning('Could not set PhpSpreadsheet temp dir: ' . $e->getMessage());
-        }
-        
+        // Set environment variables for temp directory
         putenv('TMPDIR=' . $temp_dir);
         putenv('TEMP=' . $temp_dir);
         putenv('TMP=' . $temp_dir);
+        
+        // Set PhpSpreadsheet cache settings to use memory instead of temp files
+        try {
+            \PhpOffice\PhpSpreadsheet\Settings::setCache(new \PhpOffice\PhpSpreadsheet\Collection\Memory());
+        } catch (\Exception $e) {
+            \Log::warning('Could not set PhpSpreadsheet cache: ' . $e->getMessage());
+        }
 
         if (config('app.debug')) {
             error_reporting(E_ALL & ~E_USER_DEPRECATED);
