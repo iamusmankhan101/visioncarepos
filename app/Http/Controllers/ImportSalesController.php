@@ -535,9 +535,18 @@ class ImportSalesController extends Controller
             //check empty
             $phone_mapped = $customer_phone_key !== false;
             $email_mapped = $customer_email_key !== false;
+            
+            $phone_value = $formatted_array[$key]['customer_phone_number'] ?? '';
+            $email_value = $formatted_array[$key]['customer_email'] ?? '';
+            
+            // Debug: log the actual values
+            \Log::info("Row $row_index - Phone mapped: " . ($phone_mapped ? 'YES' : 'NO') . 
+                      ", Email mapped: " . ($email_mapped ? 'YES' : 'NO') . 
+                      ", Phone value: '$phone_value', Email value: '$email_value'");
+            
             if (($phone_mapped || $email_mapped) &&
-                (trim($formatted_array[$key]['customer_phone_number'] ?? '') === '') &&
-                (trim($formatted_array[$key]['customer_email'] ?? '') === '')) {
+                (trim($phone_value) === '') &&
+                (trim($email_value) === '')) {
                 throw new \Exception(__('lang_v1.email_or_phone_cannot_be_empty_in_row', ['row' => $row_index]));
             }
             if (empty($formatted_array[$key]['product']) && empty($formatted_array[$key]['sku'])) {
