@@ -513,8 +513,9 @@ class ImportSalesController extends Controller
         foreach ($imported_data as $key => $value) {
             // Debug: show what's actually in the row
             if ($row_index == 2) {
-                $debug_row = "Row data: " . json_encode($value);
-                \Log::info($debug_row);
+                $debug_row = "Row 2 actual data: " . json_encode($value);
+                $debug_keys = "Import fields mapping: phone_key=$customer_phone_key, email_key=$customer_email_key";
+                throw new \Exception("DEBUG - $debug_row | $debug_keys");
             }
             
             $formatted_array[$key]['invoice_no'] = $invoice_number_key !== false ? ($value[$invoice_number_key] ?? null) : null;
