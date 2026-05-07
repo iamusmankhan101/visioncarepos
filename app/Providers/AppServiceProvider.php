@@ -32,6 +32,15 @@ class AppServiceProvider extends ServiceProvider
         ini_set('memory_limit', '-1');
         set_time_limit(0);
 
+        // Set custom temp directory for file operations
+        $temp_dir = storage_path('app/temp');
+        if (!is_dir($temp_dir)) {
+            mkdir($temp_dir, 0755, true);
+        }
+        putenv('TMPDIR=' . $temp_dir);
+        putenv('TEMP=' . $temp_dir);
+        putenv('TMP=' . $temp_dir);
+
         if (config('app.debug')) {
             error_reporting(E_ALL & ~E_USER_DEPRECATED);
         } else {
