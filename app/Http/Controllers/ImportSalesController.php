@@ -511,26 +511,26 @@ class ImportSalesController extends Controller
 
         $row_index = 2;
         foreach ($imported_data as $key => $value) {
-            $formatted_array[$key]['invoice_no'] = $invoice_number_key !== false ? $value[$invoice_number_key] : null;
-            $formatted_array[$key]['customer_name'] = $customer_name_key !== false ? $value[$customer_name_key] : null;
-            $formatted_array[$key]['customer_phone_number'] = $customer_phone_key !== false ? $value[$customer_phone_key] : null;
-            $formatted_array[$key]['customer_email'] = $customer_email_key !== false ? $value[$customer_email_key] : null;
-            $formatted_array[$key]['date'] = $date_key !== false ? $value[$date_key] : null;
-            $formatted_array[$key]['product'] = $product_key !== false ? $value[$product_key] : null;
-            $formatted_array[$key]['sku'] = $sku_key !== false ? $value[$sku_key] : null;
-            $formatted_array[$key]['quantity'] = $quantity_key !== false ? $value[$quantity_key] : null;
-            $formatted_array[$key]['unit_price'] = $unit_price_key !== false ? $value[$unit_price_key] : null;
-            $formatted_array[$key]['item_tax'] = $item_tax_key !== false ? $value[$item_tax_key] : null;
-            $formatted_array[$key]['item_discount'] = $item_discount_key !== false ? $value[$item_discount_key] : null;
-            $formatted_array[$key]['item_description'] = $item_description_key !== false ? $value[$item_description_key] : null;
-            $formatted_array[$key]['order_total'] = $order_total_key !== false ? $value[$order_total_key] : null;
-            $formatted_array[$key]['unit'] = $unit_key !== false ? $value[$unit_key] : null;
-            $formatted_array[$key]['types_of_service'] = $tos_key !== false ? $value[$tos_key] : null;
-            $formatted_array[$key]['service_custom_field1'] = $service_custom_field1_key !== false ? $value[$service_custom_field1_key] : null;
-            $formatted_array[$key]['service_custom_field2'] = $service_custom_field2_key !== false ? $value[$service_custom_field2_key] : null;
-            $formatted_array[$key]['service_custom_field3'] = $service_custom_field3_key !== false ? $value[$service_custom_field3_key] : null;
-            $formatted_array[$key]['service_custom_field4'] = $service_custom_field4_key !== false ? $value[$service_custom_field4_key] : null;
-            $formatted_array[$key]['group_by'] = $value[$group_by];
+            $formatted_array[$key]['invoice_no'] = $invoice_number_key !== false ? ($value[$invoice_number_key] ?? null) : null;
+            $formatted_array[$key]['customer_name'] = $customer_name_key !== false ? ($value[$customer_name_key] ?? null) : null;
+            $formatted_array[$key]['customer_phone_number'] = $customer_phone_key !== false ? ($value[$customer_phone_key] ?? null) : null;
+            $formatted_array[$key]['customer_email'] = $customer_email_key !== false ? ($value[$customer_email_key] ?? null) : null;
+            $formatted_array[$key]['date'] = $date_key !== false ? ($value[$date_key] ?? null) : null;
+            $formatted_array[$key]['product'] = $product_key !== false ? ($value[$product_key] ?? null) : null;
+            $formatted_array[$key]['sku'] = $sku_key !== false ? ($value[$sku_key] ?? null) : null;
+            $formatted_array[$key]['quantity'] = $quantity_key !== false ? ($value[$quantity_key] ?? null) : null;
+            $formatted_array[$key]['unit_price'] = $unit_price_key !== false ? ($value[$unit_price_key] ?? null) : null;
+            $formatted_array[$key]['item_tax'] = $item_tax_key !== false ? ($value[$item_tax_key] ?? null) : null;
+            $formatted_array[$key]['item_discount'] = $item_discount_key !== false ? ($value[$item_discount_key] ?? null) : null;
+            $formatted_array[$key]['item_description'] = $item_description_key !== false ? ($value[$item_description_key] ?? null) : null;
+            $formatted_array[$key]['order_total'] = $order_total_key !== false ? ($value[$order_total_key] ?? null) : null;
+            $formatted_array[$key]['unit'] = $unit_key !== false ? ($value[$unit_key] ?? null) : null;
+            $formatted_array[$key]['types_of_service'] = $tos_key !== false ? ($value[$tos_key] ?? null) : null;
+            $formatted_array[$key]['service_custom_field1'] = $service_custom_field1_key !== false ? ($value[$service_custom_field1_key] ?? null) : null;
+            $formatted_array[$key]['service_custom_field2'] = $service_custom_field2_key !== false ? ($value[$service_custom_field2_key] ?? null) : null;
+            $formatted_array[$key]['service_custom_field3'] = $service_custom_field3_key !== false ? ($value[$service_custom_field3_key] ?? null) : null;
+            $formatted_array[$key]['service_custom_field4'] = $service_custom_field4_key !== false ? ($value[$service_custom_field4_key] ?? null) : null;
+            $formatted_array[$key]['group_by'] = $value[$group_by] ?? null;
 
             //check empty
             $phone_mapped = $customer_phone_key !== false;
@@ -539,15 +539,11 @@ class ImportSalesController extends Controller
             $phone_value = $formatted_array[$key]['customer_phone_number'] ?? '';
             $email_value = $formatted_array[$key]['customer_email'] ?? '';
             
-            // Debug: log the actual values
-            \Log::info("Row $row_index - Phone mapped: " . ($phone_mapped ? 'YES' : 'NO') . 
-                      ", Email mapped: " . ($email_mapped ? 'YES' : 'NO') . 
-                      ", Phone value: '$phone_value', Email value: '$email_value'");
-            
             if (($phone_mapped || $email_mapped) &&
                 (trim($phone_value) === '') &&
                 (trim($email_value) === '')) {
-                throw new \Exception(__('lang_v1.email_or_phone_cannot_be_empty_in_row', ['row' => $row_index]));
+                $debug_info = "Phone key: $customer_phone_key, Email key: $customer_email_key, Phone val: '$phone_value', Email val: '$email_value'";
+                throw new \Exception(__('lang_v1.email_or_phone_cannot_be_empty_in_row', ['row' => $row_index]) . " (Debug: $debug_info)");
             }
             if (empty($formatted_array[$key]['product']) && empty($formatted_array[$key]['sku'])) {
                 throw new \Exception(__('lang_v1.product_cannot_be_empty_in_row', ['row' => $row_index]));
