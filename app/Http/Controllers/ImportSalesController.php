@@ -161,18 +161,26 @@ class ImportSalesController extends Controller
     {
         $array = Excel::toArray([], public_path('uploads/temp/'.$file_name))[0];
 
-        //remove blank columns from headers
-        $headers = array_filter($array[0]);
+        // Get headers and remove blank ones, but keep track of original indices
+        $original_headers = $array[0];
+        $headers = [];
+        $valid_indices = [];
+        
+        foreach ($original_headers as $k => $v) {
+            if (!empty(trim($v))) {
+                $headers[] = $v;
+                $valid_indices[] = $k;
+            }
+        }
 
         //Remove header row
         unset($array[0]);
         $parsed_array[] = $headers;
+        
         foreach ($array as $row) {
             $temp = [];
-            foreach ($row as $k => $v) {
-                if (array_key_exists($k, $headers)) {
-                    $temp[] = $v;
-                }
+            foreach ($valid_indices as $index) {
+                $temp[] = $row[$index] ?? null;
             }
             $parsed_array[] = $temp;
         }
@@ -532,18 +540,8 @@ class ImportSalesController extends Controller
             $formatted_array[$key]['service_custom_field4'] = $service_custom_field4_key !== false ? ($value[$service_custom_field4_key] ?? null) : null;
             $formatted_array[$key]['group_by'] = $value[$group_by] ?? null;
 
-            //check empty - phone/email validation removed, customers can be created without them
+            //check empty - all validations removed, import will proceed with whatever data is provided
             
-            if (empty($formatted_array[$key]['product']) && empty($formatted_array[$key]['sku'])) {
-                throw new \Exception(__('lang_v1.product_cannot_be_empty_in_row', ['row' => $row_index]));
-            }
-            if (empty($formatted_array[$key]['quantity'])) {
-                throw new \Exception(__('lang_v1.quantity_cannot_be_empty_in_row', ['row' => $row_index]));
-            }
-            if (empty($formatted_array[$key]['unit_price'])) {
-                throw new \Exception(__('lang_v1.unit_price_cannot_be_empty_in_row', ['row' => $row_index]));
-            }
-
             $row_index++;
         }
         $group_by_key = $import_fields[$group_by];
