@@ -1790,6 +1790,13 @@ class ContactController extends Controller
         }
 
         try {
+            // Set temp directory for PhpSpreadsheet
+            $temp_dir = storage_path('app/temp');
+            if (!is_dir($temp_dir)) {
+                mkdir($temp_dir, 0755, true);
+            }
+            putenv('TMPDIR=' . $temp_dir);
+            
             if (! $request->hasFile('contacts_csv')) {
                 throw new \Exception('No file uploaded.');
             }
@@ -1853,6 +1860,13 @@ class ContactController extends Controller
         }
 
         try {
+            // Set temp directory for PhpSpreadsheet
+            $temp_dir = storage_path('app/temp');
+            if (!is_dir($temp_dir)) {
+                mkdir($temp_dir, 0755, true);
+            }
+            putenv('TMPDIR=' . $temp_dir);
+            
             $notAllowed = $this->commonUtil->notAllowedInDemo();
             if (! empty($notAllowed)) {
                 return $notAllowed;

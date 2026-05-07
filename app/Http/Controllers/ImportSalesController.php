@@ -93,6 +93,13 @@ class ImportSalesController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
+        // Set temp directory for PhpSpreadsheet
+        $temp_dir = storage_path('app/temp');
+        if (!is_dir($temp_dir)) {
+            mkdir($temp_dir, 0755, true);
+        }
+        putenv('TMPDIR=' . $temp_dir);
+
         $notAllowed = $this->businessUtil->notAllowedInDemo();
         if (! empty($notAllowed)) {
             return $notAllowed;
@@ -183,6 +190,13 @@ class ImportSalesController extends Controller
         }
 
         try {
+            // Set temp directory for PhpSpreadsheet
+            $temp_dir = storage_path('app/temp');
+            if (!is_dir($temp_dir)) {
+                mkdir($temp_dir, 0755, true);
+            }
+            putenv('TMPDIR=' . $temp_dir);
+            
             DB::beginTransaction();
 
             $file_name = $request->input('file_name');
