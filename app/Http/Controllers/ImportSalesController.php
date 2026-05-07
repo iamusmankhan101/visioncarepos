@@ -539,19 +539,8 @@ class ImportSalesController extends Controller
             $formatted_array[$key]['service_custom_field4'] = $service_custom_field4_key !== false ? ($value[$service_custom_field4_key] ?? null) : null;
             $formatted_array[$key]['group_by'] = $value[$group_by] ?? null;
 
-            //check empty
-            $phone_mapped = $customer_phone_key !== false;
-            $email_mapped = $customer_email_key !== false;
+            //check empty - phone/email validation removed, customers can be created without them
             
-            $phone_value = $formatted_array[$key]['customer_phone_number'] ?? '';
-            $email_value = $formatted_array[$key]['customer_email'] ?? '';
-            
-            if (($phone_mapped || $email_mapped) &&
-                (trim($phone_value) === '') &&
-                (trim($email_value) === '')) {
-                $debug_info = "Phone key: $customer_phone_key, Email key: $customer_email_key, Phone val: '$phone_value', Email val: '$email_value', Array keys: " . implode(',', array_keys($value));
-                throw new \Exception(__('lang_v1.email_or_phone_cannot_be_empty_in_row', ['row' => $row_index]) . " (Debug: $debug_info)");
-            }
             if (empty($formatted_array[$key]['product']) && empty($formatted_array[$key]['sku'])) {
                 throw new \Exception(__('lang_v1.product_cannot_be_empty_in_row', ['row' => $row_index]));
             }
