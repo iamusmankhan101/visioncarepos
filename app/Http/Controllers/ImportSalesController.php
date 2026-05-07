@@ -161,28 +161,16 @@ class ImportSalesController extends Controller
     {
         $array = Excel::toArray([], public_path('uploads/temp/'.$file_name))[0];
 
-        // Get headers and remove blank ones, but keep track of original indices
-        $original_headers = $array[0];
-        $headers = [];
-        $valid_indices = [];
-        
-        foreach ($original_headers as $k => $v) {
-            if (!empty(trim($v))) {
-                $headers[] = $v;
-                $valid_indices[] = $k;
-            }
-        }
+        // Don't filter headers - just use them as-is
+        $headers = $array[0];
 
         //Remove header row
         unset($array[0]);
         $parsed_array[] = $headers;
         
+        // Add all data rows as-is
         foreach ($array as $row) {
-            $temp = [];
-            foreach ($valid_indices as $index) {
-                $temp[] = $row[$index] ?? null;
-            }
-            $parsed_array[] = $temp;
+            $parsed_array[] = $row;
         }
 
         return $parsed_array;
