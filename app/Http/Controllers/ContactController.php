@@ -1795,6 +1795,7 @@ class ContactController extends Controller
             if (!is_dir($temp_dir)) {
                 mkdir($temp_dir, 0755, true);
             }
+            \PhpOffice\PhpSpreadsheet\Settings::setTempDir($temp_dir);
             putenv('TMPDIR=' . $temp_dir);
             
             if (! $request->hasFile('contacts_csv')) {
@@ -1865,7 +1866,7 @@ class ContactController extends Controller
             if (!is_dir($temp_dir)) {
                 mkdir($temp_dir, 0755, true);
             }
-            putenv('TMPDIR=' . $temp_dir);
+            \PhpOffice\PhpSpreadsheet\Settings::setTempDir($temp_dir);
             
             $notAllowed = $this->commonUtil->notAllowedInDemo();
             if (! empty($notAllowed)) {

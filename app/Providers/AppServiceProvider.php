@@ -37,6 +37,15 @@ class AppServiceProvider extends ServiceProvider
         if (!is_dir($temp_dir)) {
             mkdir($temp_dir, 0755, true);
         }
+        
+        // Set PhpSpreadsheet temp directory
+        try {
+            \PhpOffice\PhpSpreadsheet\Settings::setLibXmlLoaderOptions(LIBXML_DTDLOAD | LIBXML_DTDATTR | LIBXML_NOENT);
+            \PhpOffice\PhpSpreadsheet\Settings::setTempDir($temp_dir);
+        } catch (\Exception $e) {
+            \Log::warning('Could not set PhpSpreadsheet temp dir: ' . $e->getMessage());
+        }
+        
         putenv('TMPDIR=' . $temp_dir);
         putenv('TEMP=' . $temp_dir);
         putenv('TMP=' . $temp_dir);

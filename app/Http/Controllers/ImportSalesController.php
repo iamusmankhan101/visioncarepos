@@ -98,7 +98,7 @@ class ImportSalesController extends Controller
         if (!is_dir($temp_dir)) {
             mkdir($temp_dir, 0755, true);
         }
-        putenv('TMPDIR=' . $temp_dir);
+        \PhpOffice\PhpSpreadsheet\Settings::setTempDir($temp_dir);
 
         $notAllowed = $this->businessUtil->notAllowedInDemo();
         if (! empty($notAllowed)) {
@@ -195,7 +195,7 @@ class ImportSalesController extends Controller
             if (!is_dir($temp_dir)) {
                 mkdir($temp_dir, 0755, true);
             }
-            putenv('TMPDIR=' . $temp_dir);
+            \PhpOffice\PhpSpreadsheet\Settings::setTempDir($temp_dir);
             
             DB::beginTransaction();
 
