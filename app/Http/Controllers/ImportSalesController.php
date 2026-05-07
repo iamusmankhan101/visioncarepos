@@ -536,8 +536,8 @@ class ImportSalesController extends Controller
             $phone_mapped = $customer_phone_key !== false;
             $email_mapped = $customer_email_key !== false;
             if (($phone_mapped || $email_mapped) &&
-                empty($formatted_array[$key]['customer_phone_number']) &&
-                empty($formatted_array[$key]['customer_email'])) {
+                (trim($formatted_array[$key]['customer_phone_number'] ?? '') === '') &&
+                (trim($formatted_array[$key]['customer_email'] ?? '') === '')) {
                 throw new \Exception(__('lang_v1.email_or_phone_cannot_be_empty_in_row', ['row' => $row_index]));
             }
             if (empty($formatted_array[$key]['product']) && empty($formatted_array[$key]['sku'])) {
