@@ -1814,13 +1814,19 @@ class ContactController extends Controller
                 throw new \Exception('File size too large. Maximum allowed size is 10MB.');
             }
 
-            // Validate file is not corrupted by attempting to read it
+            // Move file to our temp directory first to avoid upload temp file issues
+            $file_name = time() . '_' . $file->getClientOriginalName();
+            $file_path = public_path('uploads/temp/' . $file_name);
+            $file->move(public_path('uploads/temp'), $file_name);
+
+            // Now read from our controlled location
             try {
-                $test_read = Excel::toArray([], $file);
-                if (empty($test_read) || empty($test_read[0])) {
+                $parsed_array = Excel::toArray([], $file_path);
+                if (empty($parsed_array) || empty($parsed_array[0])) {
                     throw new \Exception('File appears to be empty or corrupted.');
                 }
             } catch (\Exception $e) {
+                @unlink($file_path);
                 if (strpos($e->getMessage(), 'zip member') !== false || 
                     strpos($e->getMessage(), 'corrupted') !== false ||
                     strpos($e->getMessage(), 'Invalid file format') !== false) {
@@ -1829,10 +1835,6 @@ class ContactController extends Controller
                 throw $e;
             }
 
-            $file_name = time() . '_' . $file->getClientOriginalName();
-            $file->move(public_path('uploads/temp'), $file_name);
-
-            $parsed_array = Excel::toArray([], $file);
             $headers = $parsed_array[0][0] ?? [];
             $rows = array_slice($parsed_array[0], 1, 100); // preview up to 100 rows
 
