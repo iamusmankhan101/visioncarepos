@@ -1790,11 +1790,13 @@ class ContactController extends Controller
         }
 
         try {
-            // Set temp directory
+            // Set temp directory using multiple methods
             $temp_dir = storage_path('app/temp');
             if (!is_dir($temp_dir)) {
                 mkdir($temp_dir, 0755, true);
             }
+            ini_set('upload_tmp_dir', $temp_dir);
+            ini_set('sys_temp_dir', $temp_dir);
             putenv('TMPDIR=' . $temp_dir);
             
             if (! $request->hasFile('contacts_csv')) {
@@ -1860,11 +1862,13 @@ class ContactController extends Controller
         }
 
         try {
-            // Set temp directory
+            // Set temp directory using multiple methods
             $temp_dir = storage_path('app/temp');
             if (!is_dir($temp_dir)) {
                 mkdir($temp_dir, 0755, true);
             }
+            ini_set('upload_tmp_dir', $temp_dir);
+            ini_set('sys_temp_dir', $temp_dir);
             putenv('TMPDIR=' . $temp_dir);
             
             $notAllowed = $this->commonUtil->notAllowedInDemo();

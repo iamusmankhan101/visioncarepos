@@ -38,7 +38,9 @@ class AppServiceProvider extends ServiceProvider
             mkdir($temp_dir, 0755, true);
         }
         
-        // Set environment variables for temp directory
+        // Set temp directory using multiple methods
+        ini_set('upload_tmp_dir', $temp_dir);
+        ini_set('sys_temp_dir', $temp_dir);
         putenv('TMPDIR=' . $temp_dir);
         putenv('TEMP=' . $temp_dir);
         putenv('TMP=' . $temp_dir);
