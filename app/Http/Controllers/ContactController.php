@@ -1821,7 +1821,7 @@ class ContactController extends Controller
             }
 
             $file_name = time() . '_' . $file->getClientOriginalName();
-            $file->storeAs('temp', $file_name);
+            $file->move(public_path('uploads/temp'), $file_name);
 
             $parsed_array = Excel::toArray([], $file);
             $headers = $parsed_array[0][0] ?? [];
@@ -1889,7 +1889,7 @@ class ContactController extends Controller
                     throw $e;
                 }
             } elseif ($request->input('file_name')) {
-                $file_path = storage_path('app/temp/' . $request->input('file_name'));
+                $file_path = public_path('uploads/temp/' . $request->input('file_name'));
                 if (!file_exists($file_path)) {
                     throw new \Exception('Uploaded file not found. Please upload the file again.');
                 }
@@ -2049,9 +2049,26 @@ class ContactController extends Controller
             $output = ['success' => 1, 'msg' => __('product.file_imported_successfully')];
             DB::commit();
 
+            // Clean up temp file
+            if ($request->input('file_name')) {
+                $temp_file = public_path('uploads/temp/' . $request->input('file_name'));
+                if (file_exists($temp_file)) {
+                    @unlink($temp_file);
+                }
+            }
+
         } catch (\Exception $e) {
             DB::rollBack();
             \Log::emergency('File:' . $e->getFile() . 'Line:' . $e->getLine() . 'Message:' . $e->getMessage());
+            
+            // Clean up temp file on error too
+            if ($request->input('file_name')) {
+                $temp_file = public_path('uploads/temp/' . $request->input('file_name'));
+                if (file_exists($temp_file)) {
+                    @unlink($temp_file);
+                }
+            }
+            
             $output = ['success' => 0, 'msg' => $e->getMessage()];
             return redirect()->route('contacts.import')->with('notification', $output);
         }
