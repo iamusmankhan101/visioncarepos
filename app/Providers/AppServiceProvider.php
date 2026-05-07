@@ -42,13 +42,6 @@ class AppServiceProvider extends ServiceProvider
         putenv('TMPDIR=' . $temp_dir);
         putenv('TEMP=' . $temp_dir);
         putenv('TMP=' . $temp_dir);
-        
-        // Set PhpSpreadsheet cache settings to use memory instead of temp files
-        try {
-            \PhpOffice\PhpSpreadsheet\Settings::setCache(new \PhpOffice\PhpSpreadsheet\Collection\Memory());
-        } catch (\Exception $e) {
-            \Log::warning('Could not set PhpSpreadsheet cache: ' . $e->getMessage());
-        }
 
         if (config('app.debug')) {
             error_reporting(E_ALL & ~E_USER_DEPRECATED);

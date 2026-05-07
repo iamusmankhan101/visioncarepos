@@ -1790,13 +1790,12 @@ class ContactController extends Controller
         }
 
         try {
-            // Set temp directory and use memory cache to avoid temp file issues
+            // Set temp directory
             $temp_dir = storage_path('app/temp');
             if (!is_dir($temp_dir)) {
                 mkdir($temp_dir, 0755, true);
             }
             putenv('TMPDIR=' . $temp_dir);
-            \PhpOffice\PhpSpreadsheet\Settings::setCache(new \PhpOffice\PhpSpreadsheet\Collection\Memory());
             
             if (! $request->hasFile('contacts_csv')) {
                 throw new \Exception('No file uploaded.');
@@ -1861,13 +1860,12 @@ class ContactController extends Controller
         }
 
         try {
-            // Set temp directory and use memory cache
+            // Set temp directory
             $temp_dir = storage_path('app/temp');
             if (!is_dir($temp_dir)) {
                 mkdir($temp_dir, 0755, true);
             }
             putenv('TMPDIR=' . $temp_dir);
-            \PhpOffice\PhpSpreadsheet\Settings::setCache(new \PhpOffice\PhpSpreadsheet\Collection\Memory());
             
             $notAllowed = $this->commonUtil->notAllowedInDemo();
             if (! empty($notAllowed)) {

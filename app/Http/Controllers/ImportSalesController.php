@@ -93,13 +93,12 @@ class ImportSalesController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        // Set temp directory and use memory cache
+        // Set temp directory
         $temp_dir = storage_path('app/temp');
         if (!is_dir($temp_dir)) {
             mkdir($temp_dir, 0755, true);
         }
         putenv('TMPDIR=' . $temp_dir);
-        \PhpOffice\PhpSpreadsheet\Settings::setCache(new \PhpOffice\PhpSpreadsheet\Collection\Memory());
 
         $notAllowed = $this->businessUtil->notAllowedInDemo();
         if (! empty($notAllowed)) {
@@ -191,13 +190,12 @@ class ImportSalesController extends Controller
         }
 
         try {
-            // Set temp directory and use memory cache
+            // Set temp directory
             $temp_dir = storage_path('app/temp');
             if (!is_dir($temp_dir)) {
                 mkdir($temp_dir, 0755, true);
             }
             putenv('TMPDIR=' . $temp_dir);
-            \PhpOffice\PhpSpreadsheet\Settings::setCache(new \PhpOffice\PhpSpreadsheet\Collection\Memory());
             
             DB::beginTransaction();
 
