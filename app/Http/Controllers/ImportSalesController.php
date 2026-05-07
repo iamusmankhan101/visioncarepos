@@ -166,13 +166,13 @@ class ImportSalesController extends Controller
 
         //Remove header row
         unset($array[0]);
-        $parsed_array[] = array_values($headers); // Re-index headers to 0,1,2,3...
-        
+        $parsed_array[] = $headers;
         foreach ($array as $row) {
             $temp = [];
-            foreach ($headers as $k => $v) {
-                // Use the original key from headers to get the value
-                $temp[] = $row[$k] ?? null;
+            foreach ($row as $k => $v) {
+                if (array_key_exists($k, $headers)) {
+                    $temp[] = $v;
+                }
             }
             $parsed_array[] = $temp;
         }
@@ -511,13 +511,6 @@ class ImportSalesController extends Controller
 
         $row_index = 2;
         foreach ($imported_data as $key => $value) {
-            // Debug: show what's actually in the row
-            if ($row_index == 2) {
-                $debug_row = "Row 2 actual data: " . json_encode($value);
-                $debug_keys = "Import fields mapping: phone_key=$customer_phone_key, email_key=$customer_email_key";
-                throw new \Exception("DEBUG - $debug_row | $debug_keys");
-            }
-            
             $formatted_array[$key]['invoice_no'] = $invoice_number_key !== false ? ($value[$invoice_number_key] ?? null) : null;
             $formatted_array[$key]['customer_name'] = $customer_name_key !== false ? ($value[$customer_name_key] ?? null) : null;
             $formatted_array[$key]['customer_phone_number'] = $customer_phone_key !== false ? ($value[$customer_phone_key] ?? null) : null;
