@@ -292,9 +292,13 @@ class ImportSalesController extends Controller
                 $item_tax = 0;
                 $line_discount = ! empty($line_data['item_discount']) ? $line_data['item_discount'] : 0;
 
-                $unit_price = $line_data['unit_price'];
+                $unit_price = $line_data['unit_price'] ?? 0;
+                if (empty($unit_price) || $unit_price == 0) {
+                    // Skip lines with no price
+                    continue;
+                }
 
-                $price_before_tax = $line_data['unit_price'] - $line_discount;
+                $price_before_tax = $unit_price - $line_discount;
                 $price_inc_tax = $price_before_tax;
                 if (! empty($line_data['item_tax'])) {
                     $tax = TaxRate::where('business_id', $business_id)
@@ -324,21 +328,21 @@ class ImportSalesController extends Controller
                 $temp = [
                     'product_id' => $variation->product_id,
                     'variation_id' => $variation->id,
-                    'quantity' => $line_data['quantity'],
+                    'quantity' => $line_data['quantity'] ?? 1,
                     'unit_price' => $unit_price,
                     'unit_price_inc_tax' => $price_inc_tax,
                     'line_discount_type' => 'fixed',
                     'line_discount_amount' => $line_discount,
                     'item_tax' => $item_tax,
                     'tax_id' => $tax_id,
-                    'sell_line_note' => $line_data['item_description'],
+                    'sell_line_note' => $line_data['item_description'] ?? null,
                     'product_unit_id' => $product->unit_id,
                     'enable_stock' => $product->enable_stock,
                     'type' => $product->type,
                     'combo_variations' => $product->type == 'combo' ? $variation->combo_variations : [],
                 ];
 
-                $line_quantity = $line_data['quantity'];
+                $line_quantity = $line_data['quantity'] ?? 1;
                 if (! empty($line_data['unit'])) {
                     $unit_name = trim($line_data['unit']);
                     $unit = Unit::where('actual_name', $unit_name)
@@ -442,6 +446,22 @@ class ImportSalesController extends Controller
 
             $this->transactionUtil->createOrUpdateSellLines($transaction, $sell_lines, $location_id, false, null, [], false);
 
+            // Handle payment if total_paid is provided
+            if (!empty($first_sell_line['total_paid']) && $first_sell_line['total_paid'] > 0) {
+                $payment_method = $first_sell_line['payment_method'] ?? 'cash';
+                
+                $payment_data = [
+                    'amount' => $first_sell_line['total_paid'],
+                    'method' => $payment_method,
+                    'paid_on' => !empty($first_sell_line['date']) ? $first_sell_line['date'] : $now,
+                    'transaction_id' => $transaction->id,
+                    'business_id' => $business_id,
+                    'created_by' => auth()->user()->id,
+                ];
+                
+                \App\TransactionPayment::create($payment_data);
+            }
+
             foreach ($sell_lines as $line) {
                 if ($line['enable_stock']) {
                     $this->productUtil->decreaseProductQuantity(
@@ -518,6 +538,8 @@ class ImportSalesController extends Controller
         $item_discount_key = array_search('item_discount', $import_fields);
         $item_description_key = array_search('item_description', $import_fields);
         $order_total_key = array_search('order_total', $import_fields);
+        $total_paid_key = array_search('total_paid', $import_fields);
+        $payment_method_key = array_search('payment_method', $import_fields);
         $unit_key = array_search('unit', $import_fields);
         $tos_key = array_search('types_of_service', $import_fields);
         $service_custom_field1_key = array_search('service_custom_field1', $import_fields);
@@ -540,6 +562,8 @@ class ImportSalesController extends Controller
             $formatted_array[$key]['item_discount'] = $item_discount_key !== false ? ($value[$item_discount_key] ?? null) : null;
             $formatted_array[$key]['item_description'] = $item_description_key !== false ? ($value[$item_description_key] ?? null) : null;
             $formatted_array[$key]['order_total'] = $order_total_key !== false ? ($value[$order_total_key] ?? null) : null;
+            $formatted_array[$key]['total_paid'] = $total_paid_key !== false ? ($value[$total_paid_key] ?? null) : null;
+            $formatted_array[$key]['payment_method'] = $payment_method_key !== false ? ($value[$payment_method_key] ?? null) : null;
             $formatted_array[$key]['unit'] = $unit_key !== false ? ($value[$unit_key] ?? null) : null;
             $formatted_array[$key]['types_of_service'] = $tos_key !== false ? ($value[$tos_key] ?? null) : null;
             $formatted_array[$key]['service_custom_field1'] = $service_custom_field1_key !== false ? ($value[$service_custom_field1_key] ?? null) : null;
@@ -578,6 +602,8 @@ class ImportSalesController extends Controller
             'item_discount' => ['label' => __('lang_v1.item_discount')],
             'item_description' => ['label' => __('lang_v1.item_description')],
             'order_total' => ['label' => __('lang_v1.order_total')],
+            'total_paid' => ['label' => __('lang_v1.total_paid')],
+            'payment_method' => ['label' => __('lang_v1.payment_method')],
         ];
 
         $is_types_service_enabled = $this->moduleUtil->isModuleEnabled('types_of_service');
