@@ -166,13 +166,13 @@ class ImportSalesController extends Controller
 
         //Remove header row
         unset($array[0]);
-        $parsed_array[] = $headers;
+        $parsed_array[] = array_values($headers); // Re-index headers to 0,1,2,3...
+        
         foreach ($array as $row) {
             $temp = [];
-            foreach ($row as $k => $v) {
-                if (array_key_exists($k, $headers)) {
-                    $temp[] = $v;
-                }
+            foreach ($headers as $k => $v) {
+                // Use the original key from headers to get the value
+                $temp[] = $row[$k] ?? null;
             }
             $parsed_array[] = $temp;
         }
