@@ -511,6 +511,12 @@ class ImportSalesController extends Controller
 
         $row_index = 2;
         foreach ($imported_data as $key => $value) {
+            // Debug: show what's actually in the row
+            if ($row_index == 2) {
+                $debug_row = "Row data: " . json_encode($value);
+                \Log::info($debug_row);
+            }
+            
             $formatted_array[$key]['invoice_no'] = $invoice_number_key !== false ? ($value[$invoice_number_key] ?? null) : null;
             $formatted_array[$key]['customer_name'] = $customer_name_key !== false ? ($value[$customer_name_key] ?? null) : null;
             $formatted_array[$key]['customer_phone_number'] = $customer_phone_key !== false ? ($value[$customer_phone_key] ?? null) : null;
@@ -542,7 +548,7 @@ class ImportSalesController extends Controller
             if (($phone_mapped || $email_mapped) &&
                 (trim($phone_value) === '') &&
                 (trim($email_value) === '')) {
-                $debug_info = "Phone key: $customer_phone_key, Email key: $customer_email_key, Phone val: '$phone_value', Email val: '$email_value'";
+                $debug_info = "Phone key: $customer_phone_key, Email key: $customer_email_key, Phone val: '$phone_value', Email val: '$email_value', Array keys: " . implode(',', array_keys($value));
                 throw new \Exception(__('lang_v1.email_or_phone_cannot_be_empty_in_row', ['row' => $row_index]) . " (Debug: $debug_info)");
             }
             if (empty($formatted_array[$key]['product']) && empty($formatted_array[$key]['sku'])) {
