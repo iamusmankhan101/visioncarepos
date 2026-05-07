@@ -168,9 +168,19 @@ class ImportSalesController extends Controller
         unset($array[0]);
         $parsed_array[] = $headers;
         
-        // Add all data rows as-is
+        // Add all data rows, skip completely empty rows
         foreach ($array as $row) {
-            $parsed_array[] = $row;
+            // Skip if row is completely empty
+            $has_data = false;
+            foreach ($row as $cell) {
+                if (!empty($cell) && trim($cell) !== '') {
+                    $has_data = true;
+                    break;
+                }
+            }
+            if ($has_data) {
+                $parsed_array[] = $row;
+            }
         }
 
         return $parsed_array;
