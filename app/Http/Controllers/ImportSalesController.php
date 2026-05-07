@@ -286,7 +286,8 @@ class ImportSalesController extends Controller
                 }
 
                 if (empty($variation)) {
-                    throw new \Exception(__('lang_v1.import_sale_product_not_found', ['row' => $row_index, 'product_name' => $line_data['product'], 'sku' => $line_data['sku']]));
+                    // Skip this line if product not found
+                    continue;
                 }
 
                 $tax_id = null;
@@ -303,11 +304,14 @@ class ImportSalesController extends Controller
                                 ->first();
 
                     if (empty($tax)) {
-                        throw new \Exception(__('lang_v1.import_sale_tax_not_found', ['row' => $row_index, 'tax_name' => $line_data['item_tax']]));
+                        // Skip tax if not found
+                        $tax_id = null;
+                        $item_tax = 0;
+                    } else {
+                        $tax_id = $tax->id;
+                        $item_tax = $this->transactionUtil->calc_percentage($price_before_tax, $tax->amount);
+                        $price_inc_tax = $price_before_tax + $item_tax;
                     }
-                    $tax_id = $tax->id;
-                    $item_tax = $this->transactionUtil->calc_percentage($price_before_tax, $tax->amount);
-                    $price_inc_tax = $price_before_tax + $item_tax;
                 }
 
                 //check if date is correct
@@ -315,7 +319,7 @@ class ImportSalesController extends Controller
                     try {
                         \Carbon::parse($line_data['date']);
                     } catch (\Exception $e) {
-                        throw new \Exception(__('lang_v1.invalid_date_format_at', ['row' => $row_index]));
+                        // Skip invalid date, will use current date
                     }
                 }
 
@@ -344,14 +348,14 @@ class ImportSalesController extends Controller
                                 ->first();
 
                     if (empty($unit)) {
-                        throw new \Exception(__('lang_v1.import_sale_unit_not_found', ['row' => $row_index, 'unit_name' => $unit_name]));
-                    }
-
-                    //Check if sub unit
-                    if ($unit->id != $product->unit_id) {
-                        $temp['sub_unit_id'] = $unit->id;
-                        $temp['base_unit_multiplier'] = $unit->base_unit_multiplier;
-                        $line_quantity = ($line_quantity * $unit->base_unit_multiplier);
+                        // Skip unit conversion if not found
+                    } else {
+                        //Check if sub unit
+                        if ($unit->id != $product->unit_id) {
+                            $temp['sub_unit_id'] = $unit->id;
+                            $temp['base_unit_multiplier'] = $unit->base_unit_multiplier;
+                            $line_quantity = ($line_quantity * $unit->base_unit_multiplier);
+                        }
                     }
                 }
                 $order_total += ($temp['unit_price_inc_tax'] * $line_quantity);
@@ -390,7 +394,13 @@ class ImportSalesController extends Controller
                                     ->where('type', 'customer')
                                     ->first();
                     if (empty($contact)) {
-                        throw new \Exception("No customer found and no customer details provided in row {$row_index}.");
+                        // Create a default walk-in customer
+                        $contact = Contact::create([
+                            'business_id' => $business_id,
+                            'type' => 'customer',
+                            'name' => 'Walk-in Customer',
+                            'created_by' => auth()->user()->id,
+                        ]);
                     }
                 }
             }
@@ -415,14 +425,14 @@ class ImportSalesController extends Controller
                                                 ->first();
 
                 if (empty($types_of_service)) {
-                    throw new \Exception(__('lang_v1.types_of_servicet_not_found', ['row' => $row_index, 'types_of_service_name' => $first_sell_line['types_of_service']]));
+                    // Skip types of service if not found
+                } else {
+                    $sale_data['types_of_service_id'] = $types_of_service->id;
+                    $sale_data['service_custom_field_1'] = ! empty($first_sell_line['service_custom_field1']) ? $first_sell_line['service_custom_field1'] : null;
+                    $sale_data['service_custom_field_2'] = ! empty($first_sell_line['service_custom_field2']) ? $first_sell_line['service_custom_field2'] : null;
+                    $sale_data['service_custom_field_3'] = ! empty($first_sell_line['service_custom_field3']) ? $first_sell_line['service_custom_field3'] : null;
+                    $sale_data['service_custom_field_4'] = ! empty($first_sell_line['service_custom_field4']) ? $first_sell_line['service_custom_field4'] : null;
                 }
-
-                $sale_data['types_of_service_id'] = $types_of_service->id;
-                $sale_data['service_custom_field_1'] = ! empty($first_sell_line['service_custom_field1']) ? $first_sell_line['service_custom_field1'] : null;
-                $sale_data['service_custom_field_2'] = ! empty($first_sell_line['service_custom_field2']) ? $first_sell_line['service_custom_field2'] : null;
-                $sale_data['service_custom_field_3'] = ! empty($first_sell_line['service_custom_field3']) ? $first_sell_line['service_custom_field3'] : null;
-                $sale_data['service_custom_field_4'] = ! empty($first_sell_line['service_custom_field4']) ? $first_sell_line['service_custom_field4'] : null;
             }
 
             $invoice_total = [
