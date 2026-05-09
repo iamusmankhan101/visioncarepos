@@ -2042,18 +2042,20 @@ class ContactController extends Controller
                 $contact_array['custom_field6']    = $value[28] ?? null;
                 $contact_array['custom_field7']    = $value[29] ?? null;
                 $contact_array['custom_field8']    = $value[30] ?? null;
+                $contact_array['custom_field9']    = $value[31] ?? null;
+                $contact_array['custom_field10']   = $value[32] ?? null;
                 
-                // Optical prescription fields (columns 31-40)
-                $contact_array['r_dist_sph']       = $value[31] ?? null;
-                $contact_array['r_dist_cyl']       = $value[32] ?? null;
-                $contact_array['r_dist_axis']      = $value[33] ?? null;
-                $contact_array['r_near_sph']       = $value[34] ?? null;
-                $contact_array['r_near_cyl']       = $value[35] ?? null;
-                $contact_array['r_near_axis']      = $value[36] ?? null;
-                $contact_array['l_dist_sph']       = $value[37] ?? null;
-                $contact_array['l_dist_cyl']       = $value[38] ?? null;
-                $contact_array['l_dist_axis']      = $value[39] ?? null;
-                $contact_array['l_near_sph']       = $value[40] ?? null;
+                // Optical prescription fields (columns 33-42)
+                $contact_array['r_dist_sph']       = $value[33] ?? null;
+                $contact_array['r_dist_cyl']       = $value[34] ?? null;
+                $contact_array['r_dist_axis']      = $value[35] ?? null;
+                $contact_array['r_near_sph']       = $value[36] ?? null;
+                $contact_array['r_near_cyl']       = $value[37] ?? null;
+                $contact_array['r_near_axis']      = $value[38] ?? null;
+                $contact_array['l_dist_sph']       = $value[39] ?? null;
+                $contact_array['l_dist_cyl']       = $value[40] ?? null;
+                $contact_array['l_dist_axis']      = $value[41] ?? null;
+                $contact_array['l_near_sph']       = $value[42] ?? null;
 
                 $formated_data[] = $contact_array;
             }
