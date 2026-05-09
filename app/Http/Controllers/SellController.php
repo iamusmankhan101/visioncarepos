@@ -508,12 +508,6 @@ class SellController extends Controller
                 })
                 ->addColumn('contact_name', '@if(!empty($supplier_business_name)) {{$supplier_business_name}}, <br> @endif {{$name}}')
                 ->editColumn('total_items', '{{@format_quantity($total_items)}}')
-                ->filterColumn('contact_name', function ($query, $keyword) {
-                    $query->where(function ($q) use ($keyword) {
-                        $q->where('contacts.name', 'like', "%{$keyword}%")
-                        ->orWhere('contacts.supplier_business_name', 'like', "%{$keyword}%");
-                    });
-                })
                 ->addColumn('payment_methods', function ($row) use ($payment_types) {
                     $methods = array_unique($row->payment_lines->pluck('method')->toArray());
                     $count = count($methods);
@@ -661,6 +655,7 @@ class SellController extends Controller
                     $query->where(function ($q) use ($keyword) {
                         $q->where('transactions.invoice_no', 'like', "%{$keyword}%")
                           ->orWhere('contacts.name', 'like', "%{$keyword}%")
+                          ->orWhere('contacts.contact_id', 'like', "%{$keyword}%")
                           ->orWhere('contacts.supplier_business_name', 'like', "%{$keyword}%")
                           ->orWhere('contacts.mobile', 'like', "%{$keyword}%")
                           ->orWhere('bl.name', 'like', "%{$keyword}%")
