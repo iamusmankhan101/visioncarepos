@@ -1100,9 +1100,8 @@ class ContactController extends Controller
                     ->orderBy('id', 'asc') // Order by ID to identify primary customer
                     ->get();
                 
-                $phone_related_contacts = $all_phone_contacts->reject(function ($c) use ($id) {
-                    return $c->id == $id;
-                });
+                // Include ALL contacts with same phone (including current one)
+                $phone_related_contacts = $all_phone_contacts;
                 
                 $primary_customer_id = $all_phone_contacts->min('id');
                 $is_current_primary = $contact->id == $primary_customer_id;
@@ -1117,6 +1116,7 @@ class ContactController extends Controller
                         'contact_status' => $rc->contact_status ?? 'active',
                         'relationship_type' => 'family', // Default to family for phone-based relationships
                         'is_primary' => $rc->id == $primary_customer_id,
+                        'is_current' => $rc->id == $id, // Mark if this is the current contact being edited
                         'prescription' => [
                             'right_eye' => [
                                 'distance' => [
