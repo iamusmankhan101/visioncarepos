@@ -319,16 +319,16 @@
                   <i class="fa fa-arrow-right" style="color: #48b2ee;"></i> RIGHT EYE
                 </td>
                 <td style="font-weight: 600;">Distance</td>
-                <td>{!! Form::text('custom_field1', $contact->custom_field1, ['class' => 'form-control', 'placeholder' => 'e.g., -2.00']); !!}</td>
-                <td>{!! Form::text('custom_field2', $contact->custom_field2, ['class' => 'form-control', 'placeholder' => 'e.g., -1.00']); !!}</td>
-                <td>{!! Form::text('custom_field3', $contact->custom_field3, ['class' => 'form-control', 'placeholder' => 'e.g., 180']); !!}</td>
+                <td>{!! Form::text('r_dist_sph', $contact->r_dist_sph, ['class' => 'form-control', 'placeholder' => 'e.g., -2.00']); !!}</td>
+                <td>{!! Form::text('r_dist_cyl', $contact->r_dist_cyl, ['class' => 'form-control', 'placeholder' => 'e.g., -1.00']); !!}</td>
+                <td>{!! Form::text('r_dist_axis', $contact->r_dist_axis, ['class' => 'form-control', 'placeholder' => 'e.g., 180']); !!}</td>
               </tr>
               <!-- RIGHT EYE - Near -->
               <tr>
                 <td style="font-weight: 600;">Near</td>
-                <td>{!! Form::text('custom_field4', $contact->custom_field4, ['class' => 'form-control', 'placeholder' => 'e.g., -2.00']); !!}</td>
-                <td>{!! Form::text('custom_field5', $contact->custom_field5, ['class' => 'form-control', 'placeholder' => 'e.g., -1.00']); !!}</td>
-                <td>{!! Form::text('custom_field6', $contact->custom_field6, ['class' => 'form-control', 'placeholder' => 'e.g., 180']); !!}</td>
+                <td>{!! Form::text('r_near_sph', $contact->r_near_sph, ['class' => 'form-control', 'placeholder' => 'e.g., -2.00']); !!}</td>
+                <td>{!! Form::text('r_near_cyl', $contact->r_near_cyl, ['class' => 'form-control', 'placeholder' => 'e.g., -1.00']); !!}</td>
+                <td>{!! Form::text('r_near_axis', $contact->r_near_axis, ['class' => 'form-control', 'placeholder' => 'e.g., 180']); !!}</td>
               </tr>
               <!-- LEFT EYE - Distance -->
               <tr>
@@ -336,16 +336,17 @@
                   <i class="fa fa-arrow-left" style="color: #48b2ee;"></i> LEFT EYE
                 </td>
                 <td style="font-weight: 600;">Distance</td>
-                <td>{!! Form::text('custom_field7', $contact->custom_field7, ['class' => 'form-control', 'placeholder' => 'e.g., -2.00']); !!}</td>
-                <td>{!! Form::text('custom_field8', $contact->custom_field8, ['class' => 'form-control', 'placeholder' => 'e.g., -1.00']); !!}</td>
-                <td>{!! Form::text('custom_field9', $contact->custom_field9, ['class' => 'form-control', 'placeholder' => 'e.g., 180']); !!}</td>
+                <td>{!! Form::text('l_dist_sph', $contact->l_dist_sph, ['class' => 'form-control', 'placeholder' => 'e.g., -2.00']); !!}</td>
+                <td>{!! Form::text('l_dist_cyl', $contact->l_dist_cyl, ['class' => 'form-control', 'placeholder' => 'e.g., -1.00']); !!}</td>
+                <td>{!! Form::text('l_dist_axis', $contact->l_dist_axis, ['class' => 'form-control', 'placeholder' => 'e.g., 180']); !!}</td>
               </tr>
               <!-- LEFT EYE - Near -->
               <tr>
                 <td style="font-weight: 600;">Near</td>
-                <td>{!! Form::text('custom_field10', $contact->custom_field10, ['class' => 'form-control', 'placeholder' => 'e.g., -2.00']); !!}</td>
-                <td>{!! Form::text('shipping_custom_field_details[shipping_custom_field_1]', !empty($contact->shipping_custom_field_details['shipping_custom_field_1']) ? $contact->shipping_custom_field_details['shipping_custom_field_1'] : null, ['class' => 'form-control', 'placeholder' => 'e.g., -1.00']); !!}</td>
-                <td>{!! Form::text('shipping_custom_field_details[shipping_custom_field_2]', !empty($contact->shipping_custom_field_details['shipping_custom_field_2']) ? $contact->shipping_custom_field_details['shipping_custom_field_2'] : null, ['class' => 'form-control', 'placeholder' => 'e.g., 180']); !!}</td>
+                <td>{!! Form::text('l_near_sph', $contact->l_near_sph, ['class' => 'form-control', 'placeholder' => 'e.g., -2.00']); !!}</td>
+                <td colspan="2" style="background-color: #f8f9fa; text-align: center; color: #999;">
+                  <small><i class="fa fa-info-circle"></i> L-Near-Cyl and L-Near-Axis not currently tracked</small>
+                </td>
               </tr>
             </tbody>
           </table>
