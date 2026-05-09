@@ -649,6 +649,14 @@ class SellController extends Controller
             // Global search across all relevant columns
             $datatable->filter(function ($query) {
                 $keyword = request('search.value');
+                
+                // Debug logging
+                \Log::info('DataTable Global Search Filter', [
+                    'keyword' => $keyword,
+                    'has_keyword' => ($keyword !== null && $keyword !== ''),
+                    'request_search' => request('search')
+                ]);
+                
                 if ($keyword !== null && $keyword !== '') {
                     $query->where(function ($q) use ($keyword) {
                         $q->where('transactions.invoice_no', 'like', "%{$keyword}%")
@@ -669,6 +677,8 @@ class SellController extends Controller
                           ->orWhere('transactions.custom_field_3', 'like', "%{$keyword}%")
                           ->orWhere('transactions.custom_field_4', 'like', "%{$keyword}%");
                     });
+                    
+                    \Log::info('Applied global search filter for keyword: ' . $keyword);
                 }
             }, true);
 
