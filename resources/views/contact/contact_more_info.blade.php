@@ -43,16 +43,16 @@
                         <i class="fa fa-arrow-right" style="color: #48b2ee;"></i> RIGHT EYE
                     </td>
                     <td style="font-weight: 600;">Distance</td>
-                    <td>{{ $contact->custom_field1 ?? '-' }}</td>
-                    <td>{{ $contact->custom_field2 ?? '-' }}</td>
-                    <td>{{ $contact->custom_field3 ?? '-' }}</td>
+                    <td>{{ $contact->r_dist_sph ?? '-' }}</td>
+                    <td>{{ $contact->r_dist_cyl ?? '-' }}</td>
+                    <td>{{ $contact->r_dist_axis ?? '-' }}</td>
                 </tr>
                 <!-- RIGHT EYE - Near -->
                 <tr>
                     <td style="font-weight: 600;">Near</td>
-                    <td>{{ $contact->custom_field4 ?? '-' }}</td>
-                    <td>{{ $contact->custom_field5 ?? '-' }}</td>
-                    <td>{{ $contact->custom_field6 ?? '-' }}</td>
+                    <td>{{ $contact->r_near_sph ?? '-' }}</td>
+                    <td>{{ $contact->r_near_cyl ?? '-' }}</td>
+                    <td>{{ $contact->r_near_axis ?? '-' }}</td>
                 </tr>
                 <!-- LEFT EYE - Distance -->
                 <tr>
@@ -60,16 +60,17 @@
                         <i class="fa fa-arrow-left" style="color: #48b2ee;"></i> LEFT EYE
                     </td>
                     <td style="font-weight: 600;">Distance</td>
-                    <td>{{ $contact->custom_field7 ?? '-' }}</td>
-                    <td>{{ $contact->custom_field8 ?? '-' }}</td>
-                    <td>{{ $contact->custom_field9 ?? '-' }}</td>
+                    <td>{{ $contact->l_dist_sph ?? '-' }}</td>
+                    <td>{{ $contact->l_dist_cyl ?? '-' }}</td>
+                    <td>{{ $contact->l_dist_axis ?? '-' }}</td>
                 </tr>
                 <!-- LEFT EYE - Near -->
                 <tr>
                     <td style="font-weight: 600;">Near</td>
-                    <td>{{ $contact->custom_field10 ?? '-' }}</td>
-                    <td>{{ !empty($contact->shipping_custom_field_details['shipping_custom_field_1']) ? $contact->shipping_custom_field_details['shipping_custom_field_1'] : '-' }}</td>
-                    <td>{{ !empty($contact->shipping_custom_field_details['shipping_custom_field_2']) ? $contact->shipping_custom_field_details['shipping_custom_field_2'] : '-' }}</td>
+                    <td>{{ $contact->l_near_sph ?? '-' }}</td>
+                    <td colspan="2" style="background-color: #f8f9fa; text-align: center; color: #999;">
+                        <small><i class="fa fa-info-circle"></i> L-Near-Cyl and L-Near-Axis not currently tracked</small>
+                    </td>
                 </tr>
             </tbody>
         </table>
