@@ -2034,28 +2034,18 @@ class ContactController extends Controller
                 $contact_array['address_line_2']   = $value[20] ?? null;
                 $contact_array['zip_code']         = $value[21] ?? null;
                 $contact_array['dob']              = $value[22] ?? null;
-                $contact_array['custom_field1']    = $value[23] ?? null;
-                $contact_array['custom_field2']    = $value[24] ?? null;
-                $contact_array['custom_field3']    = $value[25] ?? null;
-                $contact_array['custom_field4']    = $value[26] ?? null;
-                $contact_array['custom_field5']    = $value[27] ?? null;
-                $contact_array['custom_field6']    = $value[28] ?? null;
-                $contact_array['custom_field7']    = $value[29] ?? null;
-                $contact_array['custom_field8']    = $value[30] ?? null;
-                $contact_array['custom_field9']    = $value[31] ?? null;
-                $contact_array['custom_field10']   = $value[32] ?? null;
                 
-                // Optical prescription fields (columns 33-42)
-                $contact_array['r_dist_sph']       = $value[33] ?? null;
-                $contact_array['r_dist_cyl']       = $value[34] ?? null;
-                $contact_array['r_dist_axis']      = $value[35] ?? null;
-                $contact_array['r_near_sph']       = $value[36] ?? null;
-                $contact_array['r_near_cyl']       = $value[37] ?? null;
-                $contact_array['r_near_axis']      = $value[38] ?? null;
-                $contact_array['l_dist_sph']       = $value[39] ?? null;
-                $contact_array['l_dist_cyl']       = $value[40] ?? null;
-                $contact_array['l_dist_axis']      = $value[41] ?? null;
-                $contact_array['l_near_sph']       = $value[42] ?? null;
+                // Optical prescription fields mapped to custom_field1-10
+                $contact_array['custom_field1']    = $value[23] ?? null; // R-Dist-Sph
+                $contact_array['custom_field2']    = $value[24] ?? null; // R-Dist-Cyl
+                $contact_array['custom_field3']    = $value[25] ?? null; // R-Dist-Axis
+                $contact_array['custom_field4']    = $value[26] ?? null; // R-Near-Sph
+                $contact_array['custom_field5']    = $value[27] ?? null; // R-Near-Cyl
+                $contact_array['custom_field6']    = $value[28] ?? null; // R-Near-Axis
+                $contact_array['custom_field7']    = $value[29] ?? null; // L-Dist-Sph
+                $contact_array['custom_field8']    = $value[30] ?? null; // L-Dist-Cyl
+                $contact_array['custom_field9']    = $value[31] ?? null; // L-Dist-Axis
+                $contact_array['custom_field10']   = $value[32] ?? null; // L-Near-Sph
 
                 $formated_data[] = $contact_array;
             }
