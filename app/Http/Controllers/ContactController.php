@@ -2038,6 +2038,18 @@ class ContactController extends Controller
                 $contact_array['custom_field2']    = $value[24] ?? null;
                 $contact_array['custom_field3']    = $value[25] ?? null;
                 $contact_array['custom_field4']    = $value[26] ?? null;
+                
+                // Optical prescription fields
+                $contact_array['r_dist_sph']       = $value[27] ?? null;
+                $contact_array['r_dist_cyl']       = $value[28] ?? null;
+                $contact_array['r_dist_axis']      = $value[29] ?? null;
+                $contact_array['r_near_sph']       = $value[30] ?? null;
+                $contact_array['r_near_cyl']       = $value[31] ?? null;
+                $contact_array['r_near_axis']      = $value[32] ?? null;
+                $contact_array['l_dist_sph']       = $value[33] ?? null;
+                $contact_array['l_dist_cyl']       = $value[34] ?? null;
+                $contact_array['l_dist_axis']      = $value[35] ?? null;
+                $contact_array['l_near_sph']       = $value[36] ?? null;
 
                 $formated_data[] = $contact_array;
             }
