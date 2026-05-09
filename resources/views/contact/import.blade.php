@@ -203,87 +203,52 @@
                         <td>&nbsp;</td>
                     </tr>
                     <tr>
-                        <td>27</td>
-                        <td>{{ $custom_labels['contact']['custom_field_4'] ?? __('lang_v1.contact_custom_field4') }} <small class="text-muted">(@lang('lang_v1.optional'))</small></td>
-                        <td>&nbsp;</td>
-                    </tr>
-                    <tr>
-                        <td>28</td>
-                        <td>{{ $custom_labels['contact']['custom_field_5'] ?? __('lang_v1.contact_custom_field5') }} <small class="text-muted">(@lang('lang_v1.optional'))</small></td>
-                        <td>&nbsp;</td>
-                    </tr>
-                    <tr>
-                        <td>29</td>
-                        <td>{{ $custom_labels['contact']['custom_field_6'] ?? __('lang_v1.contact_custom_field6') }} <small class="text-muted">(@lang('lang_v1.optional'))</small></td>
-                        <td>&nbsp;</td>
-                    </tr>
-                    <tr>
-                        <td>30</td>
-                        <td>{{ $custom_labels['contact']['custom_field_7'] ?? __('lang_v1.contact_custom_field7') }} <small class="text-muted">(@lang('lang_v1.optional'))</small></td>
-                        <td>&nbsp;</td>
-                    </tr>
-                    <tr>
-                        <td>31</td>
-                        <td>{{ $custom_labels['contact']['custom_field_8'] ?? __('lang_v1.contact_custom_field8') }} <small class="text-muted">(@lang('lang_v1.optional'))</small></td>
-                        <td>&nbsp;</td>
-                    </tr>
-                    <tr>
-                        <td>32</td>
-                        <td>{{ $custom_labels['contact']['custom_field_9'] ?? __('lang_v1.contact_custom_field9') }} <small class="text-muted">(@lang('lang_v1.optional'))</small></td>
-                        <td>&nbsp;</td>
-                    </tr>
-                    <tr>
-                        <td>33</td>
-                        <td>{{ $custom_labels['contact']['custom_field_10'] ?? __('lang_v1.contact_custom_field10') }} <small class="text-muted">(@lang('lang_v1.optional'))</small></td>
-                        <td>&nbsp;</td>
-                    </tr>
-                    <tr>
-                        <td>34</td>
+                        <td>24</td>
                         <td>R-Dist-Sph <small class="text-muted">(@lang('lang_v1.optional'))</small></td>
                         <td>Right Eye Distance Sphere</td>
                     </tr>
                     <tr>
-                        <td>35</td>
+                        <td>25</td>
                         <td>R-Dist-Cyl <small class="text-muted">(@lang('lang_v1.optional'))</small></td>
                         <td>Right Eye Distance Cylinder</td>
                     </tr>
                     <tr>
-                        <td>36</td>
+                        <td>26</td>
                         <td>R-Dist-Axis <small class="text-muted">(@lang('lang_v1.optional'))</small></td>
                         <td>Right Eye Distance Axis</td>
                     </tr>
                     <tr>
-                        <td>37</td>
+                        <td>27</td>
                         <td>R-Near-Sph <small class="text-muted">(@lang('lang_v1.optional'))</small></td>
                         <td>Right Eye Near Sphere</td>
                     </tr>
                     <tr>
-                        <td>38</td>
+                        <td>28</td>
                         <td>R-Near-Cyl <small class="text-muted">(@lang('lang_v1.optional'))</small></td>
                         <td>Right Eye Near Cylinder</td>
                     </tr>
                     <tr>
-                        <td>39</td>
+                        <td>29</td>
                         <td>R-Near-Axis <small class="text-muted">(@lang('lang_v1.optional'))</small></td>
                         <td>Right Eye Near Axis</td>
                     </tr>
                     <tr>
-                        <td>40</td>
+                        <td>30</td>
                         <td>L-Dist-Sph <small class="text-muted">(@lang('lang_v1.optional'))</small></td>
                         <td>Left Eye Distance Sphere</td>
                     </tr>
                     <tr>
-                        <td>41</td>
+                        <td>31</td>
                         <td>L-Dist-Cyl <small class="text-muted">(@lang('lang_v1.optional'))</small></td>
                         <td>Left Eye Distance Cylinder</td>
                     </tr>
                     <tr>
-                        <td>42</td>
+                        <td>32</td>
                         <td>L-Dist-Axis <small class="text-muted">(@lang('lang_v1.optional'))</small></td>
                         <td>Left Eye Distance Axis</td>
                     </tr>
                     <tr>
-                        <td>43</td>
+                        <td>33</td>
                         <td>L-Near-Sph <small class="text-muted">(@lang('lang_v1.optional'))</small></td>
                         <td>Left Eye Near Sphere</td>
                     </tr>
