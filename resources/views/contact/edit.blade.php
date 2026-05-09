@@ -991,11 +991,13 @@ $(document).on('click', '.add-related-customer', function(e) {
     e.preventDefault();
     e.stopPropagation();
     
-    // Get the current contact's group ID
-    var groupId = $('#customer_group_id_link').val();
+    // Trigger the inline form toggle instead of opening popup
+    $('#toggle-add-customer-form').trigger('click');
     
-    // Open in popup window
-    window.open('/contacts/create?quick_add=1&group_id=' + groupId, '_blank', 'width=800,height=600');
+    // Scroll to the form smoothly
+    $('html, body').animate({
+        scrollTop: $('#inline-add-customer-form').offset().top - 100
+    }, 500);
 });
 
 // Handle inline add customer form toggle
