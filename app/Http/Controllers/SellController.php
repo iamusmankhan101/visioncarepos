@@ -646,14 +646,28 @@ class SellController extends Controller
 
             $rawColumns = ['checkbox', 'final_total', 'action', 'total_paid', 'total_remaining', 'payment_status', 'invoice_no', 'discount_amount', 'tax_amount', 'total_before_tax', 'shipping_status', 'types_of_service_name', 'payment_methods', 'return_due', 'contact_name', 'status', 'zatca_status', 'additional_notes'];
 
-            // Restrict global search to indexed columns only to avoid full scans
+            // Global search across all relevant columns
             $datatable->filter(function ($query) {
                 $keyword = request('search.value');
                 if ($keyword !== null && $keyword !== '') {
                     $query->where(function ($q) use ($keyword) {
                         $q->where('transactions.invoice_no', 'like', "%{$keyword}%")
                           ->orWhere('contacts.name', 'like', "%{$keyword}%")
-                          ->orWhere('contacts.supplier_business_name', 'like', "%{$keyword}%");
+                          ->orWhere('contacts.supplier_business_name', 'like', "%{$keyword}%")
+                          ->orWhere('contacts.mobile', 'like', "%{$keyword}%")
+                          ->orWhere('bl.name', 'like', "%{$keyword}%")
+                          ->orWhere('transactions.payment_status', 'like', "%{$keyword}%")
+                          ->orWhere('transactions.shipping_status', 'like', "%{$keyword}%")
+                          ->orWhere('transactions.additional_notes', 'like', "%{$keyword}%")
+                          ->orWhere('transactions.staff_note', 'like', "%{$keyword}%")
+                          ->orWhere('transactions.shipping_details', 'like', "%{$keyword}%")
+                          ->orWhere('u.first_name', 'like', "%{$keyword}%")
+                          ->orWhere('u.last_name', 'like', "%{$keyword}%")
+                          ->orWhere('tos.name', 'like', "%{$keyword}%")
+                          ->orWhere('transactions.custom_field_1', 'like', "%{$keyword}%")
+                          ->orWhere('transactions.custom_field_2', 'like', "%{$keyword}%")
+                          ->orWhere('transactions.custom_field_3', 'like', "%{$keyword}%")
+                          ->orWhere('transactions.custom_field_4', 'like', "%{$keyword}%");
                     });
                 }
             }, true);
