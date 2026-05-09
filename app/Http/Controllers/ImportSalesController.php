@@ -602,8 +602,8 @@ class ImportSalesController extends Controller
             'item_discount' => ['label' => __('lang_v1.item_discount')],
             'item_description' => ['label' => __('lang_v1.item_description')],
             'order_total' => ['label' => __('lang_v1.order_total')],
-            'total_paid' => ['label' => __('lang_v1.total_paid')],
-            'payment_method' => ['label' => __('lang_v1.payment_method')],
+            'total_paid' => ['label' => 'Total Paid'],
+            'payment_method' => ['label' => 'Payment Method'],
         ];
 
         $is_types_service_enabled = $this->moduleUtil->isModuleEnabled('types_of_service');
