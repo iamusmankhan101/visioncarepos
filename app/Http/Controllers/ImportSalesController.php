@@ -261,6 +261,9 @@ class ImportSalesController extends Controller
 
         $now = \Carbon::now()->toDateTimeString();
         $row_index = 2;
+        $skipped_rows = [];
+        $imported_count = 0;
+        
         foreach ($formated_data as $data) {
             $order_total = 0;
             $sell_lines = [];
@@ -284,7 +287,13 @@ class ImportSalesController extends Controller
                 }
 
                 if (empty($variation)) {
-                    // Skip this line if product not found
+                    // Log skipped product
+                    $skipped_rows[] = "Row {$row_index}: Product not found - SKU: {$line_data['sku']}, Name: {$line_data['product']}";
+                    \Log::warning("Sales Import - Product not found", [
+                        'row' => $row_index,
+                        'sku' => $line_data['sku'],
+                        'product_name' => $line_data['product']
+                    ]);
                     continue;
                 }
 
@@ -294,7 +303,12 @@ class ImportSalesController extends Controller
 
                 $unit_price = $line_data['unit_price'] ?? 0;
                 if (empty($unit_price) || $unit_price == 0) {
-                    // Skip lines with no price
+                    // Log skipped line
+                    $skipped_rows[] = "Row {$row_index}: No unit price";
+                    \Log::warning("Sales Import - No unit price", [
+                        'row' => $row_index,
+                        'product' => $line_data['product']
+                    ]);
                     continue;
                 }
 
@@ -519,7 +533,17 @@ class ImportSalesController extends Controller
                 'pos_settings' => $pos_settings,
             ];
             $this->transactionUtil->mapPurchaseSell($business, $transaction->sell_lines, 'purchase');
+            
+            $imported_count++;
         }
+        
+        // Log import summary
+        \Log::info("Sales Import Summary", [
+            'imported_count' => $imported_count,
+            'skipped_count' => count($skipped_rows),
+            'skipped_details' => $skipped_rows,
+            'import_batch' => $import_batch
+        ]);
     }
 
     private function __formatSaleData($imported_data, $import_fields, $group_by)
