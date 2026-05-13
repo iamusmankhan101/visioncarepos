@@ -2475,7 +2475,7 @@ class ContactController extends Controller
     /**
      * Export contacts in import-ready format
      */
-    public function exportForImport()
+    public function exportForImport(Request $request)
     {
         if (! auth()->user()->can('supplier.view') && ! auth()->user()->can('customer.view')) {
             abort(403, 'Unauthorized action.');
@@ -2483,12 +2483,29 @@ class ContactController extends Controller
 
         $business_id = request()->session()->get('user.business_id');
         $type = request()->get('type', 'customer');
+        
+        // Get selected IDs from query string (comma-separated) or request input (array)
+        $selected_ids = $request->input('selected_ids');
+        if (is_string($selected_ids)) {
+            $selected_ids = explode(',', $selected_ids);
+            $selected_ids = array_filter($selected_ids); // Remove empty values
+        }
 
-        // Get contacts based on type
-        $contacts = Contact::where('business_id', $business_id)
-            ->where('type', $type)
-            ->orWhere('type', 'both')
-            ->get();
+        // Get contacts based on type and selection
+        $query = Contact::where('business_id', $business_id);
+        
+        // If specific contacts are selected, only export those
+        if (!empty($selected_ids)) {
+            $query->whereIn('id', $selected_ids);
+        } else {
+            // Otherwise export all contacts of the specified type
+            $query->where(function($q) use ($type) {
+                $q->where('type', $type)
+                  ->orWhere('type', 'both');
+            });
+        }
+        
+        $contacts = $query->get();
 
         // Prepare data in exact import template order
         $export_data = [];
