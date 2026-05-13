@@ -1531,7 +1531,7 @@ class ContactController extends Controller
                 try {
                     $contact = Contact::where('business_id', $business_id)
                                      ->where('id', $contact_id)
-                                     ->whereIn('type', ['customer', 'supplier'])
+                                     ->whereIn('type', ['customer', 'supplier', 'both'])
                                      ->first();
 
                     if (!$contact) {
@@ -1539,21 +1539,42 @@ class ContactController extends Controller
                         continue;
                     }
 
-                    // Check if contact has transactions
-                    $has_transactions = DB::table('transactions')
-                                         ->where('contact_id', $contact_id)
-                                         ->exists();
+                    // Delete all related transactions first
+                    $transactions = DB::table('transactions')
+                                     ->where('contact_id', $contact_id)
+                                     ->pluck('id');
 
-                    if ($has_transactions) {
-                        $errors[] = "Contact '{$contact->name}' has transactions and cannot be deleted";
-                        continue;
+                    foreach ($transactions as $transaction_id) {
+                        // Delete transaction sell lines
+                        DB::table('transaction_sell_lines')
+                          ->where('transaction_id', $transaction_id)
+                          ->delete();
+
+                        // Delete transaction payments
+                        DB::table('transaction_payments')
+                          ->where('transaction_id', $transaction_id)
+                          ->delete();
+
+                        // Delete purchase lines
+                        DB::table('purchase_lines')
+                          ->where('transaction_id', $transaction_id)
+                          ->delete();
+
+                        // Delete the transaction
+                        DB::table('transactions')
+                          ->where('id', $transaction_id)
+                          ->delete();
                     }
 
-                    // Delete related records first
                     // Delete contact relationships
                     DB::table('contact_relationships')
                       ->where('contact_id', $contact_id)
                       ->orWhere('related_contact_id', $contact_id)
+                      ->delete();
+
+                    // Delete user contact access
+                    DB::table('user_contact_access')
+                      ->where('contact_id', $contact_id)
                       ->delete();
 
                     // Delete activities
@@ -1574,9 +1595,9 @@ class ContactController extends Controller
 
             DB::commit();
 
-            $message = "{$deleted_count} contacts deleted successfully";
+            $message = "{$deleted_count} contact(s) deleted successfully";
             if (!empty($errors)) {
-                $message .= ". Errors: " . implode(', ', $errors);
+                $message .= ". Some contacts could not be deleted: " . implode(', ', $errors);
             }
 
             return response()->json([
