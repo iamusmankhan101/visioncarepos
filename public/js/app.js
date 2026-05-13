@@ -472,6 +472,8 @@ $(document).ready(function () {
             { data: 'custom_field8', name: 'custom_field8' },
             { data: 'custom_field9', name: 'custom_field9' },
             { data: 'custom_field10', name: 'custom_field10' },
+            { data: 'custom_field11', name: 'custom_field11' },
+            { data: 'custom_field12', name: 'custom_field12' },
         ];
     } else if (contact_table_type == 'customer') {
         var columns = [
@@ -507,6 +509,8 @@ $(document).ready(function () {
         { data: 'custom_field8', name: 'contacts.custom_field8' },
         { data: 'custom_field9', name: 'contacts.custom_field9' },
         { data: 'custom_field10', name: 'contacts.custom_field10' },
+        { data: 'custom_field11', name: 'contacts.custom_field11' },
+        { data: 'custom_field12', name: 'contacts.custom_field12' },
         ]);
     }
 
