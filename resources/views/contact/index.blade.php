@@ -177,7 +177,7 @@
                                 <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2"/>
                                 <path d="M7 11l5 5l5 -5"/>
                                 <path d="M12 4l0 12"/>
-                            </svg> <span id="export_btn_text">Export for Import</span> <span id="export_selected_count" style="display: none;">(<span id="export_count">0</span> selected)</span>
+                            </svg> <span id="export_btn_text">Export (All)</span> <span id="export_selected_count" style="display: none;">(<span id="export_count">0</span> selected)</span>
                         </button>
                         <a class="tw-dw-btn tw-bg-gradient-to-r tw-from-indigo-600 tw-to-blue-500 tw-font-bold tw-text-white tw-border-none tw-rounded-full btn-modal"
                                 data-href="{{ action([\App\Http\Controllers\ContactController::class, 'create'], ['type' => $type]) }}"
@@ -341,7 +341,7 @@
                     $('#export_btn_text').text('Export');
                 } else {
                     $('#export_selected_count').hide();
-                    $('#export_btn_text').text('Export for Import (All)');
+                    $('#export_btn_text').text('Export (All)');
                 }
             }
 
