@@ -9,6 +9,19 @@
         <style>
             #contact_table { width: 100% !important; }
             .table-responsive { overflow-x: auto; }
+            
+            /* Sticky footer for contact table */
+            #contact_table tfoot {
+                position: sticky;
+                bottom: 0;
+                background-color: #f9fafb;
+                z-index: 10;
+                box-shadow: 0 -2px 4px rgba(0,0,0,0.1);
+            }
+            
+            #contact_table tfoot tr {
+                background-color: #f9fafb !important;
+            }
         </style>
     @endsection
 @else
@@ -16,6 +29,19 @@
         <style>
             #contact_table { width: 100% !important; }
             .table-responsive { overflow-x: auto; }
+            
+            /* Sticky footer for contact table */
+            #contact_table tfoot {
+                position: sticky;
+                bottom: 0;
+                background-color: #f9fafb;
+                z-index: 10;
+                box-shadow: 0 -2px 4px rgba(0,0,0,0.1);
+            }
+            
+            #contact_table tfoot tr {
+                background-color: #f9fafb !important;
+            }
         </style>
     @endsection
 @endif

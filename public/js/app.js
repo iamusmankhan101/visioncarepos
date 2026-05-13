@@ -522,6 +522,8 @@ $(document).ready(function () {
         processing: true,
         serverSide: true,
         fixedHeader: false,
+        dom: '<"row margin-bottom-20"<"col-sm-1"l><"col-sm-8"><"col-sm-3"f> r>tip', // Removed 'B' to hide buttons
+        buttons: [], // Explicitly disable export buttons
         initComplete: function() {
             // Restore global default
             $.fn.dataTable.defaults.fixedHeader = _origFixedHeader;
