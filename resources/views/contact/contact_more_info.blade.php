@@ -68,9 +68,8 @@
                 <tr>
                     <td style="font-weight: 600;">Near</td>
                     <td>{{ $contact->custom_field10 ?? '-' }}</td>
-                    <td colspan="2" style="background-color: #f8f9fa; text-align: center; color: #999;">
-                        <small><i class="fa fa-info-circle"></i> Additional near values not tracked</small>
-                    </td>
+                    <td>{{ $contact->shipping_custom_field_1 ?? '-' }}</td>
+                    <td>{{ $contact->shipping_custom_field_2 ?? '-' }}</td>
                 </tr>
             </tbody>
         </table>
