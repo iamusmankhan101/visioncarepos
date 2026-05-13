@@ -2473,6 +2473,125 @@ class ContactController extends Controller
     }
 
     /**
+     * Export contacts in import-ready format
+     */
+    public function exportForImport()
+    {
+        if (! auth()->user()->can('supplier.view') && ! auth()->user()->can('customer.view')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $business_id = request()->session()->get('user.business_id');
+        $type = request()->get('type', 'customer');
+
+        // Get contacts based on type
+        $contacts = Contact::where('business_id', $business_id)
+            ->where('type', $type)
+            ->orWhere('type', 'both')
+            ->get();
+
+        // Prepare data in exact import template order
+        $export_data = [];
+        
+        // Add header row matching import template
+        $export_data[] = [
+            'CONTACT TYPE',
+            'PREFIX',
+            'FIRST NAME',
+            'MIDDLE NAME',
+            'LAST NAME',
+            'BUSINESS NAME',
+            'CONTACT ID',
+            'TAX NUMBER',
+            'OPENING BALANCE',
+            'PAY TERM',
+            'PAY TERM PERIOD',
+            'CREDIT LIMIT',
+            'EMAIL',
+            'MOBILE',
+            'ALT. CONTACT NO.',
+            'LANDLINE',
+            'CITY',
+            'STATE',
+            'COUNTRY',
+            'ADDRESS LINE 1',
+            'ADDRESS LINE 2',
+            'ZIP CODE',
+            'DOB',
+            'R-Dist-Sph',
+            'R-Dist-Cyl',
+            'R-Dist-Axis',
+            'R-Near-Sph',
+            'R-Near-Cyl',
+            'R-Near-Axis',
+            'L-Dist-Sph',
+            'L-Dist-Cyl',
+            'L-Dist-Axis',
+            'L-Near-Sph',
+            'L-Near-Cyl',
+            'L-Near-Axis',
+        ];
+
+        // Add contact data rows
+        foreach ($contacts as $contact) {
+            $export_data[] = [
+                $contact->type,
+                $contact->prefix,
+                $contact->first_name,
+                $contact->middle_name,
+                $contact->last_name,
+                $contact->supplier_business_name,
+                $contact->contact_id,
+                $contact->tax_number,
+                $contact->opening_balance ?? 0,
+                $contact->pay_term_number,
+                $contact->pay_term_type,
+                $contact->credit_limit,
+                $contact->email,
+                $contact->mobile,
+                $contact->alternate_number,
+                $contact->landline,
+                $contact->city,
+                $contact->state,
+                $contact->country,
+                $contact->address_line_1,
+                $contact->address_line_2,
+                $contact->zip_code,
+                $contact->dob,
+                $contact->custom_field1,  // R-Dist-Sph
+                $contact->custom_field2,  // R-Dist-Cyl
+                $contact->custom_field3,  // R-Dist-Axis
+                $contact->custom_field4,  // R-Near-Sph
+                $contact->custom_field5,  // R-Near-Cyl
+                $contact->custom_field6,  // R-Near-Axis
+                $contact->custom_field7,  // L-Dist-Sph
+                $contact->custom_field8,  // L-Dist-Cyl
+                $contact->custom_field9,  // L-Dist-Axis
+                $contact->custom_field10, // L-Near-Sph
+                $contact->custom_field11, // L-Near-Cyl
+                $contact->custom_field12, // L-Near-Axis
+            ];
+        }
+
+        // Generate CSV file
+        $filename = $type . 's_export_' . date('Y-m-d_His') . '.csv';
+        
+        return Excel::download(new class($export_data) implements \Maatwebsite\Excel\Concerns\FromArray {
+            protected $data;
+            
+            public function __construct($data)
+            {
+                $this->data = $data;
+            }
+            
+            public function array(): array
+            {
+                return $this->data;
+            }
+        }, $filename);
+    }
+
+    /**
      * Display contact locations on map
      */
     public function contactMap()

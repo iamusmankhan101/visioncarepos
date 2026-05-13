@@ -193,6 +193,7 @@ Route::middleware(['setData', 'auth', 'SetSessionData', 'language', 'timezone', 
     Route::get('/contacts/import', [ContactController::class, 'getImportContacts'])->name('contacts.import');
     Route::post('/contacts/import/preview', [ContactController::class, 'previewImportContacts'])->name('contacts.import.preview');
     Route::post('/contacts/import', [ContactController::class, 'postImportContacts']);
+    Route::get('/contacts/export-for-import', [ContactController::class, 'exportForImport'])->name('contacts.export_for_import');
     Route::post('/contacts/check-contacts-id', [ContactController::class, 'checkContactId']);
 
     Route::post('/contacts/check-tax-number', [ContactController::class, 'checkTaxNumber']);
