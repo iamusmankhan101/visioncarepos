@@ -1147,6 +1147,159 @@ class SellController extends Controller
     }
 
     /**
+     * Export sales in import-ready format
+     */
+    public function exportForImport(Request $request)
+    {
+        if (!auth()->user()->can('sell.view') && !auth()->user()->can('direct_sell.access')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $business_id = request()->session()->get('user.business_id');
+        
+        // Get selected IDs from query string (comma-separated) or request input (array)
+        $selected_ids = $request->input('selected_ids');
+        if (is_string($selected_ids)) {
+            $selected_ids = explode(',', $selected_ids);
+            $selected_ids = array_filter($selected_ids);
+        }
+
+        // Build query for transactions
+        $query = Transaction::where('business_id', $business_id)
+            ->whereIn('type', ['sell', 'pos'])
+            ->with([
+                'contact',
+                'sell_lines.product',
+                'sell_lines.variations',
+                'sell_lines.variations.product_variation',
+                'sell_lines.sub_unit',
+                'payment_lines',
+                'types_of_service'
+            ]);
+
+        // If specific sales are selected, only export those
+        if (!empty($selected_ids)) {
+            $query->whereIn('id', $selected_ids);
+        }
+
+        $transactions = $query->get();
+
+        // Prepare data in exact import template order
+        $export_data = [];
+        
+        // Add header row matching import template
+        $export_data[] = [
+            'Invoice No.',
+            'Customer Phone number',
+            'Customer name',
+            'Customer Email',
+            'Sale Date',
+            'Product name',
+            'Product SKU',
+            'Quantity',
+            'Product Unit',
+            'Unit Price',
+            'Item Tax',
+            'Item Discount',
+            'Item Description',
+            'Order Total',
+            'Total Paid',
+            'Payment Method',
+            'Types of service',
+            'Custom Field 1',
+            'Custom Field 2',
+            'Custom Field 3',
+            'Custom Field 4',
+        ];
+
+        // Add transaction data rows
+        foreach ($transactions as $transaction) {
+            $contact = $transaction->contact;
+            $sale_date = $transaction->transaction_date ? \Carbon\Carbon::parse($transaction->transaction_date)->format('Y-m-d H:i:s') : '';
+            
+            // Get payment info
+            $total_paid = $transaction->payment_lines->sum('amount');
+            $payment_method = $transaction->payment_lines->first()->method ?? 'cash';
+            
+            // Get types of service info
+            $types_of_service = $transaction->types_of_service->name ?? null;
+            $service_field1 = $transaction->service_custom_field_1 ?? null;
+            $service_field2 = $transaction->service_custom_field_2 ?? null;
+            $service_field3 = $transaction->service_custom_field_3 ?? null;
+            $service_field4 = $transaction->service_custom_field_4 ?? null;
+            
+            // Export each sell line as a separate row
+            foreach ($transaction->sell_lines as $line) {
+                $product = $line->product;
+                $variation = $line->variations;
+                
+                // Get product name and SKU
+                $product_name = $product->name ?? '';
+                $sku = $variation->sub_sku ?? '';
+                
+                // Get unit info
+                $unit_name = '';
+                if ($line->sub_unit_id) {
+                    $unit_name = $line->sub_unit->actual_name ?? $line->sub_unit->short_name ?? '';
+                } elseif ($product && $product->unit) {
+                    $unit_name = $product->unit->actual_name ?? $product->unit->short_name ?? '';
+                }
+                
+                // Calculate unit price (before tax and discount)
+                $unit_price = $line->unit_price ?? 0;
+                
+                // Get tax name
+                $tax_name = '';
+                if ($line->tax_id) {
+                    $tax = \App\TaxRate::find($line->tax_id);
+                    $tax_name = $tax->name ?? '';
+                }
+                
+                $export_data[] = [
+                    $transaction->invoice_no,
+                    $contact->mobile ?? '',
+                    $contact->name ?? '',
+                    $contact->email ?? '',
+                    $sale_date,
+                    $product_name,
+                    $sku,
+                    $line->quantity ?? 1,
+                    $unit_name,
+                    $unit_price,
+                    $tax_name,
+                    $line->line_discount_amount ?? 0,
+                    $line->sell_line_note ?? '',
+                    $transaction->final_total ?? 0,
+                    $total_paid,
+                    $payment_method,
+                    $types_of_service,
+                    $service_field1,
+                    $service_field2,
+                    $service_field3,
+                    $service_field4,
+                ];
+            }
+        }
+
+        // Generate Excel file
+        $filename = 'sales_export_' . date('Y-m-d_His') . '.xlsx';
+        
+        return Excel::download(new class($export_data) implements \Maatwebsite\Excel\Concerns\FromArray {
+            protected $data;
+            
+            public function __construct($data)
+            {
+                $this->data = $data;
+            }
+            
+            public function array(): array
+            {
+                return $this->data;
+            }
+        }, $filename);
+    }
+
+    /**
      * Generate consolidated invoice for multiple transactions
      */
     private function generateConsolidatedInvoice($transactions, $start_date, $end_date, $business_id)

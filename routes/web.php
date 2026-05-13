@@ -258,6 +258,7 @@ Route::middleware(['setData', 'auth', 'SetSessionData', 'language', 'timezone', 
     Route::get('/sells/bulk-print-invoices', [SellController::class, 'bulkPrintInvoices']);
     Route::post('/sells/bulk-print-selected', [SellController::class, 'bulkPrintSelected']);
     Route::post('/sells/bulk-delete', [SellController::class, 'bulkDelete']);
+    Route::get('/sells/export-for-import', [SellController::class, 'exportForImport'])->name('sells.export_for_import');
     
     // Temporary voucher test route
     Route::get('/test-voucher-usage/{code}', function($code) {

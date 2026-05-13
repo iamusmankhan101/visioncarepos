@@ -837,9 +837,26 @@
             
             // Export for Import functionality
             $('#export_sales_for_import_btn').on('click', function() {
-                toastr.info('Sales export for import feature coming soon!');
-                // TODO: Implement sales export for import
-                // This is more complex than contacts because sales have multiple line items
+                var selectedIds = [];
+                $('.invoice_checkbox:checked').each(function() {
+                    selectedIds.push($(this).val());
+                });
+
+                // Build URL with parameters
+                var url = '/sells/export-for-import';
+                
+                // If sales are selected, add them as query parameters
+                if (selectedIds.length > 0) {
+                    url += '?selected_ids=' + selectedIds.join(',');
+                    toastr.success('Exporting ' + selectedIds.length + ' selected sale(s)...');
+                    console.log('Exporting ' + selectedIds.length + ' selected sales');
+                } else {
+                    toastr.success('Exporting all sales...');
+                    console.log('Exporting all sales');
+                }
+                
+                // Trigger download by navigating to the URL
+                window.location.href = url;
             });
         });
 
