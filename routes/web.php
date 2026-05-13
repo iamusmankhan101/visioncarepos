@@ -258,7 +258,6 @@ Route::middleware(['setData', 'auth', 'SetSessionData', 'language', 'timezone', 
     Route::get('/sells/bulk-print-invoices', [SellController::class, 'bulkPrintInvoices']);
     Route::post('/sells/bulk-print-selected', [SellController::class, 'bulkPrintSelected']);
     Route::post('/sells/bulk-delete', [SellController::class, 'bulkDelete']);
-    Route::get('/sells/export-for-import', [SellController::class, 'exportForImport'])->name('sells.export_for_import');
     
     // Temporary voucher test route
     Route::get('/test-voucher-usage/{code}', function($code) {
@@ -543,6 +542,10 @@ Route::middleware(['setData', 'auth', 'SetSessionData', 'language', 'timezone', 
             ]);
         }
     });
+    
+    // Custom sells routes must come before resource route
+    Route::get('/sells/export-for-import', [SellController::class, 'exportForImport'])->name('sells.export_for_import');
+    
     Route::resource('sells', SellController::class)->except(['show']);
     Route::get('/sells/copy-quotation/{id}', [SellPosController::class, 'copyQuotation']);
 
