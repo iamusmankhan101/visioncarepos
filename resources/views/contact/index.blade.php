@@ -213,6 +213,8 @@
                                 <th>L-Dist-Cyl</th>
                                 <th>L-Dist-Axis</th>
                                 <th>L-Near-Sph</th>
+                                <th>L-Near-Cyl</th>
+                                <th>L-Near-Axis</th>
                             </tr>
                         </thead>
                         <tfoot>

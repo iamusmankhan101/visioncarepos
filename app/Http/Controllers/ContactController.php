@@ -2585,7 +2585,7 @@ class ContactController extends Controller
                 ->where('mobile', '!=', '')
                 ->whereNotNull('mobile')
                 ->where('contact_status', 'active') // Only active contacts
-                ->select('id', 'name', 'mobile', 'contact_id', 'custom_field1', 'custom_field2', 'custom_field3', 'custom_field4', 'custom_field5', 'custom_field6', 'custom_field7', 'custom_field8', 'custom_field9', 'custom_field10')
+                ->select('id', 'name', 'mobile', 'contact_id', 'custom_field1', 'custom_field2', 'custom_field3', 'custom_field4', 'custom_field5', 'custom_field6', 'custom_field7', 'custom_field8', 'custom_field9', 'custom_field10', 'custom_field11', 'custom_field12')
                 ->orderBy('id', 'asc') // Order by ID to show primary customer first
                 ->get();
             
