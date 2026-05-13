@@ -151,7 +151,7 @@
                                 <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2"/>
                                 <path d="M7 11l5 5l5 -5"/>
                                 <path d="M12 4l0 12"/>
-                            </svg> Export for Import
+                            </svg> <span id="export_btn_text">Export for Import</span> <span id="export_selected_count" style="display: none;">(<span id="export_count">0</span> selected)</span>
                         </button>
                         <a class="tw-dw-btn tw-bg-gradient-to-r tw-from-indigo-600 tw-to-blue-500 tw-font-bold tw-text-white tw-border-none tw-rounded-full btn-modal"
                                 data-href="{{ action([\App\Http\Controllers\ContactController::class, 'create'], ['type' => $type]) }}"
@@ -303,6 +303,20 @@
                 } else {
                     $('#bulk_delete_customers').hide();
                 }
+                
+                // Update export button text
+                updateExportButtonText(selectedCount);
+            }
+            
+            function updateExportButtonText(selectedCount) {
+                if (selectedCount > 0) {
+                    $('#export_count').text(selectedCount);
+                    $('#export_selected_count').show();
+                    $('#export_btn_text').text('Export');
+                } else {
+                    $('#export_selected_count').hide();
+                    $('#export_btn_text').text('Export for Import (All)');
+                }
             }
 
             $('#bulk_delete_customers').on('click', function() {
@@ -385,8 +399,10 @@
                 // If contacts are selected, add them as query parameters
                 if (selectedIds.length > 0) {
                     url += '&selected_ids=' + selectedIds.join(',');
+                    toastr.success('Exporting ' + selectedIds.length + ' selected contact(s)...');
                     console.log('Exporting ' + selectedIds.length + ' selected contacts');
                 } else {
+                    toastr.success('Exporting all contacts...');
                     console.log('Exporting all contacts');
                 }
                 
