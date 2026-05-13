@@ -175,6 +175,8 @@ $(document).ready(function () {
             className: 'tw-dw-btn-xs  tw-dw-btn tw-dw-btn-outline tw-my-2',
             exportOptions: {
                 columns: ':visible:not(.no-export)',
+                orthogonal: 'export',
+                stripHtml: true,
                 format: {
                     body: function(data, row, column, node) {
                         // Check if the node or its children have data-is_quantity="true"
@@ -184,8 +186,12 @@ $(document).ready(function () {
                         if ($quantityElement.length > 0) {
                             return $quantityElement.attr('data-orig-value');
                         }
+                        
+                        // Strip HTML tags first
+                        var stripped = data.replace(/<[^>]*>/g, '');
+                        
                         // Remove currency symbol from the cell data
-                        return __remove_currency_symbol(data);
+                        return __remove_currency_symbol(stripped);
                     },
                     footer: function(data, row, column, node) {
                         // Remove currency symbol from the footer data
