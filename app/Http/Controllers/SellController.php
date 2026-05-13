@@ -1166,19 +1166,9 @@ class SellController extends Controller
                 $selected_ids = array_filter($selected_ids);
             }
 
-            // Build query for transactions
+            // Build query for transactions - simplified
             $query = Transaction::where('business_id', $business_id)
-                ->whereIn('type', ['sell', 'pos'])
-                ->where('status', 'final')
-                ->with([
-                    'contact',
-                    'sell_lines.product',
-                    'sell_lines.variations',
-                    'sell_lines.variations.product_variation',
-                    'sell_lines.sub_unit',
-                    'payment_lines',
-                    'types_of_service'
-                ]);
+                ->whereIn('type', ['sell', 'pos']);
 
             // If specific sales are selected, only export those
             if (!empty($selected_ids)) {
@@ -1186,9 +1176,6 @@ class SellController extends Controller
             }
 
             $transactions = $query->get();
-
-            // Log for debugging
-            \Log::info('Sales Export - Found transactions: ' . $transactions->count());
 
             // Prepare data in exact import template order
             $export_data = [];
@@ -1220,23 +1207,65 @@ class SellController extends Controller
 
             // Add transaction data rows
             foreach ($transactions as $transaction) {
+                // Load relationships manually if not loaded
+                $transaction->load([
+                    'contact',
+                    'sell_lines.product',
+                    'sell_lines.variations',
+                    'sell_lines.sub_unit',
+                    'payment_lines',
+                    'types_of_service'
+                ]);
+                
                 $contact = $transaction->contact;
                 $sale_date = $transaction->transaction_date ? \Carbon\Carbon::parse($transaction->transaction_date)->format('Y-m-d H:i:s') : '';
                 
                 // Get payment info
-                $total_paid = $transaction->payment_lines->sum('amount');
-                $payment_method = $transaction->payment_lines->first() ? $transaction->payment_lines->first()->method : 'cash';
+                $total_paid = 0;
+                $payment_method = 'cash';
+                if ($transaction->payment_lines && $transaction->payment_lines->count() > 0) {
+                    $total_paid = $transaction->payment_lines->sum('amount');
+                    $first_payment = $transaction->payment_lines->first();
+                    $payment_method = $first_payment ? $first_payment->method : 'cash';
+                }
                 
                 // Get types of service info
-                $types_of_service = $transaction->types_of_service ? $transaction->types_of_service->name : null;
-                $service_field1 = $transaction->service_custom_field_1 ?? null;
-                $service_field2 = $transaction->service_custom_field_2 ?? null;
-                $service_field3 = $transaction->service_custom_field_3 ?? null;
-                $service_field4 = $transaction->service_custom_field_4 ?? null;
+                $types_of_service = null;
+                $service_field1 = $transaction->service_custom_field_1;
+                $service_field2 = $transaction->service_custom_field_2;
+                $service_field3 = $transaction->service_custom_field_3;
+                $service_field4 = $transaction->service_custom_field_4;
+                
+                if ($transaction->types_of_service) {
+                    $types_of_service = $transaction->types_of_service->name;
+                }
                 
                 // Check if transaction has sell lines
-                if ($transaction->sell_lines->isEmpty()) {
-                    \Log::warning('Transaction ' . $transaction->id . ' has no sell lines');
+                if (!$transaction->sell_lines || $transaction->sell_lines->isEmpty()) {
+                    // If no sell lines, add a single row with transaction info
+                    $export_data[] = [
+                        $transaction->invoice_no,
+                        $contact ? $contact->mobile : '',
+                        $contact ? $contact->name : '',
+                        $contact ? $contact->email : '',
+                        $sale_date,
+                        '', // product name
+                        '', // sku
+                        0, // quantity
+                        '', // unit
+                        0, // unit price
+                        '', // tax
+                        0, // discount
+                        '', // description
+                        $transaction->final_total ?? 0,
+                        $total_paid,
+                        $payment_method,
+                        $types_of_service,
+                        $service_field1,
+                        $service_field2,
+                        $service_field3,
+                        $service_field4,
+                    ];
                     continue;
                 }
                 
@@ -1246,8 +1275,16 @@ class SellController extends Controller
                     $variation = $line->variations;
                     
                     // Get product name and SKU
-                    $product_name = $product ? $product->name : '';
-                    $sku = $variation ? $variation->sub_sku : '';
+                    $product_name = '';
+                    $sku = '';
+                    
+                    if ($product) {
+                        $product_name = $product->name;
+                    }
+                    
+                    if ($variation) {
+                        $sku = $variation->sub_sku;
+                    }
                     
                     // Get unit info
                     $unit_name = '';
@@ -1264,7 +1301,9 @@ class SellController extends Controller
                     $tax_name = '';
                     if ($line->tax_id) {
                         $tax = \App\TaxRate::find($line->tax_id);
-                        $tax_name = $tax ? $tax->name : '';
+                        if ($tax) {
+                            $tax_name = $tax->name;
+                        }
                     }
                     
                     $export_data[] = [
@@ -1293,7 +1332,32 @@ class SellController extends Controller
                 }
             }
 
-            \Log::info('Sales Export - Total rows (including header): ' . count($export_data));
+            // If no data except header, add a note
+            if (count($export_data) == 1) {
+                $export_data[] = [
+                    'No sales found',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                ];
+            }
 
             // Generate Excel file
             $filename = 'sales_export_' . date('Y-m-d_His') . '.xlsx';
@@ -1313,8 +1377,6 @@ class SellController extends Controller
             }, $filename);
             
         } catch (\Exception $e) {
-            \Log::error('Sales Export Error: ' . $e->getMessage());
-            \Log::error('Stack trace: ' . $e->getTraceAsString());
             return back()->with('error', 'Error exporting sales: ' . $e->getMessage());
         }
     }
