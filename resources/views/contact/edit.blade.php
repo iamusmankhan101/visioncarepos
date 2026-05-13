@@ -344,9 +344,8 @@
               <tr>
                 <td style="font-weight: 600;">Near</td>
                 <td>{!! Form::text('custom_field10', $contact->custom_field10, ['class' => 'form-control', 'placeholder' => 'e.g., -2.00']); !!}</td>
-                <td colspan="2" style="background-color: #f8f9fa; text-align: center; color: #999;">
-                  <small><i class="fa fa-info-circle"></i> Additional near values not tracked</small>
-                </td>
+                <td>{!! Form::text('shipping_custom_field_details[shipping_custom_field_1]', !empty($contact->shipping_custom_field_1) ? $contact->shipping_custom_field_1 : null, ['class' => 'form-control', 'placeholder' => 'e.g., -1.00']); !!}</td>
+                <td>{!! Form::text('shipping_custom_field_details[shipping_custom_field_2]', !empty($contact->shipping_custom_field_2) ? $contact->shipping_custom_field_2 : null, ['class' => 'form-control', 'placeholder' => 'e.g., 180']); !!}</td>
               </tr>
             </tbody>
           </table>
