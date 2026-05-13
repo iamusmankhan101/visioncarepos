@@ -542,8 +542,8 @@
                   <tr>
                     <td style="font-weight: 600;">Near</td>
                     <td>{!! Form::text('custom_field10', null, ['class' => 'form-control', 'placeholder' => 'e.g., -2.00']); !!}</td>
-                    <td>{!! Form::text('shipping_custom_field_details[shipping_custom_field_1]', null, ['class' => 'form-control', 'placeholder' => 'e.g., -1.00']); !!}</td>
-                    <td>{!! Form::text('shipping_custom_field_details[shipping_custom_field_2]', null, ['class' => 'form-control', 'placeholder' => 'e.g., 180']); !!}</td>
+                    <td>{!! Form::text('custom_field11', null, ['class' => 'form-control', 'placeholder' => 'e.g., -1.00']); !!}</td>
+                    <td>{!! Form::text('custom_field12', null, ['class' => 'form-control', 'placeholder' => 'e.g., 180']); !!}</td>
                   </tr>
                 </tbody>
               </table>
@@ -862,8 +862,8 @@
             '<tr>' +
             '<td style="font-weight: 600;">Near</td>' +
             '<td><input type="text" name="customers[' + customerFormCount + '][custom_field10]" class="form-control" placeholder="e.g., -2.00"></td>' +
-            '<td><input type="text" name="customers[' + customerFormCount + '][shipping_custom_field_details][shipping_custom_field_1]" class="form-control" placeholder="e.g., -1.00"></td>' +
-            '<td><input type="text" name="customers[' + customerFormCount + '][shipping_custom_field_details][shipping_custom_field_2]" class="form-control" placeholder="e.g., 180"></td>' +
+            '<td><input type="text" name="customers[' + customerFormCount + '][custom_field11]" class="form-control" placeholder="e.g., -1.00"></td>' +
+            '<td><input type="text" name="customers[' + customerFormCount + '][custom_field12]" class="form-control" placeholder="e.g., 180"></td>' +
             '</tr>' +
             '</tbody>' +
             '</table>' +

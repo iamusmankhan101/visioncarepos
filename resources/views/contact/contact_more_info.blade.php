@@ -68,8 +68,8 @@
                 <tr>
                     <td style="font-weight: 600;">Near</td>
                     <td>{{ $contact->custom_field10 ?? '-' }}</td>
-                    <td>{{ $contact->shipping_custom_field_1 ?? '-' }}</td>
-                    <td>{{ $contact->shipping_custom_field_2 ?? '-' }}</td>
+                    <td>{{ $contact->custom_field11 ?? '-' }}</td>
+                    <td>{{ $contact->custom_field12 ?? '-' }}</td>
                 </tr>
             </tbody>
         </table>

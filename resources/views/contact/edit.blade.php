@@ -344,8 +344,8 @@
               <tr>
                 <td style="font-weight: 600;">Near</td>
                 <td>{!! Form::text('custom_field10', $contact->custom_field10, ['class' => 'form-control', 'placeholder' => 'e.g., -2.00']); !!}</td>
-                <td>{!! Form::text('shipping_custom_field_details[shipping_custom_field_1]', !empty($contact->shipping_custom_field_1) ? $contact->shipping_custom_field_1 : null, ['class' => 'form-control', 'placeholder' => 'e.g., -1.00']); !!}</td>
-                <td>{!! Form::text('shipping_custom_field_details[shipping_custom_field_2]', !empty($contact->shipping_custom_field_2) ? $contact->shipping_custom_field_2 : null, ['class' => 'form-control', 'placeholder' => 'e.g., 180']); !!}</td>
+                <td>{!! Form::text('custom_field11', $contact->custom_field11, ['class' => 'form-control', 'placeholder' => 'e.g., -1.00']); !!}</td>
+                <td>{!! Form::text('custom_field12', $contact->custom_field12, ['class' => 'form-control', 'placeholder' => 'e.g., 180']); !!}</td>
               </tr>
             </tbody>
           </table>
@@ -517,8 +517,8 @@
                     <tr>
                       <td style="font-weight: 600;">Near</td>
                       <td><input type="text" name="related_custom_field10" class="form-control" placeholder="e.g., -2.00"></td>
-                      <td><input type="text" name="related_shipping_custom_field_1" class="form-control" placeholder="e.g., -1.00"></td>
-                      <td><input type="text" name="related_shipping_custom_field_2" class="form-control" placeholder="e.g., 180"></td>
+                      <td><input type="text" name="related_custom_field11" class="form-control" placeholder="e.g., -1.00"></td>
+                      <td><input type="text" name="related_custom_field12" class="form-control" placeholder="e.g., 180"></td>
                     </tr>
                   </tbody>
                 </table>
@@ -1070,8 +1070,8 @@ $(document).on('click', '#save-related-customer', function(e) {
         custom_field8: $('input[name="related_custom_field8"]').val(),
         custom_field9: $('input[name="related_custom_field9"]').val(),
         custom_field10: $('input[name="related_custom_field10"]').val(),
-        'shipping_custom_field_details[shipping_custom_field_1]': $('input[name="related_shipping_custom_field_1"]').val(),
-        'shipping_custom_field_details[shipping_custom_field_2]': $('input[name="related_shipping_custom_field_2"]').val(),
+        custom_field11: $('input[name="related_custom_field11"]').val(),
+        custom_field12: $('input[name="related_custom_field12"]').val(),
         related_prescription_source: $('input[name="related_prescription_source"]:checked').val(),
         customer_group_id_link: $('#customer_group_id_link').val(),
         _token: $('meta[name="csrf-token"]').attr('content')
