@@ -2048,6 +2048,14 @@ class ContactController extends Controller
                 $contact_array['custom_field10']   = $value[32] ?? null; // L-Near-Sph
                 $contact_array['custom_field11']   = $value[33] ?? null; // L-Near-Cyl
                 $contact_array['custom_field12']   = $value[34] ?? null; // L-Near-Axis
+                
+                // Debug logging for custom fields 11 and 12
+                \Log::info('Import Debug - Custom Fields 11 & 12', [
+                    'row_number' => $key,
+                    'custom_field11_value' => $value[33] ?? 'NULL',
+                    'custom_field12_value' => $value[34] ?? 'NULL',
+                    'total_columns' => count($value)
+                ]);
 
                 $formated_data[] = $contact_array;
             }
@@ -2066,8 +2074,23 @@ class ContactController extends Controller
 
                 $contact_data['business_id'] = $business_id;
                 $contact_data['created_by']  = $user_id;
+                
+                // Debug: Log what we're trying to save
+                \Log::info('Creating contact with data', [
+                    'custom_field10' => $contact_data['custom_field10'] ?? 'NOT_SET',
+                    'custom_field11' => $contact_data['custom_field11'] ?? 'NOT_SET',
+                    'custom_field12' => $contact_data['custom_field12'] ?? 'NOT_SET',
+                ]);
 
                 $contact = Contact::create($contact_data);
+                
+                // Debug: Log what was actually saved
+                \Log::info('Contact created', [
+                    'id' => $contact->id,
+                    'custom_field10' => $contact->custom_field10,
+                    'custom_field11' => $contact->custom_field11,
+                    'custom_field12' => $contact->custom_field12,
+                ]);
 
                 if (! empty($opening_balance)) {
                     $this->transactionUtil->createOpeningBalanceTransaction($business_id, $contact->id, $opening_balance, $user_id, false);
