@@ -136,6 +136,12 @@ class ContactController extends Controller
         }
 
         return Datatables::of($contact)
+            ->addColumn(
+                'checkbox',
+                function ($row) {
+                    return '<input type="checkbox" class="customer_checkbox" value="' . $row->id . '">';
+                }
+            )
             ->addColumn('address', '{{implode(", ", array_filter([$address_line_1, $address_line_2, $city, $state, $country, $zip_code]))}}')
             ->addColumn(
                 'due',
@@ -285,7 +291,7 @@ class ContactController extends Controller
                     $query->where('contacts.mobile', 'like', "%{$keyword}%");
                 }
             })
-            ->rawColumns(['action', 'opening_balance', 'pay_term', 'due', 'return_due', 'name', 'balance'])
+            ->rawColumns(['checkbox', 'action', 'opening_balance', 'pay_term', 'due', 'return_due', 'name', 'balance'])
             ->make(true);
     }
 
