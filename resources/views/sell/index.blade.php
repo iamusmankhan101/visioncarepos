@@ -842,17 +842,19 @@
                     selectedIds.push($(this).val());
                 });
 
-                // Build URL with parameters
-                var url = '/sells/export-for-import';
+                // Build URL with Laravel route helper
+                var url = "{{ route('sells.export_for_import') }}";
                 
                 // If sales are selected, add them as query parameters
                 if (selectedIds.length > 0) {
                     url += '?selected_ids=' + selectedIds.join(',');
                     toastr.success('Exporting ' + selectedIds.length + ' selected sale(s)...');
                     console.log('Exporting ' + selectedIds.length + ' selected sales');
+                    console.log('Export URL:', url);
                 } else {
                     toastr.success('Exporting all sales...');
                     console.log('Exporting all sales');
+                    console.log('Export URL:', url);
                 }
                 
                 // Trigger download by navigating to the URL

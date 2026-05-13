@@ -546,6 +546,17 @@ Route::middleware(['setData', 'auth', 'SetSessionData', 'language', 'timezone', 
     // Custom sells routes must come before resource route
     Route::get('/sells/export-for-import', [SellController::class, 'exportForImport'])->name('sells.export_for_import');
     
+    // Test route to verify routing works
+    Route::get('/sells/test-export', function() {
+        return response()->json([
+            'message' => 'Export route is working!',
+            'route_name' => 'sells.export_for_import',
+            'route_url' => route('sells.export_for_import'),
+            'user' => auth()->check() ? auth()->user()->username : 'not authenticated',
+            'business_id' => session('user.business_id')
+        ]);
+    });
+    
     Route::resource('sells', SellController::class)->except(['show']);
     Route::get('/sells/copy-quotation/{id}', [SellPosController::class, 'copyQuotation']);
 
