@@ -1159,6 +1159,12 @@ class SellController extends Controller
         try {
             $business_id = request()->session()->get('user.business_id');
             
+            // Log for debugging
+            \Log::info('Sales Export - Starting', [
+                'business_id' => $business_id,
+                'request_data' => $request->all()
+            ]);
+            
             // Get selected IDs from query string (comma-separated) or request input (array)
             $selected_ids = $request->input('selected_ids');
             if (is_string($selected_ids)) {
@@ -1166,16 +1172,23 @@ class SellController extends Controller
                 $selected_ids = array_filter($selected_ids);
             }
 
-            // Build query for transactions - simplified
+            // Build query for transactions - use 'sell' type only (not 'pos')
             $query = Transaction::where('business_id', $business_id)
-                ->whereIn('type', ['sell', 'pos']);
+                ->where('type', 'sell')
+                ->where('status', 'final'); // Only export finalized sales
 
             // If specific sales are selected, only export those
             if (!empty($selected_ids)) {
                 $query->whereIn('id', $selected_ids);
+                \Log::info('Sales Export - Filtering by IDs', ['ids' => $selected_ids]);
             }
 
             $transactions = $query->get();
+            
+            \Log::info('Sales Export - Found transactions', [
+                'count' => $transactions->count(),
+                'ids' => $transactions->pluck('id')->toArray()
+            ]);
 
             // Prepare data in exact import template order
             $export_data = [];

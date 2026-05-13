@@ -571,6 +571,81 @@ Route::middleware(['setData', 'auth', 'SetSessionData', 'language', 'timezone', 
     Route::get('/import-sales', [ImportSalesController::class, 'index']);
     Route::post('/import-sales/preview', [ImportSalesController::class, 'preview']);
     Route::post('/import-sales', [ImportSalesController::class, 'import']);
+    
+    
+    // Debug route to check last imports and database state
+    Route::get('/debug-sales-import', function() {
+        $business_id = session('user.business_id');
+        
+        // Check last imports
+        $last_imports = \App\Transaction::where('business_id', $business_id)
+            ->whereNotNull('import_batch')
+            ->orderBy('import_batch', 'desc')
+            ->take(10)
+            ->get(['id', 'invoice_no', 'type', 'import_batch', 'final_total', 'status', 'created_at']);
+        
+        // Check recent sales (last 10)
+        $recent_sales = \App\Transaction::where('business_id', $business_id)
+            ->where('type', 'sell')
+            ->orderBy('id', 'desc')
+            ->take(10)
+            ->get(['id', 'invoice_no', 'type', 'status', 'final_total', 'import_batch', 'created_at']);
+        
+        // Check products
+        $products = \App\Product::where('business_id', $business_id)->take(10)->get(['id', 'name', 'sku', 'type']);
+        
+        // Check variations
+        $variations = \App\Variation::whereHas('product', function($q) use ($business_id) {
+            $q->where('business_id', $business_id);
+        })->take(10)->get(['id', 'sub_sku', 'product_id', 'name']);
+        
+        // Check contacts
+        $contacts = \App\Contact::where('business_id', $business_id)
+            ->where('type', 'customer')
+            ->take(5)
+            ->get(['id', 'name', 'mobile', 'email']);
+        
+        // Check business locations
+        $locations = \App\BusinessLocation::where('business_id', $business_id)
+            ->get(['id', 'name', 'location_id']);
+        
+        // Get last 50 lines from Laravel log
+        $log_file = storage_path('logs/laravel.log');
+        $log_lines = [];
+        if (file_exists($log_file)) {
+            $lines = file($log_file);
+            $log_lines = array_slice($lines, -100); // Last 100 lines
+            // Filter for sales import related logs
+            $log_lines = array_filter($log_lines, function($line) {
+                return stripos($line, 'sales import') !== false || 
+                       stripos($line, 'import summary') !== false ||
+                       stripos($line, 'product not found') !== false ||
+                       stripos($line, 'no unit price') !== false;
+            });
+        }
+        
+        return response()->json([
+            'business_id' => $business_id,
+            'last_imports' => $last_imports,
+            'recent_sales' => $recent_sales,
+            'sample_products' => $products,
+            'sample_variations' => $variations,
+            'sample_contacts' => $contacts,
+            'locations' => $locations,
+            'recent_import_logs' => array_values($log_lines),
+            'instructions' => [
+                'If last_imports is empty, imports are not being saved',
+                'If recent_sales is empty, no sales exist in the system',
+                'If sample_products is empty, you need to create products first',
+                'Check recent_import_logs for "Sales Import Summary" to see what was skipped',
+                'Products must exist with matching SKU or name for import to work',
+                'Unit prices must be greater than 0',
+                'Make sure you have at least one business location',
+            ]
+        ]);
+    });
+    
+    
     Route::get('/revert-sale-import/{batch}', [ImportSalesController::class, 'revertSaleImport']);
 
     Route::get('/sells/pos/get_product_row/{variation_id}/{location_id}', [SellPosController::class, 'getProductRow']);
