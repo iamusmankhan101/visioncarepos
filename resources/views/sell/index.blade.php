@@ -1,6 +1,23 @@
 @extends('layouts.app')
 @section('title', __('lang_v1.all_sales'))
 
+@section('css')
+    <style>
+        /* Sticky footer for sell table */
+        #sell_table tfoot {
+            position: sticky;
+            bottom: 0;
+            background-color: #f9fafb;
+            z-index: 10;
+            box-shadow: 0 -2px 4px rgba(0,0,0,0.1);
+        }
+        
+        #sell_table tfoot tr {
+            background-color: #f9fafb !important;
+        }
+    </style>
+@endsection
+
 @section('content')
     <!-- Order Status Modal Fix CSS -->
     <link rel="stylesheet" href="{{ asset('css/order-status-modal-fix.css') }}">
@@ -178,6 +195,8 @@
                 processing: true,
                 serverSide: true,
                 fixedHeader:false,
+                dom: '<"row margin-bottom-20"<"col-sm-1"l><"col-sm-8"><"col-sm-3"f> r>tip', // Removed 'B' to hide export buttons
+                buttons: [], // Explicitly disable export buttons
                 aaSorting: [
                     [2, 'desc']
                 ],
