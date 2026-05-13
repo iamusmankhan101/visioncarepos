@@ -24,6 +24,23 @@
             </div>  
         </div>     
     @endif
+    
+    <!-- Troubleshooting Tips -->
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="alert alert-info alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <h4><i class="icon fa fa-info-circle"></i> Important: Before Importing Sales</h4>
+                <ul style="margin-bottom: 0;">
+                    <li><strong>Products must exist</strong> - Create products with matching SKUs before importing</li>
+                    <li><strong>Unit prices must be > 0</strong> - Rows with zero or empty prices will be skipped</li>
+                    <li><strong>Check product SKUs</strong> - SKUs in Excel must match product variations in your system</li>
+                    <li><strong>If import shows success but no sales appear</strong> - Visit <a href="/debug-sales-import" target="_blank" class="alert-link"><strong>/debug-sales-import</strong></a> to see why rows were skipped</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
     <div class="row">
         <div class="col-md-12">
             @component('components.widget')

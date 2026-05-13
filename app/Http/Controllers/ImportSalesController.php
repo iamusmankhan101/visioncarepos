@@ -224,12 +224,27 @@ class ImportSalesController extends Controller
             ini_set('max_execution_time', 0);
             ini_set('memory_limit', -1);
 
-            $this->__importSales($formatted_sales_data, $business_id, $location_id);
+            $import_stats = $this->__importSales($formatted_sales_data, $business_id, $location_id);
 
             DB::commit();
 
+            // Build detailed success message
+            $msg = __('lang_v1.sales_imported_successfully');
+            if ($import_stats['imported_count'] > 0) {
+                $msg .= ' (' . $import_stats['imported_count'] . ' sales imported)';
+            }
+            if ($import_stats['skipped_count'] > 0) {
+                $msg .= ' - ' . $import_stats['skipped_count'] . ' rows skipped. Check logs for details.';
+            }
+            if ($import_stats['imported_count'] == 0) {
+                $msg = 'Import completed but no sales were created. ';
+                if ($import_stats['skipped_count'] > 0) {
+                    $msg .= $import_stats['skipped_count'] . ' rows were skipped. Common reasons: products not found or unit price is 0. Check Laravel logs for details.';
+                }
+            }
+
             $output = ['success' => 1,
-                'msg' => __('lang_v1.sales_imported_successfully'),
+                'msg' => $msg,
             ];
         } catch (\Exception $e) {
             DB::rollBack();
@@ -544,6 +559,14 @@ class ImportSalesController extends Controller
             'skipped_details' => $skipped_rows,
             'import_batch' => $import_batch
         ]);
+        
+        // Return statistics
+        return [
+            'imported_count' => $imported_count,
+            'skipped_count' => count($skipped_rows),
+            'skipped_details' => $skipped_rows,
+            'import_batch' => $import_batch
+        ];
     }
 
     private function __formatSaleData($imported_data, $import_fields, $group_by)
