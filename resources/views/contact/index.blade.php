@@ -229,9 +229,9 @@
                                 <td @if ($type == 'supplier') colspan="7"
                             @elseif($type == 'customer')
                                 @if ($reward_enabled)
-                                    colspan="11"
+                                    colspan="10"
                                 @else
-                                    colspan="10" @endif
+                                    colspan="9" @endif
                                     @endif>
                                     <strong>
                                         @lang('sale.total'):
