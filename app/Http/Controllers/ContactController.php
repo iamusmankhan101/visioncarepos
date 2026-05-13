@@ -554,6 +554,21 @@ class ContactController extends Controller
             $contacts->removeColumn('total_rp');
         }
 
+        // Debug: Log a sample contact to verify custom_field11 and custom_field12
+        $sample = Contact::where('business_id', request()->session()->get('user.business_id'))
+            ->where('type', 'customer')
+            ->whereNotNull('custom_field10')
+            ->first();
+        if ($sample) {
+            \Log::info('Sample contact custom fields', [
+                'id' => $sample->id,
+                'name' => $sample->name,
+                'custom_field10' => $sample->custom_field10,
+                'custom_field11' => $sample->custom_field11,
+                'custom_field12' => $sample->custom_field12,
+            ]);
+        }
+
         return $contacts->rawColumns(['checkbox', 'action', 'opening_balance', 'credit_limit', 'pay_term', 'due', 'return_due', 'name', 'balance'])
                         ->make(true);
     }
