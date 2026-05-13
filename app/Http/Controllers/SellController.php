@@ -25,6 +25,7 @@ use App\Utils\TransactionUtil;
 use App\Variation;
 use App\Warranty;
 use DB;
+use Excel;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Http\Request;
