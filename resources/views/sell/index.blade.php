@@ -81,6 +81,16 @@
                                 <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"/>
                             </svg> @lang('messages.delete') @lang('lang_v1.selected') (<span id="selected_delete_count">0</span>)
                         </button>
+                        <button type="button" 
+                           class="tw-dw-btn tw-bg-gradient-to-r tw-from-blue-600 tw-to-blue-500 tw-font-bold tw-text-white tw-border-none tw-rounded-full tw-mr-2" 
+                           id="export_sales_for_import_btn">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-download">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2"/>
+                                <path d="M7 11l5 5l5 -5"/>
+                                <path d="M12 4l0 12"/>
+                            </svg> <span id="export_sales_btn_text">Export for Import</span> <span id="export_sales_selected_count" style="display: none;">(<span id="export_sales_count">0</span> selected)</span>
+                        </button>
                         <a class="tw-dw-btn tw-bg-gradient-to-r tw-from-indigo-600 tw-to-blue-500 tw-font-bold tw-text-white tw-border-none tw-rounded-full pull-right"
                             href="{{ action([\App\Http\Controllers\SellController::class, 'create']) }}">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
@@ -681,6 +691,20 @@
                     $('#bulk_print_invoices').hide();
                     $('#bulk_delete_sales').hide();
                 }
+                
+                // Update export button text
+                updateExportSalesButtonText(selectedCount);
+            }
+            
+            function updateExportSalesButtonText(selectedCount) {
+                if (selectedCount > 0) {
+                    $('#export_sales_count').text(selectedCount);
+                    $('#export_sales_selected_count').show();
+                    $('#export_sales_btn_text').text('Export');
+                } else {
+                    $('#export_sales_selected_count').hide();
+                    $('#export_sales_btn_text').text('Export for Import (All)');
+                }
             }
 
             $('#bulk_print_invoices').on('click', function() {
@@ -809,6 +833,13 @@
                         $('#bulk_delete_sales').prop('disabled', false).html('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-trash"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 7l16 0"/><path d="M10 11l0 6"/><path d="M14 11l0 6"/><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"/><path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"/></svg> @lang("messages.delete") @lang("lang_v1.selected") (<span id="selected_delete_count">0</span>)');
                     }
                 });
+            });
+            
+            // Export for Import functionality
+            $('#export_sales_for_import_btn').on('click', function() {
+                toastr.info('Sales export for import feature coming soon!');
+                // TODO: Implement sales export for import
+                // This is more complex than contacts because sales have multiple line items
             });
         });
 
