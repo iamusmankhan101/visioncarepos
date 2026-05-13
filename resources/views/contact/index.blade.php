@@ -165,8 +165,8 @@
                     <table class="table table-bordered table-striped" id="contact_table">
                         <thead>
                             <tr>
-                                <th><input type="checkbox" id="select_all_customers" /></th>
-                                <th class="tw-w-full">@lang('messages.action')</th>
+                                <th class="no-export"><input type="checkbox" id="select_all_customers" /></th>
+                                <th class="tw-w-full no-export">@lang('messages.action')</th>
                                 <th>@lang('lang_v1.contact_id')</th>
                                 @if ($type == 'supplier')
                                     <th>@lang('business.business_name')</th>

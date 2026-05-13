@@ -174,7 +174,7 @@ $(document).ready(function () {
             text: '<i class="fa fa-file-csv" aria-hidden="true"></i> ' + LANG.export_to_csv,
             className: 'tw-dw-btn-xs  tw-dw-btn tw-dw-btn-outline tw-my-2',
             exportOptions: {
-                columns: ':visible',
+                columns: ':visible:not(.no-export)',
                 format: {
                     body: function(data, row, column, node) {
                         // Check if the node or its children have data-is_quantity="true"
