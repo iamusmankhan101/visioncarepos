@@ -2903,7 +2903,8 @@ class ContactController extends Controller
                 // Add prescription fields if provided
                 $prescription_fields = [
                     'custom_field1', 'custom_field2', 'custom_field3', 'custom_field4', 'custom_field5',
-                    'custom_field6', 'custom_field7', 'custom_field8', 'custom_field9', 'custom_field10'
+                    'custom_field6', 'custom_field7', 'custom_field8', 'custom_field9', 'custom_field10',
+                    'custom_field11', 'custom_field12'
                 ];
                 
                 foreach ($prescription_fields as $field) {

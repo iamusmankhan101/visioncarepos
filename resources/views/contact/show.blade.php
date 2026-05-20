@@ -787,8 +787,8 @@ $(document).ready(function() {
             custom_field8:  $form.find('.rc-cf8').val(),
             custom_field9:  $form.find('.rc-cf9').val(),
             custom_field10: $form.find('.rc-cf10').val(),
-            related_shipping_custom_field_1: $form.find('.rc-scf1').val(),
-            related_shipping_custom_field_2: $form.find('.rc-scf2').val(),
+            custom_field11: $form.find('.rc-cf11').val(),
+            custom_field12: $form.find('.rc-cf12').val(),
         };
 
         $.ajax({

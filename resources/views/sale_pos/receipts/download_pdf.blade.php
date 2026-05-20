@@ -441,8 +441,8 @@ window.addEventListener('afterprint', function() {
 							<tr>
 								<td style="font-weight: 600; border: 1px solid #000 !important; padding: 1px; height: 18px; font-size: 10px;">Near</td>
 								<td style="text-align: center; border: 1px solid #000 !important; padding: 1px; height: 18px; font-size: 10px;">{{ optional($contact)->custom_field10 }}</td>
-								<td style="text-align: center; border: 1px solid #000 !important; padding: 1px; height: 18px; font-size: 10px;">{{ $contact && !empty($contact->shipping_custom_field_details['shipping_custom_field_1']) ? $contact->shipping_custom_field_details['shipping_custom_field_1'] : '' }}</td>
-								<td style="text-align: center; border: 1px solid #000 !important; padding: 1px; height: 18px; font-size: 10px;">{{ $contact && !empty($contact->shipping_custom_field_details['shipping_custom_field_2']) ? $contact->shipping_custom_field_details['shipping_custom_field_2'] : '' }}</td>
+								<td style="text-align: center; border: 1px solid #000 !important; padding: 1px; height: 18px; font-size: 10px;">{{ optional($contact)->custom_field11 }}</td>
+								<td style="text-align: center; border: 1px solid #000 !important; padding: 1px; height: 18px; font-size: 10px;">{{ optional($contact)->custom_field12 }}</td>
 							</tr>
 						</tbody>
 					</table>

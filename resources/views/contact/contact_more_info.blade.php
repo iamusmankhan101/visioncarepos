@@ -164,8 +164,8 @@
                     <tr>
                         <td><strong>Near</strong></td>
                         <td><input type="text" class="form-control input-sm rc-cf10" placeholder="-2.00"></td>
-                        <td><input type="text" class="form-control input-sm rc-scf1" placeholder="-1.00"></td>
-                        <td><input type="text" class="form-control input-sm rc-scf2" placeholder="180"></td>
+                        <td><input type="text" class="form-control input-sm rc-cf11" placeholder="-1.00"></td>
+                        <td><input type="text" class="form-control input-sm rc-cf12" placeholder="180"></td>
                     </tr>
                 </tbody>
             </table>
