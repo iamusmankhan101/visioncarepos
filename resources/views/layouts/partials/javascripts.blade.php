@@ -238,34 +238,7 @@ if (typeof tinymce !== 'undefined') {
 
         $('.dt-buttons.btn-group').find('a.btn').removeClass('btn-default');
         $('.dt-buttons.btn-group').find('a.btn').removeClass('btn');
-        
-        // Global phone number prefixing logic (+92)
-        $(document).on('focus', 'input[name="mobile"], input[name="alternate_number"], input[name="contact_number"], input[name="alt_number"], input[name="family_number"], input[name="landline"]', function() {
-            var val = $(this).val().trim();
-            if (val === '') {
-                $(this).val('+92');
-            }
-        });
 
-        $(document).on('blur', 'input[name="mobile"], input[name="alternate_number"], input[name="contact_number"], input[name="alt_number"], input[name="family_number"], input[name="landline"]', function() {
-            var val = $(this).val().trim();
-            if (val === '+92') {
-                $(this).val('');
-            }
-        });
-   
-        // Automatically add +92 to Select2 search fields if a number is typed
-        $(document).on('input', '.select2-search__field', function() {
-            var val = $(this).val();
-            // If starts with a digit and not already prefixed with +92
-            if (/^\d/.test(val) && !val.startsWith('+92')) {
-                if (val.startsWith('0')) {
-                    $(this).val('+92' + val.substring(1));
-                } else {
-                    $(this).val('+92' + val);
-                }
-            }
-        });
     });
 </script>
 
