@@ -239,6 +239,88 @@ if (typeof tinymce !== 'undefined') {
         $('.dt-buttons.btn-group').find('a.btn').removeClass('btn-default');
         $('.dt-buttons.btn-group').find('a.btn').removeClass('btn');
 
+        // Dynamic search for duplicate mobile numbers and show a dropdown
+        $(document).on('input', 'input[name="mobile"]', function() {
+            var $input = $(this);
+            var mobile = $input.val().trim();
+            
+            if (mobile.length < 3) {
+                $input.closest('.form-group').find('.contact-mobile-dropdown').remove();
+                return;
+            }
+            
+            var $container = $input.closest('.form-group');
+            $container.css('position', 'relative');
+            
+            var $dropdown = $container.find('.contact-mobile-dropdown');
+            if ($dropdown.length === 0) {
+                $dropdown = $('<div class="contact-mobile-dropdown" style="display:none; position:absolute; z-index:9999; width:100%; max-height:200px; overflow-y:auto; background:#fff; border:1px solid #ccc; box-shadow:0 2px 5px rgba(0,0,0,0.15); border-radius:4px; padding:5px 0;"></div>');
+                if ($input.parent('.input-group').length > 0) {
+                    $input.parent('.input-group').after($dropdown);
+                } else {
+                    $input.after($dropdown);
+                }
+            }
+            
+            $.ajax({
+                method: 'POST',
+                url: base_path + '/check-mobile',
+                dataType: 'json',
+                data: {
+                    mobile_number: mobile,
+                    contact_id: $('#hidden_id').val() || ''
+                },
+                success: function(result) {
+                    if (result.is_mobile_exists && result.contacts && result.contacts.length > 0) {
+                        var html = '';
+                        $.each(result.contacts, function(index, contact) {
+                            html += '<div class="contact-dropdown-item" data-id="' + contact.id + '" data-name="' + contact.name + '" style="padding:8px 12px; cursor:pointer; border-bottom:1px solid #eee; transition: background 0.2s;">';
+                            html += '<strong>' + contact.name + '</strong> <span class="text-muted" style="font-size:11px;">(' + contact.contact_id + ')</span><br/>';
+                            html += '<span class="text-muted" style="font-size:11px;"><i class="fa fa-phone"></i> ' + contact.mobile + '</span>';
+                            html += '</div>';
+                        });
+                        $dropdown.html(html).show();
+                        
+                        $dropdown.find('.contact-dropdown-item').hover(
+                            function() { $(this).css('background', '#f5f5f5'); },
+                            function() { $(this).css('background', '#fff'); }
+                        );
+                    } else {
+                        $dropdown.hide().empty();
+                    }
+                }
+            });
+        });
+        
+        // Handle selecting contact from the dropdown
+        $(document).on('click', '.contact-dropdown-item', function() {
+            var id = $(this).data('id');
+            var name = $(this).data('name');
+            
+            if ($('#customer_id').length > 0) {
+                if ($('#customer_id').find("option[value='" + id + "']").length === 0) {
+                    var newOption = new Option(name, id, true, true);
+                    $('#customer_id').append(newOption).trigger('change');
+                } else {
+                    $('#customer_id').val(id).trigger('change');
+                }
+                
+                $('.contact_modal').modal('hide');
+                $('form#quick_add_contact')[0].reset();
+            } else {
+                toastr.warning("This contact already exists: " + name);
+            }
+            
+            $('.contact-mobile-dropdown').remove();
+        });
+
+        // Hide dropdown when clicking outside
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('.form-group').hasClass('position-relative') && !$(e.target).hasClass('contact-dropdown-item')) {
+                $('.contact-mobile-dropdown').hide();
+            }
+        });
+
     });
 </script>
 

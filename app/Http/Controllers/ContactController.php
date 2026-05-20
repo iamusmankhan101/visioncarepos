@@ -2717,18 +2717,28 @@ class ContactController extends Controller
 
         $mobile_number = $request->input('mobile_number');
 
+        if (empty($mobile_number) || strlen($mobile_number) < 3) {
+            return [
+                'is_mobile_exists' => false,
+                'contacts' => []
+            ];
+        }
+
         $query = Contact::where('business_id', $business_id)
-                        ->where('mobile', 'like', "%{$mobile_number}");
+                        ->where('mobile', 'like', "%{$mobile_number}%");
 
         if (! empty($request->input('contact_id'))) {
             $query->where('id', '!=', $request->input('contact_id'));
         }
 
-        $contacts = $query->pluck('name')->toArray();
+        $matched_contacts = $query->select('id', 'name', 'mobile', 'contact_id')->limit(10)->get();
+
+        $names = $matched_contacts->pluck('name')->toArray();
 
         return [
-            'is_mobile_exists' => ! empty($contacts),
-            'msg' => __('lang_v1.mobile_already_registered', ['contacts' => implode(', ', $contacts), 'mobile' => $mobile_number]),
+            'is_mobile_exists' => !$matched_contacts->isEmpty(),
+            'msg' => __('lang_v1.mobile_already_registered', ['contacts' => implode(', ', $names), 'mobile' => $mobile_number]),
+            'contacts' => $matched_contacts
         ];
     }
 
