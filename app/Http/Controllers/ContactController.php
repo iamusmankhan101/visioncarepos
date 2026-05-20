@@ -2039,9 +2039,10 @@ class ContactController extends Controller
                     $exists = Contact::where('business_id', $business_id)
                                 ->where('contact_id', $value[6])
                                 ->exists();
-                    if (! $exists) {
-                        $contact_array['contact_id'] = $value[6];
+                    if ($exists) {
+                        continue; // Skip this row entirely to prevent duplicate
                     }
+                    $contact_array['contact_id'] = $value[6];
                 }
 
                 if (! empty(trim($value[7] ?? ''))) {
