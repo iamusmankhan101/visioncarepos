@@ -118,7 +118,12 @@ class ImportSalesController extends Controller
             }
 
             $file_name = time().'_'.$file->getClientOriginalName();
-            $request->sales->storeAs('temp', $file_name);
+            
+            $upload_path = public_path('uploads/temp');
+            if (!is_dir($upload_path)) {
+                mkdir($upload_path, 0755, true);
+            }
+            $file->move($upload_path, $file_name);
 
             $parsed_array = $this->__parseData($file_name);
 
