@@ -1245,8 +1245,8 @@ class TransactionUtil extends Util
                                     ],
                                     'near' => [
                                         'sph' => $additional_customer->custom_field10,
-                                        'cyl' => $additional_customer->shipping_custom_field_details['shipping_custom_field_1'] ?? '',
-                                        'axis' => $additional_customer->shipping_custom_field_details['shipping_custom_field_2'] ?? '',
+                                        'cyl' => $additional_customer->custom_field11,
+                                        'axis' => $additional_customer->custom_field12,
                                     ],
                                 ],
                             ],

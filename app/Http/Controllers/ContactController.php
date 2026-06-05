@@ -1025,8 +1025,8 @@ class ContactController extends Controller
                             ],
                             'near' => [
                                 'sph' => $rel_contact->custom_field10,
-                                'cyl' => $rel_contact->shipping_custom_field_details['shipping_custom_field_1'] ?? '',
-                                'axis' => $rel_contact->shipping_custom_field_details['shipping_custom_field_2'] ?? '',
+                                'cyl' => $rel_contact->custom_field11,
+                                'axis' => $rel_contact->custom_field12,
                             ]
                         ]
                     ]
@@ -1159,8 +1159,8 @@ class ContactController extends Controller
                                 ],
                                 'near' => [
                                     'sph' => $rc->custom_field10,
-                                    'cyl' => !empty($rc->shipping_custom_field_details['shipping_custom_field_1']) ? $rc->shipping_custom_field_details['shipping_custom_field_1'] : null,
-                                    'axis' => !empty($rc->shipping_custom_field_details['shipping_custom_field_2']) ? $rc->shipping_custom_field_details['shipping_custom_field_2'] : null,
+                                    'cyl' => $rc->custom_field11,
+                                    'axis' => $rc->custom_field12,
                                 ]
                             ]
                         ]
