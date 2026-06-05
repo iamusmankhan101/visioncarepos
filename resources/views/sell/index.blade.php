@@ -169,9 +169,6 @@
     <div class="modal fade edit_payment_modal" tabindex="-1" role="dialog" aria-labelledby="gridSystemModalLabel">
     </div>
 
-    <div class="modal fade view_modal" tabindex="-1" role="dialog" aria-labelledby="gridSystemModalLabel">
-    </div>
-
     <!-- This will be printed -->
     <section class="invoice print_section" id="receipt_section">
         </section> 
@@ -182,11 +179,6 @@
     <script type="text/javascript">
         $(document).ready(function() {
             // Ensure modal container exists at page load
-            if ($('.view_modal').length === 0) {
-                console.log('📦 Creating modal container at page load...');
-                $('body').append('<div class="modal fade view_modal" tabindex="-1" role="dialog" aria-labelledby="gridSystemModalLabel"></div>');
-            }
-            
             //Date range as a button
             var startLast30 = moment().subtract(29, 'days');
             var endLast = moment();
@@ -399,12 +391,6 @@
                     
                     // Re-attach click handlers for order status buttons after DataTable redraw
                     console.log('DataTable redrawn, attaching order status handlers...');
-                    
-                    // Ensure modal container exists
-                    if ($('.view_modal').length === 0) {
-                        console.warn('⚠️ Modal container .view_modal not found, creating it...');
-                        $('body').append('<div class="modal fade view_modal" tabindex="-1" role="dialog" aria-labelledby="gridSystemModalLabel"></div>');
-                    }
                     
                     // Use event delegation to handle dynamically added buttons
                     $('#sell_table').off('click', '.quick-order-status-btn').on('click', '.quick-order-status-btn', function(e) {
