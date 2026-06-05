@@ -1,6 +1,54 @@
 // POS.JS VERSION: 2025-12-28-RELATED-CUSTOMERS-v2
 console.log('POS.JS LOADED - Version: 2025-12-28-RELATED-CUSTOMERS-v2');
 
+// Finalize invoice — registered outside document.ready so it works even if
+// something else in the ready block crashes before reaching this handler.
+$(document).on('click', 'button#pos-finalize, button#pos-finalize-desktop', function() {
+    try {
+        if ($('table#pos_table tbody').find('.product_row').length <= 0) {
+            if (typeof LANG !== 'undefined' && LANG.no_products_added) {
+                toastr.warning(LANG.no_products_added);
+            }
+            return false;
+        }
+
+        if ($('#reward_point_enabled').length) {
+            try {
+                var validate_rp = isValidatRewardPoint();
+                if (!validate_rp['is_valid']) {
+                    toastr.error(validate_rp['msg']);
+                    return false;
+                }
+            } catch (e) { /* reward point check failed — continue */ }
+        }
+
+        var customerId = $('#customer_id').val();
+        if (customerId && customerId != '') {
+            $.ajax({
+                url: '/contacts/' + customerId + '/related-customers',
+                method: 'GET',
+                dataType: 'json',
+                timeout: 4000,
+                success: function(response) {
+                    if (response && response.success && response.has_related && response.customers && response.customers.length > 1) {
+                        showRelatedCustomersModal(response.customers);
+                    } else {
+                        $('#modal_payment').modal('show');
+                    }
+                },
+                error: function() {
+                    $('#modal_payment').modal('show');
+                }
+            });
+        } else {
+            $('#modal_payment').modal('show');
+        }
+    } catch (e) {
+        console.error('Multiple Pay error:', e);
+        $('#modal_payment').modal('show');
+    }
+});
+
 var global_brand_id = null;
 var global_p_category_id = null;
 var global_is_clear_local_storage = false;
@@ -772,45 +820,6 @@ $(document).ready(function() {
         });
     });
 
-    //Finalize invoice, open payment modal
-    $(document).on('click', 'button#pos-finalize, button#pos-finalize-desktop', function() {
-        //Check if product is present or not.
-        if ($('table#pos_table tbody').find('.product_row').length <= 0) {
-            toastr.warning(LANG.no_products_added);
-            return false;
-        }
-
-        if ($('#reward_point_enabled').length) {
-            var validate_rp = isValidatRewardPoint();
-            if (!validate_rp['is_valid']) {
-                toastr.error(validate_rp['msg']);
-                return false;
-            }
-        }
-
-        // Show payment modal — also check for related customers if a customer is selected
-        var customerId = $('#customer_id').val();
-        if (customerId && customerId != '') {
-            $.ajax({
-                url: '/contacts/' + customerId + '/related-customers',
-                method: 'GET',
-                dataType: 'json',
-                timeout: 4000,
-                success: function(response) {
-                    if (response && response.success && response.has_related && response.customers && response.customers.length > 1) {
-                        showRelatedCustomersModal(response.customers);
-                    } else {
-                        $('#modal_payment').modal('show');
-                    }
-                },
-                error: function() {
-                    $('#modal_payment').modal('show');
-                }
-            });
-        } else {
-            $('#modal_payment').modal('show');
-        }
-    });
 
     $('#modal_payment').one('shown.bs.modal', function() {
         $('#modal_payment')
