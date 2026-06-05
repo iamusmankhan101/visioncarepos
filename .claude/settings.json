@@ -2,7 +2,10 @@
   "permissions": {
     "allow": [
       "Bash(grep -n \"ajaxSetup\\\\|$.ajaxSetup\" /Users/imac/Desktop/CODES\\\\'/visioncarepos-main/public/js/pos.js)",
-      "Bash(awk 'NR>=140 && NR<=165 {print NR\": \"$0}' /Users/imac/Desktop/CODES\\\\'/visioncarepos-main/routes/web.php)"
+      "Bash(awk 'NR>=140 && NR<=165 {print NR\": \"$0}' /Users/imac/Desktop/CODES\\\\'/visioncarepos-main/routes/web.php)",
+      "Bash(php -l /Users/imac/Desktop/CODES\\\\'/visioncarepos-main/app/Http/Controllers/SellController.php)",
+      "Bash(php -l /Users/imac/Desktop/CODES\\\\'/visioncarepos-main/app/Http/Controllers/ImportSalesController.php)",
+      "Bash(php -l /Users/imac/Desktop/CODES\\\\'/visioncarepos-main/resources/views/sale_pos/show.blade.php)"
     ]
   }
 }

@@ -1254,20 +1254,12 @@ class SellController extends Controller
                     $types_of_service = $transaction->types_of_service->name;
                 }
 
-                // Extract additional customer phones from MULTI_INVOICE_CUSTOMERS stored in additional_notes
+                // Extract additional customer IDs from MULTI_INVOICE_CUSTOMERS stored in additional_notes
                 $additional_customer_phones = '';
                 if (!empty($transaction->additional_notes) && strpos($transaction->additional_notes, 'MULTI_INVOICE_CUSTOMERS:') !== false) {
-                    preg_match('/MULTI_INVOICE_CUSTOMERS:([^\n]+)/', $transaction->additional_notes, $multi_matches);
+                    preg_match('/MULTI_INVOICE_CUSTOMERS:([0-9,]+)/', $transaction->additional_notes, $multi_matches);
                     if (!empty($multi_matches[1])) {
-                        $extra_ids = array_filter(explode(',', trim($multi_matches[1])));
-                        $phones = [];
-                        foreach ($extra_ids as $extra_id) {
-                            $extra_contact = \App\Contact::find((int)$extra_id);
-                            if ($extra_contact && !empty($extra_contact->mobile)) {
-                                $phones[] = $extra_contact->mobile;
-                            }
-                        }
-                        $additional_customer_phones = implode('|', $phones);
+                        $additional_customer_phones = trim($multi_matches[1]);
                     }
                 }
 

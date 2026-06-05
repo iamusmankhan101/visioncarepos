@@ -78,7 +78,23 @@
         @if(!empty($sell->contact->supplier_business_name))
           {{ $sell->contact->supplier_business_name }}<br>
         @endif
-        <b>{{ __('sale.customer_name') }}:</b> {{ $sell->contact->name }}<br>
+        <b>{{ __('sale.customer_name') }}:</b> {{ $sell->contact->name }}
+        @php
+            $extra_customer_ids = [];
+            if (!empty($sell->additional_notes) && strpos($sell->additional_notes, 'MULTI_INVOICE_CUSTOMERS:') !== false) {
+                preg_match('/MULTI_INVOICE_CUSTOMERS:([0-9,]+)/', $sell->additional_notes, $_mc_matches);
+                if (!empty($_mc_matches[1])) {
+                    $extra_customer_ids = array_filter(explode(',', $_mc_matches[1]));
+                }
+            }
+        @endphp
+        @foreach($extra_customer_ids as $_cid)
+            @php $_ec = \App\Contact::find((int)$_cid); @endphp
+            @if($_ec)
+                , {{ $_ec->name }}
+            @endif
+        @endforeach
+        <br>
         <b>{{ __('business.address') }}:</b><br>
         @if(!empty($sell->billing_address()))
           {{$sell->billing_address()}}
@@ -388,7 +404,16 @@
         <strong>{{ __( 'sale.sell_note')}}:</strong><br>
         <p class="well well-sm no-shadow bg-gray">
           @if($sell->additional_notes)
-            {!! nl2br($sell->additional_notes) !!}
+            @php
+                $_clean_notes = preg_replace('/MULTI_INVOICE_CUSTOMERS:[^\n]*\n?/', '', $sell->additional_notes);
+                $_clean_notes = preg_replace('/Multiple Customers:[^\n]*\n?/', '', $_clean_notes);
+                $_clean_notes = trim($_clean_notes);
+            @endphp
+            @if($_clean_notes)
+                {!! nl2br($_clean_notes) !!}
+            @else
+                --
+            @endif
           @else
             --
           @endif

@@ -480,23 +480,16 @@ class ImportSalesController extends Controller
 
             $this->transactionUtil->createOrUpdateSellLines($transaction, $sell_lines, $location_id, false, null, [], false);
 
-            // Restore additional customers (pipe-separated phones) into additional_notes
+            // Restore additional customers (comma-separated contact IDs) into additional_notes
             if (!empty($first_sell_line['additional_customer_phones'])) {
-                $extra_phones = array_filter(explode('|', $first_sell_line['additional_customer_phones']));
-                $extra_ids = [];
-                $extra_names = [];
-                foreach ($extra_phones as $phone) {
-                    $phone = trim($phone);
-                    if (empty($phone)) continue;
-                    $extra_contact = Contact::where('business_id', $business_id)
-                        ->where('mobile', $phone)
-                        ->first();
-                    if ($extra_contact) {
-                        $extra_ids[] = $extra_contact->id;
-                        $extra_names[] = $extra_contact->name;
-                    }
-                }
+                $raw_ids = trim($first_sell_line['additional_customer_phones']);
+                $extra_ids = array_filter(explode(',', $raw_ids), 'is_numeric');
                 if (!empty($extra_ids)) {
+                    $extra_names = [];
+                    foreach ($extra_ids as $eid) {
+                        $ec = Contact::where('business_id', $business_id)->where('id', (int)$eid)->first();
+                        if ($ec) $extra_names[] = $ec->name;
+                    }
                     $all_names = array_merge([$contact->name], $extra_names);
                     $notes = 'MULTI_INVOICE_CUSTOMERS:' . implode(',', $extra_ids) . "\n"
                            . 'Multiple Customers: ' . implode(', ', $all_names);
