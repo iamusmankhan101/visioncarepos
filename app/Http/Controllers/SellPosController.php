@@ -867,36 +867,26 @@ class SellPosController extends Controller
 
                 // Store multiple customer IDs if provided (for separate invoice printing)
                 if (!empty($input['multiple_customer_ids'])) {
-                    \Log::info('Received multiple_customer_ids: ' . $input['multiple_customer_ids']);
-                    
-                    $customer_ids = explode(',', $input['multiple_customer_ids']);
-                    
-                    // Get customer names for the sell note
+                    $customer_ids = array_filter(explode(',', $input['multiple_customer_ids']));
+
                     $customer_names = [];
                     foreach ($customer_ids as $customer_id) {
-                        $customer = Contact::find($customer_id);
+                        $customer = Contact::find((int)$customer_id);
                         if ($customer) {
                             $customer_names[] = $customer->name;
                         }
                     }
-                    
+
                     if (!empty($customer_names)) {
-                        // Store the IDs for printing functionality (excluding main customer)
                         $additional_customer_ids = array_slice($customer_ids, 1);
                         if (!empty($additional_customer_ids)) {
-                            $transaction->additional_notes = (!empty($transaction->additional_notes) ? $transaction->additional_notes . "\n" : '') . 
+                            $transaction->additional_notes = (!empty($transaction->additional_notes) ? $transaction->additional_notes . "\n" : '') .
                                                             'MULTI_INVOICE_CUSTOMERS:' . implode(',', $additional_customer_ids);
                         }
-                        
-                        // Optionally add customer names to sell note for easy identification (this is optional)
                         $multiple_customers_note = 'Multiple Customers: ' . implode(', ', $customer_names);
                         $transaction->additional_notes = (!empty($transaction->additional_notes) ? $transaction->additional_notes . "\n" : '') . $multiple_customers_note;
-                        
                         $transaction->save();
-                        \Log::info('Saved transaction with customer data (sale note optional): ' . $multiple_customers_note);
                     }
-                } else {
-                    \Log::info('No multiple_customer_ids received in request');
                 }
 
                 //Upload Shipping documents
@@ -1005,25 +995,13 @@ class SellPosController extends Controller
                         $whatsapp_links[] = $whatsapp_link; // Add primary customer's link
                     }
                     
-                    \Log::info('WhatsApp Links Generation', [
-                        'primary_whatsapp_link' => $whatsapp_link,
-                        'selected_customers' => $input['selected_customers'] ?? 'not set',
-                        'multiple_customer_ids' => $input['multiple_customer_ids'] ?? 'not set',
-                        'transaction_contact_id' => $transaction->contact_id
-                    ]);
-                    
-                    // Check for additional customers and generate WhatsApp links for them
+                    // Generate WhatsApp links for all selected customers
                     if (!empty($input['selected_customers']) && is_array($input['selected_customers'])) {
                         foreach ($input['selected_customers'] as $customer_id) {
-                            if ($customer_id != $transaction->contact_id) { // Skip primary customer (already added)
+                            if ($customer_id != $transaction->contact_id) {
                                 $customer = \App\Contact::find($customer_id);
                                 if ($customer) {
                                     $additional_whatsapp_link = $this->notificationUtil->autoSendNotification($business_id, 'new_sale', $transaction, $customer);
-                                    \Log::info('Generated WhatsApp link for additional customer', [
-                                        'customer_id' => $customer_id,
-                                        'customer_name' => $customer->name,
-                                        'whatsapp_link' => $additional_whatsapp_link
-                                    ]);
                                     if (!empty($additional_whatsapp_link)) {
                                         $whatsapp_links[] = $additional_whatsapp_link;
                                     }
@@ -1031,36 +1009,8 @@ class SellPosController extends Controller
                             }
                         }
                     }
-                    
-                    // Also handle legacy multiple_customer_ids format
-                    if (!empty($input['multiple_customer_ids'])) {
-                        $customer_ids = explode(',', $input['multiple_customer_ids']);
-                        foreach ($customer_ids as $customer_id) {
-                            $customer_id = trim($customer_id);
-                            if ($customer_id && $customer_id != $transaction->contact_id) { // Skip primary customer
-                                $customer = \App\Contact::find($customer_id);
-                                if ($customer) {
-                                    $additional_whatsapp_link = $this->notificationUtil->autoSendNotification($business_id, 'new_sale', $transaction, $customer);
-                                    \Log::info('Generated WhatsApp link for legacy customer', [
-                                        'customer_id' => $customer_id,
-                                        'customer_name' => $customer->name,
-                                        'whatsapp_link' => $additional_whatsapp_link
-                                    ]);
-                                    if (!empty($additional_whatsapp_link)) {
-                                        $whatsapp_links[] = $additional_whatsapp_link;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    
-                    // Remove duplicate links
+
                     $whatsapp_links = array_unique($whatsapp_links);
-                    
-                    \Log::info('Final WhatsApp links array', [
-                        'whatsapp_links_count' => count($whatsapp_links),
-                        'whatsapp_links' => $whatsapp_links
-                    ]);
 
                     // zatca instant sync if status final type sell
                     if($transaction->type == 'sell'){
@@ -2345,57 +2295,22 @@ class SellPosController extends Controller
                 $invoice_layout_id = $transaction->is_direct_sale ? $transaction->location->sale_invoice_layout_id : null;
                 
                 // Extract selected customers from transaction's additional_notes if available
-                $selected_customers = []; // Start empty, will add main customer if needed
-                
-                \Log::info('PrintInvoice - Transaction additional_notes', [
-                    'transaction_id' => $transaction_id,
-                    'additional_notes' => $transaction->additional_notes,
-                    'has_notes' => !empty($transaction->additional_notes)
-                ]);
-                
+                $selected_customers = [$transaction->contact_id];
+
                 if (!empty($transaction->additional_notes)) {
-                    // Check for MULTI_INVOICE_CUSTOMERS format
                     if (strpos($transaction->additional_notes, 'MULTI_INVOICE_CUSTOMERS:') !== false) {
                         preg_match('/MULTI_INVOICE_CUSTOMERS:([0-9,]+)/', $transaction->additional_notes, $matches);
-                        \Log::info('PrintInvoice - MULTI_INVOICE_CUSTOMERS regex matches', ['matches' => $matches]);
                         if (!empty($matches[1])) {
                             $additional_customer_ids = explode(',', $matches[1]);
-                            // Add main customer first, then additional customers
-                            $selected_customers = array_merge([$transaction->contact_id], $additional_customer_ids);
-                            $selected_customers = array_unique(array_map('intval', $selected_customers));
-                            \Log::info('PrintInvoice - Found MULTI_INVOICE_CUSTOMERS', [
-                                'main_customer' => $transaction->contact_id,
-                                'additional_customer_ids' => $additional_customer_ids,
-                                'final_selected_customers' => $selected_customers
-                            ]);
+                            $selected_customers = array_unique(array_map('intval', array_merge([$transaction->contact_id], $additional_customer_ids)));
                         }
-                    }
-                    // Also check for SELECTED_CUSTOMERS format (legacy)
-                    elseif (strpos($transaction->additional_notes, 'SELECTED_CUSTOMERS:') !== false) {
+                    } elseif (strpos($transaction->additional_notes, 'SELECTED_CUSTOMERS:') !== false) {
                         preg_match('/SELECTED_CUSTOMERS:([0-9,]+)/', $transaction->additional_notes, $matches);
                         if (!empty($matches[1])) {
-                            $customer_ids = explode(',', $matches[1]);
-                            $selected_customers = array_unique(array_map('intval', $customer_ids));
-                            \Log::info('PrintInvoice - Found SELECTED_CUSTOMERS (legacy)', [
-                                'selected_customers' => $selected_customers
-                            ]);
+                            $selected_customers = array_unique(array_map('intval', explode(',', $matches[1])));
                         }
                     }
                 }
-                
-                // If no customers found in additional_notes, just use the main customer
-                if (empty($selected_customers)) {
-                    $selected_customers = [$transaction->contact_id];
-                    \Log::info('PrintInvoice - No multiple customers found, using main customer only', [
-                        'main_customer' => $transaction->contact_id
-                    ]);
-                }
-                
-                \Log::info('PrintInvoice - Final selected customers for receipt generation', [
-                    'transaction_id' => $transaction_id,
-                    'selected_customers' => $selected_customers,
-                    'count' => count($selected_customers)
-                ]);
                 
                 // Generate receipt
                 $receipt = $this->receiptContent($business_id, $transaction->location_id, $transaction_id, $printer_type, $is_package_slip, false, $invoice_layout_id, $selected_customers, $is_delivery_note);

@@ -571,7 +571,7 @@ window.addEventListener('afterprint', function() {
 					</thead>
 					<tbody>
 						@foreach($receipt_details->lines as $line)
-							@if(!empty($line['assigned_customer_id']) && $line['assigned_customer_id'] == $additional_customer['id'])
+							@if(empty($line['assigned_customer_id']) || $line['assigned_customer_id'] == $additional_customer['id'])
 							<tr>
 								<td style="padding: 4px 0; font-size: 13px; color: #000;">
 									{{$line['name']}} {{$line['product_variation']}} {{$line['variation']}}
