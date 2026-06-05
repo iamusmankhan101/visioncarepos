@@ -151,6 +151,17 @@
             @endif
         @endforeach
     @endif
+    <style>
+        /* POS customer search dropdown — white background, black text */
+        .select2-search--dropdown .select2-search__field {
+            background-color: #ffffff !important;
+            color: #333333 !important;
+            border: 1px solid #cccccc !important;
+        }
+        .select2-search--dropdown .select2-search__field::placeholder {
+            color: #999999 !important;
+        }
+    </style>
 @stop
 @section('javascript')
     <script src="{{ asset('js/pos.js?v=' . $asset_v) }}"></script>

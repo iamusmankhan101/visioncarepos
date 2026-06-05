@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -n \"ajaxSetup\\\\|$.ajaxSetup\" /Users/imac/Desktop/CODES\\\\'/visioncarepos-main/public/js/pos.js)",
+      "Bash(awk 'NR>=140 && NR<=165 {print NR\": \"$0}' /Users/imac/Desktop/CODES\\\\'/visioncarepos-main/routes/web.php)"
+    ]
+  }
+}
