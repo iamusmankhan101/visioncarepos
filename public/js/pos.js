@@ -773,7 +773,7 @@ $(document).ready(function() {
     });
 
     //Finalize invoice, open payment modal
-    $('button#pos-finalize').click(function() {
+    $(document).on('click', 'button#pos-finalize, button#pos-finalize-desktop', function() {
         //Check if product is present or not.
         if ($('table#pos_table tbody').find('.product_row').length <= 0) {
             toastr.warning(LANG.no_products_added);
@@ -1262,6 +1262,8 @@ $(document).ready(function() {
     $('button#add-payment-row').click(function() {
         var row_index = $('#payment_row_index').val();
         var location_id = $('input#location_id').val();
+        var $btn = $(this);
+        $btn.prop('disabled', true);
         $.ajax({
             method: 'POST',
             url: '/sells/pos/get_payment_row',
@@ -1287,6 +1289,13 @@ $(document).ready(function() {
                     $(appended).find('#method_' + row_index).change();
                     $('#payment_row_index').val(parseInt(row_index) + 1);
                 }
+            },
+            error: function(xhr, status, error) {
+                toastr.error('Failed to add payment row. Please try again.');
+                console.error('Add payment row error:', xhr.status, xhr.responseText);
+            },
+            complete: function() {
+                $btn.prop('disabled', false);
             },
         });
     });
@@ -1527,6 +1536,11 @@ $(document).ready(function() {
                     url: url,
                     data: data,
                     dataType: 'json',
+                    error: function(xhr, status, error) {
+                        enable_pos_form_actions();
+                        toastr.error('Payment submission failed. Please try again.');
+                        console.error('POS submit error:', xhr.status, xhr.responseText);
+                    },
                     success: function(result) {
                         if (result.success == 1) {
                             // Check if there are multiple customers selected
@@ -2986,6 +3000,7 @@ function reset_pos_form(){
 	$('#modal_payment').find('.remove_payment_row').each( function(){
 		$(this).closest('.payment_row').remove();
 	});
+	$('#payment_row_index').val(1);
 
     if ($('#is_credit_sale').length) {
         $('#is_credit_sale').val(0);
