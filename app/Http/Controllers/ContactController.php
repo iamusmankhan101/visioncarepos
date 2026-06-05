@@ -2777,55 +2777,38 @@ class ContactController extends Controller
      */
     public function getRelatedCustomers($contact_id)
     {
-        if (request()->ajax()) {
-            \Log::info('Getting related customers for contact', ['contact_id' => $contact_id]);
-            
+        try {
             $business_id = request()->session()->get('user.business_id');
-            
+
             $contact = Contact::where('business_id', $business_id)
                 ->where('id', $contact_id)
                 ->first();
-            
+
             if (!$contact) {
-                \Log::error('Contact not found', ['contact_id' => $contact_id, 'business_id' => $business_id]);
-                return response()->json(['success' => false, 'msg' => 'Contact not found']);
+                return response()->json(['success' => true, 'has_related' => false, 'customers' => []]);
             }
-            
-            // Get all contacts with the same phone number (phone-based relationships)
+
+            if (empty($contact->mobile)) {
+                return response()->json(['success' => true, 'has_related' => false, 'customers' => []]);
+            }
+
             $related_contacts = Contact::where('business_id', $business_id)
                 ->where('mobile', $contact->mobile)
-                ->where('mobile', '!=', '')
-                ->whereNotNull('mobile')
-                ->where('contact_status', 'active') // Only active contacts
+                ->where('contact_status', 'active')
                 ->select('id', 'name', 'mobile', 'contact_id', 'custom_field1', 'custom_field2', 'custom_field3', 'custom_field4', 'custom_field5', 'custom_field6', 'custom_field7', 'custom_field8', 'custom_field9', 'custom_field10', 'custom_field11', 'custom_field12')
-                ->orderBy('id', 'asc') // Order by ID to show primary customer first
+                ->orderBy('id', 'asc')
                 ->get();
-            
-            \Log::info('Phone-based query details', [
-                'contact_mobile' => $contact->mobile,
-                'query_mobile' => $contact->mobile,
-                'found_contacts' => $related_contacts->pluck('name', 'id')->toArray(),
-                'found_mobiles' => $related_contacts->pluck('mobile', 'id')->toArray()
-            ]);
-            
-            \Log::info('Found phone-based related contacts', ['count' => $related_contacts->count(), 'phone' => $contact->mobile]);
-            
+
             if ($related_contacts->count() <= 1) {
-                \Log::info('No related customers found with same phone number');
-                return response()->json([
-                    'success' => true,
-                    'has_related' => false,
-                    'customers' => []
-                ]);
+                return response()->json(['success' => true, 'has_related' => false, 'customers' => []]);
             }
-            
+
             $customers = [];
-            $primary_customer_id = $related_contacts->min('id'); // Get the lowest ID (primary customer)
-            
+            $primary_customer_id = $related_contacts->min('id');
+
             foreach ($related_contacts as $related) {
                 $prescription_summary = '';
-                
-                // Build prescription summary
+
                 if (!empty($related->custom_field1) || !empty($related->custom_field2) || !empty($related->custom_field3)) {
                     $prescription_summary .= 'R: ' . ($related->custom_field1 ?? '-') . '/' . ($related->custom_field2 ?? '-') . '/' . ($related->custom_field3 ?? '-');
                 }
@@ -2833,7 +2816,7 @@ class ContactController extends Controller
                     if ($prescription_summary) $prescription_summary .= ' | ';
                     $prescription_summary .= 'L: ' . ($related->custom_field7 ?? '-') . '/' . ($related->custom_field8 ?? '-') . '/' . ($related->custom_field9 ?? '-');
                 }
-                
+
                 $customers[] = [
                     'id' => $related->id,
                     'name' => $related->name,
@@ -2841,15 +2824,18 @@ class ContactController extends Controller
                     'contact_id' => $related->contact_id,
                     'prescription_summary' => $prescription_summary,
                     'is_current' => $related->id == $contact_id,
-                    'is_primary' => $related->id == $primary_customer_id
+                    'is_primary' => $related->id == $primary_customer_id,
+                    'phone_group_primary_id' => $primary_customer_id,
                 ];
             }
-            
+
             return response()->json([
                 'success' => true,
                 'has_related' => count($customers) > 1,
-                'customers' => $customers
+                'customers' => $customers,
             ]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => true, 'has_related' => false, 'customers' => []]);
         }
     }
 

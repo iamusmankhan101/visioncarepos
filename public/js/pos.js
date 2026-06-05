@@ -788,28 +788,22 @@ $(document).ready(function() {
             }
         }
 
-        // Check if customer has related customers
+        // Show payment modal — also check for related customers if a customer is selected
         var customerId = $('#customer_id').val();
         if (customerId && customerId != '') {
             $.ajax({
                 url: '/contacts/' + customerId + '/related-customers',
                 method: 'GET',
                 dataType: 'json',
+                timeout: 4000,
                 success: function(response) {
-                    console.log('Related customers response:', response);
-                    if (response.success && response.has_related && response.customers.length > 1) {
-                        // Show related customers modal
-                        console.log('Showing related customers modal');
+                    if (response && response.success && response.has_related && response.customers && response.customers.length > 1) {
                         showRelatedCustomersModal(response.customers);
                     } else {
-                        console.log('No related customers, showing payment modal');
-                        // No related customers, show payment modal directly
                         $('#modal_payment').modal('show');
                     }
                 },
-                error: function(xhr, status, error) {
-                    console.error('Error fetching related customers:', error, xhr.responseText);
-                    // On error, show payment modal directly
+                error: function() {
                     $('#modal_payment').modal('show');
                 }
             });
