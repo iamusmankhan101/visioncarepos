@@ -4636,10 +4636,20 @@ $(document).on('click', '#confirm_customer_selection', function(e) {
             window.relatedCustomerCallback = null;
         }, 300);
     } else {
-        console.log('No callback, showing payment modal');
-        // The show.bs.modal interceptor handles delivery date collection
+        console.log('No callback, showing delivery date then payment modal');
         setTimeout(function() {
-            $('#modal_payment').modal('show');
+            if ($('#delivery_date_modal').length > 0 && typeof $.fn.datetimepicker !== 'undefined') {
+                try {
+                    pos_show_delivery_modal(function() {
+                        $('#modal_payment').modal('show');
+                    });
+                } catch (err) {
+                    console.error('Delivery modal error:', err);
+                    $('#modal_payment').modal('show');
+                }
+            } else {
+                $('#modal_payment').modal('show');
+            }
         }, 300);
     }
 });
@@ -5170,28 +5180,3 @@ function pos_show_delivery_modal(onDone) {
     $('#delivery_date_modal').modal('show');
 }
 
-// Intercept #modal_payment show event so delivery modal always appears first
-$(document).on('show.bs.modal', '#modal_payment', function(e) {
-    if ($('#delivery_date_modal').hasClass('in') || $(this).data('delivery-confirmed')) {
-        $(this).removeData('delivery-confirmed');
-        return;
-    }
-
-    // Skip delivery modal if element doesn't exist or datetimepicker isn't loaded
-    if ($('#delivery_date_modal').length === 0 || typeof $.fn.datetimepicker === 'undefined') {
-        return;
-    }
-
-    e.preventDefault();
-    var $paymentModal = $(this);
-    try {
-        pos_show_delivery_modal(function() {
-            $paymentModal.data('delivery-confirmed', true);
-            $paymentModal.modal('show');
-        });
-    } catch (err) {
-        console.error('Delivery date modal error, showing payment modal directly:', err);
-        $paymentModal.data('delivery-confirmed', true);
-        $paymentModal.modal('show');
-    }
-});
