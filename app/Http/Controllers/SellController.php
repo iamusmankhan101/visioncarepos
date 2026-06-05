@@ -1216,6 +1216,7 @@ class SellController extends Controller
                 'Custom Field 2',
                 'Custom Field 3',
                 'Custom Field 4',
+                'Additional Customer Phones',
             ];
 
             // Add transaction data rows
@@ -1232,7 +1233,7 @@ class SellController extends Controller
                 
                 $contact = $transaction->contact;
                 $sale_date = $transaction->transaction_date ? \Carbon\Carbon::parse($transaction->transaction_date)->format('Y-m-d H:i:s') : '';
-                
+
                 // Get payment info
                 $total_paid = 0;
                 $payment_method = 'cash';
@@ -1241,18 +1242,35 @@ class SellController extends Controller
                     $first_payment = $transaction->payment_lines->first();
                     $payment_method = $first_payment ? $first_payment->method : 'cash';
                 }
-                
+
                 // Get types of service info
                 $types_of_service = null;
                 $service_field1 = $transaction->service_custom_field_1;
                 $service_field2 = $transaction->service_custom_field_2;
                 $service_field3 = $transaction->service_custom_field_3;
                 $service_field4 = $transaction->service_custom_field_4;
-                
+
                 if ($transaction->types_of_service) {
                     $types_of_service = $transaction->types_of_service->name;
                 }
-                
+
+                // Extract additional customer phones from MULTI_INVOICE_CUSTOMERS stored in additional_notes
+                $additional_customer_phones = '';
+                if (!empty($transaction->additional_notes) && strpos($transaction->additional_notes, 'MULTI_INVOICE_CUSTOMERS:') !== false) {
+                    preg_match('/MULTI_INVOICE_CUSTOMERS:([^\n]+)/', $transaction->additional_notes, $multi_matches);
+                    if (!empty($multi_matches[1])) {
+                        $extra_ids = array_filter(explode(',', trim($multi_matches[1])));
+                        $phones = [];
+                        foreach ($extra_ids as $extra_id) {
+                            $extra_contact = \App\Contact::find((int)$extra_id);
+                            if ($extra_contact && !empty($extra_contact->mobile)) {
+                                $phones[] = $extra_contact->mobile;
+                            }
+                        }
+                        $additional_customer_phones = implode('|', $phones);
+                    }
+                }
+
                 // Check if transaction has sell lines
                 if (!$transaction->sell_lines || $transaction->sell_lines->isEmpty()) {
                     // If no sell lines, add a single row with transaction info
@@ -1278,27 +1296,28 @@ class SellController extends Controller
                         $service_field2,
                         $service_field3,
                         $service_field4,
+                        $additional_customer_phones,
                     ];
                     continue;
                 }
-                
+
                 // Export each sell line as a separate row
                 foreach ($transaction->sell_lines as $line) {
                     $product = $line->product;
                     $variation = $line->variations;
-                    
+
                     // Get product name and SKU
                     $product_name = '';
                     $sku = '';
-                    
+
                     if ($product) {
                         $product_name = $product->name;
                     }
-                    
+
                     if ($variation) {
                         $sku = $variation->sub_sku;
                     }
-                    
+
                     // Get unit info
                     $unit_name = '';
                     if ($line->sub_unit_id && $line->sub_unit) {
@@ -1306,10 +1325,10 @@ class SellController extends Controller
                     } elseif ($product && $product->unit) {
                         $unit_name = $product->unit->actual_name ?? $product->unit->short_name ?? '';
                     }
-                    
+
                     // Calculate unit price (before tax and discount)
                     $unit_price = $line->unit_price ?? 0;
-                    
+
                     // Get tax name
                     $tax_name = '';
                     if ($line->tax_id) {
@@ -1318,7 +1337,7 @@ class SellController extends Controller
                             $tax_name = $tax->name;
                         }
                     }
-                    
+
                     $export_data[] = [
                         $transaction->invoice_no,
                         $contact ? $contact->mobile : '',
@@ -1341,6 +1360,7 @@ class SellController extends Controller
                         $service_field2,
                         $service_field3,
                         $service_field4,
+                        $additional_customer_phones,
                     ];
                 }
             }
@@ -1349,6 +1369,7 @@ class SellController extends Controller
             if (count($export_data) == 1) {
                 $export_data[] = [
                     'No sales found',
+                    '',
                     '',
                     '',
                     '',

@@ -480,6 +480,31 @@ class ImportSalesController extends Controller
 
             $this->transactionUtil->createOrUpdateSellLines($transaction, $sell_lines, $location_id, false, null, [], false);
 
+            // Restore additional customers (pipe-separated phones) into additional_notes
+            if (!empty($first_sell_line['additional_customer_phones'])) {
+                $extra_phones = array_filter(explode('|', $first_sell_line['additional_customer_phones']));
+                $extra_ids = [];
+                $extra_names = [];
+                foreach ($extra_phones as $phone) {
+                    $phone = trim($phone);
+                    if (empty($phone)) continue;
+                    $extra_contact = Contact::where('business_id', $business_id)
+                        ->where('mobile', $phone)
+                        ->first();
+                    if ($extra_contact) {
+                        $extra_ids[] = $extra_contact->id;
+                        $extra_names[] = $extra_contact->name;
+                    }
+                }
+                if (!empty($extra_ids)) {
+                    $all_names = array_merge([$contact->name], $extra_names);
+                    $notes = 'MULTI_INVOICE_CUSTOMERS:' . implode(',', $extra_ids) . "\n"
+                           . 'Multiple Customers: ' . implode(', ', $all_names);
+                    $transaction->additional_notes = (!empty($transaction->additional_notes) ? $transaction->additional_notes . "\n" : '') . $notes;
+                    $transaction->save();
+                }
+            }
+
             // Handle payment if total_paid is provided
             if (!empty($first_sell_line['total_paid']) && $first_sell_line['total_paid'] > 0) {
                 $payment_method = $first_sell_line['payment_method'] ?? 'cash';
@@ -598,6 +623,7 @@ class ImportSalesController extends Controller
         $service_custom_field2_key = array_search('service_custom_field2', $import_fields);
         $service_custom_field3_key = array_search('service_custom_field3', $import_fields);
         $service_custom_field4_key = array_search('service_custom_field4', $import_fields);
+        $additional_customer_phones_key = array_search('additional_customer_phones', $import_fields);
 
         $row_index = 2;
         foreach ($imported_data as $key => $value) {
@@ -622,6 +648,7 @@ class ImportSalesController extends Controller
             $formatted_array[$key]['service_custom_field2'] = $service_custom_field2_key !== false ? ($value[$service_custom_field2_key] ?? null) : null;
             $formatted_array[$key]['service_custom_field3'] = $service_custom_field3_key !== false ? ($value[$service_custom_field3_key] ?? null) : null;
             $formatted_array[$key]['service_custom_field4'] = $service_custom_field4_key !== false ? ($value[$service_custom_field4_key] ?? null) : null;
+            $formatted_array[$key]['additional_customer_phones'] = $additional_customer_phones_key !== false ? ($value[$additional_customer_phones_key] ?? null) : null;
             $formatted_array[$key]['group_by'] = $value[$group_by] ?? null;
 
             //check empty - all validations removed, import will proceed with whatever data is provided
@@ -656,6 +683,7 @@ class ImportSalesController extends Controller
             'order_total' => ['label' => __('lang_v1.order_total')],
             'total_paid' => ['label' => 'Total Paid'],
             'payment_method' => ['label' => 'Payment Method'],
+            'additional_customer_phones' => ['label' => 'Additional Customer Phones'],
         ];
 
         $is_types_service_enabled = $this->moduleUtil->isModuleEnabled('types_of_service');
