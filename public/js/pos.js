@@ -4636,12 +4636,10 @@ $(document).on('click', '#confirm_customer_selection', function(e) {
             window.relatedCustomerCallback = null;
         }, 300);
     } else {
-        console.log('No callback, showing delivery date modal');
-        // Show delivery date modal first, then payment modal
+        console.log('No callback, showing payment modal');
+        // The show.bs.modal interceptor handles delivery date collection
         setTimeout(function() {
-            pos_show_delivery_modal(function() {
-                $('#modal_payment').modal('show');
-            });
+            $('#modal_payment').modal('show');
         }, 300);
     }
 });
@@ -5178,9 +5176,22 @@ $(document).on('show.bs.modal', '#modal_payment', function(e) {
         $(this).removeData('delivery-confirmed');
         return;
     }
+
+    // Skip delivery modal if element doesn't exist or datetimepicker isn't loaded
+    if ($('#delivery_date_modal').length === 0 || typeof $.fn.datetimepicker === 'undefined') {
+        return;
+    }
+
     e.preventDefault();
-    pos_show_delivery_modal(function() {
-        $('#modal_payment').data('delivery-confirmed', true);
-        $('#modal_payment').modal('show');
-    });
+    var $paymentModal = $(this);
+    try {
+        pos_show_delivery_modal(function() {
+            $paymentModal.data('delivery-confirmed', true);
+            $paymentModal.modal('show');
+        });
+    } catch (err) {
+        console.error('Delivery date modal error, showing payment modal directly:', err);
+        $paymentModal.data('delivery-confirmed', true);
+        $paymentModal.modal('show');
+    }
 });
