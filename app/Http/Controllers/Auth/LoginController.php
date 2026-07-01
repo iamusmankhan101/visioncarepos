@@ -52,11 +52,6 @@ class LoginController extends Controller
         $this->moduleUtil = $moduleUtil;
     }
 
-    public function showLoginForm()
-    {
-        return redirect('/');
-    }
-
     /**
      * Change authentication from email to username
      *
@@ -65,11 +60,6 @@ class LoginController extends Controller
     public function username()
     {
         return 'username';
-    }
-
-    public function login(Request $request)
-    {
-        return redirect('/');
     }
 
     public function logout()
