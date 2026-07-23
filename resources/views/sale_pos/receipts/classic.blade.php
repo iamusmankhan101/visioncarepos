@@ -932,17 +932,24 @@ window.addEventListener('afterprint', function() {
 	@page {
 		margin-bottom: 0;
 	}
-	
+
+	/* vendor.css forces .invoice{padding:0} on #receipt_section for print;
+	   restore side spacing so content doesn't print flush against the page edges */
+	#receipt_section.invoice {
+		padding-left: 20px !important;
+		padding-right: 20px !important;
+	}
+
 	/* Hide any URL footers */
 	body::after {
 		display: none !important;
 	}
-	
+
 	/* Hide browser-generated URLs */
 	a[href]:after {
 		content: none !important;
 	}
-	
+
 	/* Hide any automatic URL display */
 	.url-display {
 		display: none !important;
