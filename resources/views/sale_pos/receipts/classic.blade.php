@@ -35,7 +35,7 @@ window.addEventListener('afterprint', function() {
 
 			<!-- business information here -->
 			<div class="col-xs-12 text-center">
-				<h2 class="text-center">
+				<h2 class="text-center" style="margin-top: 0; margin-bottom: 4px;">
 					<!-- Shop & Location Name  -->
 					@if(!empty($receipt_details->display_name))
 						{{$receipt_details->display_name}}
@@ -43,7 +43,7 @@ window.addEventListener('afterprint', function() {
 				</h2>
 
 				<!-- Address -->
-				<p>
+				<p style="margin: 0 0 8px;">
 				@if(!empty($receipt_details->address))
 						<small class="text-center">
 						{!! $receipt_details->address !!}
@@ -51,10 +51,10 @@ window.addEventListener('afterprint', function() {
 				@endif
 				@if(!empty($receipt_details->contact))
 					<br/>{!! $receipt_details->contact !!}
-				@endif	
+				@endif
 				{{-- Website URL removed --}}
 				{{-- @if(!empty($receipt_details->contact) && !empty($receipt_details->website))
-					, 
+					,
 				@endif
 				@if(!empty($receipt_details->website))
 					{{ $receipt_details->website }}
@@ -63,6 +63,7 @@ window.addEventListener('afterprint', function() {
 					<br>{{ $receipt_details->location_custom_fields }}
 				@endif
 				</p>
+				@if(!empty($receipt_details->sub_heading_line1) || !empty($receipt_details->sub_heading_line2) || !empty($receipt_details->sub_heading_line3) || !empty($receipt_details->sub_heading_line4) || !empty($receipt_details->sub_heading_line5))
 				<p>
 				@if(!empty($receipt_details->sub_heading_line1))
 					{{ $receipt_details->sub_heading_line1 }}
@@ -75,11 +76,13 @@ window.addEventListener('afterprint', function() {
 				@endif
 				@if(!empty($receipt_details->sub_heading_line4))
 					<br>{{ $receipt_details->sub_heading_line4 }}
-				@endif		
+				@endif
 				@if(!empty($receipt_details->sub_heading_line5))
 					<br>{{ $receipt_details->sub_heading_line5 }}
 				@endif
 				</p>
+				@endif
+				@if(!empty($receipt_details->tax_info1) || !empty($receipt_details->tax_info2))
 				<p>
 				@if(!empty($receipt_details->tax_info1))
 					<b>{{ $receipt_details->tax_label1 }}</b> {{ $receipt_details->tax_info1 }}
@@ -89,6 +92,7 @@ window.addEventListener('afterprint', function() {
 					<b>{{ $receipt_details->tax_label2 }}</b> {{ $receipt_details->tax_info2 }}
 				@endif
 				</p>
+				@endif
 			@endif
 
 		</div>
@@ -583,13 +587,8 @@ window.addEventListener('afterprint', function() {
 				</table>
 			</div>
 		</div>
-		</div>
 	@endforeach
 @endif
-
-<div class="row" style="color: #000000 !important;">
-	</div>
-</div>
 
 <div class="row" style="color: #000000 !important;">
 	<div class="col-md-12"><hr/></div>
