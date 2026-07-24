@@ -347,13 +347,7 @@ class TransactionUtil extends Util
                 $unit_price = $unit_price_before_discount;
                 if (! empty($product['line_discount_type']) && $product['line_discount_amount']) {
                     $discount_amount = $uf_data ? $this->num_uf($product['line_discount_amount']) : $product['line_discount_amount'];
-                    if ($product['line_discount_type'] == 'fixed') {
-
-                        //Note: Consider multiplier for fixed discount amount
-                        $unit_price = $unit_price_before_discount - ($discount_amount / $multiplier);
-                    } elseif ($product['line_discount_type'] == 'percentage') {
-                        $unit_price = ((100 - $discount_amount) * $unit_price_before_discount) / 100;
-                    }
+                    // Keep the stored unit price unchanged; line discounts are applied to totals.
                 }
                 $uf_quantity = $uf_data ? $this->num_uf($product['quantity']) : $product['quantity'];
                 $uf_item_tax = $uf_data ? $this->num_uf($product['item_tax']) : $product['item_tax'];
@@ -576,11 +570,7 @@ class TransactionUtil extends Util
         $unit_price = $unit_price_before_discount;
         if (! empty($product['line_discount_type']) && $product['line_discount_amount']) {
             $discount_amount = $uf_data ? $this->num_uf($product['line_discount_amount']) : $product['line_discount_amount'];
-            if ($product['line_discount_type'] == 'fixed') {
-                $unit_price = $unit_price_before_discount - ($discount_amount / $multiplier);
-            } elseif ($product['line_discount_type'] == 'percentage') {
-                $unit_price = ((100 - $discount_amount) * $unit_price_before_discount) / 100;
-            }
+            // Keep the stored unit price unchanged; line discounts are applied to totals.
         }
         $line_discount_amount = 0;
         if (! empty($product['line_discount_amount'])) {
@@ -2194,8 +2184,8 @@ class TransactionUtil extends Util
                 'unit_price_before_discount' => $this->num_f($line->unit_price_before_discount, false, $business_details),
                 'unit_price_before_discount_uf' => $line->unit_price_before_discount,
                 //Fields for 4th column
-                'line_total' => $this->num_f($line->unit_price_inc_tax * $line->quantity, false, $business_details),
-                'line_total_uf' => $line->unit_price_inc_tax * $line->quantity,
+                'line_total' => $this->num_f(($line->unit_price_inc_tax * $line->quantity) - ($line->get_discount_amount() * $line->quantity), false, $business_details),
+                'line_total_uf' => ($line->unit_price_inc_tax * $line->quantity) - ($line->get_discount_amount() * $line->quantity),
                 'line_total_exc_tax' => $this->num_f($line->unit_price * $line->quantity, false, $business_details),
                 'line_total_exc_tax_uf' => $line->unit_price * $line->quantity,
                 'variation_id' => $variation->id,

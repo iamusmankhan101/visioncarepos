@@ -2736,7 +2736,8 @@ function pos_each_row(row_obj) {
         .find(':selected')
         .data('rate');
 
-    var unit_price_inc_tax =
+    var unit_price_inc_tax = unit_price + __calculate_amount('percentage', tax_rate, unit_price);
+    var discounted_unit_price_inc_tax =
         discounted_unit_price + __calculate_amount('percentage', tax_rate, discounted_unit_price);
     __write_number(row_obj.find('input.pos_unit_price_inc_tax'), unit_price_inc_tax);
 
@@ -2744,13 +2745,13 @@ function pos_each_row(row_obj) {
 
     if (discount > 0) {
         var qty = __read_number(row_obj.find('input.pos_quantity'));
-        var line_total = qty * unit_price_inc_tax;
+        var line_total = qty * discounted_unit_price_inc_tax;
         __write_number(row_obj.find('input.pos_line_total'), line_total);
     }
 
     //var unit_price_inc_tax = __read_number(row_obj.find('input.pos_unit_price_inc_tax'));
 
-    __write_number(row_obj.find('input.item_tax'), unit_price_inc_tax - discounted_unit_price);
+    __write_number(row_obj.find('input.item_tax'), discounted_unit_price_inc_tax - discounted_unit_price);
 }
 
 function pos_total_row() {

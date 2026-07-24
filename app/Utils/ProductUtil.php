@@ -649,7 +649,20 @@ class ProductUtil extends Util
         //Sub Total
         foreach ($products as $product) {
             $unit_price_inc_tax = $uf_number ? $this->num_uf($product['unit_price_inc_tax']) : $product['unit_price_inc_tax'];
+            $unit_price = $uf_number ? $this->num_uf($product['unit_price']) : $product['unit_price'];
             $quantity = $uf_number ? $this->num_uf($product['quantity']) : $product['quantity'];
+            $line_discount_amount = ! empty($product['line_discount_amount'])
+                ? ($uf_number ? $this->num_uf($product['line_discount_amount']) : $product['line_discount_amount'])
+                : 0;
+
+            if (! empty($product['line_discount_type']) && $line_discount_amount) {
+                if ($product['line_discount_type'] == 'fixed') {
+                    $discount_inc_tax = $unit_price > 0 ? ($line_discount_amount * $unit_price_inc_tax) / $unit_price : $line_discount_amount;
+                    $unit_price_inc_tax -= $discount_inc_tax;
+                } elseif ($product['line_discount_type'] == 'percentage') {
+                    $unit_price_inc_tax = ((100 - $line_discount_amount) * $unit_price_inc_tax) / 100;
+                }
+            }
 
             $output['total_before_tax'] += $quantity * $unit_price_inc_tax;
 
@@ -672,6 +685,11 @@ class ProductUtil extends Util
                 $output['discount'] = $discount_amount;
             } else {
                 $output['discount'] = ($discount_amount / 100) * $output['total_before_tax'];
+            }
+
+            if (! empty($discount['voucher_discount_amount'])) {
+                $voucher_discount_amount = $uf_number ? $this->num_uf($discount['voucher_discount_amount']) : $discount['voucher_discount_amount'];
+                $output['discount'] += $voucher_discount_amount;
             }
         }
 

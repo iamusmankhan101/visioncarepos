@@ -526,6 +526,7 @@ class SellPosController extends Controller
 
                 $discount = ['discount_type' => $input['discount_type'],
                     'discount_amount' => $input['discount_amount'],
+                    'voucher_discount_amount' => $input['voucher_discount_amount'] ?? 0,
                 ];
                 // Since we replaced tax rates with vouchers, tax_rate_id might not be present
                 $tax_rate_id = isset($input['tax_rate_id']) ? $input['tax_rate_id'] : null;
@@ -1716,6 +1717,7 @@ class SellPosController extends Controller
 
                 $discount = ['discount_type' => $input['discount_type'],
                     'discount_amount' => $input['discount_amount'],
+                    'voucher_discount_amount' => $input['voucher_discount_amount'] ?? 0,
                 ];
                 $invoice_total = $this->productUtil->calculateInvoiceTotal($input['products'], $input['tax_rate_id'], $discount);
 
