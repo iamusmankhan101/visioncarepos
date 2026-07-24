@@ -675,6 +675,8 @@ class SellPosController extends Controller
                     $input['delivery_date'] = null;
                 }
 
+                $input['final_total'] = $this->transactionUtil->getInvoiceFinalTotal($input, $invoice_total);
+
                 $transaction = $this->transactionUtil->createSellTransaction($business_id, $input, $invoice_total, $user_id);
 
                 // DEBUG: Verify the transaction was created with correct shipping_status
@@ -1828,6 +1830,8 @@ class SellPosController extends Controller
 
                     return $output;
                 }
+
+                $input['final_total'] = $this->transactionUtil->getInvoiceFinalTotal($input, $invoice_total);
 
                 //Begin transaction
                 DB::beginTransaction();

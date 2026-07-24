@@ -32,6 +32,43 @@ use App\CashRegister;
 class TransactionUtil extends Util
 {
     /**
+     * Returns the transaction total using the server-calculated invoice total as
+     * the base, so voucher/discount math is not lost if the browser total is stale.
+     */
+    public function getInvoiceFinalTotal($input, $invoice_total, $uf_data = true)
+    {
+        $final_total = $invoice_total['final_total'];
+
+        $shipping_charges = isset($input['shipping_charges'])
+            ? ($uf_data ? $this->num_uf($input['shipping_charges']) : $input['shipping_charges'])
+            : 0;
+
+        $final_total += $shipping_charges;
+
+        if (! empty($input['packing_charge'])) {
+            $packing_charge = $uf_data ? $this->num_uf($input['packing_charge']) : $input['packing_charge'];
+            if (! empty($input['packing_charge_type']) && $input['packing_charge_type'] == 'percent') {
+                $packing_charge = $this->calc_percentage($invoice_total['total_before_tax'], $packing_charge);
+            }
+
+            $final_total += $packing_charge;
+        }
+
+        for ($i = 1; $i <= 4; $i++) {
+            $expense_key = 'additional_expense_value_'.$i;
+            if (isset($input[$expense_key])) {
+                $final_total += $uf_data ? $this->num_uf($input[$expense_key]) : $input[$expense_key];
+            }
+        }
+
+        if (isset($input['round_off_amount'])) {
+            $final_total += $uf_data ? $this->num_uf($input['round_off_amount']) : $input['round_off_amount'];
+        }
+
+        return $final_total;
+    }
+
+    /**
      * Add Sell transaction
      *
      * @param  int  $business_id
@@ -46,7 +83,7 @@ class TransactionUtil extends Util
         $invoice_scheme_id = ! empty($input['invoice_scheme_id']) ? $input['invoice_scheme_id'] : null;
         $invoice_no = ! empty($input['invoice_no']) ? $input['invoice_no'] : $this->getInvoiceNumber($business_id, $input['status'], $input['location_id'], $invoice_scheme_id, $sale_type);
 
-        $final_total = $uf_data ? $this->num_uf($input['final_total']) : $input['final_total'];
+        $final_total = $this->getInvoiceFinalTotal($input, $invoice_total, $uf_data);
 
         $pay_term_number = isset($input['pay_term_number']) ? $input['pay_term_number'] : null;
         $pay_term_type = isset($input['pay_term_type']) ? $input['pay_term_type'] : null;
@@ -176,7 +213,7 @@ class TransactionUtil extends Util
             $invoice_scheme_id = ! empty($input['invoice_scheme_id']) ? $input['invoice_scheme_id'] : null;
             $invoice_no = $this->getInvoiceNumber($business_id, $input['status'], $transaction->location_id, $invoice_scheme_id);
         }
-        $final_total = $uf_data ? $this->num_uf($input['final_total']) : $input['final_total'];
+        $final_total = $this->getInvoiceFinalTotal($input, $invoice_total, $uf_data);
 
         $pay_term_number = isset($input['pay_term_number']) ? $input['pay_term_number'] : null;
         $pay_term_type = isset($input['pay_term_type']) ? $input['pay_term_type'] : null;
@@ -1504,6 +1541,11 @@ class TransactionUtil extends Util
         $taxed_subtotal = $output['subtotal_unformatted'] - $total_exempt;
         $output['taxed_subtotal'] = $this->num_f($taxed_subtotal, $show_currency, $business_details);
 
+        //Voucher discount
+        $voucher_info = $this->getVoucherDiscount($transaction_id, $business_details);
+        $output['voucher_discount'] = $voucher_info['amount'];
+        $output['voucher_code'] = $voucher_info['code'];
+
         //Discount
         $discount_amount = $this->num_f($transaction->discount_amount, $show_currency, $business_details);
         $output['line_discount_label'] = $invoice_layout->discount_label;
@@ -1517,7 +1559,7 @@ class TransactionUtil extends Util
         
         // If no transaction-level discount but there's a difference between subtotal and total, calculate it
         if ($discount == 0) {
-            $calculated_discount = $transaction->total_before_tax - $transaction->final_total + $transaction->tax_amount;
+            $calculated_discount = $transaction->total_before_tax - $transaction->final_total + $transaction->tax_amount - $voucher_info['amount_unformatted'];
             if ($calculated_discount > 0) {
                 $discount = $calculated_discount;
                 // Calculate the percentage for display
@@ -1533,11 +1575,6 @@ class TransactionUtil extends Util
         $output['discount'] = ($discount > 0) ? $this->num_f($discount, $show_currency, $business_details) : 0;
 
         $output['discount_amount_unformatted'] = $discount;
-
-        //Voucher discount
-        $voucher_info = $this->getVoucherDiscount($transaction_id, $business_details);
-        $output['voucher_discount'] = $voucher_info['amount'];
-        $output['voucher_code'] = $voucher_info['code'];
 
         //reward points
         if ($business_details->enable_rp == 1 && ! empty($transaction->rp_redeemed)) {
@@ -6719,6 +6756,7 @@ class TransactionUtil extends Util
         
         $voucher_info = [
             'amount' => 0,
+            'amount_unformatted' => 0,
             'code' => ''
         ];
         
@@ -6726,6 +6764,7 @@ class TransactionUtil extends Util
             // Look for voucher pattern in notes: "Voucher: CODE123, Discount: 50.00"
             if (preg_match('/Voucher:\s*([^,]+),\s*Discount:\s*([\d\.]+)/i', $transaction->additional_notes, $matches)) {
                 $voucher_info['code'] = trim($matches[1]);
+                $voucher_info['amount_unformatted'] = $this->num_uf($matches[2]);
                 $voucher_info['amount'] = $this->num_f($matches[2], true, $business_details);
             }
         }
