@@ -2151,6 +2151,12 @@ class TransactionUtil extends Util
                 $unit_name = $line->sub_unit->short_name;
             }
             $base_unit_price = $line->unit_price_inc_tax / $base_unit_multiplier;
+            $line_discount_amount = method_exists($line, 'get_discount_amount') ? $line->get_discount_amount() : 0;
+            $line_discount_inc_tax = $line_discount_amount;
+            if (! empty($line_discount_amount) && ! empty($line->unit_price_before_discount)) {
+                $line_discount_inc_tax = ($line_discount_amount * $line->unit_price_inc_tax) / $line->unit_price_before_discount;
+            }
+            $line_total = ($line->unit_price_inc_tax * $line->quantity) - ($line_discount_inc_tax * $line->quantity);
 
             $show_product_description = $il->common_settings['show_product_description'] ?? null;
             $line_array = [
@@ -2184,8 +2190,8 @@ class TransactionUtil extends Util
                 'unit_price_before_discount' => $this->num_f($line->unit_price_before_discount, false, $business_details),
                 'unit_price_before_discount_uf' => $line->unit_price_before_discount,
                 //Fields for 4th column
-                'line_total' => $this->num_f(($line->unit_price_inc_tax * $line->quantity) - ($line->get_discount_amount() * $line->quantity), false, $business_details),
-                'line_total_uf' => ($line->unit_price_inc_tax * $line->quantity) - ($line->get_discount_amount() * $line->quantity),
+                'line_total' => $this->num_f($line_total, false, $business_details),
+                'line_total_uf' => $line_total,
                 'line_total_exc_tax' => $this->num_f($line->unit_price * $line->quantity, false, $business_details),
                 'line_total_exc_tax_uf' => $line->unit_price * $line->quantity,
                 'variation_id' => $variation->id,
@@ -2248,8 +2254,8 @@ class TransactionUtil extends Util
                 }
             }
 
-            $line_array['line_discount'] = method_exists($line, 'get_discount_amount') ? $this->num_f($line->get_discount_amount(), false, $business_details) : 0;
-            $line_array['line_discount_uf'] = method_exists($line, 'get_discount_amount') ? $line->get_discount_amount() : 0;
+            $line_array['line_discount'] = $this->num_f($line_discount_amount, false, $business_details);
+            $line_array['line_discount_uf'] = $line_discount_amount;
 
             if ($line->line_discount_type == 'percentage') {
                 $line_array['line_discount'] .= ' ('.$this->num_f($line->line_discount_amount, false, $business_details).'%)';
