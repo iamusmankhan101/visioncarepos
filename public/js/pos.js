@@ -5073,7 +5073,7 @@ $(document).on('submit', '#business_location_add_form', function(e) {
  * Show the delivery date modal, then invoke callback after confirm or skip.
  */
 function pos_show_delivery_modal(onDone) {
-    // Default: tomorrow at 10:00
+    // Default: tomorrow at 7:00 PM
     var tomorrow = moment().add(1, 'days');
 
     // Init date picker
@@ -5119,7 +5119,7 @@ function pos_show_delivery_modal(onDone) {
     if (existingTime && existingTime.isValid()) {
         $('#delivery_time_picker').data('DateTimePicker').date(existingTime);
     } else {
-        $('#delivery_time_picker').data('DateTimePicker').date(moment('10:00', 'HH:mm'));
+        $('#delivery_time_picker').data('DateTimePicker').date(moment('19:00', 'HH:mm'));
     }
 
     var is_confirmed = false;
@@ -5156,7 +5156,7 @@ function pos_show_delivery_modal(onDone) {
         }
 
         var dateStr = dateVal.format('YYYY-MM-DD');
-        var timeStr = timeVal ? timeVal.format('HH:mm') : '10:00';
+        var timeStr = timeVal ? timeVal.format('HH:mm') : '19:00';
         var fullDeliveryDate = dateStr + ' ' + timeStr + ':00';
         
         // Update hidden field for regular form submission
@@ -5182,4 +5182,3 @@ function pos_show_delivery_modal(onDone) {
     $('#delivery_date_modal').modal({ backdrop: 'static', keyboard: false });
     $('#delivery_date_modal').modal('show');
 }
-

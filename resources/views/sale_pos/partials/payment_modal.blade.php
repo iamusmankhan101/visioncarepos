@@ -44,7 +44,7 @@
             </div>
             <div class="modal-body">
                 <p style="color: #6c757d; margin-bottom: 15px;">
-                    <i class="fa fa-info-circle"></i> Set the expected delivery date and time. Defaults to <strong>1 day after today at 10:00 AM</strong>.
+                    <i class="fa fa-info-circle"></i> Set the expected delivery date and time. Defaults to <strong>1 day after today at 7:00 PM</strong>.
                 </p>
                 <div class="form-group">
                     <label for="delivery_date_input"><strong>@lang('lang_v1.delivery_date'):</strong></label>

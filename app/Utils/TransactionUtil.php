@@ -1349,9 +1349,9 @@ class TransactionUtil extends Util
             $output['invoice_date'] = \Carbon::createFromFormat('Y-m-d H:i:s', $transaction->transaction_date)->format($il->date_time_format);
         }
 
-        // Add delivery date if available (date only, no time)
+        // Add delivery date and time if available.
         if (!empty($transaction->delivery_date)) {
-            $output['delivery_date'] = $this->format_date($transaction->delivery_date, false, $business_details);
+            $output['delivery_date'] = $this->format_date($transaction->delivery_date, true, $business_details);
         }
 
         $output['transaction_date'] = $transaction->transaction_date;
