@@ -390,27 +390,27 @@ window.addEventListener('afterprint', function() {
 				<!-- RIGHT EYE TABLE -->
 				<td style="width: 48%; vertical-align: top; padding-right: 10px;">
 					<strong style="font-size: 12px;">RIGHT</strong>
-					<table class="table table-bordered table-condensed" style="margin-top: 2px; margin-bottom: 0; border: 1px solid #000 !important; border-collapse: collapse !important;">
+					<table class="table table-bordered table-condensed" style="margin-top: 2px; margin-bottom: 0; border: 1px solid #ccc !important; border-collapse: collapse !important;">
 						<thead>
 							<tr style="background-color: #f0f0f0;">
-								<th style="width: 25%; border: 1px solid #000 !important; padding: 1px; height: 18px; font-size: 10px;"></th>
-								<th style="width: 25%; text-align: center; border: 1px solid #000 !important; padding: 1px; height: 18px; font-size: 10px;">Sph.</th>
-								<th style="width: 25%; text-align: center; border: 1px solid #000 !important; padding: 1px; height: 18px; font-size: 10px;">Cyl.</th>
-								<th style="width: 25%; text-align: center; border: 1px solid #000 !important; padding: 1px; height: 18px; font-size: 10px;">Axis.</th>
+								<th style="width: 25%; border: 1px solid #ccc !important; padding: 1px; height: 18px; font-size: 10px;"></th>
+								<th style="width: 25%; text-align: center; border: 1px solid #ccc !important; padding: 1px; height: 18px; font-size: 10px;">Sph.</th>
+								<th style="width: 25%; text-align: center; border: 1px solid #ccc !important; padding: 1px; height: 18px; font-size: 10px;">Cyl.</th>
+								<th style="width: 25%; text-align: center; border: 1px solid #ccc !important; padding: 1px; height: 18px; font-size: 10px;">Axis.</th>
 							</tr>
 						</thead>
 						<tbody>
 							<tr>
-								<td style="font-weight: 600; border: 1px solid #000 !important; padding: 1px; height: 18px; font-size: 10px;">Distance</td>
-								<td style="text-align: center; border: 1px solid #000 !important; padding: 1px; height: 18px; font-size: 10px;">{{ optional($contact)->custom_field1 }}</td>
-								<td style="text-align: center; border: 1px solid #000 !important; padding: 1px; height: 18px; font-size: 10px;">{{ optional($contact)->custom_field2 }}</td>
-								<td style="text-align: center; border: 1px solid #000 !important; padding: 1px; height: 18px; font-size: 10px;">{{ optional($contact)->custom_field3 }}</td>
+								<td style="font-weight: 600; border: 1px solid #ccc !important; padding: 1px; height: 18px; font-size: 10px;">Distance</td>
+								<td style="text-align: center; border: 1px solid #ccc !important; padding: 1px; height: 18px; font-size: 10px;">{{ optional($contact)->custom_field1 }}</td>
+								<td style="text-align: center; border: 1px solid #ccc !important; padding: 1px; height: 18px; font-size: 10px;">{{ optional($contact)->custom_field2 }}</td>
+								<td style="text-align: center; border: 1px solid #ccc !important; padding: 1px; height: 18px; font-size: 10px;">{{ optional($contact)->custom_field3 }}</td>
 							</tr>
 							<tr>
-								<td style="font-weight: 600; border: 1px solid #000 !important; padding: 1px; height: 18px; font-size: 10px;">Near</td>
-								<td style="text-align: center; border: 1px solid #000 !important; padding: 1px; height: 18px; font-size: 10px;">{{ optional($contact)->custom_field4 }}</td>
-								<td style="text-align: center; border: 1px solid #000 !important; padding: 1px; height: 18px; font-size: 10px;">{{ optional($contact)->custom_field5 }}</td>
-								<td style="text-align: center; border: 1px solid #000 !important; padding: 1px; height: 18px; font-size: 10px;">{{ optional($contact)->custom_field6 }}</td>
+								<td style="font-weight: 600; border: 1px solid #ccc !important; padding: 1px; height: 18px; font-size: 10px;">Near</td>
+								<td style="text-align: center; border: 1px solid #ccc !important; padding: 1px; height: 18px; font-size: 10px;">{{ optional($contact)->custom_field4 }}</td>
+								<td style="text-align: center; border: 1px solid #ccc !important; padding: 1px; height: 18px; font-size: 10px;">{{ optional($contact)->custom_field5 }}</td>
+								<td style="text-align: center; border: 1px solid #ccc !important; padding: 1px; height: 18px; font-size: 10px;">{{ optional($contact)->custom_field6 }}</td>
 							</tr>
 						</tbody>
 					</table>
@@ -419,27 +419,27 @@ window.addEventListener('afterprint', function() {
 				<!-- LEFT EYE TABLE -->
 				<td style="width: 48%; vertical-align: top; padding-left: 10px;">
 					<strong style="font-size: 12px;">Left</strong>
-					<table class="table table-bordered table-condensed" style="margin-top: 2px; margin-bottom: 0; border: 1px solid #000 !important; border-collapse: collapse !important;">
+					<table class="table table-bordered table-condensed" style="margin-top: 2px; margin-bottom: 0; border: 1px solid #ccc !important; border-collapse: collapse !important;">
 						<thead>
 							<tr style="background-color: #f0f0f0;">
-								<th style="width: 25%; border: 1px solid #000 !important; padding: 1px; height: 18px; font-size: 10px;"></th>
-								<th style="width: 25%; text-align: center; border: 1px solid #000 !important; padding: 1px; height: 18px; font-size: 10px;">Sph.</th>
-								<th style="width: 25%; text-align: center; border: 1px solid #000 !important; padding: 1px; height: 18px; font-size: 10px;">Cyl.</th>
-								<th style="width: 25%; text-align: center; border: 1px solid #000 !important; padding: 1px; height: 18px; font-size: 10px;">Axis.</th>
+								<th style="width: 25%; border: 1px solid #ccc !important; padding: 1px; height: 18px; font-size: 10px;"></th>
+								<th style="width: 25%; text-align: center; border: 1px solid #ccc !important; padding: 1px; height: 18px; font-size: 10px;">Sph.</th>
+								<th style="width: 25%; text-align: center; border: 1px solid #ccc !important; padding: 1px; height: 18px; font-size: 10px;">Cyl.</th>
+								<th style="width: 25%; text-align: center; border: 1px solid #ccc !important; padding: 1px; height: 18px; font-size: 10px;">Axis.</th>
 							</tr>
 						</thead>
 						<tbody>
 							<tr>
-								<td style="font-weight: 600; border: 1px solid #000 !important; padding: 1px; height: 18px; font-size: 10px;">Distance</td>
-								<td style="text-align: center; border: 1px solid #000 !important; padding: 1px; height: 18px; font-size: 10px;">{{ optional($contact)->custom_field7 }}</td>
-								<td style="text-align: center; border: 1px solid #000 !important; padding: 1px; height: 18px; font-size: 10px;">{{ optional($contact)->custom_field8 }}</td>
-								<td style="text-align: center; border: 1px solid #000 !important; padding: 1px; height: 18px; font-size: 10px;">{{ optional($contact)->custom_field9 }}</td>
+								<td style="font-weight: 600; border: 1px solid #ccc !important; padding: 1px; height: 18px; font-size: 10px;">Distance</td>
+								<td style="text-align: center; border: 1px solid #ccc !important; padding: 1px; height: 18px; font-size: 10px;">{{ optional($contact)->custom_field7 }}</td>
+								<td style="text-align: center; border: 1px solid #ccc !important; padding: 1px; height: 18px; font-size: 10px;">{{ optional($contact)->custom_field8 }}</td>
+								<td style="text-align: center; border: 1px solid #ccc !important; padding: 1px; height: 18px; font-size: 10px;">{{ optional($contact)->custom_field9 }}</td>
 							</tr>
 							<tr>
-								<td style="font-weight: 600; border: 1px solid #000 !important; padding: 1px; height: 18px; font-size: 10px;">Near</td>
-								<td style="text-align: center; border: 1px solid #000 !important; padding: 1px; height: 18px; font-size: 10px;">{{ optional($contact)->custom_field10 }}</td>
-								<td style="text-align: center; border: 1px solid #000 !important; padding: 1px; height: 18px; font-size: 10px;">{{ optional($contact)->custom_field11 }}</td>
-								<td style="text-align: center; border: 1px solid #000 !important; padding: 1px; height: 18px; font-size: 10px;">{{ optional($contact)->custom_field12 }}</td>
+								<td style="font-weight: 600; border: 1px solid #ccc !important; padding: 1px; height: 18px; font-size: 10px;">Near</td>
+								<td style="text-align: center; border: 1px solid #ccc !important; padding: 1px; height: 18px; font-size: 10px;">{{ optional($contact)->custom_field10 }}</td>
+								<td style="text-align: center; border: 1px solid #ccc !important; padding: 1px; height: 18px; font-size: 10px;">{{ optional($contact)->custom_field11 }}</td>
+								<td style="text-align: center; border: 1px solid #ccc !important; padding: 1px; height: 18px; font-size: 10px;">{{ optional($contact)->custom_field12 }}</td>
 							</tr>
 						</tbody>
 					</table>
@@ -498,27 +498,27 @@ window.addEventListener('afterprint', function() {
 						<!-- RIGHT EYE TABLE -->
 						<td style="width: 48%; vertical-align: top; padding-right: 10px;">
 							<strong style="font-size: 12px;">RIGHT</strong>
-							<table class="table table-bordered table-condensed" style="margin-top: 2px; margin-bottom: 0; border: 1px solid #000 !important; border-collapse: collapse !important;">
+							<table class="table table-bordered table-condensed" style="margin-top: 2px; margin-bottom: 0; border: 1px solid #ccc !important; border-collapse: collapse !important;">
 								<thead>
 									<tr style="background-color: #f0f0f0;">
-										<th style="width: 25%; border: 1px solid #000 !important; padding: 1px; height: 18px; font-size: 10px;"></th>
-										<th style="width: 25%; text-align: center; border: 1px solid #000 !important; padding: 1px; height: 18px; font-size: 10px;">Sph.</th>
-										<th style="width: 25%; text-align: center; border: 1px solid #000 !important; padding: 1px; height: 18px; font-size: 10px;">Cyl.</th>
-										<th style="width: 25%; text-align: center; border: 1px solid #000 !important; padding: 1px; height: 18px; font-size: 10px;">Axis.</th>
+										<th style="width: 25%; border: 1px solid #ccc !important; padding: 1px; height: 18px; font-size: 10px;"></th>
+										<th style="width: 25%; text-align: center; border: 1px solid #ccc !important; padding: 1px; height: 18px; font-size: 10px;">Sph.</th>
+										<th style="width: 25%; text-align: center; border: 1px solid #ccc !important; padding: 1px; height: 18px; font-size: 10px;">Cyl.</th>
+										<th style="width: 25%; text-align: center; border: 1px solid #ccc !important; padding: 1px; height: 18px; font-size: 10px;">Axis.</th>
 									</tr>
 								</thead>
 								<tbody>
 									<tr>
-										<td style="font-weight: 600; border: 1px solid #000 !important; padding: 1px; height: 18px; font-size: 10px;">Distance</td>
-										<td style="text-align: center; border: 1px solid #000 !important; padding: 1px; height: 18px; font-size: 10px;">{{ $additional_customer['prescription']['right_eye']['distance']['sph'] ?? '' }}</td>
-										<td style="text-align: center; border: 1px solid #000 !important; padding: 1px; height: 18px; font-size: 10px;">{{ $additional_customer['prescription']['right_eye']['distance']['cyl'] ?? '' }}</td>
-										<td style="text-align: center; border: 1px solid #000 !important; padding: 1px; height: 18px; font-size: 10px;">{{ $additional_customer['prescription']['right_eye']['distance']['axis'] ?? '' }}</td>
+										<td style="font-weight: 600; border: 1px solid #ccc !important; padding: 1px; height: 18px; font-size: 10px;">Distance</td>
+										<td style="text-align: center; border: 1px solid #ccc !important; padding: 1px; height: 18px; font-size: 10px;">{{ $additional_customer['prescription']['right_eye']['distance']['sph'] ?? '' }}</td>
+										<td style="text-align: center; border: 1px solid #ccc !important; padding: 1px; height: 18px; font-size: 10px;">{{ $additional_customer['prescription']['right_eye']['distance']['cyl'] ?? '' }}</td>
+										<td style="text-align: center; border: 1px solid #ccc !important; padding: 1px; height: 18px; font-size: 10px;">{{ $additional_customer['prescription']['right_eye']['distance']['axis'] ?? '' }}</td>
 									</tr>
 									<tr>
-										<td style="font-weight: 600; border: 1px solid #000 !important; padding: 1px; height: 18px; font-size: 10px;">Near</td>
-										<td style="text-align: center; border: 1px solid #000 !important; padding: 1px; height: 18px; font-size: 10px;">{{ $additional_customer['prescription']['right_eye']['near']['sph'] ?? '' }}</td>
-										<td style="text-align: center; border: 1px solid #000 !important; padding: 1px; height: 18px; font-size: 10px;">{{ $additional_customer['prescription']['right_eye']['near']['cyl'] ?? '' }}</td>
-										<td style="text-align: center; border: 1px solid #000 !important; padding: 1px; height: 18px; font-size: 10px;">{{ $additional_customer['prescription']['right_eye']['near']['axis'] ?? '' }}</td>
+										<td style="font-weight: 600; border: 1px solid #ccc !important; padding: 1px; height: 18px; font-size: 10px;">Near</td>
+										<td style="text-align: center; border: 1px solid #ccc !important; padding: 1px; height: 18px; font-size: 10px;">{{ $additional_customer['prescription']['right_eye']['near']['sph'] ?? '' }}</td>
+										<td style="text-align: center; border: 1px solid #ccc !important; padding: 1px; height: 18px; font-size: 10px;">{{ $additional_customer['prescription']['right_eye']['near']['cyl'] ?? '' }}</td>
+										<td style="text-align: center; border: 1px solid #ccc !important; padding: 1px; height: 18px; font-size: 10px;">{{ $additional_customer['prescription']['right_eye']['near']['axis'] ?? '' }}</td>
 									</tr>
 								</tbody>
 							</table>
@@ -527,27 +527,27 @@ window.addEventListener('afterprint', function() {
 						<!-- LEFT EYE TABLE -->
 						<td style="width: 48%; vertical-align: top; padding-left: 10px;">
 							<strong style="font-size: 12px;">Left</strong>
-							<table class="table table-bordered table-condensed" style="margin-top: 2px; margin-bottom: 0; border: 1px solid #000 !important; border-collapse: collapse !important;">
+							<table class="table table-bordered table-condensed" style="margin-top: 2px; margin-bottom: 0; border: 1px solid #ccc !important; border-collapse: collapse !important;">
 								<thead>
 									<tr style="background-color: #f0f0f0;">
-										<th style="width: 25%; border: 1px solid #000 !important; padding: 1px; height: 18px; font-size: 10px;"></th>
-										<th style="width: 25%; text-align: center; border: 1px solid #000 !important; padding: 1px; height: 18px; font-size: 10px;">Sph.</th>
-										<th style="width: 25%; text-align: center; border: 1px solid #000 !important; padding: 1px; height: 18px; font-size: 10px;">Cyl.</th>
-										<th style="width: 25%; text-align: center; border: 1px solid #000 !important; padding: 1px; height: 18px; font-size: 10px;">Axis.</th>
+										<th style="width: 25%; border: 1px solid #ccc !important; padding: 1px; height: 18px; font-size: 10px;"></th>
+										<th style="width: 25%; text-align: center; border: 1px solid #ccc !important; padding: 1px; height: 18px; font-size: 10px;">Sph.</th>
+										<th style="width: 25%; text-align: center; border: 1px solid #ccc !important; padding: 1px; height: 18px; font-size: 10px;">Cyl.</th>
+										<th style="width: 25%; text-align: center; border: 1px solid #ccc !important; padding: 1px; height: 18px; font-size: 10px;">Axis.</th>
 									</tr>
 								</thead>
 								<tbody>
 									<tr>
-										<td style="font-weight: 600; border: 1px solid #000 !important; padding: 1px; height: 18px; font-size: 10px;">Distance</td>
-										<td style="text-align: center; border: 1px solid #000 !important; padding: 1px; height: 18px; font-size: 10px;">{{ $additional_customer['prescription']['left_eye']['distance']['sph'] ?? '' }}</td>
-										<td style="text-align: center; border: 1px solid #000 !important; padding: 1px; height: 18px; font-size: 10px;">{{ $additional_customer['prescription']['left_eye']['distance']['cyl'] ?? '' }}</td>
-										<td style="text-align: center; border: 1px solid #000 !important; padding: 1px; height: 18px; font-size: 10px;">{{ $additional_customer['prescription']['left_eye']['distance']['axis'] ?? '' }}</td>
+										<td style="font-weight: 600; border: 1px solid #ccc !important; padding: 1px; height: 18px; font-size: 10px;">Distance</td>
+										<td style="text-align: center; border: 1px solid #ccc !important; padding: 1px; height: 18px; font-size: 10px;">{{ $additional_customer['prescription']['left_eye']['distance']['sph'] ?? '' }}</td>
+										<td style="text-align: center; border: 1px solid #ccc !important; padding: 1px; height: 18px; font-size: 10px;">{{ $additional_customer['prescription']['left_eye']['distance']['cyl'] ?? '' }}</td>
+										<td style="text-align: center; border: 1px solid #ccc !important; padding: 1px; height: 18px; font-size: 10px;">{{ $additional_customer['prescription']['left_eye']['distance']['axis'] ?? '' }}</td>
 									</tr>
 									<tr>
-										<td style="font-weight: 600; border: 1px solid #000 !important; padding: 1px; height: 18px; font-size: 10px;">Near</td>
-										<td style="text-align: center; border: 1px solid #000 !important; padding: 1px; height: 18px; font-size: 10px;">{{ $additional_customer['prescription']['left_eye']['near']['sph'] ?? '' }}</td>
-										<td style="text-align: center; border: 1px solid #000 !important; padding: 1px; height: 18px; font-size: 10px;">{{ $additional_customer['prescription']['left_eye']['near']['cyl'] ?? '' }}</td>
-										<td style="text-align: center; border: 1px solid #000 !important; padding: 1px; height: 18px; font-size: 10px;">{{ $additional_customer['prescription']['left_eye']['near']['axis'] ?? '' }}</td>
+										<td style="font-weight: 600; border: 1px solid #ccc !important; padding: 1px; height: 18px; font-size: 10px;">Near</td>
+										<td style="text-align: center; border: 1px solid #ccc !important; padding: 1px; height: 18px; font-size: 10px;">{{ $additional_customer['prescription']['left_eye']['near']['sph'] ?? '' }}</td>
+										<td style="text-align: center; border: 1px solid #ccc !important; padding: 1px; height: 18px; font-size: 10px;">{{ $additional_customer['prescription']['left_eye']['near']['cyl'] ?? '' }}</td>
+										<td style="text-align: center; border: 1px solid #ccc !important; padding: 1px; height: 18px; font-size: 10px;">{{ $additional_customer['prescription']['left_eye']['near']['axis'] ?? '' }}</td>
 									</tr>
 								</tbody>
 							</table>
