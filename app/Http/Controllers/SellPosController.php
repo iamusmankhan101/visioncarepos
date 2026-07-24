@@ -3356,6 +3356,8 @@ class SellPosController extends Controller
             'autoArabic' => true,
             'margin_top' => 8,
             'margin_bottom' => 8,
+            'margin_left' => 12,
+            'margin_right' => 12,
             'format' => 'A4',
         ]);
 
