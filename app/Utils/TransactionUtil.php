@@ -1015,7 +1015,7 @@ class TransactionUtil extends Util
             $output['logo'] = asset('uploads/invoice_logos/'.$il->logo);
         } else {
             // Fall back to the clinic's own brand logo when no custom invoice logo has been uploaded
-            $output['logo'] = asset('images/logo2.png');
+            $output['logo'] = asset('images/logo2-color.png');
         }
 
         //Address
