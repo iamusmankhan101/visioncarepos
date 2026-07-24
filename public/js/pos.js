@@ -3354,6 +3354,10 @@ $(document).on('click', '#select_all_service_staff', function() {
 
 $(document).on('click', '.print-invoice-link', function(e) {
     e.preventDefault();
+    $('#recent_transactions_modal').modal('hide');
+    $('.modal-backdrop').remove();
+    $('body').removeClass('modal-open').css('padding-right', '');
+
     $.ajax({
         url: $(this).attr('href') + "?check_location=true",
         dataType: 'json',
