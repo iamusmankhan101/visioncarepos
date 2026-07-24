@@ -35,7 +35,7 @@ window.addEventListener('afterprint', function() {
 
 			<!-- business information here -->
 			<div class="col-xs-12 text-center">
-				<h2 class="text-center" style="margin-top: 0; margin-bottom: 4px;">
+				<h2 class="text-center" style="margin-top: 0; margin-bottom: 4px; color: #48b2ee;">
 					<!-- Shop & Location Name  -->
 					@if(!empty($receipt_details->display_name))
 						{{$receipt_details->display_name}}
@@ -101,6 +101,7 @@ window.addEventListener('afterprint', function() {
 				<img style="width: 100%;margin-bottom: 10px;" src="{{$receipt_details->letter_head}}">
 			</div>
 		@endif
+		<div class="col-xs-12"><hr style="border-top: 2px solid #48b2ee; margin: 6px 0 10px;"></div>
 	<div class="col-xs-12">
 		<!-- Invoice, Customer, and Mobile in one column -->
 		<div style="width: 100% !important; margin-bottom: 10px;">
@@ -396,10 +397,10 @@ window.addEventListener('afterprint', function() {
 			<tr>
 				<!-- RIGHT EYE TABLE -->
 				<td style="width: 48%; vertical-align: top; padding-right: 10px;">
-					<strong style="font-size: 12px;">RIGHT</strong>
+					<strong style="font-size: 12px; color: #48b2ee;">RIGHT</strong>
 					<table class="table table-bordered table-condensed" style="margin-top: 2px; margin-bottom: 0; border: 1px solid #ccc !important; border-collapse: collapse !important;">
 						<thead>
-							<tr style="background-color: #f0f0f0;">
+							<tr style="background-color: #eaf6fd;">
 								<th style="width: 25%; border: 1px solid #ccc !important; padding: 1px; height: 18px; font-size: 10px;"></th>
 								<th style="width: 25%; text-align: center; border: 1px solid #ccc !important; padding: 1px; height: 18px; font-size: 10px;">Sph.</th>
 								<th style="width: 25%; text-align: center; border: 1px solid #ccc !important; padding: 1px; height: 18px; font-size: 10px;">Cyl.</th>
@@ -425,10 +426,10 @@ window.addEventListener('afterprint', function() {
 				
 				<!-- LEFT EYE TABLE -->
 				<td style="width: 48%; vertical-align: top; padding-left: 10px;">
-					<strong style="font-size: 12px;">Left</strong>
+					<strong style="font-size: 12px; color: #48b2ee;">Left</strong>
 					<table class="table table-bordered table-condensed" style="margin-top: 2px; margin-bottom: 0; border: 1px solid #ccc !important; border-collapse: collapse !important;">
 						<thead>
-							<tr style="background-color: #f0f0f0;">
+							<tr style="background-color: #eaf6fd;">
 								<th style="width: 25%; border: 1px solid #ccc !important; padding: 1px; height: 18px; font-size: 10px;"></th>
 								<th style="width: 25%; text-align: center; border: 1px solid #ccc !important; padding: 1px; height: 18px; font-size: 10px;">Sph.</th>
 								<th style="width: 25%; text-align: center; border: 1px solid #ccc !important; padding: 1px; height: 18px; font-size: 10px;">Cyl.</th>
@@ -458,7 +459,7 @@ window.addEventListener('afterprint', function() {
 		{{-- Product table below eye chart --}}
 		<table style="width: 100%; margin-top: 8px; border-collapse: collapse;">
 			<thead>
-				<tr style="border-bottom: 1px solid #eee;">
+				<tr style="border-bottom: 2px solid #48b2ee;">
 					<th style="padding: 4px 0; text-align: left; width: 50%; font-size: 13px; color: #000;">Product</th>
 					<th style="padding: 4px 0; text-align: right; width: 17%; font-size: 13px; color: #000;">Quantity</th>
 					<th style="padding: 4px 0; text-align: right; width: 17%; font-size: 13px; color: #000;">Unit Price</th>
@@ -505,10 +506,10 @@ window.addEventListener('afterprint', function() {
 					<tr>
 						<!-- RIGHT EYE TABLE -->
 						<td style="width: 48%; vertical-align: top; padding-right: 10px;">
-							<strong style="font-size: 12px;">RIGHT</strong>
+							<strong style="font-size: 12px; color: #48b2ee;">RIGHT</strong>
 							<table class="table table-bordered table-condensed" style="margin-top: 2px; margin-bottom: 0; border: 1px solid #ccc !important; border-collapse: collapse !important;">
 								<thead>
-									<tr style="background-color: #f0f0f0;">
+									<tr style="background-color: #eaf6fd;">
 										<th style="width: 25%; border: 1px solid #ccc !important; padding: 1px; height: 18px; font-size: 10px;"></th>
 										<th style="width: 25%; text-align: center; border: 1px solid #ccc !important; padding: 1px; height: 18px; font-size: 10px;">Sph.</th>
 										<th style="width: 25%; text-align: center; border: 1px solid #ccc !important; padding: 1px; height: 18px; font-size: 10px;">Cyl.</th>
@@ -534,10 +535,10 @@ window.addEventListener('afterprint', function() {
 						
 						<!-- LEFT EYE TABLE -->
 						<td style="width: 48%; vertical-align: top; padding-left: 10px;">
-							<strong style="font-size: 12px;">Left</strong>
+							<strong style="font-size: 12px; color: #48b2ee;">Left</strong>
 							<table class="table table-bordered table-condensed" style="margin-top: 2px; margin-bottom: 0; border: 1px solid #ccc !important; border-collapse: collapse !important;">
 								<thead>
-									<tr style="background-color: #f0f0f0;">
+									<tr style="background-color: #eaf6fd;">
 										<th style="width: 25%; border: 1px solid #ccc !important; padding: 1px; height: 18px; font-size: 10px;"></th>
 										<th style="width: 25%; text-align: center; border: 1px solid #ccc !important; padding: 1px; height: 18px; font-size: 10px;">Sph.</th>
 										<th style="width: 25%; text-align: center; border: 1px solid #ccc !important; padding: 1px; height: 18px; font-size: 10px;">Cyl.</th>
@@ -566,7 +567,7 @@ window.addEventListener('afterprint', function() {
 				{{-- Product table below eye chart --}}
 				<table style="width: 100%; margin-top: 8px; border-collapse: collapse;">
 					<thead>
-						<tr style="border-bottom: 1px solid #eee;">
+						<tr style="border-bottom: 2px solid #48b2ee;">
 							<th style="padding: 4px 0; text-align: left; width: 50%; font-size: 13px; color: #000;">Product</th>
 							<th style="padding: 4px 0; text-align: right; width: 17%; font-size: 13px; color: #000;">Quantity</th>
 							<th style="padding: 4px 0; text-align: right; width: 17%; font-size: 13px; color: #000;">Unit Price</th>
@@ -844,11 +845,11 @@ window.addEventListener('afterprint', function() {
 					@endif
 
 					<!-- Total -->
-					<tr>
-						<th>
+					<tr style="color: #2b7cb3;">
+						<th style="border-top: 2px solid #48b2ee; padding-top: 4px;">
 							{!! $receipt_details->total_label !!}
 						</th>
-						<td class="text-right">
+						<td class="text-right" style="border-top: 2px solid #48b2ee; padding-top: 4px;">
 							{{$receipt_details->total}}
 							@if(!empty($receipt_details->total_in_words))
 								<br>
@@ -912,14 +913,14 @@ window.addEventListener('afterprint', function() {
 	
 	{{-- Custom Footer Text - ALWAYS VISIBLE --}}
 	<div class="col-xs-12" style="page-break-inside: avoid; margin-top: 15px;">
-		<hr style="border-top: 1px solid #000;">
-		<div style="padding: 8px; font-size: 12px; text-align: center; background-color: #f0f0f0; border: 1px solid #000;">
-			<strong style="font-size: 14px;">TERMS & CONDITIONS</strong><br>
+		<hr style="border-top: 1px solid #48b2ee;">
+		<div style="padding: 8px; font-size: 12px; text-align: center; background-color: #eaf6fd; border: 1px solid #48b2ee;">
+			<strong style="font-size: 14px; color: #2b7cb3;">TERMS & CONDITIONS</strong><br>
 			<strong>• No Order will process without 50% Advance payment.</strong><br>
 			<strong>• Orders with 100% Payment will be prioritized.</strong><br>
 			<strong>• No refunds, but we can give you a voucher or exchange it within 3 days.</strong>
 		</div>
-		<hr style="border-top: 1px solid #000;">
+		<hr style="border-top: 1px solid #48b2ee;">
 	</div>
 	@if($receipt_details->show_barcode || $receipt_details->show_qr_code)
 		<div class="@if(!empty($receipt_details->footer_text)) col-xs-4 @else col-xs-12 @endif text-center">
