@@ -909,7 +909,8 @@ window.addEventListener('afterprint', function() {
 			<strong style="font-size: 14px; color: #2b7cb3;">TERMS & CONDITIONS</strong><br>
 			<strong>• No Order will process without 50% Advance payment.</strong><br>
 			<strong>• Orders with 100% Payment will be prioritized.</strong><br>
-			<strong>• No refunds, but we can give you a voucher or exchange it within 3 days.</strong>
+			<strong>• No refunds, but we can give you a voucher or exchange it within 3 days.</strong><br>
+			<strong>• Collect your glasses within 15 days after that company will not be responsible for an damage/loss.</strong>
 		</div>
 		<hr style="border-top: 1px solid #48b2ee;">
 	</div>

@@ -886,7 +886,8 @@
                             <strong style="font-size: 14px;">TERMS & CONDITIONS</strong><br><br>
                             <strong>• No Order will process without 50% Advance payment.</strong><br>
                             <strong>• Orders with 100% Payment will be prioritised.</strong><br>
-                            <strong>• No refunds, but we can give you a voucher or exchange it within 3 days.</strong>
+                            <strong>• No refunds, but we can give you a voucher or exchange it within 3 days.</strong><br>
+                            <strong>• Collect your glasses within 15 days after that company will not be responsible for an damage/loss.</strong>
                         </div>
                         <hr style="border-top: 2px solid #000;">
                     </div>
