@@ -1014,8 +1014,11 @@ class TransactionUtil extends Util
         if ($il->show_logo != 0 && ! empty($il->logo) && file_exists(public_path('uploads/invoice_logos/'.$il->logo))) {
             $output['logo'] = asset('uploads/invoice_logos/'.$il->logo);
         } else {
-            // Fall back to the clinic's own brand logo when no custom invoice logo has been uploaded
-            $output['logo'] = asset('images/logo2-color.png');
+            // Fall back to the clinic's own brand logo when no custom invoice logo has been uploaded.
+            // Cache-bust with the file's mtime so browsers don't keep serving a stale cached image
+            // across deploys that update this same filename.
+            $logo_path = public_path('images/logo2-color.png');
+            $output['logo'] = asset('images/logo2-color.png') . '?v=' . (file_exists($logo_path) ? filemtime($logo_path) : time());
         }
 
         //Address
