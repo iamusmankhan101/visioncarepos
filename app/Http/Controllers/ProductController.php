@@ -10,7 +10,6 @@ use App\Exports\ProductsExport;
 use App\Media;
 use App\Product;
 use App\ProductVariation;
-use App\PurchaseLine;
 use App\SellingPriceGroup;
 use App\TaxRate;
 use App\Unit;
@@ -27,7 +26,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Yajra\DataTables\Facades\DataTables;
 use App\Events\ProductsCreatedOrModified;
-use App\TransactionSellLine;
 
 class ProductController extends Controller
 {
@@ -918,116 +916,27 @@ class ProductController extends Controller
             try {
                 $business_id = request()->session()->get('user.business_id');
 
-                $can_be_deleted = true;
-                $error_msg = '';
-
-                //Check if any purchase or transfer exists
-                $count = PurchaseLine::join(
-                    'transactions as T',
-                    'purchase_lines.transaction_id',
-                    '=',
-                    'T.id'
-                )
-                                    ->whereIn('T.type', ['purchase'])
-                                    ->where('T.business_id', $business_id)
-                                    ->where('purchase_lines.product_id', $id)
-                                    ->count();
-                if ($count > 0) {
-                    $can_be_deleted = false;
-                    $error_msg = __('lang_v1.purchase_already_exist');
-                } else {
-                    //Check if any opening stock sold
-                    $count = PurchaseLine::join(
-                        'transactions as T',
-                        'purchase_lines.transaction_id',
-                        '=',
-                        'T.id'
-                     )
-                                    ->where('T.type', 'opening_stock')
-                                    ->where('T.business_id', $business_id)
-                                    ->where('purchase_lines.product_id', $id)
-                                    ->where('purchase_lines.quantity_sold', '>', 0)
-                                    ->count();
-                    if ($count > 0) {
-                        $can_be_deleted = false;
-                        $error_msg = __('lang_v1.opening_stock_sold');
-                    } else {
-                        //Check if any stock is adjusted
-                        $count = PurchaseLine::join(
-                            'transactions as T',
-                            'purchase_lines.transaction_id',
-                            '=',
-                            'T.id'
-                        )
-                                    ->where('T.business_id', $business_id)
-                                    ->where('purchase_lines.product_id', $id)
-                                    ->where('purchase_lines.quantity_adjusted', '>', 0)
-                                    ->count();
-                        if ($count > 0) {
-                            $can_be_deleted = false;
-                            $error_msg = __('lang_v1.stock_adjusted');
-                        }
-                    }
-                }
-
                 $product = Product::where('id', $id)
                                 ->where('business_id', $business_id)
-                                ->with('variations')
                                 ->first();
 
-                // check for enable stock = 0 product
-                if($product->enable_stock == 0){
-                    $t_count = TransactionSellLine::join(
-                        'transactions as T',
-                        'transaction_sell_lines.transaction_id',
-                        '=',
-                        'T.id'
-                    )
-                        ->where('T.business_id', $business_id)
-                        ->where('transaction_sell_lines.product_id', $id)
-                        ->count();
-
-                    if ($t_count > 0) {
-                        $can_be_deleted = false;
-                        $error_msg = "can't delete product exit in sell";
-                    }
+                if (! empty($product)) {
+                    DB::beginTransaction();
+                    //Delete variation location details
+                    VariationLocationDetails::where('product_id', $id)
+                                            ->delete();
+                    //Detach product locations pivot
+                    $product->product_locations()->detach();
+                    //Delete rack details
+                    \App\ProductRack::where('product_id', $id)->delete();
+                    $product->delete();
+                    event(new ProductsCreatedOrModified($product, 'deleted'));
+                    DB::commit();
                 }
 
-                //Check if product is added as an ingredient of any recipe
-                if ($this->moduleUtil->isModuleInstalled('Manufacturing')) {
-                    $variation_ids = $product->variations->pluck('id');
-
-                    $exists_as_ingredient = \Modules\Manufacturing\Entities\MfgRecipeIngredient::whereIn('variation_id', $variation_ids)
-                        ->exists();
-                    if ($exists_as_ingredient) {
-                        $can_be_deleted = false;
-                        $error_msg = __('manufacturing::lang.added_as_ingredient');
-                    }
-                }
-            
-                if ($can_be_deleted) {
-                    if (! empty($product)) {
-                        DB::beginTransaction();
-                        //Delete variation location details
-                        VariationLocationDetails::where('product_id', $id)
-                                                ->delete();
-                        //Detach product locations pivot
-                        $product->product_locations()->detach();
-                        //Delete rack details
-                        \App\ProductRack::where('product_id', $id)->delete();
-                        $product->delete();
-                        event(new ProductsCreatedOrModified($product, 'deleted'));
-                        DB::commit();
-                    }
-
-                    $output = ['success' => true,
-                        'msg' => __('lang_v1.product_delete_success'),
-                    ];
-                } else {
-                    $output = ['success' => false,
-                        'msg' => $error_msg,
-                    ];
-                }
+                $output = ['success' => true,
+                    'msg' => __('lang_v1.product_delete_success'),
+                ];
             } catch (\Exception $e) {
                 DB::rollBack();
                 \Log::emergency('File:'.$e->getFile().'Line:'.$e->getLine().'Message:'.$e->getMessage());
@@ -1723,8 +1632,6 @@ class ProductController extends Controller
             abort(403, 'Unauthorized action.');
         }
         try {
-            $purchase_exist = false;
-
             if (! empty($request->input('selected_rows'))) {
                 $business_id = $request->session()->get('user.business_id');
 
@@ -1732,53 +1639,28 @@ class ProductController extends Controller
 
                 $products = Product::where('business_id', $business_id)
                                     ->whereIn('id', $selected_rows)
-                                    ->with(['purchase_lines', 'variations'])
                                     ->get();
-                $deletable_products = [];
-
-                $is_mfg_installed = $this->moduleUtil->isModuleInstalled('Manufacturing');
 
                 DB::beginTransaction();
 
                 foreach ($products as $product) {
-                    $can_be_deleted = true;
-                    //Check if product is added as an ingredient of any recipe
-                    if ($is_mfg_installed) {
-                        $variation_ids = $product->variations->pluck('id');
-
-                        $exists_as_ingredient = \Modules\Manufacturing\Entities\MfgRecipeIngredient::whereIn('variation_id', $variation_ids)
-                            ->exists();
-                        $can_be_deleted = ! $exists_as_ingredient;
-                    }
-
-                    //Delete if no purchase found
-                    if (empty($product->purchase_lines->toArray()) && $can_be_deleted) {
-                        //Delete variation location details
-                        VariationLocationDetails::where('product_id', $product->id)
-                                                    ->delete();
-                        //Detach product locations pivot
-                        $product->product_locations()->detach();
-                        //Delete rack details
-                        \App\ProductRack::where('product_id', $product->id)->delete();
-                        $product->delete();
-                        event(new ProductsCreatedOrModified($product, 'Deleted'));
-                    } else {
-                        $purchase_exist = true;
-                    }
+                    //Delete variation location details
+                    VariationLocationDetails::where('product_id', $product->id)
+                                                ->delete();
+                    //Detach product locations pivot
+                    $product->product_locations()->detach();
+                    //Delete rack details
+                    \App\ProductRack::where('product_id', $product->id)->delete();
+                    $product->delete();
+                    event(new ProductsCreatedOrModified($product, 'Deleted'));
                 }
 
                 DB::commit();
             }
 
-            if (! $purchase_exist) {
-                $output = ['success' => 1,
-                    'msg' => __('lang_v1.deleted_success'),
-                ];
-            } else {
-                $output = ['success' => 0,
-                    'msg' => __('lang_v1.products_could_not_be_deleted'),
-                ];
-            }
+            $output = ['success' => 1,
+                'msg' => __('lang_v1.deleted_success'),
+            ];
         } catch (\Exception $e) {
             DB::rollBack();
             \Log::emergency('File:'.$e->getFile().'Line:'.$e->getLine().'Message:'.$e->getMessage());
