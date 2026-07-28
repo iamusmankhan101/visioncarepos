@@ -2179,8 +2179,16 @@ $(document).ready(function() {
 
     //Quick add product
     $(document).on('click', 'button.pos_add_quick_product', function() {
-        var url = $(this).data('href');
-        var container = $(this).data('container');
+        var button = $(this);
+        var url = button.data('href');
+        var container = button.data('container');
+
+        if (button.data('can-create-product') === 0 || button.data('can-create-product') === '0') {
+            toastr.error('You do not have permission to add products. Enable Product Create permission for this user.');
+            return;
+        }
+
+        button.prop('disabled', true);
         $.ajax({
             url: url + '?product_for=pos',
             dataType: 'html',
@@ -2193,6 +2201,20 @@ $(document).ready(function() {
                     format: 'dd-mm-yyyy',
                     clearBtn: true,
                 });
+            },
+            error: function(xhr) {
+                var message = 'Unable to open add product form. Please try again.';
+
+                if (xhr.status === 403) {
+                    message = 'You do not have permission to add products. Enable Product Create permission for this user.';
+                } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                    message = xhr.responseJSON.message;
+                }
+
+                toastr.error(message);
+            },
+            complete: function() {
+                button.prop('disabled', false);
             },
         });
     });
