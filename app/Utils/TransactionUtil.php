@@ -37,7 +37,10 @@ class TransactionUtil extends Util
      */
     public function getInvoiceFinalTotal($input, $invoice_total, $uf_data = true)
     {
-        $final_total = $invoice_total['final_total'];
+        $discount = isset($invoice_total['discount']) ? $invoice_total['discount'] : 0;
+        $final_total = isset($invoice_total['final_total'])
+            ? $invoice_total['final_total']
+            : $invoice_total['total_before_tax'] + $invoice_total['tax'] - $discount;
 
         $shipping_charges = isset($input['shipping_charges'])
             ? ($uf_data ? $this->num_uf($input['shipping_charges']) : $input['shipping_charges'])
