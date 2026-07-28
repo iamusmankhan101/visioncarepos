@@ -753,6 +753,14 @@ class ContactController extends Controller
                     if (!empty($related_input['dob'])) {
                         $related_input['dob'] = $this->commonUtil->uf_date($related_input['dob']);
                     }
+
+                    if (!empty($related_input['prescription_source'])) {
+                        if (!isset($related_input['shipping_custom_field_details']) || !is_array($related_input['shipping_custom_field_details'])) {
+                            $related_input['shipping_custom_field_details'] = [];
+                        }
+                        $related_input['shipping_custom_field_details']['prescription_source'] = $related_input['prescription_source'];
+                        unset($related_input['prescription_source']);
+                    }
                     
                     $related_input['credit_limit'] = isset($related_input['credit_limit']) && $related_input['credit_limit'] != '' ? $this->commonUtil->num_uf($related_input['credit_limit']) : null;
                     $related_input['opening_balance'] = isset($related_input['opening_balance']) ? $this->commonUtil->num_uf($related_input['opening_balance']) : 0;
@@ -3018,4 +3026,3 @@ class ContactController extends Controller
         }
     }
 }
-

@@ -818,6 +818,27 @@
             '<i class="fa fa-eye"></i> Lens Prescription' +
             '</h4>' +
             '</div>' +
+            '<div class="col-md-12" style="margin-bottom: 15px;">' +
+            '<div class="form-group">' +
+            '<label style="font-weight: 600; color: #333;">' +
+            '<i class="fa fa-file-medical"></i> Prescription Source:' +
+            '</label>' +
+            '<div style="margin-top: 8px;">' +
+            '<label class="radio-inline" style="margin-right: 20px;">' +
+            '<input type="radio" name="customers[' + customerFormCount + '][prescription_source]" value="vision_care"> ' +
+            '<span style="color: #48b2ee; font-weight: 500;">' +
+            '<i class="fa fa-check-circle"></i> Prescription by Vision Care' +
+            '</span>' +
+            '</label>' +
+            '<label class="radio-inline">' +
+            '<input type="radio" name="customers[' + customerFormCount + '][prescription_source]" value="not_vision_care"> ' +
+            '<span style="color: #666; font-weight: 500;">' +
+            '<i class="fa fa-times-circle"></i> Prescription not by Vision Care' +
+            '</span>' +
+            '</label>' +
+            '</div>' +
+            '</div>' +
+            '</div>' +
             '<div class="col-md-12">' +
             '<div class="table-responsive">' +
             '<table class="table table-bordered" style="background-color: #fff;">' +
