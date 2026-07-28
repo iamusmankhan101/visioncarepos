@@ -2806,6 +2806,7 @@ $(document).on('shown.bs.modal', '.quick_add_product_modal', function (e) {
 });
 $(document).on('hidden.bs.modal', '.quick_add_product_modal', function (e) {
     tinymce.remove("textarea#product_description");
+    $('.quick-add-product-backdrop').remove();
 });
 
 $(window).scroll(function () {

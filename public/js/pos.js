@@ -2193,9 +2193,27 @@ $(document).ready(function() {
             url: url + '?product_for=pos',
             dataType: 'html',
             success: function(result) {
-                $(container)
+                var quick_add_modal = $(container);
+                if (quick_add_modal.length && !quick_add_modal.parent().is('body')) {
+                    quick_add_modal.appendTo('body');
+                }
+
+                quick_add_modal
                     .html(result)
-                    .modal('show');
+                    .css('z-index', 10050)
+                    .modal({
+                        backdrop: true,
+                        keyboard: true,
+                        show: true,
+                    });
+
+                setTimeout(function() {
+                    $('.modal-backdrop')
+                        .last()
+                        .addClass('quick-add-product-backdrop')
+                        .css('z-index', 10040);
+                }, 0);
+
                 $('.os_exp_date').datepicker({
                     autoclose: true,
                     format: 'dd-mm-yyyy',
