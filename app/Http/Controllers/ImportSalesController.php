@@ -244,7 +244,7 @@ class ImportSalesController extends Controller
             if ($import_stats['imported_count'] == 0) {
                 $msg = 'Import completed but no sales were created. ';
                 if ($import_stats['skipped_count'] > 0) {
-                    $msg .= $import_stats['skipped_count'] . ' rows were skipped. Common reasons: products not found or unit price is 0. Check Laravel logs for details.';
+                    $msg .= $import_stats['skipped_count'] . ' rows were skipped. Common reason: products not found in the system. Check Laravel logs for details.';
                 }
             }
 
@@ -288,6 +288,12 @@ class ImportSalesController extends Controller
             $order_total = 0;
             $sell_lines = [];
             foreach ($data as $line_data) {
+                // Skip rows that have no product name and no SKU (header-only rows from export)
+                if (empty($line_data['sku']) && empty($line_data['product'])) {
+                    $row_index++;
+                    continue;
+                }
+
                 if (! empty($line_data['sku'])) {
                     
                     $variation = Variation::where('sub_sku', $line_data['sku'])
@@ -321,16 +327,8 @@ class ImportSalesController extends Controller
                 $item_tax = 0;
                 $line_discount = ! empty($line_data['item_discount']) ? $line_data['item_discount'] : 0;
 
-                $unit_price = $line_data['unit_price'] ?? 0;
-                if (empty($unit_price) || $unit_price == 0) {
-                    // Log skipped line
-                    $skipped_rows[] = "Row {$row_index}: No unit price";
-                    \Log::warning("Sales Import - No unit price", [
-                        'row' => $row_index,
-                        'product' => $line_data['product']
-                    ]);
-                    continue;
-                }
+                // Allow zero-price products (e.g. complimentary items or exported POS sales with no price)
+                $unit_price = isset($line_data['unit_price']) ? (float)$line_data['unit_price'] : 0;
 
                 $price_before_tax = $unit_price - $line_discount;
                 $price_inc_tax = $price_before_tax;
