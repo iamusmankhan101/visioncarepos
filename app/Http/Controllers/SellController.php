@@ -653,13 +653,14 @@ class SellController extends Controller
                     'trace' => $e->getTraceAsString(),
                 ]);
                 
-                // Return DataTables-compatible JSON even on error so the UI shows
-                // the error instead of a silent empty table.
-                return Datatables::of(collect([]))
-                    ->rawColumns([])
-                    ->skipTotalRecords()
-                    ->setFilteredRecords(0)
-                    ->make(true);
+                // Return a plain JSON error response so the user can see what went wrong
+                return response()->json([
+                    'draw' => (int) request('draw', 1),
+                    'recordsTotal' => 0,
+                    'recordsFiltered' => 0,
+                    'data' => [],
+                    'error' => 'Query error: ' . $e->getMessage() . ' (in ' . basename($e->getFile()) . ':' . $e->getLine() . ')',
+                ]);
             }
         }
 
