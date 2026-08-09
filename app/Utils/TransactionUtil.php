@@ -37,16 +37,25 @@ class TransactionUtil extends Util
      */
     public function getInvoiceFinalTotal($input, $invoice_total, $uf_data = true)
     {
-        $discount = isset($invoice_total['discount']) ? $invoice_total['discount'] : 0;
-        // Ensure numeric values for calculations, applying formatting conversion if needed
+        // Retrieve discount, total_before_tax and tax, ensuring numeric values
+        $discount = $invoice_total['discount'] ?? 0;
+        $total_before_tax = $invoice_total['total_before_tax'] ?? 0;
+        $tax = $invoice_total['tax'] ?? 0;
+
         if ($uf_data) {
             $discount = $this->num_uf($discount);
+            $total_before_tax = $this->num_uf($total_before_tax);
+            $tax = $this->num_uf($tax);
         }
+
+        // Cast to float for safety
+        $discount = (float) $discount;
+        $total_before_tax = (float) $total_before_tax;
+        $tax = (float) $tax;
+
         if (isset($invoice_total['final_total'])) {
             $final_total = $invoice_total['final_total'];
         } else {
-            $total_before_tax = $uf_data ? $this->num_uf($invoice_total['total_before_tax']) : $invoice_total['total_before_tax'];
-            $tax = $uf_data ? $this->num_uf($invoice_total['tax']) : $invoice_total['tax'];
             $final_total = $total_before_tax + $tax - $discount;
         }
 
