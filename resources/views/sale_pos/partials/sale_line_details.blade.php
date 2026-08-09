@@ -53,7 +53,13 @@
                 @endif
             </td>
             <td>
-                {{ $sell_line->assigned_customer->name ?? $sell->contact->name }}
+                @php
+                    $customer = $sell_line->assigned_customer ?? $sell->contact;
+                @endphp
+                {{ $customer->name }}
+                @if(!empty($customer->mobile))
+                    <br><small class="text-muted">{{ __('contact.mobile') }}: {{ $customer->mobile }}</small>
+                @endif
             </td>
             @if( session()->get('business.enable_lot_number') == 1 && empty($for_ledger))
                 <td>{{ $sell_line->lot_details->lot_number ?? '--' }}
