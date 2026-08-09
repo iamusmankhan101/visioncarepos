@@ -2,6 +2,7 @@
         <tr @if(empty($for_ledger)) class="bg-green" @endif>
         <th>#</th>
         <th>{{ __('sale.product') }}</th>
+        <th>{{ __('sale.customer_name') }}</th>
         @if( session()->get('business.enable_lot_number') == 1 && empty($for_ledger))
             <th>{{ __('lang_v1.lot_n_expiry') }}</th>
         @endif
@@ -50,6 +51,9 @@
                 @if(in_array('kitchen', $enabled_modules) && empty($for_ledger))
                     <br><span class="label @if($sell_line->res_line_order_status == 'cooked' ) bg-red @elseif($sell_line->res_line_order_status == 'served') bg-green @else bg-light-blue @endif">@lang('restaurant.order_statuses.' . $sell_line->res_line_order_status) </span>
                 @endif
+            </td>
+            <td>
+                {{ $sell_line->assigned_customer->name ?? $sell->contact->name }}
             </td>
             @if( session()->get('business.enable_lot_number') == 1 && empty($for_ledger))
                 <td>{{ $sell_line->lot_details->lot_number ?? '--' }}
@@ -132,6 +136,7 @@
                     {{ $modifier->product->name }} - {{ $modifier->variations->name ?? ''}},
                     {{ $modifier->variations->sub_sku ?? ''}}
                 </td>
+                <td>&nbsp;</td>
                 @if( session()->get('business.enable_lot_number') == 1)
                     <td>&nbsp;</td>
                 @endif
