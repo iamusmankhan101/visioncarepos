@@ -295,11 +295,18 @@ class ImportSalesController extends Controller
                 }
 
                 // Skip CSV header rows and summary/total rows from exports
-                // Check invoice_no for common summary/header text
+                // Check if invoice_no contains common summary/header text
                 $invoice_no_val = strtolower(trim($line_data['invoice_no'] ?? ''));
-                $metadata_in_invoice = ['total:', 'total', 'invoice no', 'invoice no.',
-                    'sub total', 'grand total', 'summary', 'header'];
-                if (in_array($invoice_no_val, $metadata_in_invoice)) {
+                $metadata_in_invoice = ['total', 'invoice no', 'sub total', 'grand total',
+                    'summary', 'header', 'customer name', 'contact number'];
+                $is_metadata = false;
+                foreach ($metadata_in_invoice as $keyword) {
+                    if ($invoice_no_val === $keyword || str_starts_with($invoice_no_val, $keyword)) {
+                        $is_metadata = true;
+                        break;
+                    }
+                }
+                if ($is_metadata) {
                     $row_index++;
                     continue;
                 }
