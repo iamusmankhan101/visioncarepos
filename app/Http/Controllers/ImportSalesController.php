@@ -445,7 +445,7 @@ class ImportSalesController extends Controller
                 'status' => 'final',
                 'contact_id' => $contact->id,
                 'final_total' => ! empty($first_sell_line['order_total']) ? $first_sell_line['order_total'] : $order_total,
-                'transaction_date' => ! empty($first_sell_line['date']) ? $first_sell_line['date'] : $now,
+                'transaction_date' => $this->__parseImportDate($first_sell_line['date'] ?? null, $now),
                 'discount_amount' => 0,
                 'import_batch' => $import_batch,
                 'import_time' => $now,
@@ -727,5 +727,63 @@ class ImportSalesController extends Controller
         }
 
         return redirect('import-sales')->with('status', $output);
+    }
+
+    /**
+     * Parse a date string from import CSV into a valid Carbon datetime.
+     * Handles common formats like M/d/Y, Y-m-d, d/m/Y, d-M-Y, etc.
+     * Returns the current datetime if parsing fails or the year is unreasonably low.
+     *
+     * @param  string|null  $dateString
+     * @param  string  $fallback
+     * @return string
+     */
+    private function __parseImportDate($dateString, $fallback)
+    {
+        if (empty($dateString)) {
+            return $fallback;
+        }
+
+        $dateString = trim($dateString);
+
+        // Try multiple common date formats
+        $formats = [
+            'Y-m-d',           // 2024-11-30
+            'Y-m-d H:i:s',     // 2024-11-30 12:00:00
+            'd/m/Y',           // 30/11/2024
+            'd/m/Y H:i:s',     // 30/11/2024 12:00:00
+            'm/d/Y',           // 11/30/2024
+            'm/d/Y H:i:s',     // 11/30/2024 12:00:00
+            'd-M-Y',           // 30-Nov-2024
+            'd-M-Y H:i:s',     // 30-Nov-2024 12:00:00
+            'd M Y',           // 30 Nov 2024
+            'M d, Y',           // Nov 30, 2024
+            'd/m/y',           // 30/11/24 (2-digit year)
+            'm/d/y',           // 11/30/24
+        ];
+
+        foreach ($formats as $format) {
+            $parsed = \Carbon\Carbon::createFromFormat($format, $dateString, 'UTC');
+            if ($parsed && $parsed->year >= 2000 && $parsed->year <= 2100) {
+                return $parsed->toDateTimeString();
+            }
+        }
+
+        // Last resort: try Carbon::parse() which handles many formats
+        try {
+            $parsed = \Carbon\Carbon::parse($dateString, 'UTC');
+            if ($parsed && $parsed->year >= 2000 && $parsed->year <= 2100) {
+                return $parsed->toDateTimeString();
+            }
+        } catch (\Exception $e) {
+            // ignore
+        }
+
+        \Log::warning('Import Sales: Could not parse date, using fallback', [
+            'raw_date' => $dateString,
+            'fallback' => $fallback,
+        ]);
+
+        return $fallback;
     }
 }
