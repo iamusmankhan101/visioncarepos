@@ -30,6 +30,7 @@
 
     <!-- Main content -->
     <section class="content no-print">
+        <input type="hidden" id="view_export_buttons">
         @component('components.filters', ['title' => __('report.filters')])
             @include('sell.partials.sell_list_filters')
             @if ($payment_types)
@@ -197,8 +198,7 @@
                 processing: true,
                 serverSide: true,
                 fixedHeader:false,
-                dom: '<"row margin-bottom-20"<"col-sm-1"l><"col-sm-8"><"col-sm-3"f> r>tip', // Removed 'B' to hide export buttons
-                buttons: [], // Explicitly disable export buttons
+                dom: '<"row margin-bottom-20 text-center"<"col-sm-1"l><"col-sm-8"B><"col-sm-3"f> r>tip',
                 aaSorting: [
                     [2, 'desc']
                 ],

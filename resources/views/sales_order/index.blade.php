@@ -10,6 +10,7 @@
 
 <!-- Main content -->
 <section class="content no-print">
+    <input type="hidden" id="view_export_buttons">
     @component('components.filters', ['title' => __('report.filters')])
         <div class="col-md-3">
             <div class="form-group">

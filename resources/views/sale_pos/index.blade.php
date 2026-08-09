@@ -11,6 +11,7 @@
 
 <!-- Main content -->
 <section class="content no-print">
+    <input type="hidden" id="view_export_buttons">
     @component('components.filters', ['title' => __('report.filters')])
         @include('sell.partials.sell_list_filters')
     @endcomponent
