@@ -400,14 +400,6 @@ class ImportSalesController extends Controller
             }
 
             $first_sell_line = $data[0];
-
-            // Skip creating a transaction if there are no sell lines AND no order_total to record
-            // (this prevents ghost/empty transactions from header or unmapped rows)
-            $has_order_total = !empty($first_sell_line['order_total']) && (float)$first_sell_line['order_total'] > 0;
-            if (empty($sell_lines) && !$has_order_total) {
-                $skipped_rows[] = "Invoice: {$first_sell_line['invoice_no']} - Skipped: no products and no order total found";
-                continue;
-            }
             //get contact
             $contact = null;
             if (! empty($first_sell_line['customer_phone_number'])) {
@@ -624,22 +616,9 @@ class ImportSalesController extends Controller
         $service_custom_field4_key = array_search('service_custom_field4', $import_fields);
         $additional_customer_phones_key = array_search('additional_customer_phones', $import_fields);
 
-        // These values are common in summary/header rows that should not be imported as sales
-        $skip_invoice_values = [
-            'total:', 'total', 'invoice no.', 'invoice no', 'invoice_no', '#', 'invoice',
-            'customer name', 'customer_name', 'contact number', 'contact no',
-        ];
-
         $row_index = 2;
         foreach ($imported_data as $key => $value) {
-            // Detect and skip Total/header summary rows by checking the invoice_no column value
-            $raw_invoice = $invoice_number_key !== false ? ($value[$invoice_number_key] ?? null) : null;
-            if (!empty($raw_invoice) && in_array(strtolower(trim((string)$raw_invoice)), $skip_invoice_values)) {
-                $row_index++;
-                continue;
-            }
-
-            $formatted_array[$key]['invoice_no'] = $raw_invoice;
+            $formatted_array[$key]['invoice_no'] = $invoice_number_key !== false ? ($value[$invoice_number_key] ?? null) : null;
             $formatted_array[$key]['customer_name'] = $customer_name_key !== false ? ($value[$customer_name_key] ?? null) : null;
             $formatted_array[$key]['customer_phone_number'] = $customer_phone_key !== false ? ($value[$customer_phone_key] ?? null) : null;
             $formatted_array[$key]['customer_email'] = $customer_email_key !== false ? ($value[$customer_email_key] ?? null) : null;
@@ -663,29 +642,14 @@ class ImportSalesController extends Controller
             $formatted_array[$key]['additional_customer_phones'] = $additional_customer_phones_key !== false ? ($value[$additional_customer_phones_key] ?? null) : null;
             $formatted_array[$key]['group_by'] = $value[$group_by] ?? null;
 
+            //check empty - all validations removed, import will proceed with whatever data is provided
+            
             $row_index++;
         }
-        // Determine the grouping key:
-        // If invoice_no is mapped, always group by invoice_no (most reliable unique key per sale).
-        // Otherwise fall back to whatever column was selected as group_by.
-        $use_invoice_as_group = ($invoice_number_key !== false);
-
+        $group_by_key = $import_fields[$group_by];
         $formatted_data = [];
         foreach ($formatted_array as $array) {
-            if ($use_invoice_as_group) {
-                $group_val = $array['invoice_no'];
-            } else {
-                $group_val = $array['group_by'];
-            }
-
-            // Skip grouping key values that look like summary/header rows
-            if (!empty($group_val) && in_array(strtolower(trim((string)$group_val)), [
-                'total:', 'total', 'invoice no.', 'invoice no', 'invoice_no', '#',
-                'customer name', 'customer_name', 'contact number', 'contact no',
-            ])) {
-                continue;
-            }
-            $formatted_data[$group_val][] = $array;
+            $formatted_data[$array['group_by']][] = $array;
         }
 
         return $formatted_data;
