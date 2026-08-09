@@ -763,9 +763,14 @@ class ImportSalesController extends Controller
         ];
 
         foreach ($formats as $format) {
-            $parsed = \Carbon\Carbon::createFromFormat($format, $dateString, 'UTC');
-            if ($parsed && $parsed->year >= 2000 && $parsed->year <= 2100) {
-                return $parsed->toDateTimeString();
+            try {
+                $parsed = \Carbon\Carbon::createFromFormat($format, $dateString, 'UTC');
+                if ($parsed && $parsed->year >= 2000 && $parsed->year <= 2100) {
+                    return $parsed->toDateTimeString();
+                }
+            } catch (\Exception $e) {
+                // Format didn't match, try next one
+                continue;
             }
         }
 
