@@ -294,6 +294,22 @@ class ImportSalesController extends Controller
                     continue;
                 }
 
+                // Skip CSV header rows and summary/total rows from exports
+                // These have recognizable text values instead of real product data
+                $product_name = strtolower(trim($line_data['product'] ?? ''));
+                $sku_val = strtolower(trim($line_data['sku'] ?? ''));
+                $invoice_no_val = strtolower(trim($line_data['invoice_no'] ?? ''));
+                $metadata_keywords = ['total:', 'total', 'invoice no', 'customer name', 'contact number',
+                    'invoice no.', 'sub total', 'grand total', 'discount', 'tax', 'amount',
+                    'shipping', 'payment', 'paid', 'due', 'balance', 'summary', 'header',
+                    'sell due', 'sell return due', 'order status', 'total items', 'total amount',
+                    'total paid', 'payment status', 'payment method'];
+                if (in_array($product_name, $metadata_keywords) || in_array($sku_val, $metadata_keywords)
+                    || in_array($invoice_no_val, $metadata_keywords)) {
+                    $row_index++;
+                    continue;
+                }
+
                 if (! empty($line_data['sku'])) {
                     
                     $variation = Variation::where('sub_sku', $line_data['sku'])
@@ -397,6 +413,12 @@ class ImportSalesController extends Controller
                 $sell_lines[] = $temp;
 
                 $row_index++;
+            }
+
+            // Skip this group if no valid sell lines were created
+            // (all lines were metadata/header/summary rows)
+            if (empty($sell_lines)) {
+                continue;
             }
 
             $first_sell_line = $data[0];
