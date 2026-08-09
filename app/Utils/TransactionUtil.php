@@ -5314,9 +5314,10 @@ class TransactionUtil extends Util
                     'tos.id'
                 )
                 // Pre-aggregate sell line totals per transaction and join once
+                // Safely handle so_quantity_invoiced column - may not exist on all installations
                 ->leftJoinSub(
                     DB::table('transaction_sell_lines as tsl')
-                        ->selectRaw('tsl.transaction_id, COUNT(DISTINCT tsl.id) as total_items, SUM(tsl.quantity - tsl.so_quantity_invoiced) as so_qty_remaining')
+                        ->selectRaw('tsl.transaction_id, COUNT(DISTINCT tsl.id) as total_items, SUM(tsl.quantity' . (\Illuminate\Support\Facades\Schema::hasColumn('transaction_sell_lines', 'so_quantity_invoiced') ? ' - tsl.so_quantity_invoiced' : '') . ') as so_qty_remaining')
                         ->whereNull('tsl.parent_sell_line_id')
                         ->groupBy('tsl.transaction_id'),
                     'tsl_agg',

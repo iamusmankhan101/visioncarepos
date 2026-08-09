@@ -121,14 +121,6 @@ class SellController extends Controller
                     $sale_type = ['sell', 'sales_order'];
                 }
 
-                \Log::info('SellController::index called via AJAX', [
-                    'only_shipments' => request()->input('only_shipments'),
-                    'only_pending_shipments' => request()->input('only_pending_shipments'),
-                    'location_id' => request()->input('location_id'),
-                    'business_id' => $business_id,
-                    'all' => request()->all()
-                ]);
-
                 $sells = $this->transactionUtil->getListSells($business_id, $sale_type);
 
             // Apply all filters in a single reusable method
@@ -568,22 +560,16 @@ class SellController extends Controller
                         return '';
                     }
                     
-                    // Debug: Log what we're processing
-                    \Log::info('Processing additional_notes for row ' . $row->id . ': ' . $row->additional_notes);
-                    
                     // Check if this contains multiple customers information
                     if (strpos($row->additional_notes, 'Multiple Customers:') !== false || 
                         strpos($row->additional_notes, 'SELECTED_CUSTOMERS:') !== false ||
                         strpos($row->additional_notes, 'MULTI_INVOICE_CUSTOMERS:') !== false) {
-                        
-                        \Log::info('Found multiple customer data in row ' . $row->id);
                         
                         // Extract customer information for the modal
                         $customer_info = '';
                         if (strpos($row->additional_notes, 'Multiple Customers:') !== false) {
                             preg_match('/Multiple Customers: (.+?)(\n|$)/', $row->additional_notes, $matches);
                             $customer_info = !empty($matches[1]) ? $matches[1] : '';
-                            \Log::info('Found Multiple Customers format: ' . $customer_info);
                         } else if (strpos($row->additional_notes, 'SELECTED_CUSTOMERS:') !== false) {
                             // Handle legacy format - get customer names from IDs
                             preg_match('/SELECTED_CUSTOMERS:([0-9,]+)/', $row->additional_notes, $matches);
@@ -597,7 +583,6 @@ class SellController extends Controller
                                     }
                                 }
                                 $customer_info = implode(', ', $customer_names);
-                                \Log::info('Found SELECTED_CUSTOMERS format: ' . $customer_info);
                             }
                         } else if (strpos($row->additional_notes, 'MULTI_INVOICE_CUSTOMERS:') !== false) {
                             // Handle MULTI_INVOICE_CUSTOMERS format - get customer names from IDs
@@ -614,20 +599,16 @@ class SellController extends Controller
                                     }
                                 }
                                 $customer_info = implode(', ', $customer_names);
-                                \Log::info('Found MULTI_INVOICE_CUSTOMERS format: ' . $customer_info);
                             }
                         }
                         
                         if (!empty($customer_info)) {
-                            \Log::info('Returning Multiple Customers link for row ' . $row->id);
                             return '<a href="#" class="multiple-customers-link" data-customers="' . htmlspecialchars($customer_info) . '" data-toggle="modal" data-target="#multipleCustomersModal">
                                         <i class="fa fa-users"></i> Multiple Customers
                                     </a>';
                         }
                     }
                     
-                    // Return regular notes if not multiple customers
-                    \Log::info('Returning regular notes for row ' . $row->id);
                     return $row->additional_notes;
                 })
                 ->setRowAttr([
@@ -645,13 +626,6 @@ class SellController extends Controller
             $datatable->filter(function ($query) {
                 $keyword = request('search.value');
                 
-                // Debug logging
-                \Log::info('DataTable Global Search Filter', [
-                    'keyword' => $keyword,
-                    'has_keyword' => ($keyword !== null && $keyword !== ''),
-                    'request_search' => request('search')
-                ]);
-                
                 if ($keyword !== null && $keyword !== '') {
                     $query->where(function ($q) use ($keyword) {
                         // Primary search fields - most commonly searched
@@ -660,8 +634,6 @@ class SellController extends Controller
                           ->orWhere('contacts.contact_id', 'like', "%{$keyword}%")
                           ->orWhere('contacts.mobile', 'like', "%{$keyword}%");
                     });
-                    
-                    \Log::info('Applied focused global search filter for keyword: ' . $keyword);
                 }
             }, true);
 
@@ -677,15 +649,17 @@ class SellController extends Controller
                     'line' => $e->getLine(),
                     'business_id' => $business_id,
                     'user_id' => request()->session()->get('user.id'),
-                    'request_params' => request()->all()
+                    'request_params' => request()->all(),
+                    'trace' => $e->getTraceAsString(),
                 ]);
                 
-                return response()->json([
-                    'error' => 'Failed to load sales data: ' . $e->getMessage(),
-                    'data' => [],
-                    'recordsTotal' => 0,
-                    'recordsFiltered' => 0
-                ], 500);
+                // Return DataTables-compatible JSON even on error so the UI shows
+                // the error instead of a silent empty table.
+                return Datatables::of(collect([]))
+                    ->rawColumns([])
+                    ->skipTotalRecords()
+                    ->setFilteredRecords(0)
+                    ->make(true);
             }
         }
 
