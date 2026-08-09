@@ -616,9 +616,22 @@ class ImportSalesController extends Controller
         $service_custom_field4_key = array_search('service_custom_field4', $import_fields);
         $additional_customer_phones_key = array_search('additional_customer_phones', $import_fields);
 
+        // These values are common in summary/header rows that should not be imported as sales
+        $skip_invoice_values = [
+            'total:', 'total', 'invoice no.', 'invoice no', 'invoice_no', '#', 'invoice',
+            'customer name', 'customer_name', 'contact number', 'contact no',
+        ];
+
         $row_index = 2;
         foreach ($imported_data as $key => $value) {
-            $formatted_array[$key]['invoice_no'] = $invoice_number_key !== false ? ($value[$invoice_number_key] ?? null) : null;
+            // Detect and skip Total/header summary rows by checking the invoice_no column value
+            $raw_invoice = $invoice_number_key !== false ? ($value[$invoice_number_key] ?? null) : null;
+            if (!empty($raw_invoice) && in_array(strtolower(trim((string)$raw_invoice)), $skip_invoice_values)) {
+                $row_index++;
+                continue;
+            }
+
+            $formatted_array[$key]['invoice_no'] = $raw_invoice;
             $formatted_array[$key]['customer_name'] = $customer_name_key !== false ? ($value[$customer_name_key] ?? null) : null;
             $formatted_array[$key]['customer_phone_number'] = $customer_phone_key !== false ? ($value[$customer_phone_key] ?? null) : null;
             $formatted_array[$key]['customer_email'] = $customer_email_key !== false ? ($value[$customer_email_key] ?? null) : null;
@@ -642,14 +655,20 @@ class ImportSalesController extends Controller
             $formatted_array[$key]['additional_customer_phones'] = $additional_customer_phones_key !== false ? ($value[$additional_customer_phones_key] ?? null) : null;
             $formatted_array[$key]['group_by'] = $value[$group_by] ?? null;
 
-            //check empty - all validations removed, import will proceed with whatever data is provided
-            
             $row_index++;
         }
         $group_by_key = $import_fields[$group_by];
         $formatted_data = [];
         foreach ($formatted_array as $array) {
-            $formatted_data[$array['group_by']][] = $array;
+            // Also skip grouping key values that look like summary rows
+            $group_val = $array['group_by'];
+            if (!empty($group_val) && in_array(strtolower(trim((string)$group_val)), [
+                'total:', 'total', 'invoice no.', 'invoice no', 'invoice_no', '#',
+                'customer name', 'customer_name', 'contact number', 'contact no',
+            ])) {
+                continue;
+            }
+            $formatted_data[$group_val][] = $array;
         }
 
         return $formatted_data;
