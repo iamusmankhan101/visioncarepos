@@ -400,6 +400,14 @@ class ImportSalesController extends Controller
             }
 
             $first_sell_line = $data[0];
+
+            // Skip creating a transaction if there are no sell lines AND no order_total to record
+            // (this prevents ghost/empty transactions from header or unmapped rows)
+            $has_order_total = !empty($first_sell_line['order_total']) && (float)$first_sell_line['order_total'] > 0;
+            if (empty($sell_lines) && !$has_order_total) {
+                $skipped_rows[] = "Invoice: {$first_sell_line['invoice_no']} - Skipped: no products and no order total found";
+                continue;
+            }
             //get contact
             $contact = null;
             if (! empty($first_sell_line['customer_phone_number'])) {
@@ -657,11 +665,20 @@ class ImportSalesController extends Controller
 
             $row_index++;
         }
-        $group_by_key = $import_fields[$group_by];
+        // Determine the grouping key:
+        // If invoice_no is mapped, always group by invoice_no (most reliable unique key per sale).
+        // Otherwise fall back to whatever column was selected as group_by.
+        $use_invoice_as_group = ($invoice_number_key !== false);
+
         $formatted_data = [];
         foreach ($formatted_array as $array) {
-            // Also skip grouping key values that look like summary rows
-            $group_val = $array['group_by'];
+            if ($use_invoice_as_group) {
+                $group_val = $array['invoice_no'];
+            } else {
+                $group_val = $array['group_by'];
+            }
+
+            // Skip grouping key values that look like summary/header rows
             if (!empty($group_val) && in_array(strtolower(trim((string)$group_val)), [
                 'total:', 'total', 'invoice no.', 'invoice no', 'invoice_no', '#',
                 'customer name', 'customer_name', 'contact number', 'contact no',
