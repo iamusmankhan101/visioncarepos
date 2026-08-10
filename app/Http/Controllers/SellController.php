@@ -1167,32 +1167,6 @@ class SellController extends Controller
 
             // Prepare data in exact import template order
             $export_data = [];
-            
-            // Add header row matching import template
-            $export_data[] = [
-                'Invoice No.',
-                'Customer Phone number',
-                'Customer name',
-                'Customer Email',
-                'Sale Date',
-                'Product name',
-                'Product SKU',
-                'Quantity',
-                'Product Unit',
-                'Unit Price',
-                'Item Tax',
-                'Item Discount',
-                'Item Description',
-                'Order Total',
-                'Total Paid',
-                'Payment Method',
-                'Types of service',
-                'Custom Field 1',
-                'Custom Field 2',
-                'Custom Field 3',
-                'Custom Field 4',
-                'Additional Customer Phones',
-            ];
 
             // Add transaction data rows
             foreach ($transactions as $transaction) {
@@ -1332,8 +1306,8 @@ class SellController extends Controller
                 }
             }
 
-            // If no data except header, add a note
-            if (count($export_data) == 1) {
+            // If no data, add a note
+            if (count($export_data) == 0) {
                 $export_data[] = [
                     'No sales found',
                     '',
