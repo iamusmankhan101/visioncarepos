@@ -1399,7 +1399,7 @@ class SellPosController extends Controller
             ->leftjoin('units', 'units.id', '=', 'p.unit_id')
             ->leftjoin('units as u', 'p.secondary_unit_id', '=', 'u.id')
             ->where('transaction_sell_lines.transaction_id', $id)
-            ->with(['warranties'])
+            ->with(['warranties', 'assigned_customer'])
             ->select(
                 DB::raw("IF(pv.is_dummy = 0, CONCAT(p.name, ' (', pv.name, ':',variations.name, ')'), p.name) AS product_name"),
                 'p.id as product_id',
@@ -1438,6 +1438,10 @@ class SellPosController extends Controller
                 //qty_available not added when negative to avoid max quanity getting decreased in edit and showing error in max quantity validation
                 DB::raw('IF(vld.qty_available > 0, vld.qty_available + transaction_sell_lines.quantity, transaction_sell_lines.quantity) AS qty_available')
             )
+            //Needed to preselect the customer assigned to each product line on the edit screen
+            ->when(\Schema::hasColumn('transaction_sell_lines', 'assigned_customer_id'), function ($q) {
+                $q->addSelect('transaction_sell_lines.assigned_customer_id');
+            })
             ->get();
         if (!empty($sell_details)) {
             foreach ($sell_details as $key => $value) {

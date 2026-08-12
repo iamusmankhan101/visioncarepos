@@ -61,6 +61,14 @@
         
         // Initial population if products already exist
         populateAllCustomerDropdowns();
+
+        // On the edit sale screen the customer is already selected before this module is
+        // loaded, so the change event never fires. Load its related customers explicitly so
+        // the assignment dropdowns are filled and the saved assignments stay selectable.
+        var initial_customer_id = $('form#edit_pos_sell_form').length ? $('#customer_id').val() : null;
+        if (initial_customer_id) {
+            fetchAndAddRelatedCustomers(initial_customer_id);
+        }
     }
     
     /**
@@ -182,23 +190,37 @@
         }
         
         var currentValue = $dropdown.val();
-        
+        var currentText = $dropdown.find('option:selected').text();
+        var currentValueKept = false;
+
         // Clear existing options except the first one
         $dropdown.find('option:not(:first)').remove();
-        
+
         // Add customers to dropdown
         window.posSelectedCustomers.forEach(function(customer) {
             var $option = $('<option></option>')
                 .val(customer.id)
                 .text(customer.name);
-            
+
             if (customer.id == currentValue) {
                 $option.prop('selected', true);
+                currentValueKept = true;
             }
-            
+
             $dropdown.append($option);
         });
-        
+
+        // Keep the already assigned customer selected (sale being edited) even when it is
+        // not part of the related customers list, otherwise the assignment would be lost.
+        if (currentValue && !currentValueKept) {
+            $dropdown.append(
+                $('<option></option>')
+                    .val(currentValue)
+                    .text(currentText)
+                    .prop('selected', true)
+            );
+        }
+
         // Auto-select if only one customer
         if (window.posSelectedCustomers.length === 1 && !currentValue) {
             $dropdown.val(window.posSelectedCustomers[0].id);
@@ -479,8 +501,8 @@
     $(document).ready(function() {
         initProductCustomerAssignment();
         
-        // Add validation before form submission
-        $('#add_pos_sell_form').on('submit', function(e) {
+        // Add validation before form submission (add and edit sale screens)
+        $('#add_pos_sell_form, #edit_pos_sell_form').on('submit', function(e) {
             // Only validate if multiple customers are selected
             if (window.posSelectedCustomers.length > 1) {
                 if (!window.validateProductCustomerAssignments()) {

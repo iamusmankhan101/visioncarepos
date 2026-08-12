@@ -348,11 +348,19 @@
 		@endif
 		
 		{{-- Customer Assignment Column --}}
+		@php
+			//Preselect the customer already assigned to this line (edit screen)
+			$assigned_customer_id = !empty($product->assigned_customer_id) ? $product->assigned_customer_id : null;
+			$assigned_customer_name = !empty($product->assigned_customer) ? $product->assigned_customer->name : null;
+		@endphp
 		<td>
-			<select name="products[{{$row_count}}][assigned_customer_id]" 
-					class="form-control product_customer_assignment" 
+			<select name="products[{{$row_count}}][assigned_customer_id]"
+					class="form-control product_customer_assignment"
 					data-row="{{$row_count}}">
 				<option value="">@lang('lang_v1.select_customer')</option>
+				@if(!empty($assigned_customer_id) && !empty($assigned_customer_name))
+					<option value="{{$assigned_customer_id}}" selected>{{$assigned_customer_name}}</option>
+				@endif
 			</select>
 			<small class="text-muted">@lang('lang_v1.assign_to_customer')</small>
 		</td>
@@ -409,11 +417,19 @@
 		@endif
 		
 		{{-- Customer Assignment Column --}}
+		@php
+			//Preselect the customer already assigned to this line (edit screen)
+			$assigned_customer_id = !empty($product->assigned_customer_id) ? $product->assigned_customer_id : null;
+			$assigned_customer_name = !empty($product->assigned_customer) ? $product->assigned_customer->name : null;
+		@endphp
 		<td>
-			<select name="products[{{$row_count}}][assigned_customer_id]" 
-					class="form-control product_customer_assignment" 
+			<select name="products[{{$row_count}}][assigned_customer_id]"
+					class="form-control product_customer_assignment"
 					data-row="{{$row_count}}">
 				<option value="">@lang('lang_v1.select_customer')</option>
+				@if(!empty($assigned_customer_id) && !empty($assigned_customer_name))
+					<option value="{{$assigned_customer_id}}" selected>{{$assigned_customer_name}}</option>
+				@endif
 			</select>
 			<small class="text-muted">@lang('lang_v1.assign_to_customer')</small>
 		</td>

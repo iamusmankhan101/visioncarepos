@@ -654,6 +654,12 @@ class TransactionUtil extends Util
             'res_service_staff_id' => ! empty($product['res_service_staff_id']) ? $product['res_service_staff_id'] : null,
             'secondary_unit_quantity' => ! empty($product['secondary_unit_quantity']) ? $this->num_uf($product['secondary_unit_quantity']) : 0,
         ]);
+
+        //Keep the customer assigned to the line updated, else editing a sale clears the assignment.
+        if (\Schema::hasColumn('transaction_sell_lines', 'assigned_customer_id')) {
+            $sell_line->assigned_customer_id = ! empty($product['assigned_customer_id']) ? $product['assigned_customer_id'] : null;
+        }
+
         $sell_line->save();
 
         //Set warranty
