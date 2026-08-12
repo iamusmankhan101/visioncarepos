@@ -965,9 +965,8 @@ $(document).ready(function() {
         
             payment_method_dropdown.val(pay_method);
             payment_method_dropdown.change();
-        if (pay_method == 'card') {
-            $('div#card_details_modal').modal('show');
-        } else if (pay_method == 'suspend') {
+        //Card express checkout follows the same flow as cash, no card details are asked for.
+        if (pay_method == 'suspend') {
             $('div#confirmSuspendModal').modal('show');
         } else {
             // Add selected customers to form before submission
@@ -1218,30 +1217,10 @@ $(document).ready(function() {
         }
     }
 
-    $('div#card_details_modal').on('shown.bs.modal', function(e) {
-        $('input#card_number').focus();
-    });
-
     $('div#confirmSuspendModal').on('shown.bs.modal', function(e) {
         $(this)
             .find('textarea')
             .focus();
-    });
-
-    //on save card details
-    $('button#pos-save-card').click(function() {
-        $('input#card_number_0').val($('#card_number').val());
-        $('input#card_holder_name_0').val($('#card_holder_name').val());
-        $('input#card_transaction_number_0').val($('#card_transaction_number').val());
-        $('select#card_type_0').val($('#card_type').val());
-        $('input#card_month_0').val($('#card_month').val());
-        $('input#card_year_0').val($('#card_year').val());
-        $('input#card_security_0').val($('#card_security').val());
-
-        $('div#card_details_modal').modal('hide');
-        // Add selected customers to form before submission
-        addSelectedCustomersToForm();
-        pos_form_obj.submit();
     });
 
     $('button#pos-suspend').click(function() {
