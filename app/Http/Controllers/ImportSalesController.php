@@ -158,7 +158,12 @@ class ImportSalesController extends Controller
 
             $business_locations = BusinessLocation::forDropdown($business_id);
 
-            return view('import_sales.preview')->with(compact('parsed_array', 'import_fields', 'file_name', 'business_locations', 'match_array'));
+            //Pre-select the invoice number column for grouping, grouping by any other column
+            //would merge different sales sharing the same value into a single sale.
+            $default_group_by = array_search('invoice_no', $match_array);
+            $default_group_by = $default_group_by === false ? null : $default_group_by;
+
+            return view('import_sales.preview')->with(compact('parsed_array', 'import_fields', 'file_name', 'business_locations', 'match_array', 'default_group_by'));
         }
     }
 
@@ -667,19 +672,30 @@ class ImportSalesController extends Controller
             $formatted_array[$key]['service_custom_field3'] = $service_custom_field3_key !== false ? ($value[$service_custom_field3_key] ?? null) : null;
             $formatted_array[$key]['service_custom_field4'] = $service_custom_field4_key !== false ? ($value[$service_custom_field4_key] ?? null) : null;
             $formatted_array[$key]['additional_customer_phones'] = $additional_customer_phones_key !== false ? ($value[$additional_customer_phones_key] ?? null) : null;
-            $formatted_array[$key]['group_by'] = $value[$group_by] ?? null;
+            //Build the key used to group rows into a single sale.
+            //Rows are grouped by the user selected column, but rows having different invoice
+            //numbers are never merged together - otherwise two different sales sharing the same
+            //customer/date/location (which is the case for most exports) would collapse into one sale.
+            $group_by_value = trim((string) ($value[$group_by] ?? ''));
+            $invoice_no_value = trim((string) ($formatted_array[$key]['invoice_no'] ?? ''));
+
+            if ($group_by_value === '' && $invoice_no_value === '') {
+                //Nothing to group on, keep the row as its own sale instead of merging all such rows.
+                $formatted_array[$key]['group_by'] = 'row::'.$key;
+            } else {
+                $formatted_array[$key]['group_by'] = 'group::'.$group_by_value.'||invoice::'.$invoice_no_value;
+            }
 
             //check empty - all validations removed, import will proceed with whatever data is provided
-            
+
             $row_index++;
         }
-        $group_by_key = $import_fields[$group_by];
         $formatted_data = [];
         foreach ($formatted_array as $array) {
             $formatted_data[$array['group_by']][] = $array;
         }
 
-        return $formatted_data;
+        return array_values($formatted_data);
     }
 
     private function __importFields()

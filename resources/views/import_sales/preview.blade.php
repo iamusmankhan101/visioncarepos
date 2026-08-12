@@ -17,7 +17,7 @@
         <div class="col-md-6">
             <div class="form-group">
                 {!! Form::label('group_by', __('lang_v1.group_sale_line_by') . ':*') !!} @show_tooltip(__('lang_v1.group_by_tooltip'))
-                {!! Form::select('group_by', $parsed_array[0], null, ['class' => 'form-control select2', 'required', 'placeholder' => __('messages.please_select')]); !!}
+                {!! Form::select('group_by', $parsed_array[0], $default_group_by ?? null, ['class' => 'form-control select2', 'required', 'placeholder' => __('messages.please_select')]); !!}
             </div>
         </div>
         <div class="col-md-6">
