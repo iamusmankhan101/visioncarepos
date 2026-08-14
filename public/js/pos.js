@@ -3436,7 +3436,22 @@ $(document).on('change', 'select#customer_id', function(){
     // Clear selection for previous customer
     window.selectedCustomersForInvoice = null;
     sessionStorage.removeItem('selectedCustomersForInvoice');
-    
+    // The stored confirmation belongs to the previous customer — drop it so the
+    // related customers modal is shown again for the newly picked customer.
+    window.hasConfirmedRelatedCustomersModal = false;
+
+    // Keep the cached group only while the selected customer still belongs to it
+    // (confirming the modal re-selects a customer from the same group).
+    var new_customer_id = String($(this).val() || '');
+    var cached_group = window.lastRelatedCustomers || [];
+    var still_in_group = cached_group.some(function(customer) {
+        return String(customer.id) === new_customer_id;
+    });
+    if (!still_in_group) {
+        window.lastRelatedCustomers = null;
+        window.lastRelatedCustomerCallback = null;
+    }
+
     var default_customer_id = $('#default_customer_id').val();
     if ($(this).val() == default_customer_id) {
         //Disable reward points for walkin customers
@@ -4351,10 +4366,18 @@ function saveFormDataToLocalStorage() {
 // Function to show related customers modal
 function showRelatedCustomersModal(customers, callback) {
     console.log('Building modal for customers:', customers);
-    
+
     // Store callback for later use
     window.relatedCustomerCallback = callback;
-    
+
+    // Keep the list and callback so the user can come back and change the
+    // selection (e.g. from the delivery date modal) without re-fetching.
+    window.lastRelatedCustomers = customers;
+    window.lastRelatedCustomerCallback = callback;
+
+    // Reset per-show state: set to true only when the user confirms this time
+    window.relatedCustomersModalConfirmed = false;
+
     // Clear any existing event handlers
     $('#related_customers_modal').off();
     
@@ -4417,6 +4440,17 @@ function showRelatedCustomersModal(customers, callback) {
         setupCheckboxHandlers();
     });
 }
+
+// Closing the related customers modal without confirming must not leave a stale
+// confirmation behind, otherwise the next checkout click skips the modal and the
+// customer selection can no longer be changed.
+// Delegated so it survives the $('#related_customers_modal').off() above.
+$(document).on('hidden.bs.modal', '#related_customers_modal', function() {
+    if (!window.relatedCustomersModalConfirmed) {
+        window.hasConfirmedRelatedCustomersModal = false;
+        enable_pos_form_actions();
+    }
+});
 
 // Function to toggle checkbox when clicking on customer info
 function toggleCustomerCheckbox(customerId) {
@@ -4613,7 +4647,8 @@ $(document).on('click', '#confirm_customer_selection', function(e) {
     
     // Set a flag to indicate the user has explicitly confirmed the modal
     window.hasConfirmedRelatedCustomersModal = true;
-    
+    window.relatedCustomersModalConfirmed = true;
+
     console.log('Stored customers globally:', window.selectedCustomersForInvoice);
     console.log('Stored in sessionStorage:', sessionStorage.getItem('selectedCustomersForInvoice'));
     
@@ -5136,19 +5171,46 @@ function pos_show_delivery_modal(onDone) {
     }
 
     var is_confirmed = false;
-    
+    var go_back_to_customers = false;
+    var has_related_customers = !!(window.lastRelatedCustomers && window.lastRelatedCustomers.length > 1);
+
     // Clear ALL existing handlers on the modal to prevent conflicts
     $('#delivery_date_modal').off('hidden.bs.modal');
     $('#delivery_date_modal .close').off('click');
     $('#confirm_delivery_date').off('click');
     $('#skip_delivery_date').off('click');
+    $('#back_to_customers').off('click');
+
+    // Only offer "Back" when we actually came from the related customers modal
+    $('#back_to_customers').toggleClass('hide', !has_related_customers);
 
     // Reset actions if modal is closed without confirmation
     $('#delivery_date_modal').on('hidden.bs.modal', function() {
         if (!is_confirmed) {
             console.log('Delivery modal closed without confirmation, re-enabling actions');
+            // The selection is no longer locked in — let the next checkout click
+            // re-run the related customers check so the user can change it.
+            window.hasConfirmedRelatedCustomersModal = false;
             enable_pos_form_actions();
+
+            if (go_back_to_customers) {
+                go_back_to_customers = false;
+                // Small delay so the backdrop of this modal is fully removed first
+                setTimeout(function() {
+                    showRelatedCustomersModal(window.lastRelatedCustomers, window.lastRelatedCustomerCallback);
+                }, 200);
+            }
         }
+    });
+
+    // "Back" returns to the related customers modal with the current selection intact
+    $('#back_to_customers').on('click', function() {
+        if (!has_related_customers) {
+            return;
+        }
+        go_back_to_customers = true;
+        is_confirmed = false;
+        $('#delivery_date_modal').modal('hide');
     });
 
     // Explicitly handle "x" button

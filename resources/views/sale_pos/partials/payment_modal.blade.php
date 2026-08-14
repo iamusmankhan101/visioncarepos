@@ -62,6 +62,9 @@
                 </div>
             </div>
             <div class="modal-footer">
+                <button type="button" class="btn btn-default pull-left hide" id="back_to_customers">
+                    <i class="fa fa-arrow-left"></i> Back to Customers
+                </button>
                 <button type="button" class="btn btn-default" id="skip_delivery_date">
                     <i class="fa fa-forward"></i> Skip
                 </button>
