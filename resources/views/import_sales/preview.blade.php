@@ -2,6 +2,15 @@
 @section('title', __('lang_v1.preview_imported_sales'))
 
 @section('content')
+<style type="text/css">
+    /* The mapping selects sit in narrow table cells - keep the field names readable */
+    .import_fields_cell {
+        min-width: 200px;
+    }
+    .select2-container--open .select2-dropdown {
+        min-width: 240px;
+    }
+</style>
 
 <!-- Content Header (Page header) -->
 <section class="content-header">
@@ -55,7 +64,7 @@
                             <tr>
                             <td>@if($loop->index > 0 ){{$loop->index}}@endif</td>
                             @foreach($row as $k => $v)
-                                <td>
+                                <td class="import_fields_cell">
                                     {!! Form::select('import_fields[' . $k . ']', $import_fields, $match_array[$k], ['class' => 'form-control import_fields select2', 'placeholder' => __('lang_v1.skip'), 'style' => 'width: 100%;']); !!}
                                 </td>
                             @endforeach

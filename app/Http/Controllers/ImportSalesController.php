@@ -383,6 +383,7 @@ class ImportSalesController extends Controller
             'customer_phone_number' => ['customer phone number', 'contact number', 'phone number', 'mobile number', 'mobile', 'phone', 'contact no'],
             'customer_email' => ['customer email', 'email', 'email address'],
             'date' => ['date', 'sale date', 'sell date', 'transaction date', 'invoice date', 'date time'],
+            'location' => ['location', 'business location', 'branch', 'store', 'outlet'],
             'product' => ['product', 'product name', 'item', 'item name'],
             'sku' => ['sku', 'product sku', 'item code', 'product code', 'barcode'],
             'quantity' => ['quantity', 'qty'],
@@ -394,6 +395,8 @@ class ImportSalesController extends Controller
             'order_total' => ['order total', 'total', 'total amount', 'final total', 'grand total', 'net total'],
             'total_paid' => ['total paid', 'paid', 'amount paid', 'paid amount'],
             'payment_method' => ['payment method', 'payment mode', 'payment type', 'method'],
+            'payment_status' => ['payment status', 'paid status'],
+            'shipping_status' => ['shipping status', 'order status', 'delivery status'],
             'additional_customer_phones' => ['additional customer phones', 'additional customers', 'additional phones', 'related customers'],
             'types_of_service' => ['types of service', 'type of service', 'service type'],
             'service_custom_field1' => ['service custom field 1'],
@@ -435,6 +438,97 @@ class ImportSalesController extends Controller
     private function __normalizeHeader($value)
     {
         return preg_replace('/[^a-z0-9]/', '', strtolower(trim((string) $value)));
+    }
+
+    /**
+     * Resolve a location name from the file to a business location id.
+     * Falls back to the location selected on the preview screen.
+     *
+     * @param  string|null  $location_name
+     * @param  int  $business_id
+     * @param  int  $default_location_id
+     * @return int
+     */
+    private function __resolveLocationId($location_name, $business_id, $default_location_id)
+    {
+        $location_name = trim((string) $location_name);
+        if ($location_name === '') {
+            return $default_location_id;
+        }
+
+        $location = BusinessLocation::where('business_id', $business_id)
+                        ->where(function ($query) use ($location_name) {
+                            $query->where('name', $location_name)
+                                ->orWhere('location_id', $location_name);
+                        })
+                        ->first();
+
+        if (empty($location)) {
+            \Log::warning('Sales Import: Location not found, using the selected location', [
+                'location' => $location_name,
+            ]);
+
+            return $default_location_id;
+        }
+
+        return $location->id;
+    }
+
+    /**
+     * Normalize a payment status from the file. Returns null when unrecognised.
+     *
+     * @param  string|null  $value
+     * @return string|null
+     */
+    private function __resolvePaymentStatus($value)
+    {
+        $value = $this->__normalizeHeader($value);
+        if ($value === '') {
+            return null;
+        }
+
+        $statuses = [
+            'paid' => 'paid',
+            'fullypaid' => 'paid',
+            'partial' => 'partial',
+            'partiallypaid' => 'partial',
+            'due' => 'due',
+            'unpaid' => 'due',
+            'overdue' => 'due',
+        ];
+
+        return $statuses[$value] ?? null;
+    }
+
+    /**
+     * Normalize a shipping/order status from the file. Returns null when unrecognised.
+     *
+     * @param  string|null  $value
+     * @return string|null
+     */
+    private function __resolveShippingStatus($value)
+    {
+        $value = $this->__normalizeHeader($value);
+        if ($value === '') {
+            return null;
+        }
+
+        foreach (array_keys($this->transactionUtil->shipping_statuses()) as $status) {
+            if ($this->__normalizeHeader($status) === $value) {
+                return $status;
+            }
+        }
+
+        //Also accept the translated labels shown in the sales list
+        foreach ($this->transactionUtil->shipping_statuses() as $status => $label) {
+            if ($this->__normalizeHeader($label) === $value) {
+                return $status;
+            }
+        }
+
+        \Log::warning('Sales Import: Unknown shipping status', ['status' => $value]);
+
+        return null;
     }
 
     /**
@@ -712,9 +806,12 @@ class ImportSalesController extends Controller
                 }
             }
 
+            //A mapped location column overrides the location selected on the preview screen
+            $sale_location_id = $this->__resolveLocationId($first_sell_line['location'] ?? null, $business_id, $location_id);
+
             $sale_data = [
                 'invoice_no' => $first_sell_line['invoice_no'],
-                'location_id' => $location_id,
+                'location_id' => $sale_location_id,
                 'status' => 'final',
                 'contact_id' => $contact->id,
                 'final_total' => ! empty($first_sell_line['order_total']) ? $first_sell_line['order_total'] : $order_total,
@@ -749,7 +846,14 @@ class ImportSalesController extends Controller
 
             $transaction = $this->transactionUtil->createSellTransaction($business_id, $sale_data, $invoice_total, auth()->user()->id, false);
 
-            $this->transactionUtil->createOrUpdateSellLines($transaction, $sell_lines, $location_id, false, null, [], false);
+            $this->transactionUtil->createOrUpdateSellLines($transaction, $sell_lines, $sale_location_id, false, null, [], false);
+
+            //Shipping/order status from the file
+            $shipping_status = $this->__resolveShippingStatus($first_sell_line['shipping_status'] ?? null);
+            if (! empty($shipping_status)) {
+                $transaction->shipping_status = $shipping_status;
+                $transaction->save();
+            }
 
             // Restore additional customers (comma-separated contact IDs) into additional_notes
             if (!empty($first_sell_line['additional_customer_phones'])) {
@@ -770,18 +874,31 @@ class ImportSalesController extends Controller
             }
 
             // Handle payment if total_paid is provided
+            $paid_amount = 0;
             if (!empty($first_sell_line['total_paid']) && $first_sell_line['total_paid'] > 0) {
-                $payment_method = $first_sell_line['payment_method'] ?? 'cash';
-                
+                $paid_amount = $first_sell_line['total_paid'];
+            } elseif (empty($first_sell_line['total_paid_mapped'])
+                && $this->__resolvePaymentStatus($first_sell_line['payment_status'] ?? null) == 'paid') {
+                //No paid amount in the file, but it is marked as paid - record the full amount
+                //so the sale does not show up as due.
+                $paid_amount = $transaction->final_total;
+            }
+
+            if ($paid_amount > 0) {
+                //Exports write the label ("Cash"), payments store the key ("cash")
+                $payment_method = ! empty($first_sell_line['payment_method'])
+                    ? str_replace(' ', '_', strtolower(trim($first_sell_line['payment_method'])))
+                    : 'cash';
+
                 $payment_data = [
-                    'amount' => $first_sell_line['total_paid'],
+                    'amount' => $paid_amount,
                     'method' => $payment_method,
                     'paid_on' => !empty($first_sell_line['date']) ? $first_sell_line['date'] : $now,
                     'transaction_id' => $transaction->id,
                     'business_id' => $business_id,
                     'created_by' => auth()->user()->id,
                 ];
-                
+
                 \App\TransactionPayment::create($payment_data);
             }
 
@@ -790,7 +907,7 @@ class ImportSalesController extends Controller
                     $this->productUtil->decreaseProductQuantity(
                         $line['product_id'],
                         $line['variation_id'],
-                        $location_id,
+                        $sale_location_id,
                         $line['quantity']
                     );
                 }
@@ -825,7 +942,7 @@ class ImportSalesController extends Controller
                     $this->productUtil
                         ->decreaseProductQuantityCombo(
                             $combo_details,
-                            $location_id
+                            $sale_location_id
                         );
                 }
             }
@@ -838,7 +955,7 @@ class ImportSalesController extends Controller
 
             $business = ['id' => $business_id,
                 'accounting_method' => request()->session()->get('business.accounting_method'),
-                'location_id' => $location_id,
+                'location_id' => $sale_location_id,
                 'pos_settings' => $pos_settings,
             ];
             $this->transactionUtil->mapPurchaseSell($business, $transaction->sell_lines, 'purchase');
@@ -881,6 +998,9 @@ class ImportSalesController extends Controller
         $order_total_key = array_search('order_total', $import_fields);
         $total_paid_key = array_search('total_paid', $import_fields);
         $payment_method_key = array_search('payment_method', $import_fields);
+        $payment_status_key = array_search('payment_status', $import_fields);
+        $shipping_status_key = array_search('shipping_status', $import_fields);
+        $location_key = array_search('location', $import_fields);
         $unit_key = array_search('unit', $import_fields);
         $tos_key = array_search('types_of_service', $import_fields);
         $service_custom_field1_key = array_search('service_custom_field1', $import_fields);
@@ -906,6 +1026,10 @@ class ImportSalesController extends Controller
             $formatted_array[$key]['order_total'] = $order_total_key !== false ? ($value[$order_total_key] ?? null) : null;
             $formatted_array[$key]['total_paid'] = $total_paid_key !== false ? ($value[$total_paid_key] ?? null) : null;
             $formatted_array[$key]['payment_method'] = $payment_method_key !== false ? ($value[$payment_method_key] ?? null) : null;
+            $formatted_array[$key]['payment_status'] = $payment_status_key !== false ? ($value[$payment_status_key] ?? null) : null;
+            $formatted_array[$key]['shipping_status'] = $shipping_status_key !== false ? ($value[$shipping_status_key] ?? null) : null;
+            $formatted_array[$key]['location'] = $location_key !== false ? ($value[$location_key] ?? null) : null;
+            $formatted_array[$key]['total_paid_mapped'] = $total_paid_key !== false;
             $formatted_array[$key]['unit'] = $unit_key !== false ? ($value[$unit_key] ?? null) : null;
             $formatted_array[$key]['types_of_service'] = $tos_key !== false ? ($value[$tos_key] ?? null) : null;
             $formatted_array[$key]['service_custom_field1'] = $service_custom_field1_key !== false ? ($value[$service_custom_field1_key] ?? null) : null;
@@ -947,6 +1071,7 @@ class ImportSalesController extends Controller
             'customer_phone_number' => ['label' => __('lang_v1.customer_phone_number'), 'instruction' => __('lang_v1.either_cust_email_or_phone_required')],
             'customer_email' => ['label' => __('lang_v1.customer_email'), 'instruction' => __('lang_v1.either_cust_email_or_phone_required')],
             'date' => ['label' => __('sale.sale_date'), 'instruction' => __('lang_v1.date_format_instruction')],
+            'location' => ['label' => __('business.business_location'), 'instruction' => 'Optional. Matched on the location name. The location selected above is used when this is empty or unknown.'],
             'product' => ['label' => __('product.product_name'), 'instruction' => __('lang_v1.either_product_name_or_sku_required')],
             'sku' => ['label' => __('lang_v1.product_sku'), 'instruction' => __('lang_v1.either_product_name_or_sku_required')],
             'quantity' => ['label' => __('lang_v1.quantity'), 'instruction' => __('lang_v1.required')],
@@ -958,6 +1083,8 @@ class ImportSalesController extends Controller
             'order_total' => ['label' => __('lang_v1.order_total')],
             'total_paid' => ['label' => 'Total Paid'],
             'payment_method' => ['label' => 'Payment Method'],
+            'payment_status' => ['label' => 'Payment Status', 'instruction' => 'Optional. Paid / Partial / Due. Only used when Total Paid is not mapped - a "Paid" row is then recorded as fully paid.'],
+            'shipping_status' => ['label' => 'Shipping Status', 'instruction' => 'Optional. Ordered / Packed / Shipped / Delivered / Cancelled.'],
             'additional_customer_phones' => ['label' => 'Additional Customer Phones'],
         ];
 
