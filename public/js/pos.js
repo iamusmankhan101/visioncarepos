@@ -33,19 +33,19 @@ $(document).on('click', 'button#pos-finalize, button#pos-finalize-desktop', func
                     if (response && response.success && response.has_related && response.customers && response.customers.length > 1) {
                         showRelatedCustomersModal(response.customers);
                     } else {
-                        $('#modal_payment').modal('show');
+                        pos_show_delivery_then_payment();
                     }
                 },
                 error: function() {
-                    $('#modal_payment').modal('show');
+                    pos_show_delivery_then_payment();
                 }
             });
         } else {
-            $('#modal_payment').modal('show');
+            pos_show_delivery_then_payment();
         }
     } catch (e) {
         console.error('Multiple Pay error:', e);
-        $('#modal_payment').modal('show');
+        pos_show_delivery_then_payment();
     }
 });
 
@@ -4665,18 +4665,7 @@ $(document).on('click', '#confirm_customer_selection', function(e) {
     } else {
         console.log('No callback, showing delivery date then payment modal');
         setTimeout(function() {
-            if ($('#delivery_date_modal').length > 0 && typeof $.fn.datetimepicker !== 'undefined') {
-                try {
-                    pos_show_delivery_modal(function() {
-                        $('#modal_payment').modal('show');
-                    });
-                } catch (err) {
-                    console.error('Delivery modal error:', err);
-                    $('#modal_payment').modal('show');
-                }
-            } else {
-                $('#modal_payment').modal('show');
-            }
+            pos_show_delivery_then_payment();
         }, 300);
     }
 });
@@ -5205,4 +5194,24 @@ function pos_show_delivery_modal(onDone) {
 
     $('#delivery_date_modal').modal({ backdrop: 'static', keyboard: false });
     $('#delivery_date_modal').modal('show');
+}
+
+/**
+ * Ask for the delivery date and then open the payment modal.
+ * Falls back to opening the payment modal directly if the delivery modal
+ * is not available on this page or fails to initialize.
+ */
+function pos_show_delivery_then_payment() {
+    if ($('#delivery_date_modal').length > 0 && typeof $.fn.datetimepicker !== 'undefined') {
+        try {
+            pos_show_delivery_modal(function() {
+                $('#modal_payment').modal('show');
+            });
+            return;
+        } catch (err) {
+            console.error('Delivery modal error:', err);
+        }
+    }
+
+    $('#modal_payment').modal('show');
 }
