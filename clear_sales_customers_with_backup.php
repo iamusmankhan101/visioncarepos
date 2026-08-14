@@ -113,11 +113,12 @@ try {
     $deletedCounts['contact_relationships'] = $count;
     echo "   ✅ Deleted {$count} contact relationships\n";
     
-    // Delete customer contacts (but keep suppliers and other types)
-    $count = DB::table('contacts')->where('type', 'customer')->count();
-    DB::table('contacts')->where('type', 'customer')->delete();
+    // Delete customer contacts (but keep suppliers, other types and the default
+    // Walk-In Customer - the POS selects it automatically for every new sale)
+    $count = DB::table('contacts')->where('type', 'customer')->where('is_default', 0)->count();
+    DB::table('contacts')->where('type', 'customer')->where('is_default', 0)->delete();
     $deletedCounts['customers'] = $count;
-    echo "   ✅ Deleted {$count} customers\n";
+    echo "   ✅ Deleted {$count} customers (kept the default Walk-In Customer)\n";
     
     echo "\n3. Cleaning Related Data:\n";
     

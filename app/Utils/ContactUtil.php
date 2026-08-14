@@ -16,7 +16,35 @@ class ContactUtil extends Util
      */
     public function getWalkInCustomer($business_id, $array = true)
     {
-        $contact = Contact::whereIn('type', ['customer', 'both'])
+        $contact = $this->__findWalkInCustomer($business_id);
+
+        //A business always needs a default customer - the POS selects it automatically
+        //when no customer is chosen. Recreate it if it went missing (deleted contact,
+        //business created without one, etc).
+        if (empty($contact)) {
+            $this->createWalkInCustomer($business_id);
+            $contact = $this->__findWalkInCustomer($business_id);
+        }
+
+        if (! empty($contact)) {
+            $contact->contact_address = $contact->contact_address;
+            $output = $array ? $contact->toArray() : $contact;
+
+            return $output;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Query for the default (walk-in) customer of a business.
+     *
+     * @param  int  $business_id
+     * @return \App\Contact|null
+     */
+    private function __findWalkInCustomer($business_id)
+    {
+        return Contact::whereIn('type', ['customer', 'both'])
                     ->where('contacts.business_id', $business_id)
                     ->where('contacts.is_default', 1)
                     ->leftjoin('customer_groups as cg', 'cg.id', '=', 'contacts.customer_group_id')
@@ -26,13 +54,53 @@ class ContactUtil extends Util
                         'cg.selling_price_group_id'
                     )
                     ->first();
+    }
 
-        if (! empty($contact)) {
-            $contact->contact_address = $contact->contact_address;
-            $output = $array ? $contact->toArray() : $contact;
+    /**
+     * Creates the default "Walk-In Customer" for a business. An existing walk-in
+     * contact that lost the default flag is reused instead of adding a duplicate.
+     *
+     * @param  int  $business_id
+     * @return \App\Contact|null
+     */
+    public function createWalkInCustomer($business_id)
+    {
+        try {
+            $existing = Contact::whereIn('type', ['customer', 'both'])
+                            ->where('business_id', $business_id)
+                            ->where('name', 'Walk-In Customer')
+                            ->first();
 
-            return $output;
-        } else {
+            if (! empty($existing)) {
+                $existing->is_default = 1;
+                $existing->save();
+
+                return $existing;
+            }
+
+            $business = \App\Business::find($business_id);
+            if (empty($business)) {
+                return null;
+            }
+
+            $user_id = auth()->check() ? auth()->user()->id : $business->owner_id;
+
+            $ref_count = $this->setAndGetReferenceCount('contacts', $business_id);
+            $contact_id = $this->generateReferenceNumber('contacts', $ref_count, $business_id);
+
+            return Contact::create([
+                'business_id' => $business_id,
+                'type' => 'customer',
+                'name' => 'Walk-In Customer',
+                'created_by' => $user_id,
+                'is_default' => 1,
+                'contact_id' => $contact_id,
+                'credit_limit' => 0,
+            ]);
+        } catch (\Exception $e) {
+            //Never break the screen that asked for the customer
+            \Log::emergency('File:'.$e->getFile().'Line:'.$e->getLine().'Message:'.$e->getMessage());
+
             return null;
         }
     }
