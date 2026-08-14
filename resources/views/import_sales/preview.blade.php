@@ -12,6 +12,13 @@
 <section class="content">
     {!! Form::open(['url' => action([\App\Http\Controllers\ImportSalesController::class, 'import']), 'method' => 'post', 'id' => 'import_sale_form']) !!}
     {!! Form::hidden('file_name', $file_name); !!}
+    @if(isset($header_row_detected) && ! $header_row_detected)
+        <div class="alert alert-warning">
+            <i class="fa fa-exclamation-triangle"></i>
+            No column names were found in the uploaded file, so the columns could not be matched automatically.
+            Please select the matching field for each column below.
+        </div>
+    @endif
     @component('components.widget')
     <div class="row">
         <div class="col-md-6">

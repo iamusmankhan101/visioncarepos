@@ -32,6 +32,11 @@ class ImportSalesController extends Controller
     protected $moduleUtil;
 
     /**
+     * Whether the uploaded file contained a recognisable header row.
+     */
+    protected $header_row_detected = true;
+
+    /**
      * Constructor
      *
      * @param  ProductUtils  $product
@@ -133,28 +138,8 @@ class ImportSalesController extends Controller
             }
 
             //Evaluate highest matching field with the header to pre select from dropdown
-            $headers = $parsed_array[0];
-            $match_array = [];
-            $already_matched = [];
-            foreach ($headers as $key => $value) {
-                $match_percentage = [];
-                foreach ($import_fields as $k => $v) {
-                    similar_text($value, $v, $percentage);
-                    $match_percentage[$k] = $percentage;
-                }
-                // Sort descending by match percentage
-                arsort($match_percentage);
-                $matched = null;
-                foreach ($match_percentage as $k => $pct) {
-                    // Only assign if >= 50% and not already used by another column
-                    if ($pct >= 50 && ! in_array($k, $already_matched)) {
-                        $matched = $k;
-                        $already_matched[] = $k;
-                        break;
-                    }
-                }
-                $match_array[$key] = $matched;
-            }
+            $match_array = $this->__matchHeadersToFields($parsed_array[0], $import_fields);
+            $header_row_detected = $this->header_row_detected;
 
             $business_locations = BusinessLocation::forDropdown($business_id);
 
@@ -163,7 +148,7 @@ class ImportSalesController extends Controller
             $default_group_by = array_search('invoice_no', $match_array);
             $default_group_by = $default_group_by === false ? null : $default_group_by;
 
-            return view('import_sales.preview')->with(compact('parsed_array', 'import_fields', 'file_name', 'business_locations', 'match_array', 'default_group_by'));
+            return view('import_sales.preview')->with(compact('parsed_array', 'import_fields', 'file_name', 'business_locations', 'match_array', 'default_group_by', 'header_row_detected'));
         }
     }
 
@@ -171,29 +156,285 @@ class ImportSalesController extends Controller
     {
         $array = Excel::toArray([], public_path('uploads/temp/'.$file_name))[0];
 
-        // Don't filter headers - just use them as-is
-        $headers = $array[0];
-
-        //Remove header row
-        unset($array[0]);
-        $parsed_array[] = $headers;
-        
-        // Add all data rows, skip completely empty rows
+        //Drop completely empty rows
+        $rows = [];
         foreach ($array as $row) {
-            // Skip if row is completely empty
             $has_data = false;
             foreach ($row as $cell) {
-                if (!empty($cell) && trim($cell) !== '') {
+                if (! is_null($cell) && trim((string) $cell) !== '') {
                     $has_data = true;
                     break;
                 }
             }
             if ($has_data) {
-                $parsed_array[] = $row;
+                $rows[] = $row;
             }
         }
 
-        return $parsed_array;
+        if (empty($rows)) {
+            $this->header_row_detected = false;
+
+            return [[]];
+        }
+
+        //Exported files often begin with a title row (eg. "All sales - <business name>")
+        //and some exports carry no header row at all. Locate the row that really
+        //holds the column names instead of blindly using the first row.
+        $header_index = $this->__detectHeaderRow($rows);
+
+        if ($header_index === null) {
+            //No header row: keep every data row and label the columns generically
+            //so nothing is lost and the columns can still be mapped by hand.
+            $this->header_row_detected = false;
+
+            //Leading title rows are still dropped
+            $rows = array_slice($rows, $this->__firstContentRow($rows));
+
+            $column_count = 0;
+            foreach ($rows as $row) {
+                $column_count = max($column_count, count($row));
+            }
+
+            $headers = [];
+            for ($i = 0; $i < $column_count; $i++) {
+                $headers[$i] = 'Column '.($i + 1);
+            }
+
+            return array_merge([$headers], $rows);
+        }
+
+        $this->header_row_detected = true;
+
+        //Everything above the header row is title/decoration and is dropped
+        return array_merge([$rows[$header_index]], array_slice($rows, $header_index + 1));
+    }
+
+    /**
+     * Index of the first row that is not a title/decoration row, ie. the first
+     * row filling more than one cell.
+     *
+     * @param  array  $rows
+     * @return int
+     */
+    private function __firstContentRow($rows)
+    {
+        foreach ($rows as $index => $row) {
+            $filled = 0;
+            foreach ($row as $cell) {
+                if (trim((string) $cell) !== '') {
+                    $filled++;
+                }
+            }
+            if ($filled >= 2) {
+                return $index;
+            }
+        }
+
+        return 0;
+    }
+
+    /**
+     * Find the index of the row holding the column names.
+     * Returns null when the file has no header row.
+     *
+     * @param  array  $rows
+     * @return int|null
+     */
+    private function __detectHeaderRow($rows)
+    {
+        $aliases = $this->__fieldAliases();
+        $limit = min(count($rows), 10);
+
+        for ($i = 0; $i < $limit; $i++) {
+            $filled = 0;
+            $matches = 0;
+            $value_cells = 0;
+
+            foreach ($rows[$i] as $cell) {
+                $value = trim((string) $cell);
+                if ($value === '') {
+                    continue;
+                }
+
+                $filled++;
+
+                if ($this->__matchFieldForHeader($value, $aliases) !== null) {
+                    $matches++;
+                }
+
+                //Amounts, dates, invoice numbers etc. all start with a digit -
+                //column names practically never do.
+                if (preg_match('/^\d/', $value)) {
+                    $value_cells++;
+                }
+            }
+
+            //Title rows ("All sales - ...") only fill a single cell - keep looking
+            if ($filled < 2) {
+                continue;
+            }
+
+            if ($matches >= 2) {
+                return $i;
+            }
+
+            //A row of plain text with no values is still a header, even when the
+            //column names are custom or translated
+            if ($value_cells === 0 && ($matches >= 1 || $filled >= 3)) {
+                return $i;
+            }
+
+            //First row with real content is data - the file has no header row
+            return null;
+        }
+
+        return null;
+    }
+
+    /**
+     * Map each column of the header row to an import field.
+     *
+     * @param  array  $headers
+     * @param  array  $import_fields  [field_key => label]
+     * @return array  [column_index => field_key|null]
+     */
+    private function __matchHeadersToFields($headers, $import_fields)
+    {
+        $aliases = $this->__fieldAliases();
+        $match_array = [];
+        $already_matched = [];
+
+        //Pass 1: known column names and their common variations
+        foreach ($headers as $key => $value) {
+            $match_array[$key] = null;
+
+            $matched = $this->__matchFieldForHeader($value, $aliases);
+            if ($matched !== null && isset($import_fields[$matched]) && ! in_array($matched, $already_matched)) {
+                $match_array[$key] = $matched;
+                $already_matched[] = $matched;
+            }
+        }
+
+        //Pass 2: fuzzy match the columns left over
+        foreach ($headers as $key => $value) {
+            if (! empty($match_array[$key])) {
+                continue;
+            }
+
+            $value = trim((string) $value);
+            if ($value === '') {
+                continue;
+            }
+
+            $match_percentage = [];
+            foreach ($import_fields as $k => $v) {
+                similar_text(strtolower($value), strtolower($v), $percentage);
+                $match_percentage[$k] = $percentage;
+            }
+            arsort($match_percentage);
+
+            foreach ($match_percentage as $k => $pct) {
+                // Only assign a strong match that no other column is using
+                if ($pct >= 70 && ! in_array($k, $already_matched)) {
+                    $match_array[$key] = $k;
+                    $already_matched[] = $k;
+                    break;
+                }
+            }
+        }
+
+        return $match_array;
+    }
+
+    /**
+     * Resolve a single column name to an import field key.
+     *
+     * @param  string  $header
+     * @param  array  $aliases
+     * @return string|null
+     */
+    private function __matchFieldForHeader($header, $aliases)
+    {
+        $header = $this->__normalizeHeader($header);
+        if ($header === '') {
+            return null;
+        }
+
+        foreach ($aliases as $field => $field_aliases) {
+            if (in_array($header, $field_aliases, true)) {
+                return $field;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Known column names for every import field, including the names used by the
+     * sales export and the translated labels.
+     *
+     * @return array
+     */
+    private function __fieldAliases()
+    {
+        $aliases = [
+            'invoice_no' => ['invoice no', 'invoice number', 'invoice', 'bill no', 'reference no', 'ref no'],
+            'customer_name' => ['customer name', 'customer', 'client name', 'client', 'contact name'],
+            'customer_phone_number' => ['customer phone number', 'contact number', 'phone number', 'mobile number', 'mobile', 'phone', 'contact no'],
+            'customer_email' => ['customer email', 'email', 'email address'],
+            'date' => ['date', 'sale date', 'sell date', 'transaction date', 'invoice date', 'date time'],
+            'product' => ['product', 'product name', 'item', 'item name'],
+            'sku' => ['sku', 'product sku', 'item code', 'product code', 'barcode'],
+            'quantity' => ['quantity', 'qty'],
+            'unit' => ['unit', 'product unit', 'uom'],
+            'unit_price' => ['unit price', 'price', 'rate', 'unit cost'],
+            'item_tax' => ['item tax', 'tax', 'tax amount', 'line tax'],
+            'item_discount' => ['item discount', 'discount', 'discount amount', 'line discount'],
+            'item_description' => ['item description', 'line description', 'product description', 'note', 'notes'],
+            'order_total' => ['order total', 'total', 'total amount', 'final total', 'grand total', 'net total'],
+            'total_paid' => ['total paid', 'paid', 'amount paid', 'paid amount'],
+            'payment_method' => ['payment method', 'payment mode', 'payment type', 'method'],
+            'additional_customer_phones' => ['additional customer phones', 'additional customers', 'additional phones', 'related customers'],
+            'types_of_service' => ['types of service', 'type of service', 'service type'],
+            'service_custom_field1' => ['service custom field 1'],
+            'service_custom_field2' => ['service custom field 2'],
+            'service_custom_field3' => ['service custom field 3'],
+            'service_custom_field4' => ['service custom field 4'],
+        ];
+
+        //Also accept the translated labels and the raw field keys
+        foreach ($this->__importFields() as $key => $field) {
+            if (! empty($field['label'])) {
+                $aliases[$key][] = $field['label'];
+            }
+            $aliases[$key][] = str_replace('_', ' ', $key);
+        }
+
+        $normalized = [];
+        foreach ($aliases as $key => $values) {
+            $normalized[$key] = [];
+            foreach ($values as $value) {
+                $normalized_value = $this->__normalizeHeader($value);
+                if ($normalized_value !== '') {
+                    $normalized[$key][] = $normalized_value;
+                }
+            }
+            $normalized[$key] = array_values(array_unique($normalized[$key]));
+        }
+
+        return $normalized;
+    }
+
+    /**
+     * Lowercase a column name and strip everything but letters and digits, so
+     * "Invoice No." and "invoice_no" resolve to the same thing.
+     *
+     * @param  string  $value
+     * @return string
+     */
+    private function __normalizeHeader($value)
+    {
+        return preg_replace('/[^a-z0-9]/', '', strtolower(trim((string) $value)));
     }
 
     /**
