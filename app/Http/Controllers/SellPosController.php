@@ -174,66 +174,16 @@ class SellPosController extends Controller
         //like:repair
         $sub_type = request()->get('sub_type');
 
-        //Check if there is a open register, if no then redirect to Create Register screen.
+        //Open a register automatically so the POS screen is never gated behind
+        //the "Open Cash Register" form.
         if ($this->cashRegisterUtil->countOpenedRegister() == 0) {
-            // Check if user is a cashier or has limited access - auto-create cash register
-            $user = auth()->user();
-            $userRoles = $user->getRoleNames();
-            $isCashier = $userRoles->contains(function ($role) {
-                return str_contains(strtolower($role), 'cashier') || str_contains(strtolower($role), 'pos');
-            });
-            
-            $hasLimitedAccess = !$user->can('superadmin') && 
-                               !$user->can('admin') && 
-                               ($user->can('sell.create') || $user->can('pos.create'));
-            
-            if ($isCashier || $hasLimitedAccess) {
-                // Auto-create cash register for cashier users
-                try {
-                    $user_id = request()->session()->get('user.id');
-                    $business_id = request()->session()->get('user.business_id');
-                    
-                    // Get the first available business location FOR THE CURRENT BUSINESS
-                    $business_locations = \App\BusinessLocation::where('business_id', $business_id)
-                                                              ->where('is_active', 1)
-                                                              ->first();
-                    
-                    if ($business_locations) {
-                        $register = \App\CashRegister::create([
-                            'business_id' => $business_id,
-                            'user_id' => $user_id,
-                            'status' => 'open',
-                            'location_id' => $business_locations->id,
-                            'created_at' => \Carbon\Carbon::now()->format('Y-m-d H:i:00'),
-                        ]);
-                        
-                        // Add initial amount of 0 (no cash in register)
-                        $register->cash_register_transactions()->create([
-                            'amount' => 0,
-                            'pay_method' => 'cash',
-                            'type' => 'credit',
-                            'transaction_type' => 'initial',
-                        ]);
-                        
-                        \Log::info('Auto-created cash register for business switch', [
-                            'user_id' => $user_id,
-                            'business_id' => $business_id,
-                            'location_id' => $business_locations->id,
-                            'location_name' => $business_locations->name
-                        ]);
-                        
-                        // Continue to POS screen
-                    } else {
-                        // No business location found, redirect to cash register creation
-                        return redirect()->action([\App\Http\Controllers\CashRegisterController::class, 'create'], ['sub_type' => $sub_type]);
-                    }
-                } catch (\Exception $e) {
-                    \Log::error('Auto cash register creation failed: ' . $e->getMessage());
-                    // Fall back to manual cash register creation
-                    return redirect()->action([\App\Http\Controllers\CashRegisterController::class, 'create'], ['sub_type' => $sub_type]);
-                }
-            } else {
-                // For admin users, show the cash register creation form
+            $register = $this->cashRegisterUtil->autoOpenRegister(
+                request()->session()->get('user.id'),
+                $business_id
+            );
+
+            //Only fall back to the manual form if no register could be opened.
+            if (empty($register)) {
                 return redirect()->action([\App\Http\Controllers\CashRegisterController::class, 'create'], ['sub_type' => $sub_type]);
             }
         }
@@ -447,9 +397,16 @@ class SellPosController extends Controller
         
         file_put_contents(storage_path('logs/debug_multiple_customers.log'), $debugInfo, FILE_APPEND);
 
-        //Check if there is a open register, if no then redirect to Create Register screen.
+        //Open a register automatically instead of showing the "Open Cash Register" form.
         if (!$is_direct_sale && $this->cashRegisterUtil->countOpenedRegister() == 0) {
-            return redirect()->action([\App\Http\Controllers\CashRegisterController::class, 'create']);
+            $register = $this->cashRegisterUtil->autoOpenRegister(
+                request()->session()->get('user.id'),
+                request()->session()->get('user.business_id')
+            );
+
+            if (empty($register)) {
+                return redirect()->action([\App\Http\Controllers\CashRegisterController::class, 'create']);
+            }
         }
 
         try {
@@ -1339,9 +1296,16 @@ class SellPosController extends Controller
                     'msg' => __('messages.transaction_edit_not_allowed', ['days' => $edit_days])]);
         }
 
-        //Check if there is a open register, if no then redirect to Create Register screen.
+        //Open a register automatically instead of showing the "Open Cash Register" form.
         if ($this->cashRegisterUtil->countOpenedRegister() == 0) {
-            return redirect()->action([\App\Http\Controllers\CashRegisterController::class, 'create']);
+            $register = $this->cashRegisterUtil->autoOpenRegister(
+                request()->session()->get('user.id'),
+                request()->session()->get('user.business_id')
+            );
+
+            if (empty($register)) {
+                return redirect()->action([\App\Http\Controllers\CashRegisterController::class, 'create']);
+            }
         }
 
         //Check if return exist then not allowed
@@ -1712,9 +1676,16 @@ class SellPosController extends Controller
                     }
                 }
 
-                //Check if there is a open register, if no then redirect to Create Register screen.
+                //Open a register automatically instead of showing the "Open Cash Register" form.
                 if (!$is_direct_sale && $this->cashRegisterUtil->countOpenedRegister() == 0) {
-                    return redirect()->action([\App\Http\Controllers\CashRegisterController::class, 'create']);
+                    $register = $this->cashRegisterUtil->autoOpenRegister(
+                        request()->session()->get('user.id'),
+                        request()->session()->get('user.business_id')
+                    );
+
+                    if (empty($register)) {
+                        return redirect()->action([\App\Http\Controllers\CashRegisterController::class, 'create']);
+                    }
                 }
 
                 $business_id = $request->session()->get('user.business_id');
@@ -3127,9 +3098,16 @@ class SellPosController extends Controller
             }
 
             DB::beginTransaction();
-            //Check if there is a open register, if no then redirect to Create Register screen.
+            //Open a register automatically instead of showing the "Open Cash Register" form.
             if (!$is_direct_sale && $this->cashRegisterUtil->countOpenedRegister() == 0) {
-                return redirect()->action([\App\Http\Controllers\CashRegisterController::class, 'create']);
+                $register = $this->cashRegisterUtil->autoOpenRegister(
+                    request()->session()->get('user.id'),
+                    request()->session()->get('user.business_id')
+                );
+
+                if (empty($register)) {
+                    return redirect()->action([\App\Http\Controllers\CashRegisterController::class, 'create']);
+                }
             }
 
             $invoice_no = $this->transactionUtil->getInvoiceNumber($business_id, 'final', $transaction->location_id);

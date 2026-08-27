@@ -412,4 +412,46 @@ class CashRegisterUtil extends Util
 
         return $register;
     }
+
+    /**
+     * Opens a cash register for the user without prompting for an opening
+     * balance. Used to keep the POS screen reachable in one click.
+     *
+     * @param  int  $user_id
+     * @param  int  $business_id
+     * @return obj|null  the opened register, or null if none could be opened
+     */
+    public function autoOpenRegister($user_id, $business_id)
+    {
+        try {
+            $location = \App\BusinessLocation::where('business_id', $business_id)
+                                            ->where('is_active', 1)
+                                            ->first();
+
+            if (empty($location)) {
+                return null;
+            }
+
+            $register = CashRegister::create([
+                'business_id' => $business_id,
+                'user_id' => $user_id,
+                'status' => 'open',
+                'location_id' => $location->id,
+                'created_at' => \Carbon\Carbon::now()->format('Y-m-d H:i:00'),
+            ]);
+
+            $register->cash_register_transactions()->create([
+                'amount' => 0,
+                'pay_method' => 'cash',
+                'type' => 'credit',
+                'transaction_type' => 'initial',
+            ]);
+
+            return $register;
+        } catch (\Exception $e) {
+            \Log::error('autoOpenRegister failed: '.$e->getMessage());
+
+            return null;
+        }
+    }
 }
