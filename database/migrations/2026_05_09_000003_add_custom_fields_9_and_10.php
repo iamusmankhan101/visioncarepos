@@ -14,8 +14,12 @@ return new class extends Migration
     public function up()
     {
         Schema::table('contacts', function (Blueprint $table) {
-            $table->string('custom_field9')->nullable()->after('custom_field8');
-            $table->string('custom_field10')->nullable()->after('custom_field9');
+            if (! Schema::hasColumn('contacts', 'custom_field9')) {
+                $table->string('custom_field9')->nullable()->after('custom_field8');
+            }
+            if (! Schema::hasColumn('contacts', 'custom_field10')) {
+                $table->string('custom_field10')->nullable()->after('custom_field9');
+            }
         });
     }
 

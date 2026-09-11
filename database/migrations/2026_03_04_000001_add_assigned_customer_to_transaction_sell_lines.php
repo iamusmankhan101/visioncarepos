@@ -13,6 +13,10 @@ class AddAssignedCustomerToTransactionSellLines extends Migration
      */
     public function up()
     {
+        if (Schema::hasColumn('transaction_sell_lines', 'assigned_customer_id')) {
+            return;
+        }
+
         Schema::table('transaction_sell_lines', function (Blueprint $table) {
             $table->integer('assigned_customer_id')->unsigned()->nullable()->after('res_service_staff_id');
             $table->foreign('assigned_customer_id')->references('id')->on('contacts')->onDelete('set null');

@@ -13,6 +13,10 @@ return new class extends Migration
      */
     public function up()
     {
+        if (Schema::hasColumn('contacts', 'r_dist_sph')) {
+            return;
+        }
+
         Schema::table('contacts', function (Blueprint $table) {
             // Right Eye - Distance
             $table->string('r_dist_sph')->nullable()->after('custom_field4');

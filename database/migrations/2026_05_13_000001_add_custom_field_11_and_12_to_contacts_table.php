@@ -14,8 +14,12 @@ class AddCustomField11And12ToContactsTable extends Migration
     public function up()
     {
         Schema::table('contacts', function (Blueprint $table) {
-            $table->string('custom_field11', 191)->nullable()->after('custom_field10');
-            $table->string('custom_field12', 191)->nullable()->after('custom_field11');
+            if (! Schema::hasColumn('contacts', 'custom_field11')) {
+                $table->string('custom_field11', 191)->nullable()->after('custom_field10');
+            }
+            if (! Schema::hasColumn('contacts', 'custom_field12')) {
+                $table->string('custom_field12', 191)->nullable()->after('custom_field11');
+            }
         });
     }
 

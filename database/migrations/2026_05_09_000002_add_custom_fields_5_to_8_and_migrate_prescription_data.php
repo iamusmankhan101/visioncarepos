@@ -14,6 +14,13 @@ return new class extends Migration
      */
     public function up()
     {
+        //On installs where these columns were added by hand the prescription data
+        //already lives in custom_field1-4, and the data migration below would wipe
+        //it. Only run when the columns are genuinely missing.
+        if (Schema::hasColumn('contacts', 'custom_field5')) {
+            return;
+        }
+
         // First, add custom_field5-8 columns
         Schema::table('contacts', function (Blueprint $table) {
             $table->string('custom_field5')->nullable()->after('custom_field4');

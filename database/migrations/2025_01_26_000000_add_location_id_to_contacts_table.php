@@ -13,6 +13,10 @@ return new class extends Migration
      */
     public function up()
     {
+        if (Schema::hasColumn('contacts', 'location_id')) {
+            return;
+        }
+
         Schema::table('contacts', function (Blueprint $table) {
             // Add location_id field to contacts table
             $table->integer('location_id')->unsigned()->nullable()->after('business_id');
