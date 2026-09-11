@@ -94,7 +94,7 @@ if (typeof tinymce !== 'undefined') {
                 }
 
                 if (typeof toastr !== 'undefined') {
-                    toastr.error('{{ __('messages.something_went_wrong') }}');
+                    toastr.error(message || '{{ __('messages.something_went_wrong') }}');
                 }
             };
         @endif
