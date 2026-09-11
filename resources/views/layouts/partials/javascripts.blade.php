@@ -82,7 +82,21 @@ if (typeof tinymce !== 'undefined') {
         });
 
         @if (config('app.debug') == false)
-            $.fn.dataTable.ext.errMode = 'throw';
+            //Datatables alerts are too noisy, but a plain 'throw' leaves the table
+            //stuck on "Processing..." with nothing to go on. Report the error and
+            //clear the indicator instead.
+            $.fn.dataTable.ext.errMode = function(settings, helpPage, message) {
+                console.error('DataTables error:', message);
+
+                if (settings && settings.nTable) {
+                    $(settings.nTable).closest('.dataTables_wrapper')
+                        .find('.dataTables_processing').hide();
+                }
+
+                if (typeof toastr !== 'undefined') {
+                    toastr.error('{{ __('messages.something_went_wrong') }}');
+                }
+            };
         @endif
     });
 
