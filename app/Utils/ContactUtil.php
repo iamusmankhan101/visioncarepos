@@ -155,6 +155,28 @@ class ContactUtil extends Util
         return $contact;
     }
 
+    /**
+     * Keeps only the keys which are actual columns of the contacts table.
+     *
+     * The contact forms post a few fields which are used by the controller only
+     * (customer_group_id_link, relationship_type, ...). Contact has $guarded = ['id'],
+     * so those would otherwise be mass assigned and make the insert fail with
+     * "Unknown column ... in 'field list'".
+     *
+     * @param  array  $input
+     * @return array
+     */
+    private function filterContactColumns($input)
+    {
+        static $columns = null;
+
+        if ($columns === null) {
+            $columns = \Illuminate\Support\Facades\Schema::getColumnListing('contacts');
+        }
+
+        return array_intersect_key($input, array_flip($columns));
+    }
+
     public function createNewContact($input)
     {
         //Check Contact id
@@ -202,7 +224,7 @@ class ContactUtil extends Util
                 unset($input['assigned_to_users']);
             }
 
-            $contact = Contact::create($input);
+            $contact = Contact::create($this->filterContactColumns($input));
 
             //Assigned the user
             if (! empty($assigned_to_users)) {
@@ -256,7 +278,7 @@ class ContactUtil extends Util
             }
 
             $contact = Contact::where('business_id', $business_id)->findOrFail($id);
-            foreach ($input as $key => $value) {
+            foreach ($this->filterContactColumns($input) as $key => $value) {
                 $contact->$key = $value;
             }
             $contact->save();

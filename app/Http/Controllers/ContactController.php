@@ -803,8 +803,10 @@ class ContactController extends Controller
 
             DB::commit();
             
-            // Handle single related customer (from edit form)
-            if (!empty($input['customer_group_id_link'])) {
+            // Handle single related customer (from edit form).
+            // The create form posts a uniqid() here just to group the customer blocks
+            // client side, so only an existing contact id is a real parent.
+            if (!empty($input['customer_group_id_link']) && is_numeric($input['customer_group_id_link'])) {
                 \Log::info('Creating relationship for single related customer', [
                     'parent_contact_id' => $input['customer_group_id_link'],
                     'new_contact_id' => $output['data']->id,
@@ -913,12 +915,10 @@ class ContactController extends Controller
             // Provide more specific error messages
             $error_msg = __('messages.something_went_wrong');
             
-            if (strpos($e->getMessage(), 'contact_id') !== false) {
+            // NOTE: a failed insert reports the whole SQL statement, which lists every
+            // contacts column - so match on the error itself, never on a column name.
+            if (strpos($e->getMessage(), 'Duplicate entry') !== false && strpos($e->getMessage(), 'contact_id') !== false) {
                 $error_msg = 'Contact ID already exists. Please try again.';
-            } elseif (strpos($e->getMessage(), 'email') !== false) {
-                $error_msg = 'Email address is invalid or already exists.';
-            } elseif (strpos($e->getMessage(), 'mobile') !== false) {
-                $error_msg = 'Mobile number format is invalid.';
             } elseif (strpos($e->getMessage(), 'Duplicate entry') !== false) {
                 $error_msg = 'A contact with this information already exists.';
             } elseif (strpos($e->getMessage(), 'Data too long') !== false) {
