@@ -96,6 +96,28 @@ class ContactController extends Controller
     }
 
     /**
+     * Guarantees every prescription column the datatable asks for is present.
+     *
+     * custom_field11 and custom_field12 arrive with a later migration, and a single
+     * key missing from a row makes DataTables abort the whole table client side.
+     *
+     * @param  mixed  $datatable
+     * @return mixed
+     */
+    private function addPrescriptionColumns($datatable)
+    {
+        foreach (range(1, 12) as $i) {
+            $column = 'custom_field'.$i;
+
+            $datatable->editColumn($column, function ($row) use ($column) {
+                return $row->{$column} ?? '';
+            });
+        }
+
+        return $datatable;
+    }
+
+    /**
      * Returns the database object for supplier
      *
      * @return \Illuminate\Http\Response
@@ -135,7 +157,7 @@ class ContactController extends Controller
                 ->where('uc.user_id', request()->input('assigned_to'));
         }
 
-        return Datatables::of($contact)
+        $suppliers = Datatables::of($contact)
             ->addColumn(
                 'checkbox',
                 function ($row) {
@@ -291,8 +313,9 @@ class ContactController extends Controller
                     $query->where('contacts.mobile', 'like', "%{$keyword}%");
                 }
             })
-            ->rawColumns(['checkbox', 'action', 'opening_balance', 'pay_term', 'due', 'return_due', 'name', 'balance'])
-            ->make(true);
+            ->rawColumns(['checkbox', 'action', 'opening_balance', 'pay_term', 'due', 'return_due', 'name', 'balance']);
+
+        return $this->addPrescriptionColumns($suppliers)->make(true);
     }
 
     /**
@@ -560,8 +583,9 @@ class ContactController extends Controller
             $contacts->removeColumn('total_rp');
         }
 
-        return $contacts->rawColumns(['checkbox', 'action', 'opening_balance', 'credit_limit', 'pay_term', 'due', 'return_due', 'name', 'balance'])
-                        ->make(true);
+        $contacts->rawColumns(['checkbox', 'action', 'opening_balance', 'credit_limit', 'pay_term', 'due', 'return_due', 'name', 'balance']);
+
+        return $this->addPrescriptionColumns($contacts)->make(true);
     }
 
     /**
