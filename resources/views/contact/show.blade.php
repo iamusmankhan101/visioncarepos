@@ -742,93 +742,143 @@ $(document).on('click', '#print_ledger_pdf', function() {
 
 <script type="text/javascript">
 $(document).ready(function() {
-    // Toggle add form — scoped to the clicked button's .rc-section container
+    var rcBlockSeq = 0;
+
+    // Escapes for both text nodes and double quoted attributes
+    function rcEscape(value) {
+        return $('<div>').text(value == null ? '' : value).html().replace(/"/g, '&quot;');
+    }
+
+    // Renumber the headings of a section's blocks after one is added or removed
+    function rcRefresh($section) {
+        var $blocks = $section.find('.rc-forms .rc-block');
+        $blocks.each(function(i) {
+            $(this).find('.rc-block-number').first().text(i + 1);
+        });
+        $section.find('.rc-save-count').text($blocks.length);
+        return $blocks.length;
+    }
+
+    // Each click adds one more customer block, so several can be saved together
     $(document).on('click', '.rc-show-form-btn', function() {
         var $section = $(this).closest('.rc-section');
+        var $block = $section.find('.rc-block-template .rc-block').clone();
+
+        // Radios need a name unique to the block, otherwise both options can be picked
+        rcBlockSeq++;
+        $block.find('.rc-prx-source').attr('name', 'rc_prx_source_' + rcBlockSeq);
+
+        $section.find('.rc-forms').append($block);
+        rcRefresh($section);
+
         $section.find('.rc-add-form').slideDown();
-        $section.find('.rc-add-form').data('trigger-btn', $(this));
-        $(this).hide();
+        $block.find('.rc-name').focus();
+    });
+
+    $(document).on('click', '.rc-remove-block', function() {
+        var $section = $(this).closest('.rc-section');
+        $(this).closest('.rc-block').remove();
+
+        if (rcRefresh($section) === 0) {
+            $section.find('.rc-add-form').slideUp();
+        }
     });
 
     $(document).on('click', '.rc-cancel-btn', function() {
         var $section = $(this).closest('.rc-section');
+        $section.find('.rc-forms').empty();
+        rcRefresh($section);
         $section.find('.rc-add-form').slideUp();
-        $section.find('.rc-show-form-btn').show();
     });
 
     $(document).on('click', '.rc-save-btn', function() {
         var $btn = $(this);
         var $section = $btn.closest('.rc-section');
-        var $form = $btn.closest('.rc-add-form');
+        var $blocks = $section.find('.rc-forms .rc-block');
         var contactId = $btn.data('contact-id');
-        var name = $form.find('.rc-name').val().trim();
 
-        if (!name) {
-            alert('Please enter a customer name.');
-            $form.find('.rc-name').focus();
+        if ($blocks.length === 0) {
+            alert('Please add at least one customer.');
             return;
         }
 
-        $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Saving...');
+        var customers = [];
+        var invalid = null;
 
-        var data = {
-            _token: $('meta[name="csrf-token"]').attr('content'),
-            related_first_name: name,
-            related_relationship_type: $form.find('.rc-relationship').val(),
-            related_email: $form.find('.rc-email').val(),
-            related_prescription_source: $form.find('.rc-prx-source:checked').val() || '',
-            custom_field1:  $form.find('.rc-cf1').val(),
-            custom_field2:  $form.find('.rc-cf2').val(),
-            custom_field3:  $form.find('.rc-cf3').val(),
-            custom_field4:  $form.find('.rc-cf4').val(),
-            custom_field5:  $form.find('.rc-cf5').val(),
-            custom_field6:  $form.find('.rc-cf6').val(),
-            custom_field7:  $form.find('.rc-cf7').val(),
-            custom_field8:  $form.find('.rc-cf8').val(),
-            custom_field9:  $form.find('.rc-cf9').val(),
-            custom_field10: $form.find('.rc-cf10').val(),
-            custom_field11: $form.find('.rc-cf11').val(),
-            custom_field12: $form.find('.rc-cf12').val(),
-        };
+        $blocks.each(function(i) {
+            var $block = $(this);
+            var name = ($block.find('.rc-name').val() || '').trim();
+
+            if (!name) {
+                invalid = invalid || { index: i + 1, field: $block.find('.rc-name') };
+                return;
+            }
+
+            var customer = {
+                related_first_name: name,
+                related_relationship_type: $block.find('.rc-relationship').val() || '',
+                related_email: $block.find('.rc-email').val() || '',
+                related_prescription_source: $block.find('.rc-prx-source:checked').val() || ''
+            };
+
+            for (var f = 1; f <= 12; f++) {
+                customer['custom_field' + f] = $block.find('.rc-cf' + f).val() || '';
+            }
+
+            customers.push(customer);
+        });
+
+        if (invalid) {
+            alert('Please enter a name for Customer ' + invalid.index + '.');
+            invalid.field.focus();
+            return;
+        }
+
+        var originalHtml = $btn.html();
+        $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Saving...');
 
         $.ajax({
             url: '/contacts/' + contactId + '/store-related-customer',
             method: 'POST',
-            data: data,
+            data: {
+                customers: customers,
+                _token: $('meta[name="csrf-token"]').attr('content')
+            },
             success: function(response) {
-                if (response.success) {
+                if (response && response.success) {
                     if (typeof toastr !== 'undefined') {
-                        toastr.success(response.msg || 'Related customer added successfully');
+                        toastr.success(response.msg || 'Related customers added successfully');
                     }
 
-                    var relType = $form.find('.rc-relationship').val() || 'relative';
-                    var card = '<div style="background-color:#fff; padding:10px; border-radius:5px; margin-bottom:10px; border-left:3px solid #48b2ee;">' +
-                        '<strong>' + response.data.name + '</strong>' +
-                        '<span class="label label-info" style="margin-left:5px;">' + relType.charAt(0).toUpperCase() + relType.slice(1) + '</span>' +
-                        '<a href="/contacts/' + response.data.id + '" class="btn btn-xs btn-default pull-right" title="View Full Details"><i class="fa fa-eye"></i></a>' +
-                        '<br><small class="text-muted">Contact ID: ' + response.data.contact_id + '</small>' +
-                        '</div>';
+                    var saved = response.customers || (response.data ? [response.data] : []);
 
-                    // Update both visible instances
+                    // Update both visible instances of the list
                     $('.rc-empty-msg').remove();
-                    $('.rc-list').append(card);
+                    $.each(saved, function(i, customer) {
+                        var relType = customer.relationship_type || 'relative';
+                        var card = '<div style="background-color:#fff; padding:10px; border-radius:5px; margin-bottom:10px; border-left:3px solid #48b2ee;">' +
+                            '<strong>' + rcEscape(customer.name) + '</strong>' +
+                            '<span class="label label-info" style="margin-left:5px;">' + rcEscape(relType.charAt(0).toUpperCase() + relType.slice(1)) + '</span>' +
+                            '<a href="/contacts/' + customer.id + '" class="btn btn-xs btn-default pull-right" title="View Full Details"><i class="fa fa-eye"></i></a>' +
+                            '<br><small class="text-muted">Contact ID: ' + rcEscape(customer.contact_id) + '</small>' +
+                            '</div>';
+                        $('.rc-list').append(card);
+                    });
 
-                    // Reset this form
-                    $form.find('input[type="text"], input[type="email"]').val('');
-                    $form.find('.rc-relationship').val('');
-                    $form.find('.rc-prx-source').prop('checked', false);
-                    $form.slideUp();
-                    $section.find('.rc-show-form-btn').show();
+                    $section.find('.rc-forms').empty();
+                    rcRefresh($section);
+                    $section.find('.rc-add-form').slideUp();
                 } else {
-                    alert('Error: ' + (response.msg || 'Unknown error'));
+                    alert('Error: ' + ((response && response.msg) || 'Unknown error'));
                 }
-                $btn.prop('disabled', false).html('<i class="fa fa-save"></i> Save Related Customer');
+                $btn.prop('disabled', false).html(originalHtml);
+                rcRefresh($section);
             },
             error: function(xhr) {
                 var msg = 'Failed to save related customer';
                 if (xhr.responseJSON && xhr.responseJSON.msg) msg = xhr.responseJSON.msg;
                 alert(msg);
-                $btn.prop('disabled', false).html('<i class="fa fa-save"></i> Save Related Customer');
+                $btn.prop('disabled', false).html(originalHtml);
             }
         });
     });

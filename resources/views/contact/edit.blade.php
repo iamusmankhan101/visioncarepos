@@ -358,20 +358,20 @@
               <i class="fa fa-plus-circle"></i> Add Another Related Customer
           </button>
           <small class="text-muted" style="margin-left: 10px;">
-              <i class="fa fa-info-circle"></i> Add family members or related customers
+              <i class="fa fa-info-circle"></i> Click again to add more than one family member at a time
           </small>
       </div>
-      
-      {{-- Inline Add Customer Form (Hidden by default) --}}
+
+      {{-- Inline Add Customer Forms (one block per related customer, hidden until the first is added) --}}
       <div class="col-md-12" id="inline-add-customer-form" style="display: none; background-color: #f0f8ff; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 2px solid #48b2ee;">
           <h5 style="color: #48b2ee; margin-top: 0;">
-              <i class="fa fa-user-plus"></i> Add New Related Customer
+              <i class="fa fa-user-plus"></i> Add New Related Customers
               <button type="button" class="btn btn-sm btn-default pull-right" id="cancel-add-customer">
                   <i class="fa fa-times"></i> Cancel
               </button>
           </h5>
           <hr>
-          
+
           <style>
             /* Ensure mobile field is completely hidden for related customers */
             #inline-add-customer-form .mobile-field-hidden {
@@ -380,158 +380,26 @@
               height: 0 !important;
               overflow: hidden !important;
             }
+            #inline-add-customer-form .related-customer-block {
+              background-color: #fff;
+              border: 1px solid #cfe7f7;
+              border-left: 4px solid #48b2ee;
+              border-radius: 6px;
+              padding: 15px;
+              margin-bottom: 20px;
+            }
           </style>
-          
-          <!-- Clean inline form instead of iframe -->
-          <div id="inline-customer-form-content">
-            <div class="row">
-              <div class="col-md-6">
-                <div class="form-group">
-                  <label for="related_relationship_type">Relationship:</label>
-                  <div class="input-group">
-                    <span class="input-group-addon"><i class="fa fa-users"></i></span>
-                    <select name="related_relationship_type" class="form-control" id="related_relationship_type">
-                      <option value="">Select Relationship</option>
-                      <option value="self">Self (Primary)</option>
-                      <option value="spouse">Spouse</option>
-                      <option value="child">Child</option>
-                      <option value="parent">Parent</option>
-                      <option value="sibling">Sibling</option>
-                      <option value="relative">Other Relative</option>
-                      <option value="friend">Friend</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-              <div class="col-md-6">
-                <div class="form-group">
-                  <label for="related_first_name">Name:*</label>
-                  <div class="input-group">
-                    <span class="input-group-addon"><i class="fa fa-user"></i></span>
-                    <input type="text" name="related_first_name" class="form-control" id="related_first_name" placeholder="Enter customer name">
-                  </div>
-                </div>
-              </div>
-              <!-- Mobile field hidden for related customers - they use primary customer's mobile -->
-              <div class="col-md-6 mobile-field-hidden">
-                <div class="form-group">
-                  <label for="related_mobile">Mobile:</label>
-                  <div class="input-group">
-                    <span class="input-group-addon"><i class="fa fa-mobile"></i></span>
-                    <input type="text" name="related_mobile" class="form-control" id="related_mobile" placeholder="Will use primary customer's mobile number" readonly>
-                  </div>
-                  <small class="text-muted">
-                    <i class="fa fa-info-circle"></i> Related customers will use the primary customer's mobile number
-                  </small>
-                </div>
-              </div>
-              <div class="col-md-12">
-                <div class="form-group">
-                  <label for="related_email">Email:</label>
-                  <div class="input-group">
-                    <span class="input-group-addon"><i class="fa fa-envelope"></i></span>
-                    <input type="email" name="related_email" class="form-control" id="related_email" placeholder="Enter email address">
-                  </div>
-                </div>
-              </div>
-              <div class="col-md-12">
-                <p class="help-block" style="color: #48b2ee;">
-                  <i class="fa fa-info-circle"></i> This customer is linked with other customers added in this form
-                </p>
-              </div>
-              <div class="clearfix"></div>
-            </div>
-            
-            <!-- Lens Prescription Section -->
-            <div class="col-md-12">
-              <hr/>
-              <h4 style="color: #48b2ee;">
-                <i class="fa fa-eye"></i> Lens Prescription
-              </h4>
-            </div>
-            
-            <!-- Prescription Source Selection for Related Customer -->
-            <div class="col-md-12" style="margin-bottom: 15px;">
-              <div class="form-group">
-                <label style="font-weight: 600; color: #333;">
-                  <i class="fa fa-file-medical"></i> Prescription Source:
-                </label>
-                <div style="margin-top: 8px;">
-                  <label class="radio-inline" style="margin-right: 20px;">
-                    <input type="radio" name="related_prescription_source" value="vision_care">
-                    <span style="color: #48b2ee; font-weight: 500;">
-                      <i class="fa fa-check-circle"></i> Prescription by Vision Care
-                    </span>
-                  </label>
-                  <label class="radio-inline">
-                    <input type="radio" name="related_prescription_source" value="not_vision_care">
-                    <span style="color: #666; font-weight: 500;">
-                      <i class="fa fa-times-circle"></i> Prescription not by Vision Care
-                    </span>
-                  </label>
-                </div>
-              </div>
-            </div>
-            
-            <div class="col-md-12">
-              <div class="table-responsive">
-                <table class="table table-bordered" style="background-color: #fff;">
-                  <thead style="background-color: #48b2ee; color: white;">
-                    <tr>
-                      <th style="width: 15%;">Eye</th>
-                      <th style="width: 15%;">Type</th>
-                      <th style="width: 23%;">Sph.</th>
-                      <th style="width: 23%;">Cyl.</th>
-                      <th style="width: 24%;">Axis</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <!-- RIGHT EYE - Distance -->
-                    <tr>
-                      <td rowspan="2" style="vertical-align: middle; font-weight: bold; background-color: #f8f9fa;">
-                        <i class="fa fa-arrow-right" style="color: #48b2ee;"></i> RIGHT EYE
-                      </td>
-                      <td style="font-weight: 600;">Distance</td>
-                      <td><input type="text" name="related_custom_field1" class="form-control" placeholder="e.g., -2.00"></td>
-                      <td><input type="text" name="related_custom_field2" class="form-control" placeholder="e.g., -1.00"></td>
-                      <td><input type="text" name="related_custom_field3" class="form-control" placeholder="e.g., 180"></td>
-                    </tr>
-                    <!-- RIGHT EYE - Near -->
-                    <tr>
-                      <td style="font-weight: 600;">Near</td>
-                      <td><input type="text" name="related_custom_field4" class="form-control" placeholder="e.g., -2.00"></td>
-                      <td><input type="text" name="related_custom_field5" class="form-control" placeholder="e.g., -1.00"></td>
-                      <td><input type="text" name="related_custom_field6" class="form-control" placeholder="e.g., 180"></td>
-                    </tr>
-                    <!-- LEFT EYE - Distance -->
-                    <tr>
-                      <td rowspan="2" style="vertical-align: middle; font-weight: bold; background-color: #f8f9fa;">
-                        <i class="fa fa-arrow-left" style="color: #48b2ee;"></i> LEFT EYE
-                      </td>
-                      <td style="font-weight: 600;">Distance</td>
-                      <td><input type="text" name="related_custom_field7" class="form-control" placeholder="e.g., -2.00"></td>
-                      <td><input type="text" name="related_custom_field8" class="form-control" placeholder="e.g., -1.00"></td>
-                      <td><input type="text" name="related_custom_field9" class="form-control" placeholder="e.g., 180"></td>
-                    </tr>
-                    <!-- LEFT EYE - Near -->
-                    <tr>
-                      <td style="font-weight: 600;">Near</td>
-                      <td><input type="text" name="related_custom_field10" class="form-control" placeholder="e.g., -2.00"></td>
-                      <td><input type="text" name="related_custom_field11" class="form-control" placeholder="e.g., -1.00"></td>
-                      <td><input type="text" name="related_custom_field12" class="form-control" placeholder="e.g., 180"></td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-            
-            <!-- Save Button -->
-            <div class="col-md-12 text-center" style="margin-top: 20px;">
-              <button type="button" class="btn btn-primary" id="save-related-customer">
-                <i class="fa fa-save"></i> Save Related Customer
-              </button>
-            </div>
+
+          {{-- Blocks are appended here by JS, one per customer being added --}}
+          <div id="related-customer-forms"></div>
+
+          <!-- Save Button -->
+          <div class="col-md-12 text-center" style="margin-top: 20px;">
+            <button type="button" class="btn btn-primary" id="save-related-customer">
+              <i class="fa fa-save"></i> Save <span id="related-customer-save-count">1</span> Related Customer(s)
+            </button>
           </div>
+          <div class="clearfix"></div>
       </div>
       
       <div class="clearfix"></div>
@@ -638,8 +506,7 @@
             @endfor
         @endif
         
-        {{-- Related Customers Section --}}
-        @if(!empty($related_customers) && count($related_customers) > 0)
+        {{-- Related Customers Section - always rendered so newly saved customers can be appended without a reload --}}
             <div class="col-md-12"><hr style="border-top: 2px solid #48b2ee; margin: 20px 0;"/></div>
             <div class="col-md-12">
                 <h4 style="color: #48b2ee; margin-bottom: 15px;">
@@ -651,8 +518,12 @@
                 <p style="color: #6c757d; font-size: 13px; margin-bottom: 15px;">
                     <i class="fa fa-info-circle"></i> These customers are linked to this contact
                 </p>
-                
-                @foreach($related_customers as $related)
+
+                <div id="related-customers-list">
+                <p class="text-muted" id="no-related-customers-msg" style="@if(!empty($related_customers) && count($related_customers) > 0) display: none; @endif">
+                    <i class="fa fa-info-circle"></i> No related customers yet.
+                </p>
+                @foreach($related_customers ?? [] as $related)
                     <div style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #48b2ee;">
                         <div class="row">
                             <div class="col-md-12">
@@ -793,8 +664,8 @@
                         @endif
                     </div>
                 @endforeach
+                </div>
             </div>
-        @endif
             </div>
         </div>
     </div>
@@ -985,123 +856,305 @@ $(document).on('click', '.edit-related-customer', function(e) {
     }
 });
 
+// ---------------------------------------------------------------------------
+// Related customers: several can be filled in at once and saved in one request
+// ---------------------------------------------------------------------------
+var relatedCustomerBlockCount = 0;
+
+// This view is loaded into a modal, so the script re-runs every time the modal is
+// opened. Drop the previous bindings first, otherwise one click would add or save
+// a block once per time the modal has been opened.
+$(document).off('click.relatedCustomers');
+
+function relatedCustomerPrescriptionRow(offset) {
+    return '<td><input type="text" class="form-control rc-cf' + (offset + 1) + '" placeholder="e.g., -2.00"></td>' +
+           '<td><input type="text" class="form-control rc-cf' + (offset + 2) + '" placeholder="e.g., -1.00"></td>' +
+           '<td><input type="text" class="form-control rc-cf' + (offset + 3) + '" placeholder="e.g., 180"></td>';
+}
+
+function buildRelatedCustomerBlock(index, primaryMobile) {
+    return '' +
+    '<div class="related-customer-block" data-block-index="' + index + '">' +
+      '<h5 style="color: #48b2ee; margin-top: 0;">' +
+        '<i class="fa fa-user-plus"></i> Related Customer <span class="rc-block-number">' + index + '</span>' +
+        '<button type="button" class="btn btn-xs btn-danger pull-right rc-remove-block">' +
+          '<i class="fa fa-times"></i> Remove' +
+        '</button>' +
+      '</h5>' +
+      '<hr style="margin: 8px 0 15px;">' +
+      '<div class="row">' +
+        '<div class="col-md-6">' +
+          '<div class="form-group">' +
+            '<label>Relationship:</label>' +
+            '<div class="input-group">' +
+              '<span class="input-group-addon"><i class="fa fa-users"></i></span>' +
+              '<select class="form-control rc-relationship">' +
+                '<option value="">Select Relationship</option>' +
+                '<option value="self">Self (Primary)</option>' +
+                '<option value="spouse">Spouse</option>' +
+                '<option value="child">Child</option>' +
+                '<option value="parent">Parent</option>' +
+                '<option value="sibling">Sibling</option>' +
+                '<option value="relative">Other Relative</option>' +
+                '<option value="friend">Friend</option>' +
+              '</select>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="col-md-6">' +
+          '<div class="form-group">' +
+            '<label>Name:*</label>' +
+            '<div class="input-group">' +
+              '<span class="input-group-addon"><i class="fa fa-user"></i></span>' +
+              '<input type="text" class="form-control rc-name" placeholder="Enter customer name">' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="col-md-6 mobile-field-hidden">' +
+          '<div class="form-group">' +
+            '<label>Mobile:</label>' +
+            '<input type="text" class="form-control rc-mobile" value="' + rcEscape(primaryMobile) + '" readonly>' +
+          '</div>' +
+        '</div>' +
+        '<div class="col-md-12">' +
+          '<div class="form-group">' +
+            '<label>Email:</label>' +
+            '<div class="input-group">' +
+              '<span class="input-group-addon"><i class="fa fa-envelope"></i></span>' +
+              '<input type="email" class="form-control rc-email" placeholder="Enter email address">' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="col-md-12">' +
+          '<p class="help-block" style="color: #48b2ee;">' +
+            '<i class="fa fa-info-circle"></i> This customer is linked with the primary customer and uses their mobile number' +
+          '</p>' +
+        '</div>' +
+      '</div>' +
+      '<div class="row">' +
+        '<div class="col-md-12">' +
+          '<h4 style="color: #48b2ee;"><i class="fa fa-eye"></i> Lens Prescription</h4>' +
+        '</div>' +
+        '<div class="col-md-12" style="margin-bottom: 15px;">' +
+          '<div class="form-group">' +
+            '<label style="font-weight: 600; color: #333;"><i class="fa fa-file-medical"></i> Prescription Source:</label>' +
+            '<div style="margin-top: 8px;">' +
+              '<label class="radio-inline" style="margin-right: 20px;">' +
+                '<input type="radio" name="rc_prescription_source_' + index + '" class="rc-prescription-source" value="vision_care"> ' +
+                '<span style="color: #48b2ee; font-weight: 500;"><i class="fa fa-check-circle"></i> Prescription by Vision Care</span>' +
+              '</label>' +
+              '<label class="radio-inline">' +
+                '<input type="radio" name="rc_prescription_source_' + index + '" class="rc-prescription-source" value="not_vision_care"> ' +
+                '<span style="color: #666; font-weight: 500;"><i class="fa fa-times-circle"></i> Prescription not by Vision Care</span>' +
+              '</label>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="col-md-12">' +
+          '<div class="table-responsive">' +
+            '<table class="table table-bordered" style="background-color: #fff;">' +
+              '<thead style="background-color: #48b2ee; color: white;">' +
+                '<tr><th style="width: 15%;">Eye</th><th style="width: 15%;">Type</th><th style="width: 23%;">Sph.</th><th style="width: 23%;">Cyl.</th><th style="width: 24%;">Axis</th></tr>' +
+              '</thead>' +
+              '<tbody>' +
+                '<tr>' +
+                  '<td rowspan="2" style="vertical-align: middle; font-weight: bold; background-color: #f8f9fa;"><i class="fa fa-arrow-right" style="color: #48b2ee;"></i> RIGHT EYE</td>' +
+                  '<td style="font-weight: 600;">Distance</td>' + relatedCustomerPrescriptionRow(0) +
+                '</tr>' +
+                '<tr><td style="font-weight: 600;">Near</td>' + relatedCustomerPrescriptionRow(3) + '</tr>' +
+                '<tr>' +
+                  '<td rowspan="2" style="vertical-align: middle; font-weight: bold; background-color: #f8f9fa;"><i class="fa fa-arrow-left" style="color: #48b2ee;"></i> LEFT EYE</td>' +
+                  '<td style="font-weight: 600;">Distance</td>' + relatedCustomerPrescriptionRow(6) +
+                '</tr>' +
+                '<tr><td style="font-weight: 600;">Near</td>' + relatedCustomerPrescriptionRow(9) + '</tr>' +
+              '</tbody>' +
+            '</table>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+}
+
+// Renumber the visible headings after a block is added or removed
+function refreshRelatedCustomerBlocks() {
+    var $blocks = $('#related-customer-forms .related-customer-block');
+    $blocks.each(function(i) {
+        $(this).find('.rc-block-number').first().text(i + 1);
+    });
+    $('#related-customer-save-count').text($blocks.length);
+    return $blocks.length;
+}
+
+function addRelatedCustomerBlock() {
+    var $container = $('#related-customer-forms');
+    relatedCustomerBlockCount++;
+
+    var $block = $(buildRelatedCustomerBlock(relatedCustomerBlockCount, $('#mobile').val()));
+    $container.append($block);
+    refreshRelatedCustomerBlocks();
+
+    $('#inline-add-customer-form').slideDown();
+
+    $block.find('.rc-name').focus();
+    if ($block[0] && $block[0].scrollIntoView) {
+        $block[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+}
+
 // Handle "Add Another Customer" button in Related Customers section
-$(document).on('click', '.add-related-customer', function(e) {
+$(document).on('click.relatedCustomers', '.add-related-customer', function(e) {
     e.preventDefault();
     e.stopPropagation();
-    
-    // Trigger the inline form toggle instead of opening popup
-    $('#toggle-add-customer-form').trigger('click');
-    
-    // Scroll to the form smoothly
-    $('html, body').animate({
-        scrollTop: $('#inline-add-customer-form').offset().top - 100
-    }, 500);
+
+    addRelatedCustomerBlock();
 });
 
-// Handle inline add customer form toggle
-$(document).on('click', '#toggle-add-customer-form', function(e) {
+// Every click adds one more customer block instead of toggling a single form
+$(document).on('click.relatedCustomers', '#toggle-add-customer-form', function(e) {
     e.preventDefault();
-    var $form = $('#inline-add-customer-form');
-    
-    if ($form.is(':visible')) {
-        // Hide form and remove required attributes to prevent validation issues
-        $form.find('input[data-was-required]').removeAttr('required');
-        $form.slideUp();
-    } else {
-        // Clear the form fields and add required attributes back
-        $form.find('input, select, textarea').val('');
-        $form.find('#related_first_name').attr('required', 'required').attr('data-was-required', 'true');
-        
-        // Auto-populate mobile field with primary customer's mobile number
-        var primaryMobile = $('#mobile').val();
-        if (primaryMobile) {
-            $('#related_mobile').val(primaryMobile);
-            console.log('Auto-populated related customer mobile with primary customer mobile:', primaryMobile);
-        }
-        
-        $form.slideDown();
+
+    addRelatedCustomerBlock();
+});
+
+// Remove a single block
+$(document).on('click.relatedCustomers', '.rc-remove-block', function(e) {
+    e.preventDefault();
+
+    $(this).closest('.related-customer-block').remove();
+
+    if (refreshRelatedCustomerBlocks() === 0) {
+        $('#inline-add-customer-form').slideUp();
     }
 });
 
-// Handle cancel button
-$(document).on('click', '#cancel-add-customer', function(e) {
+// Handle cancel button - drops every unsaved block
+$(document).on('click.relatedCustomers', '#cancel-add-customer', function(e) {
     e.preventDefault();
-    // Remove required attributes when hiding
-    $('#inline-add-customer-form').find('input[data-was-required]').removeAttr('required');
+    $('#related-customer-forms').empty();
+    refreshRelatedCustomerBlocks();
     $('#inline-add-customer-form').slideUp();
 });
 
-// Handle save related customer
-$(document).on('click', '#save-related-customer', function(e) {
+// Escapes for both text nodes and double quoted attributes
+function rcEscape(value) {
+    return $('<div>').text(value == null ? '' : value).html().replace(/"/g, '&quot;');
+}
+
+// Build the card shown in the Related Customers list for a customer we just saved
+function renderSavedRelatedCustomer(customer) {
+    var relationship = customer.relationship_type
+        ? '<span class="label label-info" style="margin-left: 10px;">' +
+          rcEscape(customer.relationship_type.charAt(0).toUpperCase() + customer.relationship_type.slice(1)) +
+          '</span>'
+        : '';
+
+    return '<div style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #48b2ee;">' +
+        '<div class="row"><div class="col-md-12">' +
+        '<h5 style="color: #333; margin-top: 0;"><i class="fa fa-user"></i> ' + rcEscape(customer.name) + relationship +
+        '<span class="label label-warning" style="margin-left: 10px;">Secondary</span>' +
+        '<span class="label label-success" style="margin-left: 10px;"><i class="fa fa-check-circle"></i> {{ __('lang_v1.active') }}</span>' +
+        '</h5></div></div>' +
+        '<div class="row" style="margin-top: 10px;">' +
+            '<div class="col-md-3"><strong>Contact ID:</strong><br>' + rcEscape(customer.contact_id) + '</div>' +
+            '<div class="col-md-3"><strong>Mobile:</strong><br>' + rcEscape(customer.mobile || 'N/A') + '</div>' +
+            '<div class="col-md-3"><strong>Email:</strong><br>' + rcEscape(customer.email || 'N/A') + '</div>' +
+            '<div class="col-md-3">' +
+                '<a href="/contacts/' + customer.id + '" class="btn btn-sm btn-info" target="_blank" style="margin-top: 15px;">' +
+                    '<i class="fa fa-eye"></i> View Full Details' +
+                '</a>' +
+                '<button type="button" class="btn btn-sm btn-primary edit-related-customer" data-contact-id="' + customer.id + '" ' +
+                    'style="margin-top: 15px; margin-left: 5px;">' +
+                    '<i class="fa fa-edit"></i> Edit' +
+                '</button>' +
+                '<button type="button" class="btn btn-sm btn-danger delete-related-customer" data-contact-id="' + customer.id + '" ' +
+                    'data-contact-name="' + rcEscape(customer.name) + '" style="margin-top: 15px; margin-left: 5px;">' +
+                    '<i class="fa fa-trash"></i> Delete' +
+                '</button>' +
+            '</div>' +
+        '</div>' +
+    '</div>';
+}
+
+// Handle save of every related customer block in one request
+$(document).on('click.relatedCustomers', '#save-related-customer', function(e) {
     e.preventDefault();
-    
-    var relationshipType = $('#related_relationship_type').val();
-    var customerName = $('#related_first_name').val();
-    var customerMobile = $('#related_mobile').val();
-    var customerEmail = $('#related_email').val();
-    
-    if (!relationshipType) {
-        alert('Please select a relationship type');
+
+    var $btn = $(this);
+    var $blocks = $('#related-customer-forms .related-customer-block');
+
+    if ($blocks.length === 0) {
+        alert('Please add at least one customer');
         return;
     }
-    
-    if (!customerName.trim()) {
-        alert('Please enter a customer name');
+
+    var customers = [];
+    var invalid = null;
+
+    $blocks.each(function(i) {
+        var $block = $(this);
+        var name = ($block.find('.rc-name').val() || '').trim();
+
+        if (!name) {
+            invalid = invalid || { index: i + 1, field: $block.find('.rc-name') };
+            return;
+        }
+
+        var customer = {
+            related_first_name: name,
+            related_relationship_type: $block.find('.rc-relationship').val() || '',
+            related_email: $block.find('.rc-email').val() || '',
+            related_prescription_source: $block.find('.rc-prescription-source:checked').val() || ''
+        };
+
+        for (var f = 1; f <= 12; f++) {
+            customer['custom_field' + f] = $block.find('.rc-cf' + f).val() || '';
+        }
+
+        customers.push(customer);
+    });
+
+    if (invalid) {
+        alert('Please enter a name for Related Customer ' + invalid.index);
+        invalid.field.focus();
         return;
     }
-    
-    // Collect form data
-    var formData = {
-        type: 'customer', // Set contact type
-        contact_type_radio: 'individual', // Set individual type
-        relationship_type: relationshipType,
-        related_first_name: customerName, // Fixed: use related_first_name to match validation
-        first_name: customerName,
-        mobile: customerMobile || '', // Use entered mobile or empty
-        email: customerEmail || '', // Use entered email or empty
-        custom_field1: $('input[name="related_custom_field1"]').val(),
-        custom_field2: $('input[name="related_custom_field2"]').val(),
-        custom_field3: $('input[name="related_custom_field3"]').val(),
-        custom_field4: $('input[name="related_custom_field4"]').val(),
-        custom_field5: $('input[name="related_custom_field5"]').val(),
-        custom_field6: $('input[name="related_custom_field6"]').val(),
-        custom_field7: $('input[name="related_custom_field7"]').val(),
-        custom_field8: $('input[name="related_custom_field8"]').val(),
-        custom_field9: $('input[name="related_custom_field9"]').val(),
-        custom_field10: $('input[name="related_custom_field10"]').val(),
-        custom_field11: $('input[name="related_custom_field11"]').val(),
-        custom_field12: $('input[name="related_custom_field12"]').val(),
-        related_prescription_source: $('input[name="related_prescription_source"]:checked').val(),
-        customer_group_id_link: $('#customer_group_id_link').val(),
-        _token: $('meta[name="csrf-token"]').attr('content')
-    };
-    
-    // Show loading
-    $('#save-related-customer').prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Saving...');
-    
-    // Save via AJAX
+
+    var originalHtml = $btn.html();
+    $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Saving...');
+
     $.ajax({
         url: '/contacts/' + primaryContactId + '/store-related-customer',
         method: 'POST',
-        data: formData,
+        data: {
+            customers: customers,
+            customer_group_id_link: $('#customer_group_id_link').val(),
+            _token: $('meta[name="csrf-token"]').attr('content')
+        },
         dataType: 'json',
         success: function(response) {
-            console.log('Success response:', response);
-            if (response.success) {
+            if (response && response.success) {
+                var saved = response.customers || (response.data ? [response.data] : []);
+
+                // Show the new customers straight away instead of reloading the page,
+                // which used to close this modal and lose the contact being edited.
+                $('#no-related-customers-msg').hide();
+                $.each(saved, function(i, customer) {
+                    $('#related-customers-list').append(renderSavedRelatedCustomer(customer));
+                });
+
+                $('#related-customer-forms').empty();
+                refreshRelatedCustomerBlocks();
                 $('#inline-add-customer-form').slideUp();
+
                 if (typeof toastr !== 'undefined') {
-                    toastr.success('Related customer added successfully');
+                    toastr.success(response.msg || 'Related customers added successfully');
                 }
-                // Reload the page to show new related customer
-                setTimeout(function() {
-                    location.reload();
-                }, 1000);
             } else {
                 console.log('Error in response:', response);
-                alert('Error saving customer: ' + (response.msg || 'Unknown error'));
-                $('#save-related-customer').prop('disabled', false).html('<i class="fa fa-save"></i> Save Related Customer');
+                alert('Error saving customer: ' + ((response && response.msg) || 'Unknown error'));
             }
+            $btn.prop('disabled', false).html(originalHtml);
+            refreshRelatedCustomerBlocks();
         },
         error: function(xhr, status, error) {
             console.log('AJAX Error:', xhr.responseText);
@@ -1115,11 +1168,11 @@ $(document).on('click', '#save-related-customer', function(e) {
                     var errors = Object.values(response.errors).flat();
                     errorMsg += ': ' + errors.join(', ');
                 }
-            } catch (e) {
+            } catch (err) {
                 errorMsg += ': ' + error;
             }
             alert(errorMsg);
-            $('#save-related-customer').prop('disabled', false).html('<i class="fa fa-save"></i> Save Related Customer');
+            $btn.prop('disabled', false).html(originalHtml);
         }
     });
 });

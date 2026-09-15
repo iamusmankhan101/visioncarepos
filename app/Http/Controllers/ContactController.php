@@ -2857,7 +2857,11 @@ class ContactController extends Controller
     }
 
     /**
-     * Store a new related customer
+     * Store one or more new related customers
+     *
+     * Accepts either a single customer (related_* fields on the request) or a
+     * batch of them in a "customers" array, so several family members can be
+     * saved in one go.
      *
      * @param Request $request
      * @param int $contact_id
@@ -2871,100 +2875,98 @@ class ContactController extends Controller
                     'contact_id' => $contact_id,
                     'request_data' => $request->all()
                 ]);
-                
+
                 $business_id = $request->session()->get('user.business_id');
-                
+
                 // Get the primary contact to get mobile number
                 $primary_contact = Contact::where('business_id', $business_id)
                                          ->where('id', $contact_id)
                                          ->first();
-                
+
                 if (!$primary_contact) {
                     return response()->json([
                         'success' => false,
                         'msg' => 'Primary contact not found'
                     ]);
                 }
-                
-                // Validate required fields
-                $validator = \Validator::make($request->all(), [
-                    'related_first_name' => 'required|string|max:255',
-                ]);
-                
-                if ($validator->fails()) {
-                    \Log::error('Validation failed for related customer', [
-                        'errors' => $validator->errors()->toArray(),
-                        'request_data' => $request->all()
-                    ]);
-                    
+
+                $is_batch = $request->has('customers') && is_array($request->input('customers'));
+
+                $customers_input = $is_batch ? array_values($request->input('customers')) : [$request->all()];
+
+                if (empty($customers_input)) {
                     return response()->json([
                         'success' => false,
-                        'msg' => 'Validation failed: ' . $validator->errors()->first()
+                        'msg' => 'No customer details received'
                     ]);
                 }
-                
-                // Prepare input for new related customer
-                $input = [
-                    'type' => 'customer',
-                    'name' => trim($request->input('related_first_name')),
-                    'first_name' => trim($request->input('related_first_name')),
-                    'mobile' => $primary_contact->mobile, // Use primary customer's mobile
-                    'business_id' => $business_id,
-                    'created_by' => $request->session()->get('user.id'),
-                    'contact_type' => 'individual'
-                ];
-                
-                // Add prescription fields if provided
-                $prescription_fields = [
-                    'custom_field1', 'custom_field2', 'custom_field3', 'custom_field4', 'custom_field5',
-                    'custom_field6', 'custom_field7', 'custom_field8', 'custom_field9', 'custom_field10',
-                    'custom_field11', 'custom_field12'
-                ];
-                
-                foreach ($prescription_fields as $field) {
-                    if ($request->has($field)) {
-                        $input[$field] = $request->input($field);
+
+                // Validate all of them upfront so a bad row does not leave a half saved batch
+                foreach ($customers_input as $index => $customer_input) {
+                    $validator = \Validator::make($customer_input, [
+                        'related_first_name' => 'required|string|max:255',
+                    ]);
+
+                    if ($validator->fails()) {
+                        \Log::error('Validation failed for related customer', [
+                            'index' => $index,
+                            'errors' => $validator->errors()->toArray(),
+                            'request_data' => $customer_input
+                        ]);
+
+                        $prefix = $is_batch ? 'Customer #' . ($index + 1) . ': ' : 'Validation failed: ';
+
+                        return response()->json([
+                            'success' => false,
+                            'msg' => $prefix . $validator->errors()->first()
+                        ]);
                     }
                 }
-                
-                // Handle prescription_source for related customer
-                if ($request->has('related_prescription_source')) {
-                    $input['shipping_custom_field_details'] = [
-                        'prescription_source' => $request->input('related_prescription_source')
+
+                $created = [];
+
+                DB::beginTransaction();
+
+                foreach ($customers_input as $customer_input) {
+                    $contact = $this->createRelatedCustomerRecord($business_id, $primary_contact, $customer_input);
+
+                    if (empty($contact['success'])) {
+                        DB::rollBack();
+
+                        return response()->json([
+                            'success' => false,
+                            'msg' => $contact['msg'] ?? 'Error creating related customer'
+                        ]);
+                    }
+
+                    $this->contactUtil->activityLog($contact['data'], 'added');
+
+                    $created[] = [
+                        'id' => $contact['data']->id,
+                        'name' => $contact['data']->name,
+                        'contact_id' => $contact['data']->contact_id,
+                        'mobile' => $contact['data']->mobile,
+                        'email' => $contact['data']->email,
+                        'relationship_type' => $customer_input['related_relationship_type'] ?? '',
                     ];
                 }
 
-                // Handle relationship type
-                if ($request->has('related_relationship_type') && !empty($request->input('related_relationship_type'))) {
-                    if (!isset($input['shipping_custom_field_details'])) {
-                        $input['shipping_custom_field_details'] = [];
-                    }
-                    $input['shipping_custom_field_details']['relationship'] = $request->input('related_relationship_type');
-                }
-                
-                // Create the related customer
-                $contact = $this->contactUtil->createNewContact($input);
-                
-                if ($contact['success']) {
-                    $this->contactUtil->activityLog($contact['data'], 'added');
-                    
-                    return response()->json([
-                        'success' => true,
-                        'msg' => 'Related customer added successfully',
-                        'data' => [
-                            'id' => $contact['data']->id,
-                            'name' => $contact['data']->name,
-                            'contact_id' => $contact['data']->contact_id
-                        ]
-                    ]);
-                } else {
-                    return response()->json([
-                        'success' => false,
-                        'msg' => $contact['msg'] ?? 'Error creating related customer'
-                    ]);
-                }
-                
+                DB::commit();
+
+                $msg = count($created) > 1
+                    ? count($created) . ' related customers added successfully'
+                    : 'Related customer added successfully';
+
+                return response()->json([
+                    'success' => true,
+                    'msg' => $msg,
+                    // Kept for callers that save a single customer at a time
+                    'data' => $created[0],
+                    'customers' => $created,
+                ]);
+
             } catch (\Exception $e) {
+                DB::rollBack();
                 \Log::error('Error storing related customer: ' . $e->getMessage());
                 return response()->json([
                     'success' => false,
@@ -2972,6 +2974,56 @@ class ContactController extends Controller
                 ]);
             }
         }
+    }
+
+    /**
+     * Build and persist a single related customer from a set of related_* inputs
+     *
+     * @param int $business_id
+     * @param Contact $primary_contact
+     * @param array $data
+     * @return array
+     */
+    protected function createRelatedCustomerRecord($business_id, $primary_contact, array $data)
+    {
+        $input = [
+            'type' => 'customer',
+            'name' => trim($data['related_first_name']),
+            'first_name' => trim($data['related_first_name']),
+            'mobile' => $primary_contact->mobile, // Use primary customer's mobile
+            'business_id' => $business_id,
+            'created_by' => session()->get('user.id'),
+            'contact_type' => 'individual'
+        ];
+
+        if (!empty($data['related_email'])) {
+            $input['email'] = trim($data['related_email']);
+        }
+
+        // Add prescription fields if provided
+        for ($i = 1; $i <= 12; $i++) {
+            $field = 'custom_field' . $i;
+            if (array_key_exists($field, $data)) {
+                $input[$field] = $data[$field];
+            }
+        }
+
+        // Handle prescription_source for related customer
+        if (!empty($data['related_prescription_source'])) {
+            $input['shipping_custom_field_details'] = [
+                'prescription_source' => $data['related_prescription_source']
+            ];
+        }
+
+        // Handle relationship type
+        if (!empty($data['related_relationship_type'])) {
+            if (!isset($input['shipping_custom_field_details'])) {
+                $input['shipping_custom_field_details'] = [];
+            }
+            $input['shipping_custom_field_details']['relationship'] = $data['related_relationship_type'];
+        }
+
+        return $this->contactUtil->createNewContact($input);
     }
 
     /**

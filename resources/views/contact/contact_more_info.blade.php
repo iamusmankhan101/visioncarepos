@@ -87,97 +87,113 @@
         @endif
     </h5>
 
-    {{-- Inline Add Form --}}
+    {{-- Inline Add Form: one block per customer, all saved together --}}
     @if(auth()->user()->can('customer.create'))
     <div class="rc-add-form" style="display:none; background:#fff; padding:15px; border-radius:6px; margin-bottom:15px; border:1px solid #48b2ee;">
-        <h6 style="color:#48b2ee; margin-top:0;"><i class="fa fa-user-plus"></i> Add New Related Customer</h6>
+        <h6 style="color:#48b2ee; margin-top:0;"><i class="fa fa-user-plus"></i> Add New Related Customers</h6>
         <hr style="margin:8px 0 12px;">
-        <div class="row">
-            <div class="col-xs-6">
-                <div class="form-group">
-                    <label>Relationship:</label>
-                    <select class="form-control rc-relationship">
-                        <option value="">Select Relationship</option>
-                        <option value="spouse">Spouse</option>
-                        <option value="child">Child</option>
-                        <option value="parent">Parent</option>
-                        <option value="sibling">Sibling</option>
-                        <option value="relative">Other Relative</option>
-                        <option value="friend">Friend</option>
-                    </select>
-                </div>
-            </div>
-            <div class="col-xs-6">
-                <div class="form-group">
-                    <label>Name: <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control rc-name" placeholder="Enter customer name">
-                </div>
-            </div>
-            <div class="col-xs-12">
-                <div class="form-group">
-                    <label>Email:</label>
-                    <input type="email" class="form-control rc-email" placeholder="Enter email address">
-                </div>
-            </div>
-        </div>
 
-        <div style="margin-bottom:10px;">
-            <label style="font-weight:600;"><i class="fa fa-file-medical"></i> Prescription Source:</label>
-            <div style="margin-top:5px;">
-                <label class="radio-inline" style="margin-right:15px;">
-                    <input type="radio" class="rc-prx-source" value="vision_care">
-                    <span style="color:#48b2ee;"><i class="fa fa-check-circle"></i> Prescription by Vision Care</span>
-                </label>
-                <label class="radio-inline">
-                    <input type="radio" class="rc-prx-source" value="not_vision_care">
-                    <span style="color:#666;"><i class="fa fa-times-circle"></i> Not by Vision Care</span>
-                </label>
-            </div>
-        </div>
-
-        <div class="table-responsive">
-            <table class="table table-bordered table-condensed" style="background:#fff; margin-bottom:10px;">
-                <thead style="background-color:#48b2ee; color:white;">
-                    <tr><th>Eye</th><th>Type</th><th>Sph.</th><th>Cyl.</th><th>Axis</th></tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td rowspan="2" style="vertical-align:middle; font-weight:bold; background:#f8f9fa;"><i class="fa fa-arrow-right" style="color:#48b2ee;"></i> RIGHT</td>
-                        <td><strong>Dist.</strong></td>
-                        <td><input type="text" class="form-control input-sm rc-cf1" placeholder="-2.00"></td>
-                        <td><input type="text" class="form-control input-sm rc-cf2" placeholder="-1.00"></td>
-                        <td><input type="text" class="form-control input-sm rc-cf3" placeholder="180"></td>
-                    </tr>
-                    <tr>
-                        <td><strong>Near</strong></td>
-                        <td><input type="text" class="form-control input-sm rc-cf4" placeholder="-2.00"></td>
-                        <td><input type="text" class="form-control input-sm rc-cf5" placeholder="-1.00"></td>
-                        <td><input type="text" class="form-control input-sm rc-cf6" placeholder="180"></td>
-                    </tr>
-                    <tr>
-                        <td rowspan="2" style="vertical-align:middle; font-weight:bold; background:#f8f9fa;"><i class="fa fa-arrow-left" style="color:#48b2ee;"></i> LEFT</td>
-                        <td><strong>Dist.</strong></td>
-                        <td><input type="text" class="form-control input-sm rc-cf7" placeholder="-2.00"></td>
-                        <td><input type="text" class="form-control input-sm rc-cf8" placeholder="-1.00"></td>
-                        <td><input type="text" class="form-control input-sm rc-cf9" placeholder="180"></td>
-                    </tr>
-                    <tr>
-                        <td><strong>Near</strong></td>
-                        <td><input type="text" class="form-control input-sm rc-cf10" placeholder="-2.00"></td>
-                        <td><input type="text" class="form-control input-sm rc-cf11" placeholder="-1.00"></td>
-                        <td><input type="text" class="form-control input-sm rc-cf12" placeholder="180"></td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+        {{-- Blocks are cloned from .rc-block-template into here, one per customer --}}
+        <div class="rc-forms"></div>
 
         <div class="text-right">
             <button type="button" class="btn btn-default btn-sm rc-cancel-btn">
                 <i class="fa fa-times"></i> Cancel
             </button>
             <button type="button" class="btn btn-primary btn-sm rc-save-btn" data-contact-id="{{ $contact->id }}">
-                <i class="fa fa-save"></i> Save Related Customer
+                <i class="fa fa-save"></i> Save <span class="rc-save-count">1</span> Related Customer(s)
             </button>
+        </div>
+    </div>
+
+    {{-- Template for one customer block, cloned by JS. Never submitted itself. --}}
+    <div class="rc-block-template" style="display:none;">
+        <div class="rc-block" style="border:1px solid #cfe7f7; border-left:3px solid #48b2ee; border-radius:5px; padding:12px; margin-bottom:12px;">
+            <div style="margin-bottom:8px;">
+                <strong style="color:#48b2ee;"><i class="fa fa-user-plus"></i> Customer <span class="rc-block-number">1</span></strong>
+                <button type="button" class="btn btn-xs btn-danger pull-right rc-remove-block">
+                    <i class="fa fa-times"></i> Remove
+                </button>
+                <div class="clearfix"></div>
+            </div>
+            <div class="row">
+                <div class="col-xs-6">
+                    <div class="form-group">
+                        <label>Relationship:</label>
+                        <select class="form-control rc-relationship">
+                            <option value="">Select Relationship</option>
+                            <option value="spouse">Spouse</option>
+                            <option value="child">Child</option>
+                            <option value="parent">Parent</option>
+                            <option value="sibling">Sibling</option>
+                            <option value="relative">Other Relative</option>
+                            <option value="friend">Friend</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-xs-6">
+                    <div class="form-group">
+                        <label>Name: <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control rc-name" placeholder="Enter customer name">
+                    </div>
+                </div>
+                <div class="col-xs-12">
+                    <div class="form-group">
+                        <label>Email:</label>
+                        <input type="email" class="form-control rc-email" placeholder="Enter email address">
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-bottom:10px;">
+                <label style="font-weight:600;"><i class="fa fa-file-medical"></i> Prescription Source:</label>
+                <div style="margin-top:5px;">
+                    <label class="radio-inline" style="margin-right:15px;">
+                        <input type="radio" class="rc-prx-source" value="vision_care">
+                        <span style="color:#48b2ee;"><i class="fa fa-check-circle"></i> Prescription by Vision Care</span>
+                    </label>
+                    <label class="radio-inline">
+                        <input type="radio" class="rc-prx-source" value="not_vision_care">
+                        <span style="color:#666;"><i class="fa fa-times-circle"></i> Not by Vision Care</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-bordered table-condensed" style="background:#fff; margin-bottom:10px;">
+                    <thead style="background-color:#48b2ee; color:white;">
+                        <tr><th>Eye</th><th>Type</th><th>Sph.</th><th>Cyl.</th><th>Axis</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td rowspan="2" style="vertical-align:middle; font-weight:bold; background:#f8f9fa;"><i class="fa fa-arrow-right" style="color:#48b2ee;"></i> RIGHT</td>
+                            <td><strong>Dist.</strong></td>
+                            <td><input type="text" class="form-control input-sm rc-cf1" placeholder="-2.00"></td>
+                            <td><input type="text" class="form-control input-sm rc-cf2" placeholder="-1.00"></td>
+                            <td><input type="text" class="form-control input-sm rc-cf3" placeholder="180"></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Near</strong></td>
+                            <td><input type="text" class="form-control input-sm rc-cf4" placeholder="-2.00"></td>
+                            <td><input type="text" class="form-control input-sm rc-cf5" placeholder="-1.00"></td>
+                            <td><input type="text" class="form-control input-sm rc-cf6" placeholder="180"></td>
+                        </tr>
+                        <tr>
+                            <td rowspan="2" style="vertical-align:middle; font-weight:bold; background:#f8f9fa;"><i class="fa fa-arrow-left" style="color:#48b2ee;"></i> LEFT</td>
+                            <td><strong>Dist.</strong></td>
+                            <td><input type="text" class="form-control input-sm rc-cf7" placeholder="-2.00"></td>
+                            <td><input type="text" class="form-control input-sm rc-cf8" placeholder="-1.00"></td>
+                            <td><input type="text" class="form-control input-sm rc-cf9" placeholder="180"></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Near</strong></td>
+                            <td><input type="text" class="form-control input-sm rc-cf10" placeholder="-2.00"></td>
+                            <td><input type="text" class="form-control input-sm rc-cf11" placeholder="-1.00"></td>
+                            <td><input type="text" class="form-control input-sm rc-cf12" placeholder="180"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
     @endif

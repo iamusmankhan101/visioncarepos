@@ -751,9 +751,31 @@
         
         // Counter for multiple customer forms
         var customerFormCount = 0;
+
+        // Renumber the visible headings so they stay 1, 2, 3... after one is removed.
+        // The customers[N] field indexes are left alone - PHP loops over the array, so
+        // gaps in the keys are harmless.
+        function renumberCustomerForms() {
+          $('.customer-form-container').each(function(i) {
+            $(this).find('.customer-form-number').first().text(i + 2);
+          });
+        }
         
         // Get or generate a unique group ID for linking customers
         var customerGroupLinkId = $('#customer_group_id_link').val();
+
+        // On the POS screen this modal stays in the page between uses, and form.reset()
+        // only clears values - the extra blocks would still be sitting there (and would
+        // be submitted as blank customers) the next time it is opened.
+        var $customerModal = $('.add-another-customer-btn').closest('.modal');
+        if ($customerModal.length) {
+          $customerModal
+            .off('hidden.bs.modal.addAnotherCustomer')
+            .on('hidden.bs.modal.addAnotherCustomer', function() {
+              $('.customer-form-container').remove();
+              customerFormCount = 0;
+            });
+        }
         
         // Handle Add Another Customer button
         $('.add-another-customer-btn').off('click').on('click', function(e) {
@@ -766,7 +788,17 @@
           var $customerContainer = $('<div class="customer-form-container" data-customer="' + customerFormCount + '" style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;"></div>');
           
           // Add header
-          var $separator = $('<div class="col-md-12"><hr style="border-top: 2px solid #48b2ee; margin: 30px 0 20px 0;"/><h4 style="color: #48b2ee; margin-bottom: 10px;"><i class="fa fa-user-plus"></i> Related Customer #' + (customerFormCount + 1) + '</h4><p style="color: #6c757d; font-size: 13px;"><i class="fa fa-link"></i> This customer will be linked to the primary customer</p></div>');
+          var $separator = $('<div class="col-md-12">' +
+            '<hr style="border-top: 2px solid #48b2ee; margin: 30px 0 20px 0;"/>' +
+            '<h4 style="color: #48b2ee; margin-bottom: 10px;">' +
+              '<i class="fa fa-user-plus"></i> Related Customer #<span class="customer-form-number">' + (customerFormCount + 1) + '</span>' +
+              '<button type="button" class="btn btn-xs btn-danger pull-right remove-customer-form-btn" title="Remove this customer">' +
+                '<i class="fa fa-times"></i> Remove' +
+              '</button>' +
+            '</h4>' +
+            '<div class="clearfix"></div>' +
+            '<p style="color: #6c757d; font-size: 13px;"><i class="fa fa-link"></i> This customer will be linked to the primary customer</p>' +
+          '</div>');
           
           // Create relationship section with name field
           var relationshipHtml = '<div class="col-md-4">' +
@@ -909,6 +941,14 @@
           
           // Insert before button
           $('.add-another-customer-btn').closest('.row').before($customerContainer);
+          renumberCustomerForms();
+
+          // Drop this block again - covers an accidental double click on Add Another Customer
+          $customerContainer.find('.remove-customer-form-btn').on('click', function(ev) {
+            ev.preventDefault();
+            $customerContainer.remove();
+            renumberCustomerForms();
+          });
           
           // Reinitialize plugins
           if (typeof $.fn.select2 !== 'undefined') {
