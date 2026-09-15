@@ -439,10 +439,12 @@
             
             sessionStorage.setItem('selectedCustomersForInvoice', JSON.stringify(window.selectedCustomersForInvoice));
             
-            // Also update the hidden form fields just like pos.js does
-            $('#pos-form').find('input[name="selected_customers[]"]').remove();
+            // Also update the hidden form fields just like pos.js does.
+            // #pos-form does not exist - the real form is #add_pos_sell_form / #edit_pos_sell_form.
+            var $posForm = $('form#add_pos_sell_form, form#edit_pos_sell_form');
+            $posForm.find('input[name="selected_customers[]"]').remove();
             selectedIds.forEach(function(customerId) {
-                $('#pos-form').append('<input type="hidden" name="selected_customers[]" value="' + customerId + '">');
+                $posForm.append('<input type="hidden" name="selected_customers[]" value="' + customerId + '">');
             });
             console.log('🔄 Synced row assignments back to modal memory:', window.selectedCustomersForInvoice);
         }

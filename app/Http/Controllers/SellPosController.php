@@ -323,6 +323,30 @@ class SellPosController extends Controller
     }
 
     /**
+     * Collect the customer ids a POS sale was made for.
+     *
+     * The POS screen sends these as selected_customers[] in some paths and as a
+     * comma separated multiple_customer_ids in others, so both are read here.
+     *
+     * @param  array  $input
+     * @return array
+     */
+    protected function getSelectedCustomerIds($input)
+    {
+        $selected_customers = [];
+
+        if (!empty($input['selected_customers']) && is_array($input['selected_customers'])) {
+            $selected_customers = $input['selected_customers'];
+        }
+
+        if (!empty($input['multiple_customer_ids'])) {
+            $selected_customers = array_merge($selected_customers, explode(',', $input['multiple_customer_ids']));
+        }
+
+        return array_values(array_unique(array_filter(array_map('trim', $selected_customers))));
+    }
+
+    /**
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
@@ -955,9 +979,13 @@ class SellPosController extends Controller
                         $whatsapp_links[] = $whatsapp_link; // Add primary customer's link
                     }
                     
-                    // Generate WhatsApp links for all selected customers
-                    if (!empty($input['selected_customers']) && is_array($input['selected_customers'])) {
-                        foreach ($input['selected_customers'] as $customer_id) {
+                    // Generate WhatsApp links for all selected customers.
+                    // The POS screen sends the extra customers as multiple_customer_ids, so
+                    // reading selected_customers alone missed every related customer here.
+                    $notify_customer_ids = $this->getSelectedCustomerIds($input);
+
+                    if (!empty($notify_customer_ids)) {
+                        foreach ($notify_customer_ids as $customer_id) {
                             if ($customer_id != $transaction->contact_id) {
                                 $customer = \App\Contact::find($customer_id);
                                 if ($customer) {
@@ -1035,16 +1063,7 @@ class SellPosController extends Controller
                     ]);
                     
                     // Collect all selected customer IDs for single receipt
-                    $selected_customers = $input['selected_customers'] ?? [];
-                    
-                    // Also handle legacy multiple_customer_ids format
-                    if (!empty($input['multiple_customer_ids'])) {
-                        $customer_ids = explode(',', $input['multiple_customer_ids']);
-                        $selected_customers = array_merge($selected_customers, $customer_ids);
-                    }
-                    
-                    // Remove duplicates and filter out empty values
-                    $selected_customers = array_unique(array_filter($selected_customers));
+                    $selected_customers = $this->getSelectedCustomerIds($input);
                     
                     \Log::info('Generating single receipt with multiple customers', [
                         'main_customer_id' => $transaction->contact_id,
@@ -1192,14 +1211,17 @@ class SellPosController extends Controller
         }
 
         $output['print_title'] = $receipt_details->invoice_no;
+
+        // Resolved up front: the additional receipts below render with it too, and it used
+        // to be undefined there whenever the location printed to a receipt printer.
+        $layout = !empty($receipt_details->design) ? 'sale_pos.receipts.' . $receipt_details->design : 'sale_pos.receipts.classic';
+
         //If print type browser - return the content, printer - return printer config data, and invoice format config
         if ($receipt_printer_type == 'printer') {
             $output['print_type'] = 'printer';
             $output['printer_config'] = $this->businessUtil->printerConfig($business_id, $location_details->printer_id);
             $output['data'] = $receipt_details;
         } else {
-            $layout = !empty($receipt_details->design) ? 'sale_pos.receipts.' . $receipt_details->design : 'sale_pos.receipts.classic';
-
             $output['html_content'] = view($layout, compact('receipt_details'))->render();
         }
 

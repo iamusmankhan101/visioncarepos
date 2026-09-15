@@ -1120,15 +1120,7 @@ $(document).ready(function() {
                         if (result.success == 1) {
                             var selectedCustomers = window.selectedCustomersForInvoice || JSON.parse(sessionStorage.getItem('selectedCustomersForInvoice') || 'null');
                             var hasMultipleCustomers = selectedCustomers && selectedCustomers.ids && selectedCustomers.ids.length > 1;
-                            if (result.whatsapp_link || (result.whatsapp_links && result.whatsapp_links.length > 0)) {
-                                if (hasMultipleCustomers && result.whatsapp_links && result.whatsapp_links.length > 0) {
-                                    result.whatsapp_links.forEach(function(link, index) {
-                                        setTimeout(function() { window.open(link, '_blank'); }, index * 2000);
-                                    });
-                                } else if (result.whatsapp_link) {
-                                    window.open(result.whatsapp_link, '_blank');
-                                }
-                            }
+                            pos_open_whatsapp_links(result);
                             toastr.success(result.msg);
                             reset_pos_form();
                             if (result.receipt.is_enabled) { pos_print(result.receipt); }
@@ -1536,23 +1528,7 @@ $(document).ready(function() {
                                 whatsapp_links_length: result.whatsapp_links ? result.whatsapp_links.length : 0
                             });
                             
-                            // Open WhatsApp for all customers
-                            if (result.whatsapp_link || (result.whatsapp_links && result.whatsapp_links.length > 0)) {
-                                if (hasMultipleCustomers && result.whatsapp_links && result.whatsapp_links.length > 0) {
-                                    // Multiple customers - open WhatsApp for each with delay
-                                    console.log('Opening multiple WhatsApp windows:', result.whatsapp_links.length);
-                                    result.whatsapp_links.forEach(function(link, index) {
-                                        setTimeout(function() {
-                                            console.log('Opening WhatsApp window', index + 1, ':', link);
-                                            window.open(link, '_blank');
-                                        }, index * 2000); // 2 second delay between each WhatsApp window
-                                    });
-                                } else if (result.whatsapp_link) {
-                                    // Single customer - open WhatsApp normally
-                                    console.log('Opening single WhatsApp window:', result.whatsapp_link);
-                                    window.open(result.whatsapp_link, '_blank');
-                                }
-                            }
+                            pos_open_whatsapp_links(result);
                             $('#modal_payment').modal('hide');
                             toastr.success(result.msg);
 
@@ -2992,6 +2968,121 @@ function isValidPosForm() {
     return flag;
 }
 
+
+// ---------------------------------------------------------------------------
+// WhatsApp links after a sale
+//
+// Browsers only allow window.open() while a user gesture is on the stack. These
+// links are opened from an AJAX success handler, so the browser silently blocks
+// them - and the ones that used to be queued with setTimeout(index * 2000) never
+// ran at all, because reset_pos_form() reloads the page 1.5s after the sale.
+//
+// So: try the first link straight away, and hand anything that was blocked or
+// queued to the user as real links, which open on click.
+// ---------------------------------------------------------------------------
+function pos_collect_whatsapp_links(result) {
+    var links = [];
+
+    if (result && result.whatsapp_links && result.whatsapp_links.length > 0) {
+        result.whatsapp_links.forEach(function(link) {
+            if (link && links.indexOf(link) === -1) {
+                links.push(link);
+            }
+        });
+    }
+
+    if (result && result.whatsapp_link && links.indexOf(result.whatsapp_link) === -1) {
+        links.push(result.whatsapp_link);
+    }
+
+    return links;
+}
+
+function pos_open_whatsapp_links(result) {
+    var links = pos_collect_whatsapp_links(result);
+
+    if (links.length === 0) {
+        return;
+    }
+
+    // One window.open may still get through when the browser is lenient
+    var opened = null;
+    try {
+        opened = window.open(links[0], '_blank');
+    } catch (e) {
+        opened = null;
+    }
+
+    var pending = links.slice(opened ? 1 : 0);
+
+    if (pending.length > 0) {
+        pos_show_whatsapp_prompt(pending);
+    }
+}
+
+function pos_whatsapp_link_label(link, index) {
+    var match = link.match(/(?:phone=|wa\.me\/)\+?(\d+)/);
+
+    return match ? match[1] : 'Customer ' + (index + 1);
+}
+
+function pos_show_whatsapp_prompt(links) {
+    // reset_pos_form() reloads the POS screen shortly after a sale. Hold that off
+    // while the links are on screen, otherwise they disappear before they can be used.
+    pos_cancel_pending_reload();
+
+    if ($('#pos_whatsapp_modal').length === 0) {
+        $('body').append(
+            '<div class="modal fade" id="pos_whatsapp_modal" tabindex="-1" role="dialog">' +
+              '<div class="modal-dialog modal-sm" role="document">' +
+                '<div class="modal-content">' +
+                  '<div class="modal-header">' +
+                    '<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>' +
+                    '<h4 class="modal-title"><i class="fa fa-whatsapp"></i> Send WhatsApp</h4>' +
+                  '</div>' +
+                  '<div class="modal-body"><div id="pos_whatsapp_links"></div></div>' +
+                  '<div class="modal-footer">' +
+                    '<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>' +
+                  '</div>' +
+                '</div>' +
+              '</div>' +
+            '</div>'
+        );
+
+        // The POS screen still needs its refresh once the user is done here
+        $(document).on('hidden.bs.modal', '#pos_whatsapp_modal', function() {
+            pos_run_pending_reload();
+        });
+    }
+
+    var html = links.map(function(link, index) {
+        return '<a href="' + link + '" target="_blank" rel="noopener" class="btn btn-success btn-block" style="margin-bottom: 8px;">' +
+                 '<i class="fa fa-whatsapp"></i> ' + pos_whatsapp_link_label(link, index) +
+               '</a>';
+    }).join('');
+
+    $('#pos_whatsapp_links').html(html);
+    $('#pos_whatsapp_modal').modal('show');
+}
+
+// The POS refresh scheduled by reset_pos_form(), so it can be held back or run early
+window.posPendingReloadTimer = null;
+
+function pos_cancel_pending_reload() {
+    if (window.posPendingReloadTimer) {
+        clearTimeout(window.posPendingReloadTimer);
+        window.posPendingReloadTimer = null;
+        window.posReloadWasDeferred = true;
+    }
+}
+
+function pos_run_pending_reload() {
+    if (window.posReloadWasDeferred) {
+        window.posReloadWasDeferred = false;
+        window.location.reload();
+    }
+}
+
 function reset_pos_form(){
 
 	//If on edit page then redirect to Add POS page
@@ -3084,9 +3175,11 @@ function reset_pos_form(){
     global_is_clear_local_storage = true;
     saveFormDataToLocalStorage();
 
-    // Refresh POS screen after sale completion/reset (except on edit page)
+    // Refresh POS screen after sale completion/reset (except on edit page).
+    // Held in a handle so the WhatsApp links can hold it off until they are used.
     if ($('form#edit_pos_sell_form').length == 0) {
-        setTimeout(function() {
+        window.posPendingReloadTimer = setTimeout(function() {
+            window.posPendingReloadTimer = null;
             window.location.reload();
         }, 1500);
     }
@@ -3436,6 +3529,11 @@ $(document).on('change', 'select#customer_id', function(){
     // Clear selection for previous customer
     window.selectedCustomersForInvoice = null;
     sessionStorage.removeItem('selectedCustomersForInvoice');
+    // This one is read first by addSelectedCustomersToForm() and was never cleared, so a
+    // failed sale kept resubmitting the old customer set even after picking a single customer.
+    window.selectedRelatedCustomers = null;
+    var $stale_form = (typeof pos_form_obj !== 'undefined' && pos_form_obj && pos_form_obj.length) ? pos_form_obj : $('form#add_pos_sell_form, form#edit_pos_sell_form');
+    $stale_form.find('input[name^="selected_customers"], input[name="multiple_customer_ids"], input[name="multiple_customer_names"]').remove();
     // The stored confirmation belongs to the previous customer — drop it so the
     // related customers modal is shown again for the newly picked customer.
     window.hasConfirmedRelatedCustomersModal = false;
@@ -4657,21 +4755,25 @@ $(document).on('click', '#confirm_customer_selection', function(e) {
         window.syncRelatedCustomersAssignment(selectedCustomers);
     }
     
-    // Store all selected customer IDs and names
-    $('#pos-form').find('input[name="multiple_customer_ids"]').remove();
-    $('#pos-form').find('input[name="multiple_customer_names"]').remove();
-    $('#pos-form').find('input[name^="selected_customers"]').remove();
+    // Store all selected customer IDs and names.
+    // #pos-form does not exist - the POS form is #add_pos_sell_form / #edit_pos_sell_form,
+    // which pos_form_obj already points at - so none of these fields used to be submitted.
+    var $pos_form = (typeof pos_form_obj !== 'undefined' && pos_form_obj && pos_form_obj.length) ? pos_form_obj : $('form#add_pos_sell_form');
+
+    $pos_form.find('input[name="multiple_customer_ids"]').remove();
+    $pos_form.find('input[name="multiple_customer_names"]').remove();
+    $pos_form.find('input[name^="selected_customers"]').remove();
     
     if (selectedCustomers.length > 1) {
         // Add hidden fields using the new selected_customers[] format
         selectedCustomers.forEach(function(customerId) {
-            $('#pos-form').append('<input type="hidden" name="selected_customers[]" value="' + customerId + '">');
+            $pos_form.append('<input type="hidden" name="selected_customers[]" value="' + customerId + '">');
         });
         
         // Also keep the legacy format for backward compatibility
         var customerNamesString = selectedCustomerNames.slice(1).join(', '); // Skip first customer
-        $('#pos-form').append('<input type="hidden" name="multiple_customer_ids" value="' + selectedCustomers.join(',') + '">');
-        $('#pos-form').append('<input type="hidden" name="multiple_customer_names" value="' + customerNamesString + '">');
+        $pos_form.append('<input type="hidden" name="multiple_customer_ids" value="' + selectedCustomers.join(',') + '">');
+        $pos_form.append('<input type="hidden" name="multiple_customer_names" value="' + customerNamesString + '">');
         
         console.log('Added hidden fields:');
         console.log('  selected_customers[]:', selectedCustomers);

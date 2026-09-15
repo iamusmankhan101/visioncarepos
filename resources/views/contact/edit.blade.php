@@ -685,13 +685,20 @@
 // Get the primary contact ID from the hidden field
 var primaryContactId = $('#customer_group_id_link').val() || {{ $contact->id }};
 
+// This view is loaded into a modal and its <script> re-runs every time the modal is
+// opened, so every delegated handler below would be registered again. After a second
+// open one click fired two handlers - which is why the add-related-customer form
+// opened and immediately closed again, until the page was reloaded.
+// Clearing the namespace first keeps exactly one of each, however often this runs.
+$(document).off('.contactEditForm');
+
 // Prevent form validation errors from hidden required fields
 $(document).ready(function() {
     // Initially remove required from hidden fields
     $('#inline-add-customer-form').find('#related_first_name').removeAttr('required');
     
     // Override form validation to ignore hidden required fields
-    $('#contact_edit_form').on('submit', function(e) {
+    $('#contact_edit_form').off('submit.contactEditForm').on('submit.contactEditForm', function(e) {
         // Ensure hidden form fields don't have required attribute
         $('#inline-add-customer-form').find('input[required]').each(function() {
             if ($(this).closest('#inline-add-customer-form').is(':hidden')) {
@@ -701,7 +708,7 @@ $(document).ready(function() {
     });
     
     // Also handle any other form submissions
-    $(document).on('submit', 'form', function(e) {
+    $(document).on('submit.contactEditForm', 'form', function(e) {
         // Remove required from any hidden fields in any form
         $(this).find('input[required]:hidden, input[required]').each(function() {
             if (!$(this).is(':visible') || $(this).closest(':hidden').length > 0) {
@@ -711,7 +718,7 @@ $(document).ready(function() {
     });
 });
 
-$(document).on('click', '.edit-related-customer', function(e) {
+$(document).on('click.contactEditForm', '.edit-related-customer', function(e) {
     e.preventDefault();
     e.stopPropagation();
     
@@ -761,7 +768,7 @@ $(document).on('click', '.edit-related-customer', function(e) {
                     $newModal.find('input:visible:first').focus();
                     
                     // Override form submission to use AJAX
-                    $newModal.find('form').on('submit', function(e) {
+                    $newModal.find('form').off('submit.relatedEdit').on('submit.relatedEdit', function(e) {
                         e.preventDefault();
                         
                         var $form = $(this);
@@ -860,11 +867,6 @@ $(document).on('click', '.edit-related-customer', function(e) {
 // Related customers: several can be filled in at once and saved in one request
 // ---------------------------------------------------------------------------
 var relatedCustomerBlockCount = 0;
-
-// This view is loaded into a modal, so the script re-runs every time the modal is
-// opened. Drop the previous bindings first, otherwise one click would add or save
-// a block once per time the modal has been opened.
-$(document).off('click.relatedCustomers');
 
 function relatedCustomerPrescriptionRow(offset) {
     return '<td><input type="text" class="form-control rc-cf' + (offset + 1) + '" placeholder="e.g., -2.00"></td>' +
@@ -1002,7 +1004,7 @@ function addRelatedCustomerBlock() {
 }
 
 // Handle "Add Another Customer" button in Related Customers section
-$(document).on('click.relatedCustomers', '.add-related-customer', function(e) {
+$(document).on('click.contactEditForm', '.add-related-customer', function(e) {
     e.preventDefault();
     e.stopPropagation();
 
@@ -1010,14 +1012,14 @@ $(document).on('click.relatedCustomers', '.add-related-customer', function(e) {
 });
 
 // Every click adds one more customer block instead of toggling a single form
-$(document).on('click.relatedCustomers', '#toggle-add-customer-form', function(e) {
+$(document).on('click.contactEditForm', '#toggle-add-customer-form', function(e) {
     e.preventDefault();
 
     addRelatedCustomerBlock();
 });
 
 // Remove a single block
-$(document).on('click.relatedCustomers', '.rc-remove-block', function(e) {
+$(document).on('click.contactEditForm', '.rc-remove-block', function(e) {
     e.preventDefault();
 
     $(this).closest('.related-customer-block').remove();
@@ -1028,7 +1030,7 @@ $(document).on('click.relatedCustomers', '.rc-remove-block', function(e) {
 });
 
 // Handle cancel button - drops every unsaved block
-$(document).on('click.relatedCustomers', '#cancel-add-customer', function(e) {
+$(document).on('click.contactEditForm', '#cancel-add-customer', function(e) {
     e.preventDefault();
     $('#related-customer-forms').empty();
     refreshRelatedCustomerBlocks();
@@ -1076,11 +1078,15 @@ function renderSavedRelatedCustomer(customer) {
 }
 
 // Handle save of every related customer block in one request
-$(document).on('click.relatedCustomers', '#save-related-customer', function(e) {
+$(document).on('click.contactEditForm', '#save-related-customer', function(e) {
     e.preventDefault();
 
     var $btn = $(this);
-    var $blocks = $('#related-customer-forms .related-customer-block');
+    // Opening the nested "edit related customer" modal reloads this view and reassigns
+    // primaryContactId, so read the contact id from the modal the button lives in.
+    var $scope = $btn.closest('.modal-content');
+    var contactId = ($scope.length ? $scope.find('#customer_group_id_link').val() : '') || primaryContactId;
+    var $blocks = ($scope.length ? $scope : $(document)).find('#related-customer-forms .related-customer-block');
 
     if ($blocks.length === 0) {
         alert('Please add at least one customer');
@@ -1123,11 +1129,11 @@ $(document).on('click.relatedCustomers', '#save-related-customer', function(e) {
     $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Saving...');
 
     $.ajax({
-        url: '/contacts/' + primaryContactId + '/store-related-customer',
+        url: '/contacts/' + contactId + '/store-related-customer',
         method: 'POST',
         data: {
             customers: customers,
-            customer_group_id_link: $('#customer_group_id_link').val(),
+            customer_group_id_link: contactId,
             _token: $('meta[name="csrf-token"]').attr('content')
         },
         dataType: 'json',
@@ -1178,7 +1184,7 @@ $(document).on('click.relatedCustomers', '#save-related-customer', function(e) {
 });
 
 // Handle delete related customer button click
-$(document).on('click', '.delete-related-customer', function(e) {
+$(document).on('click.contactEditForm', '.delete-related-customer', function(e) {
     e.preventDefault();
     e.stopPropagation();
     
@@ -1268,7 +1274,7 @@ function toggleContactStatus(btn) {
 }
 
 // Handle activate/deactivate for related customers
-$(document).on('click', '.toggle-related-status', function(e) {
+$(document).on('click.contactEditForm', '.toggle-related-status', function(e) {
     e.preventDefault();
     e.stopPropagation();
 

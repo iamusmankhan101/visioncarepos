@@ -657,6 +657,9 @@
                 <button type="button" class="tw-dw-btn tw-text-white tw-dw-btn-sm add-another-customer-btn" style="background-color: #48b2ee !important;">
                     <i class="fa fa-plus-circle"></i> Add Another Customer
                 </button>
+                <button type="button" class="tw-dw-btn tw-dw-btn-neutral tw-text-white tw-dw-btn-sm cancel-another-customer-btn" style="display: none; margin-left: 8px;">
+                    <i class="fa fa-times"></i> @lang('messages.cancel')
+                </button>
             </div>
         </div>
         
@@ -756,10 +759,21 @@
         // The customers[N] field indexes are left alone - PHP loops over the array, so
         // gaps in the keys are harmless.
         function renumberCustomerForms() {
-          $('.customer-form-container').each(function(i) {
+          var $containers = $('.customer-form-container');
+          $containers.each(function(i) {
             $(this).find('.customer-form-number').first().text(i + 2);
           });
+          // Cancel only means something once there is a block to drop
+          $('.cancel-another-customer-btn').toggle($containers.length > 0);
         }
+
+        // Cancel - drops every related customer block that was opened
+        $('.cancel-another-customer-btn').off('click').on('click', function(e) {
+          e.preventDefault();
+          $('.customer-form-container').remove();
+          customerFormCount = 0;
+          renumberCustomerForms();
+        });
         
         // Get or generate a unique group ID for linking customers
         var customerGroupLinkId = $('#customer_group_id_link').val();
@@ -774,6 +788,7 @@
             .on('hidden.bs.modal.addAnotherCustomer', function() {
               $('.customer-form-container').remove();
               customerFormCount = 0;
+              renumberCustomerForms();
             });
         }
         
