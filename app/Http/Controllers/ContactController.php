@@ -789,7 +789,7 @@ class ContactController extends Controller
                             'relationship_type' => $related_input['relationship_type'] ?? null,
                             'business_id' => $business_id
                         ]);
-                        
+
                         // Also create reverse relationship for easy querying
                         $relationship2 = \App\ContactRelationship::create([
                             'contact_id' => $related_output['data']->id,
@@ -797,11 +797,21 @@ class ContactController extends Controller
                             'relationship_type' => $related_input['relationship_type'] ?? null,
                             'business_id' => $business_id
                         ]);
-                        
+
                         \Log::info('Created relationships', [
                             'relationship1' => $relationship1->id,
                             'relationship2' => $relationship2->id
                         ]);
+
+                        // Surface the newly created related customer back to the
+                        // client so the customer dropdown can add it immediately
+                        // without needing a full page reload.
+                        $output['related_customers'][] = [
+                            'id' => $related_output['data']->id,
+                            'name' => $related_output['data']->name,
+                            'supplier_business_name' => $related_output['data']->supplier_business_name,
+                            'mobile' => $related_output['data']->mobile,
+                        ];
                     } else {
                         \Log::error('Failed to create related contact', ['error' => $related_output]);
                     }

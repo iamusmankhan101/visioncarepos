@@ -4140,6 +4140,24 @@ function submitQuickContactForm(form) {
                 $('select#customer_id').append(
                     $('<option>', { value: result.data.id, text: name })
                 );
+
+                // Related customers created alongside the primary one (e.g. via
+                // "Add Another Customer") aren't in the select2 list yet either -
+                // add them now so they're pickable without a page reload.
+                if (result.related_customers && result.related_customers.length) {
+                    $.each(result.related_customers, function(i, related) {
+                        var related_name = related.name;
+                        if (related.supplier_business_name) {
+                            related_name += related.supplier_business_name;
+                        }
+                        if ($('select#customer_id').find('option[value="' + related.id + '"]').length === 0) {
+                            $('select#customer_id').append(
+                                $('<option>', { value: related.id, text: related_name })
+                            );
+                        }
+                    });
+                }
+
                 $('select#customer_id')
                     .val(result.data.id)
                     .trigger('change');
