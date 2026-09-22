@@ -1274,10 +1274,13 @@ class TransactionUtil extends Util
                         $customer_names[] = $additional_customer->name;
                         
                         // Get products assigned to this customer
-                        $assigned_products = $transaction->sell_lines()
-                            ->where('assigned_customer_id', $customer_id)
-                            ->with(['product', 'product.unit', 'variations', 'variations.product_variation'])
-                            ->get();
+                        $assigned_products = collect();
+                        if (\Schema::hasColumn('transaction_sell_lines', 'assigned_customer_id')) {
+                            $assigned_products = $transaction->sell_lines()
+                                ->where('assigned_customer_id', $customer_id)
+                                ->with(['product', 'product.unit', 'variations', 'variations.product_variation'])
+                                ->get();
+                        }
                         
                         $customers_data[] = [
                             'id' => $additional_customer->id,
@@ -1317,11 +1320,14 @@ class TransactionUtil extends Util
             }
             
             // Also get products assigned to the primary customer
-            $primary_assigned_products = $transaction->sell_lines()
-                ->where('assigned_customer_id', $transaction->contact_id)
-                ->with(['product', 'product.unit', 'variations', 'variations.product_variation'])
-                ->get();
-            
+            $primary_assigned_products = collect();
+            if (\Schema::hasColumn('transaction_sell_lines', 'assigned_customer_id')) {
+                $primary_assigned_products = $transaction->sell_lines()
+                    ->where('assigned_customer_id', $transaction->contact_id)
+                    ->with(['product', 'product.unit', 'variations', 'variations.product_variation'])
+                    ->get();
+            }
+
             $output['primary_customer_assigned_products'] = $primary_assigned_products;
             
             if (!empty($customer_names)) {
