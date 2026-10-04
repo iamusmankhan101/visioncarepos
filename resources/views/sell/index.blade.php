@@ -199,6 +199,10 @@
                 serverSide: true,
                 fixedHeader:false,
                 dom: '<"row margin-bottom-20 text-center"<"col-sm-1"l><"col-sm-8"B><"col-sm-3"f> r>tip',
+                // Sales are exported with the "Export" button above (import-ready file)
+                buttons: $.fn.dataTable.defaults.buttons.filter(function(b) {
+                    return b.extend !== 'excel' && b.extend !== 'csv';
+                }),
                 aaSorting: [
                     [2, 'desc']
                 ],

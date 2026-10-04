@@ -664,6 +664,12 @@ class ContactController extends Controller
                 ];
             }
 
+            // The same form submitted again (double click, slow network) is saved only once
+            $submit_key = 'contact_store:'.$business_id.':'.md5(json_encode($request->except('_token')));
+            if (! \Cache::add($submit_key, 1, 60)) {
+                return ['success' => false, 'msg' => 'This customer is already saved or being saved. Please wait.'];
+            }
+
             $input = $request->only(['type', 'supplier_business_name',
                 'prefix', 'first_name', 'middle_name', 'last_name', 'tax_number', 'pay_term_number', 'pay_term_type', 'mobile', 'landline', 'alternate_number', 'city', 'state', 'country', 'address_line_1', 'address_line_2', 'customer_group_id', 'zip_code', 'contact_id', 'custom_field1', 'custom_field2', 'custom_field3', 'custom_field4', 'custom_field5', 'custom_field6', 'custom_field7', 'custom_field8', 'custom_field9', 'custom_field10', 'custom_field11', 'custom_field12', 'email', 'shipping_address', 'position', 'dob', 'shipping_custom_field_details', 'assigned_to_users', 'land_mark', 'street_name', 'building_number', 'additional_number', 'customer_group_id_link', 'relationship_type', 'contact_status']);
 
@@ -927,6 +933,10 @@ class ContactController extends Controller
             }
         } catch (\Exception $e) {
             DB::rollBack();
+            // Saving failed - allow the same form to be submitted again
+            if (isset($submit_key)) {
+                \Cache::forget($submit_key);
+            }
             \Log::emergency('File:'.$e->getFile().'Line:'.$e->getLine().'Message:'.$e->getMessage());
             \Log::emergency('Stack trace: '.$e->getTraceAsString());
             \Log::emergency('Request data: '.json_encode($request->all()));
@@ -2092,10 +2102,10 @@ class ContactController extends Controller
 
                 // Mobile — optional now
                 if (! empty(trim($value[13] ?? ''))) {
-                    $contact_array['mobile'] = $value[13];
+                    $contact_array['mobile'] = $this->__importPhone($value[13]);
                 }
 
-                $contact_array['alternate_number'] = $value[14] ?? null;
+                $contact_array['alternate_number'] = $this->__importPhone($value[14] ?? null);
                 $contact_array['landline']         = $value[15] ?? null;
                 $contact_array['city']             = $value[16] ?? null;
                 $contact_array['state']            = $value[17] ?? null;
@@ -2118,6 +2128,12 @@ class ContactController extends Controller
                 $contact_array['custom_field10']   = $value[32] ?? null; // L-Near-Sph
                 $contact_array['custom_field11']   = $value[33] ?? null; // L-Near-Cyl
                 $contact_array['custom_field12']   = $value[34] ?? null; // L-Near-Axis
+
+                // DATE ADDED - empty means today
+                $date_added = $this->__importDateAdded($value[35] ?? null);
+                if (! empty($date_added)) {
+                    $contact_array['created_at'] = $date_added;
+                }
                 
                 // Debug logging for custom fields 11 and 12
                 \Log::info('Import Debug - Custom Fields 11 & 12', [
@@ -2596,6 +2612,7 @@ class ContactController extends Controller
             'L-Near-Sph',
             'L-Near-Cyl',
             'L-Near-Axis',
+            'DATE ADDED',
         ];
 
         // Add contact data rows
@@ -2636,13 +2653,14 @@ class ContactController extends Controller
                 $contact->custom_field10, // L-Near-Sph
                 $contact->custom_field11, // L-Near-Cyl
                 $contact->custom_field12, // L-Near-Axis
+                $contact->created_at ? $contact->created_at->format('Y-m-d H:i:s') : '',
             ];
         }
 
-        // Generate CSV file
-        $filename = $type . 's_export_' . date('Y-m-d_His') . '.csv';
-        
-        return Excel::download(new class($export_data) implements \Maatwebsite\Excel\Concerns\FromArray {
+        // xlsx (not csv) so the phone columns can be stored as text - Excel drops the leading "+" otherwise
+        $filename = $type . 's_export_' . date('Y-m-d_His') . '.xlsx';
+
+        return Excel::download(new class($export_data) extends \PhpOffice\PhpSpreadsheet\Cell\DefaultValueBinder implements \Maatwebsite\Excel\Concerns\FromArray, \Maatwebsite\Excel\Concerns\WithCustomValueBinder {
             protected $data;
             
             public function __construct($data)
@@ -2654,7 +2672,67 @@ class ContactController extends Controller
             {
                 return $this->data;
             }
+
+            public function bindValue(\PhpOffice\PhpSpreadsheet\Cell\Cell $cell, $value)
+            {
+                // MOBILE, ALT. CONTACT NO., LANDLINE
+                if (in_array($cell->getColumn(), ['N', 'O', 'P'])) {
+                    $cell->setValueExplicit((string) $value, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+
+                    return true;
+                }
+
+                return parent::bindValue($cell, $value);
+            }
         }, $filename);
+    }
+
+    /**
+     * Keep the leading "+" of an international number. Excel turns "+971..." into
+     * the number 971..., so a digits-only number not starting with 0 gets it back.
+     *
+     * @param  mixed  $value
+     * @return string|null
+     */
+    private function __importPhone($value)
+    {
+        if (is_float($value)) {
+            $value = number_format($value, 0, '', '');
+        }
+
+        $value = trim((string) $value);
+        if ($value === '') {
+            return null;
+        }
+
+        if (preg_match('/^[1-9][0-9]{7,}$/', $value)) {
+            return '+'.$value;
+        }
+
+        return $value;
+    }
+
+    /**
+     * Parse the DATE ADDED column (text or an Excel date cell).
+     *
+     * @param  mixed  $value
+     * @return string|null
+     */
+    private function __importDateAdded($value)
+    {
+        if (is_null($value) || trim((string) $value) === '') {
+            return null;
+        }
+
+        try {
+            if (is_numeric($value)) {
+                return \Carbon::instance(\PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($value))->toDateTimeString();
+            }
+
+            return \Carbon::parse(trim($value))->toDateTimeString();
+        } catch (\Exception $e) {
+            return null;
+        }
     }
 
     /**

@@ -520,7 +520,12 @@ function __is_online() {
 
 function __disable_submit_button(element) {
     if (__is_online()) {
-        element.attr('disable', true);
+        element.prop('disabled', true);
+        // Re-enable once the requests finish so a failed save can be retried -
+        // a successful save closes or reloads the form anyway
+        $(document).one('ajaxStop', function() {
+            element.prop('disabled', false);
+        });
     }
 }
 

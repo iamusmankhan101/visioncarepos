@@ -252,6 +252,11 @@
                         <td>L-Near-Sph <small class="text-muted">(@lang('lang_v1.optional'))</small></td>
                         <td>Left Eye Near Sphere</td>
                     </tr>
+                    <tr>
+                        <td>36</td>
+                        <td>Date Added <small class="text-muted">(@lang('lang_v1.optional'))</small></td>
+                        <td>Date the customer was added, eg. {{\Carbon::now()->format('Y-m-d H:i:s')}}. Today's date is used when empty.</td>
+                    </tr>
                 </table>
             @endcomponent
         </div>

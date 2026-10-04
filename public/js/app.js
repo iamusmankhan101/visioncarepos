@@ -3008,6 +3008,10 @@ function submitContactForm(form) {
         url: $(form).attr('action'),
         dataType: 'json',
         data: data,
+        beforeSend: function () {
+            // The tax/mobile checks have finished by now and re-enabled the button
+            __disable_submit_button($(form).find('button[type="submit"]'));
+        },
         success: function (result) {
             if (result.success == true) {
                 $('div.contact_modal').modal('hide');

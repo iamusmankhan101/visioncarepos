@@ -1735,6 +1735,12 @@ $(document).ready(function() {
                 },
             },
             submitHandler: function(form) {
+                // Ignore repeat clicks while this customer is being saved (slow network),
+                // otherwise every click creates the customer again
+                if ($(form).data('saving')) {
+                    return;
+                }
+                $(form).data('saving', true).find('button[type="submit"]').prop('disabled', true);
                 checkTaxNumberAndSubmitQuick(form);
             },
         });
@@ -1762,12 +1768,16 @@ $(document).ready(function() {
                             if (willContinue) {
                                 checkMobileAndSubmitQuick(form);
                             } else {
+                                releaseQuickContactForm(form);
                                 $('#tax_number').select();
                             }
                         });
                     } else {
                         checkMobileAndSubmitQuick(form);
                     }
+                },
+                error: function() {
+                    releaseQuickContactForm(form);
                 },
             });
         } else {
@@ -1801,6 +1811,7 @@ $(document).ready(function() {
                         if (willContinue) {
                             submitQuickContactForm(form);
                         } else {
+                            releaseQuickContactForm(form);
                             $('#mobile').select();
                         }
                     });
@@ -1809,13 +1820,14 @@ $(document).ready(function() {
                     submitQuickContactForm(form);
                 }
             },
+            error: function() {
+                releaseQuickContactForm(form);
+            },
         });
     }
 
     $('.contact_modal').on('hidden.bs.modal', function() {
-        $('form#quick_add_contact')
-            .find('button[type="submit"]')
-            .removeAttr('disabled');
+        releaseQuickContactForm($('form#quick_add_contact'));
         $('form#quick_add_contact')[0].reset();
     });
 
@@ -4119,6 +4131,11 @@ function get_contact_due(id) {
     });
 }
 
+// Let the quick add customer form be submitted again (save failed or was cancelled)
+function releaseQuickContactForm(form) {
+    $(form).data('saving', false).find('button[type="submit"]').prop('disabled', false);
+}
+
 function submitQuickContactForm(form) {
     var data = $(form).serialize();
     $.ajax({
@@ -4165,8 +4182,13 @@ function submitQuickContactForm(form) {
                 update_shipping_address(result.data)
                 toastr.success(result.msg);
             } else {
+                releaseQuickContactForm(form);
                 toastr.error(result.msg);
             }
+        },
+        error: function() {
+            releaseQuickContactForm(form);
+            toastr.error(LANG.something_went_wrong || 'Something went wrong, please try again.');
         },
     });
 }

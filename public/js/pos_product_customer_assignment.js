@@ -37,6 +37,14 @@
             }
         });
 
+        // Related customers may have been added/removed in the edit customer modal -
+        // refetch so the product rows list them without a page reload
+        $(document).on('hidden.bs.modal', '.contact_modal', function(e) {
+            if ($(e.target).is('.contact_modal')) {
+                window.refreshRelatedCustomers();
+            }
+        });
+
         // Listen for changes in product row customer assignments to make it "sticky" and sync with modal
         $(document).on('change', '.product_customer_assignment', function() {
             var val = $(this).val();

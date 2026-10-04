@@ -766,6 +766,11 @@ class ImportSalesController extends Controller
                 $row_index++;
             }
 
+            //No product of this sale was found - don't create an empty sale
+            if (empty($sell_lines)) {
+                continue;
+            }
+
             $first_sell_line = $data[0];
             //get contact
             $contact = null;
@@ -893,7 +898,7 @@ class ImportSalesController extends Controller
                 $payment_data = [
                     'amount' => $paid_amount,
                     'method' => $payment_method,
-                    'paid_on' => !empty($first_sell_line['date']) ? $first_sell_line['date'] : $now,
+                    'paid_on' => $transaction->transaction_date,
                     'transaction_id' => $transaction->id,
                     'business_id' => $business_id,
                     'created_by' => auth()->user()->id,
@@ -1018,13 +1023,13 @@ class ImportSalesController extends Controller
             $formatted_array[$key]['date'] = $date_key !== false ? ($value[$date_key] ?? null) : null;
             $formatted_array[$key]['product'] = $product_key !== false ? ($value[$product_key] ?? null) : null;
             $formatted_array[$key]['sku'] = $sku_key !== false ? ($value[$sku_key] ?? null) : null;
-            $formatted_array[$key]['quantity'] = $quantity_key !== false ? ($value[$quantity_key] ?? null) : null;
-            $formatted_array[$key]['unit_price'] = $unit_price_key !== false ? ($value[$unit_price_key] ?? null) : null;
+            $formatted_array[$key]['quantity'] = $quantity_key !== false ? $this->__toNumber($value[$quantity_key] ?? null) : null;
+            $formatted_array[$key]['unit_price'] = $unit_price_key !== false ? $this->__toNumber($value[$unit_price_key] ?? null) : null;
             $formatted_array[$key]['item_tax'] = $item_tax_key !== false ? ($value[$item_tax_key] ?? null) : null;
-            $formatted_array[$key]['item_discount'] = $item_discount_key !== false ? ($value[$item_discount_key] ?? null) : null;
+            $formatted_array[$key]['item_discount'] = $item_discount_key !== false ? $this->__toNumber($value[$item_discount_key] ?? null) : null;
             $formatted_array[$key]['item_description'] = $item_description_key !== false ? ($value[$item_description_key] ?? null) : null;
-            $formatted_array[$key]['order_total'] = $order_total_key !== false ? ($value[$order_total_key] ?? null) : null;
-            $formatted_array[$key]['total_paid'] = $total_paid_key !== false ? ($value[$total_paid_key] ?? null) : null;
+            $formatted_array[$key]['order_total'] = $order_total_key !== false ? $this->__toNumber($value[$order_total_key] ?? null) : null;
+            $formatted_array[$key]['total_paid'] = $total_paid_key !== false ? $this->__toNumber($value[$total_paid_key] ?? null) : null;
             $formatted_array[$key]['payment_method'] = $payment_method_key !== false ? ($value[$payment_method_key] ?? null) : null;
             $formatted_array[$key]['payment_status'] = $payment_status_key !== false ? ($value[$payment_status_key] ?? null) : null;
             $formatted_array[$key]['shipping_status'] = $shipping_status_key !== false ? ($value[$shipping_status_key] ?? null) : null;
@@ -1061,6 +1066,23 @@ class ImportSalesController extends Controller
         }
 
         return array_values($formatted_data);
+    }
+
+    /**
+     * Turn an amount from the file ("AED 1,250.00", "1,250") into a number.
+     *
+     * @param  mixed  $value
+     * @return float|null
+     */
+    private function __toNumber($value)
+    {
+        if (is_numeric($value)) {
+            return (float) $value;
+        }
+
+        $value = preg_replace('/[^0-9.\-]/', '', (string) $value);
+
+        return is_numeric($value) ? (float) $value : null;
     }
 
     private function __importFields()
@@ -1153,6 +1175,11 @@ class ImportSalesController extends Controller
     {
         if (empty($dateString)) {
             return $fallback;
+        }
+
+        //Excel date cells come through as serial numbers
+        if (is_numeric($dateString)) {
+            return \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($dateString)->format('Y-m-d H:i:s');
         }
 
         $dateString = trim($dateString);

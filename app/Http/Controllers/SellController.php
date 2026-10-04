@@ -1165,8 +1165,15 @@ class SellController extends Controller
                 'ids' => $transactions->pluck('id')->toArray()
             ]);
 
-            // Prepare data in exact import template order
-            $export_data = [];
+            // Prepare data in exact import template order. The header row lets the
+            // import screen auto-select every column.
+            $export_data = [[
+                'Invoice No', 'Customer Phone Number', 'Customer Name', 'Customer Email', 'Date',
+                'Product Name', 'SKU', 'Quantity', 'Unit', 'Unit Price', 'Item Tax', 'Item Discount',
+                'Item Description', 'Order Total', 'Total Paid', 'Payment Method', 'Types of Service',
+                'Service Custom Field 1', 'Service Custom Field 2', 'Service Custom Field 3',
+                'Service Custom Field 4', 'Additional Customer Phones',
+            ]];
 
             // Add transaction data rows
             foreach ($transactions as $transaction) {
@@ -1307,7 +1314,7 @@ class SellController extends Controller
             }
 
             // If no data, add a note
-            if (count($export_data) == 0) {
+            if (count($export_data) == 1) {
                 $export_data[] = [
                     'No sales found',
                     '',
