@@ -1827,8 +1827,13 @@ $(document).ready(function() {
     }
 
     $('.contact_modal').on('hidden.bs.modal', function() {
-        releaseQuickContactForm($('form#quick_add_contact'));
-        $('form#quick_add_contact')[0].reset();
+        // The modal may hold the edit customer form instead; resetting a missing form threw
+        // and stopped the related-customers refresh handler from running.
+        var $quick_form = $('form#quick_add_contact');
+        if ($quick_form.length) {
+            releaseQuickContactForm($quick_form);
+            $quick_form[0].reset();
+        }
     });
 
     // Handle contact type radio button changes
