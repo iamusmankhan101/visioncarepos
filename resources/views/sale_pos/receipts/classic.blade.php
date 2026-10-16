@@ -375,6 +375,7 @@ window.addEventListener('afterprint', function() {
 @endphp
 
 {{-- Main Customer Prescription --}}
+@php $additional_customer_ids = collect($receipt_details->multiple_customers_data ?? [])->pluck('id')->all(); @endphp
 
 
 @if($contact)
@@ -458,8 +459,10 @@ window.addEventListener('afterprint', function() {
 				</tr>
 			</thead>
 			<tbody>
+				@php $customer_total = 0; @endphp
 				@foreach($receipt_details->lines as $line)
-					@if(empty($line['assigned_customer_id']) || $line['assigned_customer_id'] == $contact->id)
+					@if(!in_array($line['assigned_customer_id'] ?? null, $additional_customer_ids))
+					@php $customer_total += $line['line_total_uf']; @endphp
 					<tr>
 						<td style="padding: 4px 0; font-size: 13px; color: #000;">
 							{{$line['name']}} {{$line['product_variation']}} {{$line['variation']}}
@@ -477,6 +480,14 @@ window.addEventListener('afterprint', function() {
 					@endif
 				@endforeach
 			</tbody>
+			@if(!empty($additional_customer_ids))
+			<tfoot>
+				<tr style="border-top: 1px solid #ddd;">
+					<th colspan="3" style="padding: 4px 0; text-align: right; font-size: 13px; color: #000;">Subtotal</th>
+					<th style="padding: 4px 0; text-align: right; font-size: 13px; color: #000;">{{ @num_format($customer_total) }}</th>
+				</tr>
+			</tfoot>
+			@endif
 		</table>
 	</div>
 </div>
@@ -566,8 +577,10 @@ window.addEventListener('afterprint', function() {
 						</tr>
 					</thead>
 					<tbody>
+						@php $customer_total = 0; @endphp
 						@foreach($receipt_details->lines as $line)
-							@if(empty($line['assigned_customer_id']) || $line['assigned_customer_id'] == $additional_customer['id'])
+							@if(($line['assigned_customer_id'] ?? null) == $additional_customer['id'])
+							@php $customer_total += $line['line_total_uf']; @endphp
 							<tr>
 								<td style="padding: 4px 0; font-size: 13px; color: #000;">
 									{{$line['name']}} {{$line['product_variation']}} {{$line['variation']}}
@@ -585,6 +598,12 @@ window.addEventListener('afterprint', function() {
 							@endif
 						@endforeach
 					</tbody>
+					<tfoot>
+						<tr style="border-top: 1px solid #ddd;">
+							<th colspan="3" style="padding: 4px 0; text-align: right; font-size: 13px; color: #000;">Subtotal</th>
+							<th style="padding: 4px 0; text-align: right; font-size: 13px; color: #000;">{{ @num_format($customer_total) }}</th>
+						</tr>
+					</tfoot>
 				</table>
 			</div>
 		</div>

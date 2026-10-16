@@ -73,7 +73,7 @@
         // On the edit sale screen the customer is already selected before this module is
         // loaded, so the change event never fires. Load its related customers explicitly so
         // the assignment dropdowns are filled and the saved assignments stay selectable.
-        var initial_customer_id = $('form#edit_pos_sell_form').length ? $('#customer_id').val() : null;
+        var initial_customer_id = $('form#edit_pos_sell_form, form#edit_sell_form').length ? $('#customer_id').val() : null;
         if (initial_customer_id) {
             fetchAndAddRelatedCustomers(initial_customer_id);
         }
@@ -449,7 +449,7 @@
             
             // Also update the hidden form fields just like pos.js does.
             // #pos-form does not exist - the real form is #add_pos_sell_form / #edit_pos_sell_form.
-            var $posForm = $('form#add_pos_sell_form, form#edit_pos_sell_form');
+            var $posForm = $('form#add_pos_sell_form, form#edit_pos_sell_form, form#add_sell_form, form#edit_sell_form');
             $posForm.find('input[name="selected_customers[]"]').remove();
             selectedIds.forEach(function(customerId) {
                 $posForm.append('<input type="hidden" name="selected_customers[]" value="' + customerId + '">');
@@ -512,7 +512,7 @@
         initProductCustomerAssignment();
         
         // Add validation before form submission (add and edit sale screens)
-        $('#add_pos_sell_form, #edit_pos_sell_form').on('submit', function(e) {
+        $('#add_pos_sell_form, #edit_pos_sell_form, #add_sell_form, #edit_sell_form').on('submit', function(e) {
             // Only validate if multiple customers are selected
             if (window.posSelectedCustomers.length > 1) {
                 if (!window.validateProductCustomerAssignments()) {
