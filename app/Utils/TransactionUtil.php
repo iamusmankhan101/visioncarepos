@@ -1179,40 +1179,6 @@ class TransactionUtil extends Util
             $output['customer_tax_number'] = $customer->tax_number;
             $output['customer_tax_label'] = ! empty($il->client_tax_label) ? $il->client_tax_label : '';
 
-            $temp = [];
-            $customer_custom_fields_settings = ! empty($il->contact_custom_fields) ? $il->contact_custom_fields : [];
-            $contact_custom_labels = $this->getCustomLabels($business_details, 'contact');
-            if (! empty($customer->custom_field1) && in_array('custom_field1', $customer_custom_fields_settings)) {
-                if (! empty($contact_custom_labels['custom_field_1'])) {
-                    $temp[] = $contact_custom_labels['custom_field_1'].': '.$customer->custom_field1;
-                } else {
-                    $temp[] = $customer->custom_field1;
-                }
-            }
-            if (! empty($customer->custom_field2) && in_array('custom_field2', $customer_custom_fields_settings)) {
-                if (! empty($contact_custom_labels['custom_field_2'])) {
-                    $temp[] = $contact_custom_labels['custom_field_2'].': '.$customer->custom_field2;
-                } else {
-                    $temp[] = $customer->custom_field2;
-                }
-            }
-            if (! empty($customer->custom_field3) && in_array('custom_field3', $customer_custom_fields_settings)) {
-                if (! empty($contact_custom_labels['custom_field_3'])) {
-                    $temp[] = $contact_custom_labels['custom_field_3'].': '.$customer->custom_field3;
-                } else {
-                    $temp[] = $customer->custom_field3;
-                }
-            }
-            if (! empty($customer->custom_field4) && in_array('custom_field4', $customer_custom_fields_settings)) {
-                if (! empty($contact_custom_labels['custom_field_4'])) {
-                    $temp[] = $contact_custom_labels['custom_field_4'].': '.$customer->custom_field4;
-                } else {
-                    $temp[] = $customer->custom_field1;
-                }
-            }
-            if (! empty($temp)) {
-                $output['customer_custom_fields'] .= implode('<br>', $temp);
-            }
 
             //To be used in pdfs
             $customer_address = [];
