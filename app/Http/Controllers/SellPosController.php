@@ -1882,6 +1882,27 @@ class SellPosController extends Controller
                 //Update Sell lines
                 $deleted_lines = $this->transactionUtil->createOrUpdateSellLines($transaction, $input['products'], $input['location_id'], true, $status_before);
 
+                // Rebuild the multi-customer marker from the line assignments. The edit form only sends
+                // back the marker saved at creation, so customers assigned while editing were lost.
+                $assigned_customer_ids = [];
+                if (\Schema::hasColumn('transaction_sell_lines', 'assigned_customer_id')) {
+                    $assigned_customer_ids = $transaction->sell_lines()
+                        ->whereNotNull('assigned_customer_id')
+                        ->where('assigned_customer_id', '!=', $transaction->contact_id)
+                        ->distinct()
+                        ->pluck('assigned_customer_id')
+                        ->all();
+
+                    $notes = trim(preg_replace('/^(MULTI_INVOICE_CUSTOMERS:|Multiple Customers:).*\R?/m', '', (string) $transaction->additional_notes));
+                    if (!empty($assigned_customer_ids)) {
+                        $customer_names = Contact::whereIn('id', $assigned_customer_ids)->pluck('name')->prepend($transaction->contact->name);
+                        $notes = trim($notes . "\nMULTI_INVOICE_CUSTOMERS:" . implode(',', $assigned_customer_ids) . "\nMultiple Customers: " . $customer_names->implode(', '));
+                    }
+                    $transaction->additional_notes = $notes !== '' ? $notes : null;
+                    $transaction->save();
+                }
+                $selected_customers = array_merge([$transaction->contact_id], $assigned_customer_ids);
+
                 //Update update lines
                 $is_credit_sale = isset($input['is_credit_sale']) && $input['is_credit_sale'] == 1 ? true : false;
 
@@ -1984,14 +2005,14 @@ class SellPosController extends Controller
                 } elseif ($input['status'] == 'draft' && $input['is_quotation'] == 1) {
                     $msg = trans('lang_v1.quotation_updated');
                     if (!$is_direct_sale && $can_print_invoice) {
-                        $receipt = $this->receiptContent($business_id, $input['location_id'], $transaction->id, null, false, true, $invoice_layout_id);
+                        $receipt = $this->receiptContent($business_id, $input['location_id'], $transaction->id, null, false, true, $invoice_layout_id, $selected_customers);
                     } else {
                         $receipt = '';
                     }
                 } elseif ($input['status'] == 'final') {
                     $msg = trans('sale.pos_sale_updated');
                     if (!$is_direct_sale && $can_print_invoice) {
-                        $receipt = $this->receiptContent($business_id, $input['location_id'], $transaction->id, null, false, true, $invoice_layout_id);
+                        $receipt = $this->receiptContent($business_id, $input['location_id'], $transaction->id, null, false, true, $invoice_layout_id, $selected_customers);
                     } else {
                         $receipt = '';
                     }
