@@ -766,7 +766,8 @@ class HomeController extends Controller
                              'id',
                              DB::raw("CONCAT(COALESCE(surname, ''), ' ', COALESCE(first_name, ''), ' ', COALESCE(last_name, '')) as full_name"),
                              'cmmsn_percent',
-                             'condition'
+                             // Without the column the query failed and the whole section silently disappeared
+                             \Schema::hasColumn('users', 'condition') ? 'condition' : DB::raw('NULL as `condition`'),
                          ])
                          ->get();
 
