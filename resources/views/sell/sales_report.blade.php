@@ -138,6 +138,22 @@
 @section('javascript')
     <script type="text/javascript">
         $(document).ready( function(){
+            // Date range filter - set up before the table so its first request is limited to
+            // today instead of loading every sale ever made (which never finishes)
+            if($('#sales_date_filter').length == 1){
+                $('#sales_date_filter').daterangepicker(
+                    $.extend(true, {}, dateRangeSettings, { startDate: moment(), endDate: moment() }),
+                    function (start, end) {
+                        $('#sales_date_filter').val(start.format(moment_date_format) + ' ~ ' + end.format(moment_date_format));
+                        sales_report_table.ajax.reload();
+                    }
+                );
+                $('#sales_date_filter').on('cancel.daterangepicker', function(ev, picker) {
+                    $('#sales_date_filter').val('');
+                    sales_report_table.ajax.reload();
+                });
+            }
+
             //Sales report table
             sales_report_table = $('#sales_report_table').DataTable({
                 processing: true,
@@ -178,21 +194,6 @@
                     $( row ).find('td:eq(7), td:eq(8)').addClass('text-right');
                 }
             });
-
-            // Date range filter
-            if($('#sales_date_filter').length == 1){
-                $('#sales_date_filter').daterangepicker(
-                    dateRangeSettings,
-                    function (start, end) {
-                        $('#sales_date_filter').val(start.format(moment_date_format) + ' ~ ' + end.format(moment_date_format));
-                        sales_report_table.ajax.reload();
-                    }
-                );
-                $('#sales_date_filter').on('cancel.daterangepicker', function(ev, picker) {
-                    $('#sales_date_filter').val('');
-                    sales_report_table.ajax.reload();
-                });
-            }
 
             // Location filter
             $('#sales_location_filter').change( function(){

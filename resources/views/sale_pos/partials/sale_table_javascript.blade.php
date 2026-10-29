@@ -3,7 +3,13 @@ $(document).ready( function(){
 
 //Date range as a button
 $('#sell_list_filter_date_range').daterangepicker(
-    dateRangeSettings,
+    //Last 30 days like All Sales; the 10-year default loads the whole history and never finishes.
+    //A customer's own sales list (contact page) keeps the full range.
+    @if(empty($contact))
+        $.extend(true, {}, dateRangeSettings, { startDate: moment().subtract(29, 'days'), endDate: moment() }),
+    @else
+        dateRangeSettings,
+    @endif
     function (start, end) {
         $('#sell_list_filter_date_range').val(start.format(moment_date_format) + ' ~ ' + end.format(moment_date_format));
         sell_table.ajax.reload();
