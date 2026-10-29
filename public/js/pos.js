@@ -401,7 +401,8 @@ $(document).ready(function() {
                     );
                 },
                 minLength: 1,
-                autoFocus: false,
+                // Highlight the first match so Enter adds it
+                autoFocus: true,
                 response: function(event, ui) {
                     if (ui.content.length == 0) {
                         toastr.error(LANG.no_products_found);
@@ -409,8 +410,10 @@ $(document).ready(function() {
                             $('input#search_product').select();
                         }
                     } else if (ui.content.length == 1) {
-                        // Force menu to show for single result
-                        $(this).autocomplete('instance').menu.element.show();
+                        // Single match: add it straight away
+                        ui.item = ui.content[0];
+                        $(this).data('ui-autocomplete')._trigger('select', 'autocompleteselect', ui);
+                        $(this).autocomplete('close');
                     }
                 },
                 focus: function(event, ui) {

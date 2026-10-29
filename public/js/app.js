@@ -577,7 +577,8 @@ $(document).ready(function () {
                 }
             }
         },
-        aaSorting: [[1, 'desc']],
+        // Newest contacts first (column 1 is the non-orderable action column)
+        aaSorting: [[columns.findIndex(function (c) { return c.data === 'created_at'; }), 'desc']],
         columns: columns,
         fnDrawCallback: function (oSettings) {
             __currency_convert_recursively($('#contact_table'));
