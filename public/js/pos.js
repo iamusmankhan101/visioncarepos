@@ -396,6 +396,9 @@ $(document).ready(function() {
                                  item.value = '';
                                  item.label = name + ' (' + sku + ')' + (combined_note ? ' | Note: ' + combined_note : '');
                              });
+                             // Highest price first
+                             var price = function(p) { return parseFloat(p.variation_group_price || p.selling_price) || 0; };
+                             products.sort(function(a, b) { return price(b) - price(a); });
                              response(products);
                          }
                     );

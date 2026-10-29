@@ -2678,6 +2678,10 @@ $(document).on('submit', 'form#edit_shipping_form', function (e) {
                 if (typeof (purchase_order_table) != 'undefined') {
                     purchase_order_table.ajax.reload();
                 }
+
+                if (result.whatsapp_link) {
+                    window.open(result.whatsapp_link, '_blank');
+                }
             } else {
                 toastr.error(result.msg);
             }

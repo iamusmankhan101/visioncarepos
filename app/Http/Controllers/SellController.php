@@ -2640,6 +2640,10 @@ class SellController extends Controller
             $output = ['success' => 1,
                 'msg' => trans('lang_v1.updated_success'),
             ];
+
+            if (($input['shipping_status'] ?? null) == 'delivered' && $transaction_before->shipping_status != 'delivered') {
+                $output['whatsapp_link'] = $this->sendOrderStatusNotification($transaction, 'delivered');
+            }
         } catch (\Exception $e) {
             \Log::emergency('File:'.$e->getFile().'Line:'.$e->getLine().'Message:'.$e->getMessage());
 
@@ -2726,6 +2730,20 @@ class SellController extends Controller
             } elseif ($new_status == 'delivered') {
                 // Send "Delivered" notification  
                 $whatsapp_link = $this->notificationUtil->autoSendNotification($transaction->business_id, 'order_delivered', $transaction, $transaction->contact);
+
+                // WhatsApp auto-send not set up: still open WhatsApp with the template text, or a default message
+                if (empty($whatsapp_link) && ! empty($transaction->contact->mobile)) {
+                    $text = \App\NotificationTemplate::where('business_id', $transaction->business_id)
+                        ->where('template_for', 'order_delivered')
+                        ->value('whatsapp_text')
+                        ?: 'Dear {contact_name}, your order {invoice_number} has been delivered. Thank you for choosing {business_name}.';
+                    $text = $this->notificationUtil->replaceTags($transaction->business_id, ['whatsapp_text' => $text], $transaction)['whatsapp_text'];
+                    $whatsapp_link = $this->notificationUtil->getWhatsappNotificationLink([
+                        'mobile_number' => $transaction->contact->mobile,
+                        'whatsapp_text' => $text,
+                    ]);
+                }
+
                 if ($whatsapp_link) {
                     \Log::info('WhatsApp Delivered link generated: ' . $whatsapp_link);
                 }
