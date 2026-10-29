@@ -760,8 +760,16 @@ class HomeController extends Controller
             $today_end = $now->copy()->endOfDay()->format('Y-m-d 23:59:59');
 
             // Get all commission agents for this business
+            // Flagged commission agents, plus any staff picked as commission agent on a sale
+            // (business setting "Select from users list" uses regular users)
             $agents = User::where('business_id', $business_id)
-                         ->where('is_cmmsn_agnt', 1)
+                         ->where(function ($q) use ($business_id) {
+                             $q->where('is_cmmsn_agnt', 1)
+                               ->orWhereIn('id', DB::table('transactions')
+                                   ->where('business_id', $business_id)
+                                   ->whereNotNull('commission_agent')
+                                   ->select('commission_agent'));
+                         })
                          ->select([
                              'id',
                              DB::raw("CONCAT(COALESCE(surname, ''), ' ', COALESCE(first_name, ''), ' ', COALESCE(last_name, '')) as full_name"),

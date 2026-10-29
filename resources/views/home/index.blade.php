@@ -392,7 +392,7 @@
         <div class="tw-px-5 tw-py-6">
             <div class="tw-grid tw-grid-cols-1 tw-gap-4 sm:tw-gap-5 lg:tw-grid-cols-2">
                 {{-- SALES COMMISSION AGENTS PROGRESS SECTION --}}
-                @if (!empty($commission_agents_data) && count($commission_agents_data) > 0)
+                @if (isset($commission_agents_data))
                     <div class="tw-transition-all lg:tw-col-span-2 tw-duration-200 tw-bg-white tw-shadow-sm tw-rounded-xl tw-ring-1 hover:tw-shadow-md hover:tw--translate-y-0.5 tw-ring-gray-200">
                         <div class="tw-p-4 sm:tw-p-5">
                             <div class="tw-flex tw-items-center tw-gap-2.5">
@@ -418,6 +418,13 @@
                             </div>
                             
                             <div class="tw-mt-5">
+                                @if(count($commission_agents_data) == 0)
+                                    <p class="tw-text-sm tw-text-gray-500">
+                                        No commission agents yet.
+                                        <a href="{{ action([\App\Http\Controllers\SalesCommissionAgentController::class, 'index']) }}" class="tw-text-blue-600">Add a sales commission agent</a>
+                                        or select one on POS sales to see their progress here.
+                                    </p>
+                                @endif
                                 <div class="tw-grid tw-grid-cols-1 sm:tw-grid-cols-2 lg:tw-grid-cols-3 tw-gap-4">
                                     @foreach($commission_agents_data as $agent)
                                         <div class="tw-bg-gray-50 tw-rounded-lg tw-p-4 tw-border tw-border-gray-200 hover:tw-border-blue-300 tw-transition-colors">
