@@ -2641,8 +2641,9 @@ class SellController extends Controller
                 'msg' => trans('lang_v1.updated_success'),
             ];
 
-            if (($input['shipping_status'] ?? null) == 'delivered' && $transaction_before->shipping_status != 'delivered') {
-                $output['whatsapp_link'] = $this->sendOrderStatusNotification($transaction, 'delivered');
+            $new_status = $input['shipping_status'] ?? null;
+            if (in_array($new_status, ['packed', 'delivered']) && $transaction_before->shipping_status != $new_status) {
+                $output['whatsapp_link'] = $this->sendOrderStatusNotification($transaction, $new_status);
             }
         } catch (\Exception $e) {
             \Log::emergency('File:'.$e->getFile().'Line:'.$e->getLine().'Message:'.$e->getMessage());
@@ -2718,37 +2719,31 @@ class SellController extends Controller
     private function sendOrderStatusNotification($transaction, $new_status)
     {
         try {
-            $whatsapp_link = null;
-            
-            // Only send notifications for Ready and Delivered status
-            if ($new_status == 'packed') {
-                // Send "Ready" notification
-                $whatsapp_link = $this->notificationUtil->autoSendNotification($transaction->business_id, 'order_ready', $transaction, $transaction->contact);
-                if ($whatsapp_link) {
-                    \Log::info('WhatsApp Ready link generated: ' . $whatsapp_link);
-                }
-            } elseif ($new_status == 'delivered') {
-                // Send "Delivered" notification  
-                $whatsapp_link = $this->notificationUtil->autoSendNotification($transaction->business_id, 'order_delivered', $transaction, $transaction->contact);
-
-                // WhatsApp auto-send not set up: still open WhatsApp with the template text, or a default message
-                if (empty($whatsapp_link) && ! empty($transaction->contact->mobile)) {
-                    $text = \App\NotificationTemplate::where('business_id', $transaction->business_id)
-                        ->where('template_for', 'order_delivered')
-                        ->value('whatsapp_text')
-                        ?: 'Dear {contact_name}, your order {invoice_number} has been delivered. Thank you for choosing {business_name}.';
-                    $text = $this->notificationUtil->replaceTags($transaction->business_id, ['whatsapp_text' => $text], $transaction)['whatsapp_text'];
-                    $whatsapp_link = $this->notificationUtil->getWhatsappNotificationLink([
-                        'mobile_number' => $transaction->contact->mobile,
-                        'whatsapp_text' => $text,
-                    ]);
-                }
-
-                if ($whatsapp_link) {
-                    \Log::info('WhatsApp Delivered link generated: ' . $whatsapp_link);
-                }
+            // Only send notifications for Ready (packed) and Delivered status
+            $templates = [
+                'packed' => ['order_ready', 'Dear {contact_name}, your order {invoice_number} is ready. Thank you for choosing {business_name}.'],
+                'delivered' => ['order_delivered', 'Dear {contact_name}, your order {invoice_number} has been delivered. Thank you for choosing {business_name}.'],
+            ];
+            if (! isset($templates[$new_status])) {
+                return null;
             }
-            
+            [$template_for, $default_text] = $templates[$new_status];
+
+            $whatsapp_link = $this->notificationUtil->autoSendNotification($transaction->business_id, $template_for, $transaction, $transaction->contact);
+
+            // WhatsApp auto-send not set up: still open WhatsApp with the template text, or a default message
+            if (empty($whatsapp_link) && ! empty($transaction->contact->mobile)) {
+                $text = \App\NotificationTemplate::where('business_id', $transaction->business_id)
+                    ->where('template_for', $template_for)
+                    ->value('whatsapp_text')
+                    ?: $default_text;
+                $text = $this->notificationUtil->replaceTags($transaction->business_id, ['whatsapp_text' => $text], $transaction)['whatsapp_text'];
+                $whatsapp_link = $this->notificationUtil->getWhatsappNotificationLink([
+                    'mobile_number' => $transaction->contact->mobile,
+                    'whatsapp_text' => $text,
+                ]);
+            }
+
             return $whatsapp_link;
         } catch (\Exception $e) {
             \Log::error('Error sending order status notification: ' . $e->getMessage());

@@ -209,7 +209,7 @@
                         <i class="fa fa-eye"></i>
                     </a>
                     <br>
-                    <small class="text-muted">Contact ID: {{ $related['contact_id'] }}</small>
+                    <small class="text-muted">Contact ID: {{ $related['contact_id'] }} | @lang('lang_v1.added_on'): {{ $related['created_at'] ?? 'N/A' }}</small>
                     @if(!empty($related['prescription']))
                         <div style="margin-top:8px; border-top:1px solid #f1f1f1; padding-top:5px;">
                             <div class="row">

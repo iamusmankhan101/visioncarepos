@@ -22,6 +22,11 @@
     </p>
 @endif
 
+<strong><i class="fa fa-calendar margin-r-5"></i> @lang('lang_v1.added_on')</strong>
+<p class="text-muted">
+    {{ @format_date($contact->created_at) }}
+</p>
+
 <strong><i class="fa fa-mobile margin-r-5"></i> @lang('contact.mobile')</strong>
 <p class="text-muted">
     {{ $contact->mobile }}

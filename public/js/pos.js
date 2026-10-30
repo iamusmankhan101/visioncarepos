@@ -12,6 +12,10 @@ $(document).on('click', 'button#pos-finalize, button#pos-finalize-desktop', func
             return false;
         }
 
+        if (!pos_validate_order_status()) {
+            return false;
+        }
+
         if ($('#reward_point_enabled').length) {
             try {
                 var validate_rp = isValidatRewardPoint();
@@ -396,9 +400,9 @@ $(document).ready(function() {
                                  item.value = '';
                                  item.label = name + ' (' + sku + ')' + (combined_note ? ' | Note: ' + combined_note : '');
                              });
-                             // Highest price first
+                             // Lowest price first
                              var price = function(p) { return parseFloat(p.variation_group_price || p.selling_price) || 0; };
-                             products.sort(function(a, b) { return price(b) - price(a); });
+                             products.sort(function(a, b) { return price(a) - price(b); });
                              response(products);
                          }
                     );
@@ -845,6 +849,10 @@ $(document).ready(function() {
         //Check if product is present or not.
         if ($('table#pos_table tbody').find('.product_row').length <= 0) {
             toastr.warning(LANG.no_products_added);
+            return false;
+        }
+
+        if (!pos_validate_order_status()) {
             return false;
         }
 
@@ -1607,7 +1615,7 @@ $(document).ready(function() {
         $('input#shipping_details').val($('#shipping_details_modal').val());
 
         $('input#shipping_address').val($('#shipping_address_modal').val());
-        $('input#shipping_status').val($('#shipping_status_modal').val());
+        $('[name="shipping_status"]').val($('#shipping_status_modal').val()).trigger('change');
         $('input#delivered_to').val($('#delivered_to_modal').val());
         $('input#delivery_person').val($('#delivery_person_modal').val());
 
@@ -1621,7 +1629,7 @@ $(document).ready(function() {
 
         // Update the order status display
         var selectedStatus = $('#shipping_status_modal option:selected').text();
-        $('#shipping_status_display').text(selectedStatus || 'Ordered');
+        $('#shipping_status_display').text(selectedStatus);
 
         pos_total_row();
     });
@@ -1634,11 +1642,8 @@ $(document).ready(function() {
             .select();
             // $('.select2-selection__rendered').css('padding-right', '150px');
         
-        // Set default status to "ordered" for new transactions
-        if (!$('#shipping_status').val()) {
-            $('#shipping_status_modal').val('ordered');
-            $('#shipping_status_display').text('Ordered');
-        }
+        // Show the order status picked so far; new sales start with none selected
+        $('#shipping_status_modal').val($('#shipping_status').val() || '');
     });
 
     $(document).on('shown.bs.modal', '.row_edit_product_price_model', function() {
@@ -3003,6 +3008,27 @@ function isValidPosForm() {
 // So: try the first link straight away, and hand anything that was blocked or
 // queued to the user as real links, which open on click.
 // ---------------------------------------------------------------------------
+// Order status must be chosen for every sale: highlight the dropdown when it's empty
+function pos_validate_order_status() {
+    var $status = $('select#shipping_status');
+    if (!$status.length || $status.val()) {
+        return true;
+    }
+    $status.closest('.form-group').addClass('has-error');
+    $('#shipping_status_display').addClass('text-danger');
+    $('html, body').animate({ scrollTop: $status.offset().top - 100 }, 200);
+    $status.focus();
+    toastr.error($status.closest('.form-group').find('label').text().replace(/[:*]/g, '').trim() + ' is required');
+    return false;
+}
+
+$(document).on('change', 'select#shipping_status', function() {
+    if ($(this).val()) {
+        $(this).closest('.form-group').removeClass('has-error');
+        $('#shipping_status_display').removeClass('text-danger').text($(this).find('option:selected').text());
+    }
+});
+
 function pos_collect_whatsapp_links(result) {
     var links = [];
 
@@ -3157,7 +3183,8 @@ function reset_pos_form(){
 	//Reset shipping
 	__write_number($('input#shipping_charges'), $('input#shipping_charges').data('default'));
 	$('input#shipping_details').val($('input#shipping_details').data('default'));
-    $('input#shipping_address, input#shipping_status, input#delivered_to').val('');
+    $('input#shipping_address, input#shipping_status, input#delivered_to, select#shipping_status').val('');
+    $('#shipping_status_display').text($('select#shipping_status option[value=""]').text() || $('#shipping_status_display').text());
 	if($('input#is_recurring').length > 0){
 		$('input#is_recurring').iCheck('update');
 	};
@@ -4567,6 +4594,7 @@ function showRelatedCustomersModal(customers, callback) {
         html += '      </h5>';
         html += '      <p style="margin-bottom: 5px;"><strong>Contact ID:</strong> ' + (customer.contact_id || 'N/A') + '</p>';
         html += '      <p style="margin-bottom: 5px;"><strong>Mobile:</strong> ' + (customer.mobile || 'N/A') + '</p>';
+        html += '      <p style="margin-bottom: 5px;"><strong>Added On:</strong> ' + (customer.created_at || 'N/A') + '</p>';
         if (customer.prescription_summary) {
             html += '      <p style="margin-bottom: 0; color: #6c757d;"><strong>Prescription:</strong> ' + customer.prescription_summary + '</p>';
         }

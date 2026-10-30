@@ -1040,6 +1040,7 @@ class ContactController extends Controller
                     'contact_id' => $rel_contact->contact_id,
                     'mobile' => $rel_contact->mobile,
                     'email' => $rel_contact->email,
+                    'created_at' => $this->commonUtil->format_date($rel_contact->created_at),
                     'relationship_type' => $rel_contact->shipping_custom_field_details['relationship'] ?? 'Relative',
                     'prescription' => [
                         'right_eye' => [
@@ -1171,6 +1172,7 @@ class ContactController extends Controller
                         'contact_id' => $rc->contact_id,
                         'mobile' => $rc->mobile,
                         'email' => $rc->email,
+                        'created_at' => $this->commonUtil->format_date($rc->created_at),
                         'contact_status' => $rc->contact_status ?? 'active',
                         'relationship_type' => 'family', // Default to family for phone-based relationships
                         'is_primary' => $rc->id == $primary_customer_id,
@@ -2900,7 +2902,7 @@ class ContactController extends Controller
             $related_contacts = Contact::where('business_id', $business_id)
                 ->where('mobile', $contact->mobile)
                 ->where('contact_status', 'active')
-                ->select('id', 'name', 'mobile', 'contact_id', 'custom_field1', 'custom_field2', 'custom_field3', 'custom_field4', 'custom_field5', 'custom_field6', 'custom_field7', 'custom_field8', 'custom_field9', 'custom_field10', 'custom_field11', 'custom_field12')
+                ->select('id', 'name', 'mobile', 'contact_id', 'created_at', 'custom_field1', 'custom_field2', 'custom_field3', 'custom_field4', 'custom_field5', 'custom_field6', 'custom_field7', 'custom_field8', 'custom_field9', 'custom_field10', 'custom_field11', 'custom_field12')
                 ->orderBy('id', 'asc')
                 ->get();
 
@@ -2927,6 +2929,7 @@ class ContactController extends Controller
                     'name' => $related->name,
                     'mobile' => $related->mobile,
                     'contact_id' => $related->contact_id,
+                    'created_at' => $this->commonUtil->format_date($related->created_at),
                     'prescription_summary' => $prescription_summary,
                     'is_current' => $related->id == $contact_id,
                     'is_primary' => $related->id == $primary_customer_id,
@@ -3035,6 +3038,7 @@ class ContactController extends Controller
                         'contact_id' => $contact['data']->contact_id,
                         'mobile' => $contact['data']->mobile,
                         'email' => $contact['data']->email,
+                        'created_at' => $this->commonUtil->format_date($contact['data']->created_at),
                         'relationship_type' => $customer_input['related_relationship_type'] ?? '',
                     ];
                 }

@@ -66,7 +66,7 @@
 
 						<b class="tw-text-base md:tw-text-lg tw-font-bold">@lang('lang_v1.order_status'): @show_tooltip(__('tooltip.order_status'))</b> 
 						<i class="fas fa-edit cursor-pointer"  title="@lang('lang_v1.order_status')" aria-hidden="true" data-toggle="modal" data-target="#posShippingModal"></i>
-						<span id="shipping_status_display">@if(empty($edit)){{'Ordered'}}@else{{$shipping_statuses[$transaction->shipping_status] ?? 'Ordered'}}@endif</span>
+						<span id="shipping_status_display">@if(empty($edit)){{ __('messages.please_select') }}@else{{$shipping_statuses[$transaction->shipping_status] ?? __('messages.please_select')}}@endif</span>
 						<input type="hidden" name="shipping_details" id="shipping_details" value="@if(empty($edit)){{''}}@else{{$transaction->shipping_details}}@endif" data-default="">
 
 						<input type="hidden" name="shipping_address" id="shipping_address" value="@if(empty($edit)){{''}}@else{{$transaction->shipping_address}}@endif">

@@ -37,7 +37,7 @@
 				    <div class="col-md-6">
 				        <div class="form-group">
 				            {!! Form::label('shipping_status_modal', __('lang_v1.order_status') . ':*' ) !!}
-				            {!! Form::select('shipping_status_modal',$shipping_statuses, !empty($transaction->shipping_status) ? $transaction->shipping_status : 'ordered', ['class' => 'form-control','placeholder' => __('messages.please_select')]); !!}
+				            {!! Form::select('shipping_status_modal',$shipping_statuses, !empty($transaction->shipping_status) ? $transaction->shipping_status : null, ['class' => 'form-control','placeholder' => __('messages.please_select')]); !!}
 				        </div>
 				    </div>
 

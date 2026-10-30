@@ -566,6 +566,7 @@
                             <div class="col-md-3">
                                 <strong>Email:</strong><br>
                                 {{ $related['email'] ?? 'N/A' }}
+                                <br><strong>@lang('lang_v1.added_on'):</strong> {{ $related['created_at'] ?? 'N/A' }}
                             </div>
                             <div class="col-md-3">
                                 <a href="{{ action([\App\Http\Controllers\ContactController::class, 'show'], [$related['id']]) }}" 
@@ -1059,7 +1060,8 @@ function renderSavedRelatedCustomer(customer) {
         '<div class="row" style="margin-top: 10px;">' +
             '<div class="col-md-3"><strong>Contact ID:</strong><br>' + rcEscape(customer.contact_id) + '</div>' +
             '<div class="col-md-3"><strong>Mobile:</strong><br>' + rcEscape(customer.mobile || 'N/A') + '</div>' +
-            '<div class="col-md-3"><strong>Email:</strong><br>' + rcEscape(customer.email || 'N/A') + '</div>' +
+            '<div class="col-md-3"><strong>Email:</strong><br>' + rcEscape(customer.email || 'N/A') +
+                '<br><strong>{{ __('lang_v1.added_on') }}:</strong> ' + rcEscape(customer.created_at || 'N/A') + '</div>' +
             '<div class="col-md-3">' +
                 '<a href="/contacts/' + customer.id + '" class="btn btn-sm btn-info" target="_blank" style="margin-top: 15px;">' +
                     '<i class="fa fa-eye"></i> View Full Details' +
