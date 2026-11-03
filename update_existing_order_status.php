@@ -48,24 +48,24 @@ try {
         SELECT COUNT(*) as count 
         FROM transactions 
         WHERE type = 'sell' 
-        AND (shipping_status IS NULL OR shipping_status = '')
+        AND (shipping_status IS NULL OR shipping_status = '' OR shipping_status IN ('ordered', 'packed'))
     ");
     $emptyCount = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
     
     echo "\n2. Found {$emptyCount} sales without order status\n";
     
     if ($emptyCount > 0) {
-        echo "\n3. Setting default order status 'ordered' for existing sales...\n";
+        echo "\n3. Setting order status 'delivered' for existing sales...\n";
         
         $stmt = $pdo->prepare("
             UPDATE transactions 
-            SET shipping_status = 'ordered' 
+            SET shipping_status = 'delivered'
             WHERE type = 'sell' 
-            AND (shipping_status IS NULL OR shipping_status = '')
+            AND (shipping_status IS NULL OR shipping_status = '' OR shipping_status IN ('ordered', 'packed'))
         ");
         $stmt->execute();
         
-        echo "   ✅ Updated {$emptyCount} sales with default order status 'ordered'\n";
+        echo "   ✅ Updated {$emptyCount} sales with order status 'delivered'\n";
     }
     
     // Verify the fix
@@ -83,8 +83,7 @@ try {
     }
     
     echo "\n✅ Order status update completed successfully!\n";
-    echo "\nAll existing sales now have 'Ordered' status by default.\n";
-    echo "New sales will also default to 'Ordered' status.\n";
+    echo "\nAll existing sales now have 'Delivered' status.\n";
     
 } catch (Exception $e) {
     echo "❌ Error: " . $e->getMessage() . "\n";

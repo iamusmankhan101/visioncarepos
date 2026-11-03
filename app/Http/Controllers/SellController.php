@@ -482,7 +482,9 @@ class SellController extends Controller
                 })
                 ->editColumn('shipping_status', function ($row) use ($shipping_statuses) {
                     // Set default status if none exists
-                    $current_status = !empty($row->shipping_status) ? $row->shipping_status : 'ordered';
+                    $current_status = in_array($row->shipping_status, [null, '', 'ordered', 'packed'], true)
+                        ? 'delivered'
+                        : $row->shipping_status;
                     $status_color = ! empty($this->shipping_status_colors[$current_status]) ? $this->shipping_status_colors[$current_status] : 'bg-gray';
                     
                     // Custom status text for our 3 statuses
