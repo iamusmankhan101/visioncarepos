@@ -913,32 +913,6 @@ window.addEventListener('afterprint', function() {
     @endif
     
 </div>
-@php
-    $assigned_prescription_ids = collect($receipt_details->lines ?? [])->pluck('assigned_customer_id')->filter()->unique();
-    $assigned_prescription_contacts = $assigned_prescription_ids->isNotEmpty()
-        ? \App\Contact::whereIn('id', $assigned_prescription_ids)->get()->keyBy('id')
-        : collect();
-@endphp
-@php
-    $prescription_groups = collect($receipt_details->lines ?? [])->groupBy(function ($line) use ($contact) {
-        return $line['assigned_customer_id'] ?? ($contact->id ?? 'primary');
-    });
-@endphp
-@foreach($prescription_groups as $prescription_customer_id => $prescription_lines)
-    @php
-        $product_line = $prescription_lines->first();
-        $product_contact = $prescription_customer_id !== 'primary'
-            ? ($assigned_prescription_contacts->get($prescription_customer_id) ?: $contact)
-            : $contact;
-        $product_line['product_label'] = $prescription_lines->map(function ($line) {
-            return trim($line['name'].' '.($line['product_variation'] ?? '').' '.($line['variation'] ?? ''));
-        })->unique()->implode(', ');
-    @endphp
-    @if($product_contact)
-        @include('sale_pos.receipts.partials.product_prescription', ['product_line' => $product_line, 'prescription_contact' => $product_contact])
-    @endif
-@endforeach
-
 <div class="row" style="color: #000000 !important;">
 	<!-- Footer Debug: '{{ $receipt_details->footer_text ?? 'NULL' }}' ({{ empty($receipt_details->footer_text) ? 'empty' : 'not empty' }}) -->
 	@if(!empty($receipt_details->footer_text))
