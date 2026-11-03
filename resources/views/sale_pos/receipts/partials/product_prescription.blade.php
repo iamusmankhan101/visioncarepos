@@ -1,6 +1,6 @@
 <div style="margin-top: 8px; padding-top: 5px; border-top: 1px solid #ddd; page-break-inside: avoid; color: #000;">
     <div style="font-weight: 600; color: #48b2ee; font-size: 12px; margin-bottom: 3px;">
-        <i class="fa fa-eye"></i> {{ $product_line['name'] }} {{ $product_line['product_variation'] ?? '' }} {{ $product_line['variation'] ?? '' }}
+        <i class="fa fa-eye"></i> {{ $product_line['product_label'] ?? ($product_line['name'].' '.($product_line['product_variation'] ?? '').' '.($product_line['variation'] ?? '')) }}
         <span style="color: #555; font-weight: normal;">- Prescription{{ !empty($prescription_contact->name) ? ' - '.$prescription_contact->name : '' }}</span>
     </div>
     <table width="100%" style="border-collapse: collapse; table-layout: fixed;">

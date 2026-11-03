@@ -919,11 +919,20 @@ window.addEventListener('afterprint', function() {
         ? \App\Contact::whereIn('id', $assigned_prescription_ids)->get()->keyBy('id')
         : collect();
 @endphp
-@foreach($receipt_details->lines ?? [] as $product_line)
+@php
+    $prescription_groups = collect($receipt_details->lines ?? [])->groupBy(function ($line) use ($contact) {
+        return $line['assigned_customer_id'] ?? ($contact->id ?? 'primary');
+    });
+@endphp
+@foreach($prescription_groups as $prescription_customer_id => $prescription_lines)
     @php
-        $product_contact = !empty($product_line['assigned_customer_id'])
-            ? ($assigned_prescription_contacts->get($product_line['assigned_customer_id']) ?: $contact)
+        $product_line = $prescription_lines->first();
+        $product_contact = $prescription_customer_id !== 'primary'
+            ? ($assigned_prescription_contacts->get($prescription_customer_id) ?: $contact)
             : $contact;
+        $product_line['product_label'] = $prescription_lines->map(function ($line) {
+            return trim($line['name'].' '.($line['product_variation'] ?? '').' '.($line['variation'] ?? ''));
+        })->unique()->implode(', ');
     @endphp
     @if($product_contact)
         @include('sale_pos.receipts.partials.product_prescription', ['product_line' => $product_line, 'prescription_contact' => $product_contact])
