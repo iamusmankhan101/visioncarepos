@@ -619,23 +619,6 @@ window.addEventListener('afterprint', function() {
 	@endforeach
 @endif
 
-@php
-    $assigned_prescription_ids = collect($receipt_details->lines ?? [])->pluck('assigned_customer_id')->filter()->unique();
-    $assigned_prescription_contacts = $assigned_prescription_ids->isNotEmpty()
-        ? \App\Contact::whereIn('id', $assigned_prescription_ids)->get()->keyBy('id')
-        : collect();
-@endphp
-@foreach($receipt_details->lines ?? [] as $product_line)
-    @php
-        $product_contact = !empty($product_line['assigned_customer_id'])
-            ? ($assigned_prescription_contacts->get($product_line['assigned_customer_id']) ?: $contact)
-            : $contact;
-    @endphp
-    @if($product_contact)
-        @include('sale_pos.receipts.partials.product_prescription', ['product_line' => $product_line, 'prescription_contact' => $product_contact])
-    @endif
-@endforeach
-
 <div class="row" style="color: #000000 !important;">
 	<div class="col-md-12"><hr/></div>
 	<div class="col-xs-6">
@@ -939,6 +922,23 @@ window.addEventListener('afterprint', function() {
     @endif
     
 </div>
+@php
+    $assigned_prescription_ids = collect($receipt_details->lines ?? [])->pluck('assigned_customer_id')->filter()->unique();
+    $assigned_prescription_contacts = $assigned_prescription_ids->isNotEmpty()
+        ? \App\Contact::whereIn('id', $assigned_prescription_ids)->get()->keyBy('id')
+        : collect();
+@endphp
+@foreach($receipt_details->lines ?? [] as $product_line)
+    @php
+        $product_contact = !empty($product_line['assigned_customer_id'])
+            ? ($assigned_prescription_contacts->get($product_line['assigned_customer_id']) ?: $contact)
+            : $contact;
+    @endphp
+    @if($product_contact)
+        @include('sale_pos.receipts.partials.product_prescription', ['product_line' => $product_line, 'prescription_contact' => $product_contact])
+    @endif
+@endforeach
+
 <div class="row" style="color: #000000 !important;">
 	<!-- Footer Debug: '{{ $receipt_details->footer_text ?? 'NULL' }}' ({{ empty($receipt_details->footer_text) ? 'empty' : 'not empty' }}) -->
 	@if(!empty($receipt_details->footer_text))
