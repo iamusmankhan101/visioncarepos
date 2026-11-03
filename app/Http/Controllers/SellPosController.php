@@ -2255,7 +2255,7 @@ class SellPosController extends Controller
         }
 
         // Retrieve the limit for displaying recent transactions from the configuration
-        $limit = config('constants.pos_recent_transactions_display_limit', 10);
+        $limit = max(20, (int) config('constants.pos_recent_transactions_display_limit', 20));
         
         $transactions = $query->orderBy('transactions.created_at', 'desc')
             ->groupBy('transactions.id')

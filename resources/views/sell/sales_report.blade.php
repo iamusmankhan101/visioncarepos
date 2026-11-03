@@ -3,23 +3,6 @@
 
 @section('content')
 
-<style>
-    /* Hide all page content when printing - only print from the separate invoice window */
-    @media print {
-        body * {
-            visibility: hidden !important;
-        }
-        body::after {
-            content: "Please use the print dialog from the invoice window that opened.";
-            visibility: visible !important;
-            display: block;
-            text-align: center;
-            margin-top: 50px;
-            font-size: 18px;
-        }
-    }
-</style>
-
 <!-- Content Header (Page header) -->
 <section class="content-header">
     <h1>@lang('business.sales')
@@ -128,9 +111,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Hidden div for receipt printing -->
-    <div id="receipt_section" style="display: none;"></div>
 
 </section>
 <!-- /.content -->
@@ -286,31 +266,6 @@
             });
         });
 
-        $(document).on('click', '.print-invoice', function(e){
-            e.preventDefault();
-            $.ajax({
-                url: $(this).data('href'),
-                dataType: 'json',
-                success: function(result){
-                    if(result.success == 1 && result.receipt){
-                        // Use a clean print approach - open new window with only receipt content
-                        if (result.receipt.html_content) {
-                            var printWindow = window.open('', '_blank', 'width=800,height=600');
-                            printWindow.document.write(result.receipt.html_content);
-                            printWindow.document.close();
-                            
-                            // Wait for content to load then print
-                            printWindow.onload = function() {
-                                setTimeout(function() {
-                                    printWindow.focus();
-                                    printWindow.print();
-                                }, 500);
-                            };
-                        }
-                    }
-                }
-            });
-        });
     </script>
     
     <!-- Include POS JavaScript for printing functionality -->
