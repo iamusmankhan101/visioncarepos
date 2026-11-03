@@ -19,9 +19,6 @@
 @endsection
 
 @section('content')
-    <!-- Order Status Modal Fix CSS -->
-    <link rel="stylesheet" href="{{ asset('css/order-status-modal-fix.css') }}">
-
     <!-- Content Header (Page header) -->
     <section class="content-header no-print">
         <h1  class="tw-text-xl md:tw-text-3xl tw-font-bold tw-text-black">@lang('sale.sells') <span id="sell_list_selected_range" class="tw-text-gray-600 tw-font-normal tw-text-base">{{ @format_date(\Carbon\Carbon::now()->subDays(29)) }} ~ {{ @format_date(\Carbon\Carbon::now()) }}</span>

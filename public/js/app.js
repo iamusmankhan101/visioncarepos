@@ -446,6 +446,7 @@ $(document).ready(function () {
     //Start: CRUD for Contacts
     //contacts table
     var contact_table_type = $('#contact_type').val();
+    var columns = [];
     if (contact_table_type == 'supplier') {
         var columns = [
             { data: 'checkbox', searchable: false, orderable: false },
