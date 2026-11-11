@@ -172,8 +172,7 @@
 		<div class="form-group">
 			{!! Form::label('shipping_status', __('lang_v1.order_status') . ':*') !!}
 			<select name="shipping_status" class="form-control" id="shipping_status" required>
-				<option value="" selected>@lang('messages.please_select')</option>
-				<option value="ordered">Ordered</option>
+				<option value="ordered" selected>Ordered</option>
 				<option value="packed">Ready</option>
 				<option value="delivered">Delivered</option>
 			</select>
