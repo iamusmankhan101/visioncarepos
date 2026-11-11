@@ -3,4 +3,7 @@ deployment:
   tasks:
     - export DEPLOYPATH=/home/hawkdisp/public_html/pos
     - /usr/bin/rsync -rlt --chmod=D755,F644 --exclude='.git' --exclude='.env' --exclude='storage' --exclude='vendor' --exclude='public/uploads' --exclude='bootstrap/cache' ./ $DEPLOYPATH/
+    - find $DEPLOYPATH -path $DEPLOYPATH/storage -prune -o -path $DEPLOYPATH/vendor -prune -o -type d -exec chmod 755 {} \;
+    - find $DEPLOYPATH -path $DEPLOYPATH/storage -prune -o -path $DEPLOYPATH/vendor -prune -o -type f -exec chmod 644 {} \;
+    - chmod -R 775 $DEPLOYPATH/storage $DEPLOYPATH/bootstrap/cache
     - /opt/cpanel/ea-php82/root/usr/bin/php $DEPLOYPATH/artisan optimize:clear
