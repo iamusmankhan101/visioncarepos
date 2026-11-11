@@ -1164,7 +1164,8 @@ class SellPosController extends Controller
         $from_pos_screen = true,
         $invoice_layout_id = null,
         $selected_customers = [],
-        $is_delivery_note = false
+        $is_delivery_note = false,
+        $contact_override = null
     ) {
         $output = ['is_enabled' => false,
             'print_type' => 'browser',
@@ -1189,7 +1190,7 @@ class SellPosController extends Controller
         //Check if printer setting is provided.
         $receipt_printer_type = is_null($printer_type) ? $location_details->receipt_printer_type : $printer_type;
 
-        $receipt_details = $this->transactionUtil->getReceiptDetails($transaction_id, $location_id, $invoice_layout, $business_details, $location_details, $receipt_printer_type, $selected_customers);
+        $receipt_details = $this->transactionUtil->getReceiptDetails($transaction_id, $location_id, $invoice_layout, $business_details, $location_details, $receipt_printer_type, $selected_customers, $contact_override);
 
         $currency_details = [
             'symbol' => $business_details->currency_symbol,
@@ -1235,19 +1236,17 @@ class SellPosController extends Controller
             
             foreach ($selected_customers as $customer_id) {
                 if ($customer_id && $customer_id != $original_contact_id) {
-                    // Temporarily change the transaction's contact_id to generate receipt for this customer
-                    $transaction->contact_id = $customer_id;
-                    $transaction->save();
-                    
-                    // Generate receipt details for this specific customer
+                    // Generate receipt details for this specific customer (in memory only,
+                    // never save a swapped contact_id: it corrupted the sale's primary customer)
                     $additional_receipt_details = $this->transactionUtil->getReceiptDetails(
-                        $transaction_id, 
-                        $location_id, 
-                        $invoice_layout, 
-                        $business_details, 
-                        $location_details, 
-                        $receipt_printer_type, 
-                        [$customer_id] // Pass only this customer
+                        $transaction_id,
+                        $location_id,
+                        $invoice_layout,
+                        $business_details,
+                        $location_details,
+                        $receipt_printer_type,
+                        [$customer_id], // Pass only this customer
+                        $customer_id
                     );
                     
                     $additional_receipt_details->currency = $currency_details;
@@ -1263,10 +1262,6 @@ class SellPosController extends Controller
                     ];
                 }
             }
-            
-            // Restore original contact_id
-            $transaction->contact_id = $original_contact_id;
-            $transaction->save();
             
             \Log::info('Generated additional receipts', [
                 'main_receipt_customer' => $original_contact_id,
@@ -2302,10 +2297,9 @@ class SellPosController extends Controller
                         'custom_customer' => $custom_customer_id
                     ]);
                     
-                    // Temporarily change the contact_id
-                    $original_contact_id = $transaction->contact_id;
+                    // In-memory only; never save (a failed/overlapping print used to leave the
+                    // sale permanently assigned to the secondary customer)
                     $transaction->contact_id = $custom_customer_id;
-                    $transaction->save();
                 }
 
                 $printer_type = 'browser';
@@ -2337,13 +2331,7 @@ class SellPosController extends Controller
                 }
                 
                 // Generate receipt
-                $receipt = $this->receiptContent($business_id, $transaction->location_id, $transaction_id, $printer_type, $is_package_slip, false, $invoice_layout_id, $selected_customers, $is_delivery_note);
-                
-                // Restore original contact_id if it was changed
-                if (!empty($custom_customer_id) && isset($original_contact_id)) {
-                    $transaction->contact_id = $original_contact_id;
-                    $transaction->save();
-                }
+                $receipt = $this->receiptContent($business_id, $transaction->location_id, $transaction_id, $printer_type, $is_package_slip, false, $invoice_layout_id, $selected_customers, $is_delivery_note, $custom_customer_id);
 
                 if (!empty($receipt)) {
                     $output = [

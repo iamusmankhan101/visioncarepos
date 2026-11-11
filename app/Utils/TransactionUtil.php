@@ -1014,11 +1014,15 @@ class TransactionUtil extends Util
      * @param  string  $receipt_printer_type
      * @return array
      */
-    public function getReceiptDetails($transaction_id, $location_id, $invoice_layout, $business_details, $location_details, $receipt_printer_type, $selected_customers = [])
+    public function getReceiptDetails($transaction_id, $location_id, $invoice_layout, $business_details, $location_details, $receipt_printer_type, $selected_customers = [], $contact_override = null)
     {
         $il = $invoice_layout;
 
         $transaction = Transaction::find($transaction_id);
+        // Print another customer's bill without ever saving a changed contact_id to the database.
+        if (! empty($contact_override)) {
+            $transaction->contact_id = $contact_override;
+        }
         $transaction_type = $transaction->type;
 
         $output = [
