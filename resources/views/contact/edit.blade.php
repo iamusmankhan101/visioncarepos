@@ -720,6 +720,20 @@ $(document).ready(function() {
     });
 });
 
+// Related-customer edit popup is .edit-contact-modal (not .contact_modal), so app.js never
+// bound the Individual/Business toggle there. Delegate it here (change + iCheck events).
+$(document).off('change.relType ifChecked.relType', '.edit-contact-modal input[name="contact_type_radio"]')
+    .on('change.relType ifChecked.relType', '.edit-contact-modal input[name="contact_type_radio"]', function() {
+        var $m = $(this).closest('.edit-contact-modal');
+        if (this.value == 'business') {
+            $m.find('div.individual').hide();
+            $m.find('div.business').show();
+        } else {
+            $m.find('div.business').hide();
+            $m.find('div.individual').show();
+        }
+    });
+
 $(document).on('click.contactEditForm', '.edit-related-customer', function(e) {
     e.preventDefault();
     e.stopPropagation();
