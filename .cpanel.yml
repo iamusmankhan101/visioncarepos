@@ -1,0 +1,6 @@
+---
+deployment:
+  tasks:
+    - export DEPLOYPATH=/home/hawkdisp/public_html/pos
+    - /usr/bin/rsync -a --exclude='.git' --exclude='.env' --exclude='storage' --exclude='vendor' --exclude='public/uploads' --exclude='bootstrap/cache' ./ $DEPLOYPATH/
+    - /opt/cpanel/ea-php82/root/usr/bin/php $DEPLOYPATH/artisan optimize:clear
