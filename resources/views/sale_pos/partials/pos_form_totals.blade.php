@@ -40,7 +40,7 @@
 						</b> 
 					</td>
 				
-				<td class="@if(isset($pos_settings['disable_order_tax']) && $pos_settings['disable_order_tax'] != 0) hide @endif">
+				<td>
 					<span class="tw-text-base md:tw-text-lg tw-font-semibold">
 						<b class="tw-text-base md:tw-text-lg tw-font-bold">@lang('lang_v1.voucher')(-): @show_tooltip(__('tooltip.voucher_discount'))</b>
 						<i class="fas fa-edit cursor-pointer" title="@lang('lang_v1.apply_voucher')" id="pos-edit-voucher" style="cursor:pointer;"></i> 
@@ -66,12 +66,12 @@
 
 						<b class="tw-text-base md:tw-text-lg tw-font-bold">@lang('lang_v1.order_status'): @show_tooltip(__('tooltip.order_status'))</b> 
 						<i class="fas fa-edit cursor-pointer"  title="@lang('lang_v1.order_status')" aria-hidden="true" data-toggle="modal" data-target="#posShippingModal"></i>
-						<span id="shipping_status_display">@if(empty($edit)){{ __('messages.please_select') }}@else{{$shipping_statuses[$transaction->shipping_status] ?? __('messages.please_select')}}@endif</span>
+						<span id="shipping_status_display">@if(empty($edit)){{ $shipping_statuses['ordered'] ?? 'Ordered' }}@else{{$shipping_statuses[$transaction->shipping_status] ?? __('messages.please_select')}}@endif</span>
 						<input type="hidden" name="shipping_details" id="shipping_details" value="@if(empty($edit)){{''}}@else{{$transaction->shipping_details}}@endif" data-default="">
 
 						<input type="hidden" name="shipping_address" id="shipping_address" value="@if(empty($edit)){{''}}@else{{$transaction->shipping_address}}@endif">
 
-						<input type="hidden" name="shipping_status" id="shipping_status" value="@if(empty($edit)){{''}}@else{{$transaction->shipping_status}}@endif">
+						<input type="hidden" name="shipping_status" id="shipping_status" value="@if(empty($edit)){{'ordered'}}@else{{$transaction->shipping_status}}@endif">
 
 						<input type="hidden" name="delivered_to" id="delivered_to" value="@if(empty($edit)){{''}}@else{{$transaction->delivered_to}}@endif">
 
